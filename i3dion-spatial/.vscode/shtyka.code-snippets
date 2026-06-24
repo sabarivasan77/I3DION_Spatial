@@ -1,0 +1,22 @@
+{
+  "React Architecture Component": {
+    "prefix": "rafc",
+    "body": [
+      "import { FC } from 'react';",
+      "import { cn } from '@/utils/cn';",
+      "",
+      "interface ${1:${TM_FILENAME_BASE}}Props {",
+      "  className?: string;",
+      "}",
+      "",
+      "export const ${1:${TM_FILENAME_BASE}}: FC<${1:${TM_FILENAME_BASE}}Props> = ({ className }) => {",
+      "  return (",
+      "    <div className={cn('$2', className)}>",
+      "      $0",
+      "    </div>",
+      "  );",
+      "};"
+    ],
+    "description": "Base FAANG-style React Component"
+  }
+}

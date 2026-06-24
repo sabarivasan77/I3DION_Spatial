@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: i3dion-spatial-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: i3dion_spatial
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d i3dion_spatial']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: i3dion-spatial-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      APP_URL: http://localhost:5173
+      API_URL: http://localhost:4000
+      UPLOAD_DIR: uploads
+      JWT_SECRET: your_super_secret_jwt_key_here
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/i3dion_spatial
+    ports:
+      - '4000:4000'
+    volumes:
+      - ./backend/uploads:/app/backend/uploads
+
+volumes:
+  postgres_data:

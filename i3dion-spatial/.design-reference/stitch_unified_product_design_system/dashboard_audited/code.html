@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .card-shadow {
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "navy-dark": "#0F172A",
+                      "on-secondary-container": "#5c647a",
+                      "gray-100": "#F8FAFC",
+                      "surface-tint": "#0053db",
+                      "surface-container-highest": "#e1e2ed",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-container": "#ffede6",
+                      "on-surface": "#191b23",
+                      "background": "#F8FAFC",
+                      "inverse-primary": "#b4c5ff",
+                      "outline": "#737686",
+                      "on-tertiary-fixed-variant": "#7d2d00",
+                      "on-primary-container": "#eeefff",
+                      "secondary": "#565e74",
+                      "on-primary-fixed-variant": "#003ea8",
+                      "primary-fixed-dim": "#b4c5ff",
+                      "secondary-fixed": "#dae2fd",
+                      "error-container": "#ffdad6",
+                      "on-error": "#ffffff",
+                      "surface-container-low": "#f3f3fe",
+                      "primary-container": "#2563eb",
+                      "gray-200": "#E2E8F0",
+                      "tertiary-container": "#bc4800",
+                      "surface-container": "#ededf9",
+                      "surface-bright": "#faf8ff",
+                      "inverse-surface": "#2e3039",
+                      "warning": "#F59E0B",
+                      "surface": "#ffffff",
+                      "on-surface-variant": "#64748B",
+                      "inverse-on-surface": "#f0f0fb",
+                      "on-primary-fixed": "#00174b",
+                      "tertiary": "#943700",
+                      "error": "#EF4444",
+                      "on-tertiary-fixed": "#360f00",
+                      "on-background": "#191b23",
+                      "secondary-container": "#dae2fd",
+                      "on-secondary-fixed-variant": "#3f465c",
+                      "secondary-fixed-dim": "#bec6e0",
+                      "on-secondary-fixed": "#131b2e",
+                      "surface-dim": "#d9d9e5",
+                      "on-error-container": "#93000a",
+                      "primary-fixed": "#dbe1ff",
+                      "on-primary": "#ffffff",
+                      "primary": "#2563eb",
+                      "outline-variant": "#c3c6d7",
+                      "surface-container-high": "#e7e7f3",
+                      "tertiary-fixed": "#ffdbcd",
+                      "tertiary-fixed-dim": "#ffb596",
+                      "success": "#10B981",
+                      "gray-400": "#94A3B8",
+                      "on-secondary": "#ffffff",
+                      "gray-700": "#334155",
+                      "surface-variant": "#e1e2ed"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.5rem",
+                      "lg": "0.75rem",
+                      "xl": "1rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "2xl": "48px",
+                      "md": "16px",
+                      "4xl": "96px",
+                      "sm": "8px",
+                      "3xl": "64px",
+                      "lg": "24px",
+                      "gutter": "16px",
+                      "xs": "4px",
+                      "margin": "24px",
+                      "base": "8px",
+                      "xl": "32px"
+              },
+              "fontFamily": {
+                      "h2": ["Inter"],
+                      "h3": ["Inter"],
+                      "caption": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "h1-mobile": ["Inter"],
+                      "h1": ["Inter"],
+                      "label": ["Inter"],
+                      "display": ["Inter"],
+                      "h4": ["Inter"],
+                      "body-reg": ["Inter"]
+              },
+              "fontSize": {
+                      "h2": ["30px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                      "h3": ["24px", {"lineHeight": "1.35", "fontWeight": "600"}],
+                      "caption": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                      "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                      "h1-mobile": ["30px", {"lineHeight": "1.25", "fontWeight": "600"}],
+                      "h1": ["36px", {"lineHeight": "1.25", "fontWeight": "600"}],
+                      "label": ["14px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                      "display": ["48px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                      "h4": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                      "body-reg": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background font-body-reg text-on-surface">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-navy-dark border-r border-slate-800 z-50 flex flex-col py-6 px-4 text-white">
+<div class="mb-8 px-2 flex items-center gap-3">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">spatial_tracking</span>
+</div>
+<div>
+<h1 class="text-lg font-bold tracking-tight text-white leading-tight">I3DION Spatial</h1>
+<p class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">Enterprise AR</p>
+</div>
+</div>
+<button class="mb-8 w-full bg-primary hover:bg-blue-600 text-white font-medium text-sm py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all active:scale-95">
+<span class="material-symbols-outlined text-base">add</span>
+        New Visualization
+    </button>
+<nav class="flex-1 space-y-1 sidebar-scroll overflow-y-auto">
+<a class="flex items-center gap-3 bg-slate-800 text-white font-medium rounded-lg px-3 py-2" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="text-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg px-3 py-2 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="text-sm">Products</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg px-3 py-2 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">menu_book</span>
+<span class="text-sm">Catalogs</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg px-3 py-2 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">qr_code_2</span>
+<span class="text-sm">QR Codes</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg px-3 py-2 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">person_search</span>
+<span class="text-sm">Leads</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg px-3 py-2 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">monitoring</span>
+<span class="text-sm">Analytics</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg px-3 py-2 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-sm">Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-slate-800 space-y-1">
+<a class="flex items-center gap-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg px-3 py-2 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">contact_support</span>
+<span class="text-sm">Support</span>
+</a>
+<a class="flex items-center gap-3 text-rose-400 hover:bg-rose-500/10 rounded-lg px-3 py-2 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+<span class="text-sm">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 flex flex-col min-h-screen">
+<!-- Top App Bar -->
+<header class="h-16 bg-white border-b border-gray-200 flex justify-between items-center px-8 sticky top-0 z-40">
+<div class="flex items-center gap-4">
+<div class="relative w-80">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+<input class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" placeholder="Search catalogs, products..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1">
+<button class="material-symbols-outlined p-2 rounded-full hover:bg-slate-100 text-slate-600 relative transition-colors">
+                    notifications
+                    <span class="absolute top-2 right-2.5 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
+</button>
+<button class="material-symbols-outlined p-2 rounded-full hover:bg-slate-100 text-slate-600 transition-colors">help</button>
+</div>
+<div class="h-6 w-[1px] bg-slate-200 mx-1"></div>
+<div class="flex items-center gap-3 pl-2">
+<div class="text-right">
+<p class="text-sm font-semibold text-slate-900">Alex Thorne</p>
+<p class="text-[11px] text-slate-500 font-medium">Admin • Level 4</p>
+</div>
+<img class="w-9 h-9 rounded-full object-cover ring-2 ring-slate-100" data-alt="Alex Thorne Headshot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAp1ovNSEDaoXNi3eQyU3YjLWbdNlHVICHONYxzJZojhIuTROHW4G6iMY4pPVFpgYZY2W-FY0gYHJ8tVSIsBbk62e1bjjvxZTOaCEBFBJHBgFp8dzlsB4INeGwqMfmEi9dFw3RQSWm5d37HHFd-MkRzSFqpS3O_Q6aGUFHoxVYB1w4PE72XNoQua234P3fUQ6l-klBne2UFcxyC_g9kPGC6cmfZY-ivICgi4VQoSkMoVF0z6UYzARCQZ_il4mBYeI1VHYfiVmlmKM2W"/>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="p-8 max-w-[1440px] mx-auto w-full space-y-8 flex-1">
+<!-- Welcome Header -->
+<div class="flex justify-between items-end">
+<div>
+<h2 class="text-3xl font-bold text-slate-900 tracking-tight">Dashboard</h2>
+<p class="text-slate-500 mt-1">Welcome back, here's what's happening with your AR catalog.</p>
+</div>
+<div class="flex gap-3">
+<button class="bg-white border border-slate-200 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+                    Last 30 Days
+                </button>
+<button class="bg-white border border-slate-200 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                    Export
+                </button>
+</div>
+</div>
+<!-- KPI Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+<!-- Card 1 -->
+<div class="bg-white p-6 rounded-xl border border-slate-200 card-shadow">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-blue-50 rounded-lg">
+<span class="material-symbols-outlined text-primary text-[20px]">inventory_2</span>
+</div>
+<span class="text-success text-xs font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-sm">trending_up</span> 12%
+                    </span>
+</div>
+<p class="text-slate-500 text-sm font-medium">Total Products</p>
+<h3 class="text-2xl font-bold text-slate-900 mt-1">1,248</h3>
+</div>
+<!-- Card 2 -->
+<div class="bg-white p-6 rounded-xl border border-slate-200 card-shadow">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-indigo-50 rounded-lg">
+<span class="material-symbols-outlined text-indigo-600 text-[20px]">menu_book</span>
+</div>
+<span class="text-success text-xs font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-sm">trending_up</span> 4%
+                    </span>
+</div>
+<p class="text-slate-500 text-sm font-medium">Total Catalogs</p>
+<h3 class="text-2xl font-bold text-slate-900 mt-1">32</h3>
+</div>
+<!-- Card 3 -->
+<div class="bg-white p-6 rounded-xl border border-slate-200 card-shadow">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-orange-50 rounded-lg">
+<span class="material-symbols-outlined text-orange-600 text-[20px]">qr_code_2</span>
+</div>
+<span class="text-success text-xs font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-sm">trending_up</span> 28%
+                    </span>
+</div>
+<p class="text-slate-500 text-sm font-medium">QR Scans</p>
+<h3 class="text-2xl font-bold text-slate-900 mt-1">15.4k</h3>
+</div>
+<!-- Card 4 -->
+<div class="bg-white p-6 rounded-xl border border-slate-200 card-shadow">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-blue-50 rounded-lg">
+<span class="material-symbols-outlined text-blue-600 text-[20px]">person_search</span>
+</div>
+<span class="text-warning text-xs font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-sm">trending_flat</span> 0.5%
+                    </span>
+</div>
+<p class="text-slate-500 text-sm font-medium">Total Leads</p>
+<h3 class="text-2xl font-bold text-slate-900 mt-1">892</h3>
+</div>
+<!-- Card 5 -->
+<div class="bg-white p-6 rounded-xl border border-slate-200 card-shadow">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-emerald-50 rounded-lg">
+<span class="material-symbols-outlined text-emerald-600 text-[20px]">visibility</span>
+</div>
+<span class="text-success text-xs font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-sm">trending_up</span> 18%
+                    </span>
+</div>
+<p class="text-slate-500 text-sm font-medium">AR Views</p>
+<h3 class="text-2xl font-bold text-slate-900 mt-1">42.1k</h3>
+</div>
+</div>
+<!-- Main Charts and Activity -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Left Column: Analytics -->
+<div class="lg:col-span-8 space-y-8">
+<!-- Line Chart Container -->
+<div class="bg-white border border-slate-200 rounded-xl card-shadow overflow-hidden">
+<div class="p-6 border-b border-slate-100 flex justify-between items-center">
+<div>
+<h4 class="text-lg font-bold text-slate-900">QR Scan Trends</h4>
+<p class="text-xs text-slate-500 mt-0.5">Activity recorded over the last 30 days across all regions.</p>
+</div>
+<div class="flex bg-slate-100 p-1 rounded-lg">
+<button class="px-3 py-1 bg-white shadow-sm rounded-md text-xs font-semibold text-slate-900">Daily</button>
+<button class="px-3 py-1 hover:bg-white/50 rounded-md text-xs font-semibold text-slate-500">Weekly</button>
+</div>
+</div>
+<div class="p-6 h-72 relative">
+<!-- Chart Mockup -->
+<div class="absolute inset-x-6 bottom-6 top-6 flex items-end">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 1000 300">
+<path d="M0,280 Q100,240 200,260 T400,180 T600,220 T800,100 T1000,50" fill="none" stroke="#2563eb" stroke-width="3"></path>
+<path d="M0,280 Q100,240 200,260 T400,180 T600,220 T800,100 T1000,50 L1000,300 L0,300 Z" fill="url(#gradient-blue)" opacity="0.1"></path>
+<defs>
+<lineargradient id="gradient-blue" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#2563eb;stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:#2563eb;stop-opacity:0"></stop>
+</lineargradient>
+</defs>
+</svg>
+</div>
+<!-- Grid Lines -->
+<div class="absolute inset-x-6 bottom-6 top-6 flex flex-col justify-between pointer-events-none">
+<div class="border-b border-slate-100 w-full h-0"></div>
+<div class="border-b border-slate-100 w-full h-0"></div>
+<div class="border-b border-slate-100 w-full h-0"></div>
+<div class="border-b border-slate-100 w-full h-0"></div>
+<div class="border-b border-slate-100 w-full h-0"></div>
+</div>
+</div>
+</div>
+<!-- Secondary Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-white border border-slate-200 rounded-xl card-shadow p-6">
+<h4 class="text-base font-bold text-slate-900 mb-6">Lead Conversion</h4>
+<div class="space-y-5">
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-semibold">
+<span class="text-slate-600">Direct Scans</span>
+<span class="text-primary">64%</span>
+</div>
+<div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 64%"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-semibold">
+<span class="text-slate-600">Catalog Referrals</span>
+<span class="text-slate-500">28%</span>
+</div>
+<div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-slate-400" style="width: 28%"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-semibold">
+<span class="text-slate-600">Manual Entry</span>
+<span class="text-slate-400">8%</span>
+</div>
+<div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-slate-300" style="width: 8%"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white border border-slate-200 rounded-xl card-shadow p-6 flex flex-col justify-center relative overflow-hidden group">
+<div class="relative z-10">
+<h4 class="text-base font-bold text-slate-900 mb-1">Live AR Engine</h4>
+<p class="text-xs text-slate-500 mb-6">System optimization: High Performance</p>
+<div class="flex items-center gap-6">
+<div>
+<p class="text-2xl font-bold text-primary">0.4s</p>
+<p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Avg. Load Time</p>
+</div>
+<div class="h-10 w-[1px] bg-slate-100"></div>
+<div>
+<p class="text-2xl font-bold text-emerald-600">99.9%</p>
+<p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Render Uptime</p>
+</div>
+</div>
+</div>
+<div class="absolute right-[-10px] bottom-[-10px] opacity-[0.03] group-hover:scale-110 transition-transform duration-700">
+<span class="material-symbols-outlined text-[100px] text-primary" style="font-variation-settings: 'FILL' 1;">view_in_ar</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Recent Activity -->
+<div class="lg:col-span-4">
+<div class="bg-white border border-slate-200 rounded-xl card-shadow flex flex-col h-full">
+<div class="p-6 border-b border-slate-100 flex justify-between items-center">
+<h4 class="text-base font-bold text-slate-900">Recent Activity</h4>
+<button class="text-primary text-xs font-semibold hover:underline">View All</button>
+</div>
+<div class="p-6 flex-1 space-y-6 overflow-y-auto">
+<!-- Activity Item 1 -->
+<div class="flex gap-4 relative">
+<div class="absolute left-4 top-8 bottom-[-24px] w-[2px] bg-slate-50"></div>
+<div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 relative z-10">
+<span class="material-symbols-outlined text-[16px] text-primary">person_add</span>
+</div>
+<div>
+<p class="text-sm font-semibold text-slate-900">New lead generated</p>
+<p class="text-xs text-slate-500">Marcus V. scanned "Industrial Drill X2"</p>
+<p class="text-[11px] text-slate-400 mt-1 font-medium">2 mins ago</p>
+</div>
+</div>
+<!-- Activity Item 2 -->
+<div class="flex gap-4 relative">
+<div class="absolute left-4 top-8 bottom-[-24px] w-[2px] bg-slate-50"></div>
+<div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center shrink-0 relative z-10">
+<span class="material-symbols-outlined text-[16px] text-emerald-600">publish</span>
+</div>
+<div>
+<p class="text-sm font-semibold text-slate-900">Catalog Published</p>
+<p class="text-xs text-slate-500">Summer 2024 Heavy Machinery updated</p>
+<p class="text-[11px] text-slate-400 mt-1 font-medium">45 mins ago</p>
+</div>
+</div>
+<!-- Activity Item 3 -->
+<div class="flex gap-4 relative">
+<div class="absolute left-4 top-8 bottom-[-24px] w-[2px] bg-slate-50"></div>
+<div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center shrink-0 relative z-10">
+<span class="material-symbols-outlined text-[16px] text-amber-600">error</span>
+</div>
+<div>
+<p class="text-sm font-semibold text-slate-900">Low stock alert</p>
+<p class="text-xs text-slate-500">Hydraulic Press P14 marked out of stock</p>
+<p class="text-[11px] text-slate-400 mt-1 font-medium">2 hours ago</p>
+</div>
+</div>
+<!-- Activity Item 4 -->
+<div class="flex gap-4">
+<div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0 relative z-10">
+<span class="material-symbols-outlined text-[16px] text-slate-600">edit</span>
+</div>
+<div>
+<p class="text-sm font-semibold text-slate-900">Model Updated</p>
+<p class="text-xs text-slate-500">AR asset "Turbine Fan" polygon optimization</p>
+<p class="text-[11px] text-slate-400 mt-1 font-medium">5 hours ago</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Regional Showcase -->
+<div class="bg-navy-dark text-white rounded-xl overflow-hidden p-0 border border-slate-800 flex flex-col md:flex-row h-72">
+<div class="p-8 md:w-1/2 flex flex-col justify-center">
+<span class="text-blue-400 font-bold text-[10px] uppercase tracking-widest mb-3">Global Impact</span>
+<h3 class="text-2xl font-bold mb-4 tracking-tight">Regional Scan Density</h3>
+<p class="text-slate-400 text-sm leading-relaxed mb-6 max-w-md">Your 3D catalogs are being explored worldwide. Key markets in North America and DACH region show highest AR engagement rates this month.</p>
+<div class="flex gap-10">
+<div>
+<p class="text-2xl font-bold text-white">64%</p>
+<p class="text-[11px] text-slate-500 font-bold uppercase tracking-wide">Engagement</p>
+</div>
+<div>
+<p class="text-2xl font-bold text-white">12</p>
+<p class="text-[11px] text-slate-500 font-bold uppercase tracking-wide">Active Regions</p>
+</div>
+</div>
+</div>
+<div class="md:w-1/2 relative min-h-[150px] bg-slate-900">
+<div class="w-full h-full opacity-40 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC7wyO2FMCIo2l8vRabPFY8-you6KI7_9Xg4w_vepf4vGziYdw24o_KbvNrCaWxRLNz37tEldLsppuY1dyGKpiOa3YTTVH8Ev8d3DFOvqaM9LloftnbAmflbsgqf9mb4BO9wU32qttazbhVzr0WEKMtWEzjvqohysD79U7gTflU-XpUkwqkNY-FRoAzBd1FtY5a9_OeU0Ogqk7g8b2yzaeVl2gF2mHLuIJvYircwJITsLDof1fqAldB_2-2bN5j4BilioSm1RBcaLdu')"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-navy-dark via-transparent to-transparent"></div>
+<!-- Visual Map Nodes (Mock) -->
+<div class="absolute top-1/4 left-1/3 w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_#3b82f6]"></div>
+<div class="absolute top-1/2 right-1/4 w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse delay-75 shadow-[0_0_8px_#60a5fa]"></div>
+<div class="absolute bottom-1/3 left-1/2 w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-150 shadow-[0_0_10px_#3b82f6]"></div>
+</div>
+</div>
+</div>
+</main>
+<script>
+    // Navigation toggle mockup
+    document.querySelectorAll('nav a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('nav a').forEach(el => {
+                el.classList.remove('bg-slate-800', 'text-white', 'font-medium');
+                el.classList.add('text-slate-400');
+            });
+            this.classList.add('bg-slate-800', 'text-white', 'font-medium');
+            this.classList.remove('text-slate-400');
+        });
+    });
+</script>
+</body></html>

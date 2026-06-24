@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Media Upload | I3DION Spatial</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed": "#131b2e",
+                        "inverse-on-surface": "#f0f0fb",
+                        "surface-container-high": "#e7e7f3",
+                        "tertiary": "#943700",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "surface-dim": "#d9d9e5",
+                        "tertiary-fixed": "#ffdbcd",
+                        "on-tertiary-container": "#ffede6",
+                        "primary-fixed": "#dbe1ff",
+                        "warning": "#F59E0B",
+                        "background": "#faf8ff",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#434655",
+                        "on-surface": "#191b23",
+                        "secondary-container": "#dae2fd",
+                        "gray-700": "#334155",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#2563eb",
+                        "on-tertiary-fixed-variant": "#7d2d00",
+                        "inverse-primary": "#b4c5ff",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#dae2fd",
+                        "surface": "#faf8ff",
+                        "surface-variant": "#e1e2ed",
+                        "gray-400": "#94A3B8",
+                        "gray-200": "#E2E8F0",
+                        "surface-container-highest": "#e1e2ed",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "on-tertiary-fixed": "#360f00",
+                        "error": "#EF4444",
+                        "outline-variant": "#c3c6d7",
+                        "error-container": "#ffdad6",
+                        "on-primary-container": "#eeefff",
+                        "surface-bright": "#faf8ff",
+                        "on-primary-fixed": "#00174b",
+                        "secondary": "#565e74",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "outline": "#737686",
+                        "on-background": "#191b23",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "gray-100": "#F8FAFC",
+                        "surface-container-low": "#f3f3fe",
+                        "on-error-container": "#93000a",
+                        "surface-container": "#ededf9",
+                        "tertiary-container": "#bc4800",
+                        "primary": "#004ac6",
+                        "tertiary-fixed-dim": "#ffb596",
+                        "surface-tint": "#0053db",
+                        "inverse-surface": "#2e3039",
+                        "on-secondary-container": "#5c647a",
+                        "on-secondary": "#ffffff",
+                        "success": "#22C55E"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "xs": "4px",
+                        "2xl": "48px",
+                        "4xl": "96px",
+                        "3xl": "64px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "md": "16px",
+                        "margin": "24px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "label": ["Inter"],
+                        "display": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "h1": ["Inter"],
+                        "h2": ["Inter"],
+                        "h1-mobile": ["Inter"],
+                        "h4": ["Inter"],
+                        "body-reg": ["Inter"],
+                        "caption": ["Inter"],
+                        "h3": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label": ["14px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                        "display": ["48px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "h1": ["36px", {"lineHeight": "1.25", "fontWeight": "600"}],
+                        "h2": ["30px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "h1-mobile": ["30px", {"lineHeight": "1.25", "fontWeight": "600"}],
+                        "h4": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "body-reg": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "caption": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                        "h3": ["24px", {"lineHeight": "1.35", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+    </style>
+</head>
+<body class="bg-background font-body-reg text-on-surface min-h-screen flex overflow-hidden">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-lowest border-r border-outline-variant flex flex-col py-lg px-md z-50">
+<div class="mb-xl px-sm flex items-center gap-md">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-on-primary shadow-sm">
+<span class="material-symbols-outlined">view_in_ar</span>
+</div>
+<div>
+<h1 class="font-h4 text-h4 font-bold text-primary tracking-tight">I3DION</h1>
+<p class="text-caption text-on-surface-variant font-medium leading-none">Spatial Enterprise</p>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-xs">
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-md group-hover:text-primary">dashboard</span>
+<span class="font-label text-label">Dashboard</span>
+</a>
+<a class="flex items-center gap-md bg-primary-container text-on-primary-container px-md py-sm rounded-lg shadow-sm" href="#">
+<span class="material-symbols-outlined text-md" style="font-variation-settings: 'FILL' 1">inventory_2</span>
+<span class="font-label text-label font-semibold">Products</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-md group-hover:text-primary">menu_book</span>
+<span class="font-label text-label">Catalogs</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-md group-hover:text-primary">qr_code_2</span>
+<span class="font-label text-label">QR Codes</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-md group-hover:text-primary">person_search</span>
+<span class="font-label text-label">Leads</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-md group-hover:text-primary">monitoring</span>
+<span class="font-label text-label">Analytics</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-md group-hover:text-primary">settings</span>
+<span class="font-label text-label">Settings</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-outline-variant pt-lg flex flex-col gap-xs">
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-md group-hover:text-primary">contact_support</span>
+<span class="font-label text-label">Support</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-md group-hover:text-error">logout</span>
+<span class="font-label text-label">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 ml-64 flex flex-col h-screen overflow-y-auto">
+<!-- Header -->
+<header class="sticky top-0 z-40 bg-surface/80 backdrop-blur-md flex justify-between items-center w-full px-margin h-[72px] border-b border-outline-variant">
+<div class="flex items-center gap-lg">
+<div class="relative w-[400px]">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-full h-11 pl-11 pr-md focus:ring-2 focus:ring-primary focus:border-primary text-body-reg transition-all" placeholder="Search products, files, or tasks..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors relative">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="h-8 w-px bg-outline-variant mx-sm"></div>
+<div class="flex items-center gap-md pl-sm pr-xs py-xs hover:bg-surface-container-low rounded-full cursor-pointer transition-all border border-transparent hover:border-outline-variant">
+<div class="text-right hidden sm:block">
+<p class="font-label text-label font-bold text-on-surface leading-none">Alex Rivera</p>
+<p class="text-[11px] text-on-surface-variant mt-0.5">Admin Role</p>
+</div>
+<img class="w-9 h-9 rounded-full object-cover border-2 border-primary-container" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjOy0AFvSVigIbh4CrQcyFL2OBUDDzeM4TmMmQOyYzmYHDXwHy8TixPdOySuK2qcYlbIAykhEEB-Ybb1k4Obl4V-nQrHb7aHKhKx62-uoTe3BT1cPoolH2Bo5EAl-zJ0R6QbG2OE3_qVmHA9xaLEz9Zbdtceeib_fg9-n0d2BS47kQIDCyWH-hLqR1IQFDhz4LTsLn6i0PgTb6zBqjxtGel5SHxS-zjW2gDjwICfYPwhCWQ-t9oijF3Gklnr3YLvPafp3CHFZi-x0w"/>
+</div>
+</div>
+</header>
+<!-- Wizard Flow Container -->
+<div class="max-w-[1200px] mx-auto w-full px-margin py-xl flex flex-col gap-xl">
+<!-- Step Indicator -->
+<div class="relative px-xl">
+<div class="absolute top-5 left-0 right-0 h-[2px] bg-outline-variant -z-10"></div>
+<div class="absolute top-5 left-0 w-1/2 h-[2px] bg-primary -z-10 transition-all duration-700 ease-in-out"></div>
+<div class="flex justify-between">
+<!-- Completed -->
+<div class="flex flex-col items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary ring-4 ring-background">
+<span class="material-symbols-outlined text-md" style="font-variation-settings: 'FILL' 1">check</span>
+</div>
+<span class="text-caption font-bold text-primary">Basic Info</span>
+</div>
+<!-- Completed -->
+<div class="flex flex-col items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary ring-4 ring-background">
+<span class="material-symbols-outlined text-md" style="font-variation-settings: 'FILL' 1">check</span>
+</div>
+<span class="text-caption font-bold text-primary">Specifications</span>
+</div>
+<!-- Active -->
+<div class="flex flex-col items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-background border-2 border-primary flex items-center justify-center text-primary font-bold ring-4 ring-background shadow-md">3</div>
+<span class="text-caption font-bold text-primary">Media Upload</span>
+</div>
+<!-- Inactive -->
+<div class="flex flex-col items-center gap-sm text-on-surface-variant">
+<div class="w-10 h-10 rounded-full bg-background border-2 border-outline-variant flex items-center justify-center font-bold ring-4 ring-background">4</div>
+<span class="text-caption font-medium">Animations</span>
+</div>
+<!-- Inactive -->
+<div class="flex flex-col items-center gap-sm text-on-surface-variant">
+<div class="w-10 h-10 rounded-full bg-background border-2 border-outline-variant flex items-center justify-center font-bold ring-4 ring-background">5</div>
+<span class="text-caption font-medium">Publish</span>
+</div>
+</div>
+</div>
+<!-- Page Title Area -->
+<div>
+<h2 class="font-h2 text-h2 text-on-surface">Product Media &amp; 3D Assets</h2>
+<p class="text-body-reg text-on-surface-variant mt-xs">Upload, manage, and optimize assets for high-fidelity spatial visualization.</p>
+</div>
+<!-- Main Wizard Card -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+<div class="p-lg grid grid-cols-12 gap-lg">
+<!-- Left: Upload Section -->
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-lg">
+<div class="border-2 border-dashed border-outline-variant rounded-xl bg-surface-container-low p-xl flex flex-col items-center justify-center text-center transition-all hover:border-primary hover:bg-surface-container-high group cursor-pointer min-h-[400px]" id="drop-zone">
+<div class="w-16 h-16 bg-surface-container-lowest rounded-full flex items-center justify-center shadow-sm mb-lg group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl text-primary">cloud_upload</span>
+</div>
+<h3 class="font-h3 text-h3 text-on-surface mb-sm">Drag and drop assets</h3>
+<p class="text-body-reg text-on-surface-variant max-w-sm mb-xl leading-relaxed">
+                                Optimized for <span class="text-on-surface font-semibold">GLB/GLTF</span>. Supports <span class="text-on-surface font-semibold">PNG, JPG,</span> and <span class="text-on-surface font-semibold">PDF</span> documentation.
+                            </p>
+<button class="bg-primary text-on-primary px-xl h-11 rounded-lg font-bold flex items-center gap-md hover:bg-surface-tint shadow-sm transition-colors">
+<span class="material-symbols-outlined text-md">add_circle</span>
+                                Browse Files
+                            </button>
+<p class="mt-xl text-caption text-on-surface-variant">Maximum upload size: 250MB per asset</p>
+</div>
+</div>
+<!-- Right: Info & Queue -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-lg">
+<!-- Guidelines -->
+<div class="bg-surface-container-low rounded-xl p-md border border-outline-variant">
+<div class="flex items-center gap-sm mb-md text-on-surface font-bold">
+<span class="material-symbols-outlined text-primary text-md">lightbulb</span>
+<span class="text-label uppercase tracking-wider">Guidelines</span>
+</div>
+<ul class="space-y-sm">
+<li class="flex gap-md text-caption text-on-surface-variant">
+<span class="material-symbols-outlined text-success text-md">check_circle</span>
+<span>Prefer GLB for AR performance</span>
+</li>
+<li class="flex gap-md text-caption text-on-surface-variant">
+<span class="material-symbols-outlined text-success text-md">check_circle</span>
+<span>Max 50k triangles per model</span>
+</li>
+<li class="flex gap-md text-caption text-on-surface-variant">
+<span class="material-symbols-outlined text-success text-md">check_circle</span>
+<span>Texture resolution &lt; 2048px</span>
+</li>
+<li class="flex gap-md text-caption text-on-surface-variant">
+<span class="material-symbols-outlined text-warning text-md">report</span>
+<span>PBR materials required</span>
+</li>
+</ul>
+</div>
+<!-- Upload Queue -->
+<div class="flex-1 flex flex-col bg-surface-container-low rounded-xl border border-outline-variant overflow-hidden">
+<div class="px-md py-sm bg-surface-container border-b border-outline-variant flex justify-between items-center">
+<span class="text-caption font-bold text-on-surface-variant uppercase tracking-wider">Queue (2)</span>
+<button class="text-[11px] text-primary font-bold hover:underline">Clear All</button>
+</div>
+<div class="p-md flex flex-col gap-md">
+<!-- Item 1 -->
+<div class="flex gap-md">
+<div class="w-10 h-10 shrink-0 bg-primary-container/30 rounded-lg flex items-center justify-center text-primary border border-primary-container/50">
+<span class="material-symbols-outlined text-md">deployed_code</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between mb-1">
+<p class="text-caption font-bold text-on-surface truncate">turbine_assembly.glb</p>
+<span class="text-[10px] font-bold text-success">COMPLETE</span>
+</div>
+<div class="w-full bg-outline-variant rounded-full h-1">
+<div class="bg-success h-1 rounded-full w-full"></div>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1">
+<span class="material-symbols-outlined text-md">delete</span>
+</button>
+</div>
+<!-- Item 2 -->
+<div class="flex gap-md">
+<div class="w-10 h-10 shrink-0 bg-error-container/30 rounded-lg flex items-center justify-center text-error border border-error-container/50">
+<span class="material-symbols-outlined text-md">picture_as_pdf</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between mb-1">
+<p class="text-caption font-bold text-on-surface truncate">safety_specs.pdf</p>
+<span class="text-[10px] font-bold text-primary">45%</span>
+</div>
+<div class="w-full bg-outline-variant rounded-full h-1">
+<div class="bg-primary h-1 rounded-full w-[45%]"></div>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1">
+<span class="material-symbols-outlined text-md">close</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card Footer Controls -->
+<div class="px-lg py-md bg-surface-container border-t border-outline-variant flex justify-between items-center">
+<button class="h-11 px-lg bg-surface-container-lowest border border-outline-variant text-on-surface font-bold rounded-lg flex items-center gap-md hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-md">arrow_back</span>
+                        Back: Specifications
+                    </button>
+<div class="flex items-center gap-md">
+<button class="h-11 px-lg text-on-surface-variant font-bold hover:text-on-surface transition-colors">Save as Draft</button>
+<button class="h-11 px-xl bg-primary text-on-primary font-bold rounded-lg flex items-center gap-md hover:bg-surface-tint shadow-sm transition-colors">
+                            Continue: Animations
+                            <span class="material-symbols-outlined text-md">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Asset Preview Section -->
+<div class="flex flex-col gap-lg">
+<div class="flex items-end justify-between">
+<div>
+<h4 class="font-h4 text-h4 text-on-surface">Asset Preview</h4>
+<p class="text-caption text-on-surface-variant">Real-time visualization of uploaded models.</p>
+</div>
+<div class="flex gap-sm">
+<button class="w-9 h-9 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-md">grid_view</span>
+</button>
+<button class="w-9 h-9 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-md">format_list_bulleted</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-md">
+<!-- Main Preview -->
+<div class="md:col-span-2 md:row-span-2 bg-surface-container-low rounded-xl border border-outline-variant overflow-hidden relative group h-[400px]">
+<img alt="Primary Turbine" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBeqBJtYTITm_aw8TV0xhTFYFrzwecvrsMozHqGXJ5Yf31ipA1507E597y7BVSiOBavutxFcILBbUeqLVx3CEdZOp5JVG2ESNUgjblKkZERBNIx9beSC4tvka3K7kpsSEYBv7Jx8bLFJOYeFRfCmx2EJktPENfB54-9O6DCp45Rt3cnYXVcTyiVwVirfH7fqbXVYH4FCHiZNCjHK1uk5xCSijmsbbx_4BmWCRAMrYzeBA3_ZxSREo4A2lQ7BrpN-9jVF0Id92eywKU"/>
+<div class="absolute inset-0 bg-on-surface/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-lg">
+<button class="w-12 h-12 bg-on-primary text-primary rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+<button class="w-12 h-12 bg-on-primary text-on-surface rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">view_in_ar</span>
+</button>
+</div>
+<div class="absolute top-md left-md bg-primary text-on-primary text-[10px] font-bold px-sm py-1 rounded-full uppercase tracking-widest shadow-sm">Primary Model</div>
+</div>
+<!-- Secondary Preview 1 -->
+<div class="bg-surface-container-low rounded-xl border border-outline-variant overflow-hidden relative group aspect-square">
+<img alt="Detail 1" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcdVeWkDyYIaIHPypvI9Jy5wOPeZsTti2yQLh2IN3u5qHD7KKAnO5n3sMPz1O63zTkXJbSxLyPa7Zr6JUdFoKKC0X-HWczg088u-f2RbYlTP1Yk0CgxN7XSkaQ8Q6Pff3Nld05LbjrrUMi0ioM9Ac0G7Qv6sXce90ojv4cQgdALPRJJJFcUdcUsO4SnyDOsa-_vTLvsYdVkErMR5Ke4spKXBb-SNnS5dDymRdO9dVHSDDIwAK7VflUsGfD5myeht1V-f5A_cBEBgP5"/>
+<div class="absolute inset-0 bg-on-surface/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary">zoom_in</span>
+</div>
+</div>
+<!-- Secondary Preview 2 -->
+<div class="bg-surface-container-low rounded-xl border border-outline-variant overflow-hidden p-md flex flex-col items-center justify-center text-center aspect-square group cursor-pointer relative">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant mb-md group-hover:scale-110 transition-transform">description</span>
+<p class="text-caption font-bold text-on-surface truncate w-full px-sm">Technical_Specs_v2.pdf</p>
+<div class="absolute inset-0 bg-on-surface/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="bg-on-primary text-on-surface px-md py-1.5 rounded-full text-caption font-bold">Open PDF</span>
+</div>
+</div>
+<!-- Optimizer Promo -->
+<div class="md:col-span-2 bg-primary-container/20 rounded-xl border border-primary/20 p-lg flex items-center gap-lg">
+<div class="w-14 h-14 bg-on-primary rounded-xl flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined text-3xl">auto_fix_high</span>
+</div>
+<div>
+<p class="font-label text-label font-bold text-primary">Auto-Optimizer Active</p>
+<p class="text-caption text-on-surface-variant leading-relaxed">Your models are being optimized for low-latency web viewing and AR stability automatically.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Spacer -->
+<div class="h-xl"></div>
+</main>
+<script>
+        // Basic drag & drop UI response
+        const dropZone = document.getElementById('drop-zone');
+        if (dropZone) {
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('border-primary', 'bg-surface-container-high');
+            });
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('border-primary', 'bg-surface-container-high');
+            });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('border-primary', 'bg-surface-container-high');
+                console.log('Files dropped');
+            });
+        }
+    </script>
+</body></html>

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>I3DION Spatial - Catalog Builder</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .card-hover-effect:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed": "#131b2e",
+                        "inverse-on-surface": "#f0f0fb",
+                        "surface-container-high": "#e7e7f3",
+                        "tertiary": "#943700",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "surface-dim": "#d9d9e5",
+                        "tertiary-fixed": "#ffdbcd",
+                        "on-tertiary-container": "#ffede6",
+                        "primary-fixed": "#dbe1ff",
+                        "warning": "#F59E0B",
+                        "background": "#faf8ff",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#434655",
+                        "on-surface": "#191b23",
+                        "secondary-container": "#dae2fd",
+                        "gray-700": "#334155",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#2563eb",
+                        "on-tertiary-fixed-variant": "#7d2d00",
+                        "inverse-primary": "#b4c5ff",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#dae2fd",
+                        "surface": "#faf8ff",
+                        "surface-variant": "#e1e2ed",
+                        "gray-400": "#94A3B8",
+                        "gray-200": "#E2E8F0",
+                        "surface-container-highest": "#e1e2ed",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "on-tertiary-fixed": "#360f00",
+                        "error": "#EF4444",
+                        "outline-variant": "#c3c6d7",
+                        "error-container": "#ffdad6",
+                        "on-primary-container": "#eeefff",
+                        "surface-bright": "#faf8ff",
+                        "on-primary-fixed": "#00174b",
+                        "secondary": "#565e74",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "outline": "#737686",
+                        "on-background": "#191b23",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "gray-100": "#F8FAFC",
+                        "surface-container-low": "#f3f3fe",
+                        "on-error-container": "#93000a",
+                        "surface-container": "#ededf9",
+                        "tertiary-container": "#bc4800",
+                        "primary": "#004ac6",
+                        "tertiary-fixed-dim": "#ffb596",
+                        "surface-tint": "#0053db",
+                        "inverse-surface": "#2e3039",
+                        "on-secondary-container": "#5c647a",
+                        "on-secondary": "#ffffff",
+                        "success": "#22C55E"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "xs": "4px",
+                        "2xl": "48px",
+                        "4xl": "96px",
+                        "3xl": "64px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "md": "16px",
+                        "margin": "24px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "label": ["Inter"],
+                        "display": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "h1": ["Inter"],
+                        "h2": ["Inter"],
+                        "h1-mobile": ["Inter"],
+                        "h4": ["Inter"],
+                        "body-reg": ["Inter"],
+                        "caption": ["Inter"],
+                        "h3": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label": ["14px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                        "display": ["48px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "h1": ["36px", {"lineHeight": "1.25", "fontWeight": "600"}],
+                        "h2": ["30px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "h1-mobile": ["30px", {"lineHeight": "1.25", "fontWeight": "600"}],
+                        "h4": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "body-reg": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "caption": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                        "h3": ["24px", {"lineHeight": "1.35", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-reg overflow-hidden">
+<!-- Top Navigation -->
+<header class="flex justify-between items-center w-full px-margin h-[64px] z-40 bg-white border-b border-gray-200">
+<div class="flex items-center gap-xl">
+<span class="font-h3 text-h3 font-bold text-primary">I3DION Spatial</span>
+<nav class="hidden md:flex items-center gap-md h-full">
+<a class="text-on-surface-variant hover:text-primary transition-colors px-3 py-1 text-label" href="#">Dashboard</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors px-3 py-1 text-label" href="#">Products</a>
+<a class="text-primary font-semibold border-b-2 border-primary h-[64px] flex items-center px-3 text-label" href="#">Catalogs</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors px-3 py-1 text-label" href="#">Analytics</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<button class="flex items-center gap-sm px-4 py-2 text-secondary font-label border border-gray-200 rounded-lg hover:bg-gray-100 transition-all">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+<span>Live Preview</span>
+</button>
+<button class="flex items-center gap-sm px-6 py-2 bg-primary text-on-primary font-label rounded-lg hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]">publish</span>
+<span>Publish Catalog</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant ml-2">
+<img alt="User profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAG1mfPGnJcZKVsNXr5LOh4uHf8eSYxPV12hm5cH-V2wBByBkeEv-0S0qLOCEa4Po85IJ-4jm23ISqEDM9IKwWM9F9ncUDpqH0JigsschuWA4-yPaFgFa-W2xbtBlR70ylt0ouv6Xi3jdXdToXK1BCr8K5tJfoYP_oua8Js3Ig7-MJ4VFPn_62wGlo4pzMKczyrfDfbcA0qoET5mqm5Sodo8NEgSqb9HoHaAAL14C8Ojmqo1E4JdQESo5x9Szap8kz8wvCG8w_YgUMe"/>
+</div>
+</div>
+</header>
+<div class="flex h-[calc(100vh-64px)] overflow-hidden">
+<!-- Left Sidebar: Product Library -->
+<aside class="w-80 flex flex-col bg-white border-r border-gray-200">
+<div class="p-lg space-y-md border-b border-gray-100">
+<h2 class="font-h4 text-h4">Product Library</h2>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+<input class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none text-body-reg transition-all" placeholder="Search components..." type="text"/>
+</div>
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-primary text-on-primary text-[11px] font-bold rounded-full uppercase tracking-wider cursor-pointer">All</span>
+<span class="px-3 py-1 bg-gray-100 text-on-surface-variant text-[11px] font-bold rounded-full border border-transparent uppercase tracking-wider cursor-pointer hover:bg-gray-200">Mechanical</span>
+<span class="px-3 py-1 bg-gray-100 text-on-surface-variant text-[11px] font-bold rounded-full border border-transparent uppercase tracking-wider cursor-pointer hover:bg-gray-200">Electrical</span>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-md space-y-md custom-scrollbar bg-gray-50/50">
+<!-- Library Product Card 1 -->
+<div class="p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-primary cursor-grab transition-all group">
+<div class="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
+<img alt="Actuator X-200" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBssQf6B5prSafXNdtTHSJ0RGjfbw6QzkjNSERR_NK9PFAgDwJkgH-WSmk7MjjSjSioW5TkeiqkndLVAjVh7kAsJpelnYeGuPLiWxnYUizOMTpd9rNBN3rFFUimeEt4desVCeGPZiDtQsrN-Kw6eNCeVqAMPfgv9pWmPK5ngFaJ2CI44Jvqli3Euy6WZ2gpafDlJKAWR87bSh3FGTI9N1C_KNtaORifz561-5zRebgeLhTwGBHBdCAtA50X74eVuOC2J0luTNXNKLdc"/>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label text-on-surface">Actuator X-200</p>
+<p class="text-caption text-outline">Mechanical • 12.4 MB</p>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">add_circle</span>
+</div>
+</div>
+<!-- Library Product Card 2 -->
+<div class="p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-primary cursor-grab transition-all group">
+<div class="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
+<img alt="Power Module PDU" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGJXUYM7zntWFRsMuXxw0jmWUmd-5TuLlcXL3e9nKPQB2_2-iTsf4EROYYxTS0OFv9rxfjxJixgYWanM9gKLDDyu66c5290FnnBlmo7uNBpL4dDCwTUbLcHu3QK5_jD6zUDd7KWIwTLxXo7NQZ6gqJZWIMkzz5WQ7mSkp8_s-6B4Y-z0XgoVsnOBgbLdIgehNUd_LPGCxYwT7mrGNvp8E6L7FoNI61TejYDXE5GrlRiKyzoPd_OPq09E1cm7DOg4-b-6BNjW5NoRnL"/>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label text-on-surface">Power Module PDU</p>
+<p class="text-caption text-outline">Electrical • 8.1 MB</p>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">add_circle</span>
+</div>
+</div>
+<!-- Library Product Card 3 -->
+<div class="p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-primary cursor-grab transition-all group">
+<div class="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
+<img alt="Laser Align L-50" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkX3GgLv7_FS008xExibJaPOrK_d1CCvCJS1B_c0vVNNaRYu-lxmUnHIRk9wwVNy8SznJgFwqbhdSNQjl0ELADfqr5MFjt36WW4JIwB8mWX6Mmu6HPhbaSynJzGNEVvdOb-ZPPGJIlS6zKscpTtEmBJ4IXN0mB96y8isBw0e_tfed9CHvEYfp47CwMbTQDMxnK5WQmtEGmDuRlTD2qz3b2dKObMhMMu0B4KfQpAJz-eFBMxa6XLKwjHqmkraL9TbD7KklnuWsjxsO1"/>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label text-on-surface">Laser Align L-50</p>
+<p class="text-caption text-outline">Optical • 15.2 MB</p>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">add_circle</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content: Workspace -->
+<main class="flex-1 flex flex-col bg-white overflow-hidden">
+<!-- Header for Workspace -->
+<div class="px-xl py-lg border-b border-gray-100 flex justify-between items-center">
+<div class="space-y-1">
+<h1 class="font-h2 text-h2 text-on-surface">Selection Workspace</h1>
+<p class="text-caption text-on-surface-variant">Drag items from the library to build your custom AR catalog.</p>
+</div>
+<div class="flex p-1 bg-gray-100 rounded-lg border border-gray-200">
+<button class="px-3 py-1.5 bg-white shadow-sm rounded-md text-primary flex items-center gap-2 text-label transition-all">
+<span class="material-symbols-outlined text-[18px]">grid_view</span>
+                        Grid
+                    </button>
+<button class="px-3 py-1.5 text-outline hover:text-on-surface flex items-center gap-2 text-label transition-all">
+<span class="material-symbols-outlined text-[18px]">list</span>
+                        List
+                    </button>
+</div>
+</div>
+<!-- The Grid Canvas -->
+<div class="flex-1 overflow-y-auto p-xl custom-scrollbar bg-gray-50/30">
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-xl">
+<!-- Empty State Slot (Droppable) -->
+<div class="border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center p-xl h-64 text-center hover:border-primary hover:bg-white transition-all cursor-pointer group">
+<div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-md group-hover:bg-primary-fixed transition-colors">
+<span class="material-symbols-outlined text-outline group-hover:text-primary">add</span>
+</div>
+<p class="text-label text-on-surface font-semibold">Drop Product Here</p>
+<p class="text-caption text-outline mt-1">Add a new item slot</p>
+</div>
+<!-- Selected Product 1 -->
+<div class="group relative bg-white border border-gray-200 rounded-2xl p-4 shadow-sm card-hover-effect flex flex-col">
+<div class="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+<button class="p-2 bg-white rounded-lg shadow-md text-outline hover:text-error hover:bg-error-container/20 transition-all">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+<button class="p-2 bg-white rounded-lg shadow-md text-outline hover:text-primary transition-all cursor-move">
+<span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+</button>
+</div>
+<div class="aspect-video bg-gray-100 rounded-xl overflow-hidden mb-4 border border-gray-200">
+<img alt="Sensor Hub S1" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7EQ-aG-WzHr8JWAeGPTVkF3zHuOXlI2ZMbW9G302Jl5p68E36MkgCH6XK8TYgB0-iO-q4rhzt_3FrIqA_VuXH-cwEiYHtGNHH9rGM4yUTsmV7JmU8Pi6As1XXyXcTwtGCU42Nm1RTgbj-g0AoOgkjyHmmPjmo6zSvmZvY12jnozNAvXbkEpndLEIz6oHUiyJct5SoAsPoM2TsjU_E-7bFZbHOY0ceb9YPxYuPq9dItubW0H_hcS0n71uSJwJFbcL-u0qeolV8Ie-u"/>
+</div>
+<div class="flex items-center justify-between mb-2">
+<h3 class="font-label text-on-surface text-lg">Sensor Hub S1</h3>
+<span class="px-2 py-0.5 bg-success/10 text-success text-[10px] font-bold rounded-full uppercase">Ready</span>
+</div>
+<div class="mt-auto flex items-center gap-4 text-caption text-outline">
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">view_in_ar</span> 3D Asset</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">qr_code</span> Linked</span>
+</div>
+</div>
+<!-- Selected Product 2 -->
+<div class="group relative bg-white border border-gray-200 rounded-2xl p-4 shadow-sm card-hover-effect flex flex-col">
+<div class="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+<button class="p-2 bg-white rounded-lg shadow-md text-outline hover:text-error transition-all">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+<button class="p-2 bg-white rounded-lg shadow-md text-outline hover:text-primary transition-all">
+<span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+</button>
+</div>
+<div class="aspect-video bg-gray-100 rounded-xl overflow-hidden mb-4 border border-gray-200">
+<img alt="Robotic Joint J-4" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9j9EaDr7xk6uI8O0Tc2Mx14LwRxzBWgxDQw5rqptYIfEWvKxYPbWMUxDVr5zELTNaxyMBP-loJizvxGkK5mZHFb3WcZk7iK1GLUfA-EguRY7N-CI15rx_Xb9xLQaEbwAEElFqKTvKa-GjS_yL00Ujwy4AeHZhNC4hLOOg0tjLxqZW5WPXtc4oPaarMxRYz3AR774dN7wECNqNysJlCU43XvlA3jUSHYJU7LsNP_QtR7-cR-HWb75pnfR2lKgmcecUKiP8HUcBwWkr"/>
+</div>
+<div class="flex items-center justify-between mb-2">
+<h3 class="font-label text-on-surface text-lg">Robotic Joint J-4</h3>
+<span class="px-2 py-0.5 bg-warning/10 text-warning text-[10px] font-bold rounded-full uppercase">Processing</span>
+</div>
+<div class="mt-auto flex items-center gap-4 text-caption text-outline">
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">view_in_ar</span> 3D Asset</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">qr_code</span> Syncing</span>
+</div>
+</div>
+<!-- Selected Product 3 -->
+<div class="group relative bg-white border border-gray-200 rounded-2xl p-4 shadow-sm card-hover-effect flex flex-col">
+<div class="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+<button class="p-2 bg-white rounded-lg shadow-md text-outline hover:text-error transition-all">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+<button class="p-2 bg-white rounded-lg shadow-md text-outline hover:text-primary transition-all">
+<span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+</button>
+</div>
+<div class="aspect-video bg-gray-100 rounded-xl overflow-hidden mb-4 border border-gray-200">
+<img alt="Valve Assembly V2" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgn3cPPdOYurD-giS1Rnm3ikSmRHS89vLZUVmdrxA8O-hnEcL1Xgx9XCxB_pSwn4e4-CxbRxf71Z5ReR3tYFcEYjiPlKaYbWj37YjfCu9NpD2q8sF8SUNfj1FLs0XKYqPqd08S09fPfpldgD5bTAJxSmGFu9frJvM0EjKWnKQWnUuaQsyNHwWbb4-jWiI93yQ6h2Y1qP8RUjq7Z59Byt-JK8AoPEveAqL4Fj9ew3l_Evha2Z-ajuhWqEZ-0WPcp_hqGwPlhHsb-SP0"/>
+</div>
+<div class="flex items-center justify-between mb-2">
+<h3 class="font-label text-on-surface text-lg">Valve Assembly V2</h3>
+<span class="px-2 py-0.5 bg-success/10 text-success text-[10px] font-bold rounded-full uppercase">Ready</span>
+</div>
+<div class="mt-auto flex items-center gap-4 text-caption text-outline">
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">view_in_ar</span> 3D Asset</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">qr_code</span> Linked</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Toolbar -->
+<footer class="p-lg bg-white border-t border-gray-200 flex justify-between items-center z-10">
+<div class="flex items-center gap-xl">
+<div class="flex flex-col">
+<span class="text-caption text-outline">Selected Items</span>
+<span class="font-label text-on-surface font-semibold">3 Products</span>
+</div>
+<div class="w-px h-8 bg-gray-200"></div>
+<div class="flex flex-col">
+<span class="text-caption text-outline">Total Weight</span>
+<span class="font-label text-on-surface font-semibold">35.7 MB</span>
+</div>
+</div>
+<div class="flex gap-md">
+<button class="px-5 py-2.5 text-secondary font-label bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">Discard Draft</button>
+<button class="px-5 py-2.5 bg-secondary text-white font-label rounded-lg hover:bg-on-secondary-fixed-variant transition-all shadow-sm">Save Progress</button>
+</div>
+</footer>
+</main>
+<!-- Right Sidebar: Properties -->
+<aside class="w-80 flex flex-col bg-white border-l border-gray-200">
+<div class="p-lg border-b border-gray-100">
+<h3 class="font-label text-on-surface text-lg font-bold">Catalog Settings</h3>
+<p class="text-caption text-outline">Global visualization parameters</p>
+</div>
+<div class="flex-1 overflow-y-auto p-lg space-y-xl custom-scrollbar">
+<div class="space-y-sm">
+<label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Catalog Name</label>
+<input class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" type="text" value="Q4 Industrial Parts"/>
+</div>
+<div class="space-y-sm">
+<label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">AR Environment</label>
+<div class="relative">
+<select class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none appearance-none transition-all cursor-pointer">
+<option>Industrial Factory (Default)</option>
+<option>Warehouse Dark</option>
+<option>Outdoor Bright</option>
+<option>Studio Neutral</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-outline">expand_more</span>
+</div>
+</div>
+<div class="space-y-md">
+<label class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Interactions</label>
+<div class="space-y-sm">
+<label class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer border border-transparent transition-all">
+<input checked="" class="w-5 h-5 rounded text-primary focus:ring-primary border-gray-300" type="checkbox"/>
+<span class="text-label text-on-surface">Exploded View</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer border border-transparent transition-all">
+<input checked="" class="w-5 h-5 rounded text-primary focus:ring-primary border-gray-300" type="checkbox"/>
+<span class="text-label text-on-surface">Technical Specs Overlay</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer border border-transparent transition-all">
+<input class="w-5 h-5 rounded text-primary focus:ring-primary border-gray-300" type="checkbox"/>
+<span class="text-label text-on-surface">Price Display</span>
+</label>
+</div>
+</div>
+<div class="p-lg bg-primary-container/10 rounded-2xl border border-primary-container/20">
+<div class="flex items-center gap-3 mb-2 text-primary">
+<span class="material-symbols-outlined text-[24px]">qr_code_2</span>
+<span class="font-label font-bold">Live Sync</span>
+</div>
+<p class="text-caption text-on-surface-variant mb-4">Instant mobile testing via temporary QR sync.</p>
+<button class="w-full py-2.5 bg-primary text-on-primary font-label rounded-lg hover:bg-primary/90 transition-all shadow-sm">Generate Test QR</button>
+</div>
+</div>
+</aside>
+</div>
+<script>
+        // Library interaction
+        document.querySelectorAll('.cursor-grab').forEach(item => {
+            item.addEventListener('click', () => {
+                const name = item.querySelector('.font-label').innerText;
+                console.log('Interaction: Selecting ' + name);
+            });
+        });
+
+        // Focus styling
+        document.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('focus', () => {
+                el.classList.add('bg-white');
+                el.classList.remove('bg-gray-50');
+            });
+            el.addEventListener('blur', () => {
+                el.classList.remove('bg-white');
+                el.classList.add('bg-gray-50');
+            });
+        });
+    </script>
+</body></html>

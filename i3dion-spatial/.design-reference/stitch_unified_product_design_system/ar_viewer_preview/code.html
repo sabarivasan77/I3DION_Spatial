@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>I3DION Spatial - AR Viewer Preview</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#5c647a",
+                    "gray-100": "#F8FAFC",
+                    "surface-tint": "#0053db",
+                    "surface-container-highest": "#e1e2ed",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-container": "#ffede6",
+                    "on-surface": "#191b23",
+                    "background": "#faf8ff",
+                    "inverse-primary": "#b4c5ff",
+                    "outline": "#737686",
+                    "on-tertiary-fixed-variant": "#7d2d00",
+                    "on-primary-container": "#eeefff",
+                    "secondary": "#565e74",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "primary-fixed-dim": "#b4c5ff",
+                    "secondary-fixed": "#dae2fd",
+                    "error-container": "#ffdad6",
+                    "on-error": "#ffffff",
+                    "surface-container-low": "#f3f3fe",
+                    "primary-container": "#2563eb",
+                    "gray-200": "#E2E8F0",
+                    "tertiary-container": "#bc4800",
+                    "surface-container": "#ededf9",
+                    "surface-bright": "#faf8ff",
+                    "inverse-surface": "#2e3039",
+                    "warning": "#F59E0B",
+                    "surface": "#faf8ff",
+                    "on-surface-variant": "#434655",
+                    "inverse-on-surface": "#f0f0fb",
+                    "on-primary-fixed": "#00174b",
+                    "tertiary": "#943700",
+                    "error": "#EF4444",
+                    "on-tertiary-fixed": "#360f00",
+                    "on-background": "#191b23",
+                    "secondary-container": "#dae2fd",
+                    "on-secondary-fixed-variant": "#3f465c",
+                    "secondary-fixed-dim": "#bec6e0",
+                    "on-secondary-fixed": "#131b2e",
+                    "surface-dim": "#d9d9e5",
+                    "on-error-container": "#93000a",
+                    "primary-fixed": "#dbe1ff",
+                    "on-primary": "#ffffff",
+                    "primary": "#004ac6",
+                    "outline-variant": "#c3c6d7",
+                    "surface-container-high": "#e7e7f3",
+                    "tertiary-fixed": "#ffdbcd",
+                    "tertiary-fixed-dim": "#ffb596",
+                    "success": "#22C55E",
+                    "gray-400": "#94A3B8",
+                    "on-secondary": "#ffffff",
+                    "gray-700": "#334155",
+                    "surface-variant": "#e1e2ed"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "2xl": "48px",
+                    "md": "16px",
+                    "4xl": "96px",
+                    "sm": "8px",
+                    "3xl": "64px",
+                    "lg": "24px",
+                    "gutter": "16px",
+                    "xs": "4px",
+                    "margin": "24px",
+                    "base": "8px",
+                    "xl": "32px"
+            },
+            "fontFamily": {
+                    "h2": ["Inter"],
+                    "h3": ["Inter"],
+                    "caption": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "h1-mobile": ["Inter"],
+                    "h1": ["Inter"],
+                    "label": ["Inter"],
+                    "display": ["Inter"],
+                    "h4": ["Inter"],
+                    "body-reg": ["Inter"]
+            },
+            "fontSize": {
+                    "h2": ["30px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "h3": ["24px", {"lineHeight": "1.35", "fontWeight": "600"}],
+                    "caption": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "h1-mobile": ["30px", {"lineHeight": "1.25", "fontWeight": "600"}],
+                    "h1": ["36px", {"lineHeight": "1.25", "fontWeight": "600"}],
+                    "label": ["14px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                    "display": ["48px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "h4": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "body-reg": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(248, 250, 252, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .ar-viewport {
+            cursor: grab;
+        }
+        .ar-viewport:active {
+            cursor: grabbing;
+        }
+        .hotspot-pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(0, 74, 198, 0.7); }
+            70% { transform: scale(1.2); opacity: 0.8; box-shadow: 0 0 0 15px rgba(0, 74, 198, 0); }
+            100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(0, 74, 198, 0); }
+        }
+        .float-info {
+            animation: float 4s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-body-reg text-on-surface h-screen overflow-hidden">
+<!-- AR VIEWPORT (The main canvas) -->
+<main class="relative w-full h-full bg-surface-dim ar-viewport group overflow-hidden">
+<!-- Background Mock (The AR environment) -->
+<div class="absolute inset-0 z-0">
+<div class="w-full h-full object-cover opacity-60" data-alt="A high-resolution wide-angle view of a clean, modern industrial manufacturing floor with polished concrete floors and bright overhead LED lighting. Soft sunlight filters through large high-altitude windows. The scene is slightly blurred to serve as a background for a 3D model, maintaining the professional industrial SaaS aesthetic with cool blue and grey tones." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBpkIBMTdJj6Xbaq8O-xmkpubkRzuzxggPnb9OsO-ysOTKvPXc9vQYR0tzFKrcqRZJPi6_7gUd0YArhL8iq2l4WWN4OU06LdvTPcgBlcdFL9YtrNG4vH18Fs8gjGp4ogZ1jdcTPefJX9SKi9w7fMJGHYTXzx-A1qa0GBfFy1u5wNi-z1mMN0yeSg_KXrTfh2p_3Lk8pFHmOKXUBlW9xp7DLuqPeE7mw8Z6DEchDN8OvBSfuaIuafDwVwaPK5ZZpmVq4NzVvGyo2T7Nq')"></div>
+</div>
+<!-- 3D Model Placeholder Container -->
+<div class="absolute inset-0 flex items-center justify-center z-10">
+<div class="relative w-[800px] h-[600px] flex items-center justify-center">
+<!-- Main Industrial Machine Model Image -->
+<img class="max-w-full max-h-full drop-shadow-2xl" data-alt="A photorealistic 3D rendering of a high-tech industrial turbine engine assembly. The machine is composed of brushed stainless steel, dark carbon fiber panels, and intricate copper wiring. It is displayed in a 3/4 perspective, floating slightly above a digital grid. The lighting is dramatic and precise, highlighting the metallic textures and complex internal components, fitting a premium AR catalog visualization." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGZe_BoWX7veTdnCIDkf5sySPITv37kpfXUJEnrr8Z39jRoCFIFxuznranZghTqCz7En8qvWo_w9tffIlBOors0H37Hj1TW-2hirsEBGkPMnsE1Tcgaz6eJO__tvlbiuAyA2yPz8FzMW724qpXZYbTOtAe2HDFQ6hktt2AZP0uw4HtKbOcWEhsuryZJx_VLVB_wCOraZJ0G_UaFUK_tdw8bnusZFN44sUdTTpZTBG97LrU0dJCxs7gZCKXBAx6fzy57eEzbVi6T_HW"/>
+<!-- Interactive Hotspot -->
+<div class="absolute top-[40%] right-[35%] z-20">
+<button class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white hotspot-pulse shadow-lg transition-transform hover:scale-110 active:scale-95" onclick="toggleHotspot()">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">add</span>
+</button>
+<!-- Info Card (Appears near hotspot) -->
+<div class="float-info absolute left-10 -top-12 w-64 glass-panel border border-gray-200 rounded-xl p-lg shadow-xl transition-all duration-300 transform origin-left" id="hotspot-card">
+<div class="flex justify-between items-start mb-sm">
+<span class="font-h4 text-h4 text-primary">Core Assembly</span>
+<span class="material-symbols-outlined text-success" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<p class="font-caption text-caption text-on-surface-variant mb-md">
+                            High-pressure turbine stage utilizing advanced ceramic matrix composites for extreme thermal resistance.
+                        </p>
+<div class="flex gap-sm">
+<div class="bg-primary-container/10 px-sm py-xs rounded-full border border-primary/20">
+<span class="font-label text-[10px] text-primary font-bold">SERIAL: XR-904</span>
+</div>
+<div class="bg-warning/10 px-sm py-xs rounded-full border border-warning/20">
+<span class="font-label text-[10px] text-warning font-bold">MAINTENANCE DUE</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Ground Grid for AR reference -->
+<div class="absolute bottom-0 w-[120%] h-40 bg-[radial-gradient(circle,rgba(0,74,198,0.1)_1px,transparent_1px)] bg-[size:40px_40px] [transform:rotateX(75deg)] -z-10"></div>
+</div>
+</div>
+<!-- Top Navigation Bar (JSON Shell Implementation) -->
+<header class="absolute top-0 left-0 right-0 z-40 flex justify-between items-center w-full px-margin h-[64px] bg-transparent pointer-events-none">
+<div class="flex items-center gap-md pointer-events-auto">
+<button class="w-10 h-10 rounded-lg flex items-center justify-center bg-surface border border-gray-200 text-on-surface hover:bg-gray-100 transition-colors shadow-sm active:scale-95">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="glass-panel px-lg py-sm rounded-xl border border-gray-200 shadow-sm">
+<span class="font-h4 text-h4 font-bold text-primary">I3DION Spatial</span>
+<span class="mx-sm text-outline-variant">|</span>
+<span class="font-body-reg text-body-reg text-on-surface-variant">Industrial Turbine XR-7</span>
+</div>
+</div>
+<div class="flex items-center gap-md pointer-events-auto">
+<button class="flex items-center gap-sm px-lg h-10 rounded-lg bg-surface border border-gray-200 font-label text-label hover:bg-gray-100 transition-colors shadow-sm active:scale-95">
+<span class="material-symbols-outlined">share</span>
+<span>Share View</span>
+</button>
+<div class="w-10 h-10 rounded-full border-2 border-primary overflow-hidden shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Professional headshot of a female industrial engineer in a bright tech office, wearing a dark blue blazer. The image has a clean, high-contrast look consistent with enterprise software profile pictures." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYqWDZskiJ59l3l507e9fq7WMmuhusTpO0I0hpFYGj3ZmwCXabXWaTz-x8aILy9tfPjOqn0vrk1eExmGOtuTM0duMNik3BTcBUkEV4u73S_8RgyW4e3EZqXSJYU48URF7bi1qPleSUYFEvS0rnosr18rws13tcMPVIWij5sp9YcDQ801eKfTiRAhrVfvvsy_AwgzZHD66U68Rip0l9Iu1847IhASpc85UECvYlwNsgoQESORi1p6bRYpfgrdQfqixP0Ru5HEp109p1"/>
+</div>
+</div>
+</header>
+<!-- Right Side Stats Panel -->
+<aside class="absolute right-margin top-[100px] z-30 w-64 pointer-events-none">
+<div class="glass-panel p-lg rounded-xl border border-gray-200 shadow-xl pointer-events-auto space-y-lg">
+<div>
+<span class="font-label text-label text-outline mb-xs block">Model Integrity</span>
+<div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+<div class="w-[94%] h-full bg-success"></div>
+</div>
+<div class="flex justify-between mt-xs">
+<span class="font-caption text-caption font-bold">94%</span>
+<span class="font-caption text-caption text-on-surface-variant">42.8 MB</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-sm">
+<div class="bg-surface-container rounded-lg p-sm">
+<span class="font-label text-[10px] text-outline uppercase">Polygons</span>
+<p class="font-h4 text-h4">1.2M</p>
+</div>
+<div class="bg-surface-container rounded-lg p-sm">
+<span class="font-label text-[10px] text-outline uppercase">Draw Calls</span>
+<p class="font-h4 text-h4">84</p>
+</div>
+</div>
+<button class="w-full py-sm bg-primary-container text-white rounded-lg font-label text-label hover:opacity-90 transition-opacity active:scale-95">
+                    Show Annotations
+                </button>
+</div>
+</aside>
+<!-- Bottom Controls (Floating AR Toolbar) -->
+<div class="absolute bottom-margin left-1/2 -translate-x-1/2 z-40 flex items-end gap-lg">
+<!-- Transform Toolbar -->
+<nav class="glass-panel flex items-center p-sm rounded-2xl border border-gray-200 shadow-2xl">
+<div class="flex items-center gap-xs">
+<button class="control-btn group active" data-action="move">
+<span class="material-symbols-outlined">open_with</span>
+<span class="tooltip">Move</span>
+</button>
+<button class="control-btn group" data-action="rotate">
+<span class="material-symbols-outlined">sync</span>
+<span class="tooltip">Rotate</span>
+</button>
+<button class="control-btn group" data-action="scale">
+<span class="material-symbols-outlined">zoom_out_map</span>
+<span class="tooltip">Scale</span>
+</button>
+<div class="w-px h-8 bg-gray-200 mx-xs"></div>
+<button class="control-btn group" id="lock-btn" onclick="toggleLock()">
+<span class="material-symbols-outlined" id="lock-icon">lock_open</span>
+<span class="tooltip">Lock Position</span>
+</button>
+<button class="control-btn group text-error hover:bg-error-container/20">
+<span class="material-symbols-outlined">restart_alt</span>
+<span class="tooltip">Reset View</span>
+</button>
+</div>
+</nav>
+<!-- AR Toggle Button (Right Side of bottom) -->
+<button class="h-16 w-16 rounded-full bg-primary flex flex-col items-center justify-center text-white shadow-2xl hover:bg-surface-tint transition-all active:scale-90 group">
+<span class="material-symbols-outlined text-[32px]">view_in_ar</span>
+<span class="font-label text-[10px] font-bold">VIEW IN SPACE</span>
+</button>
+</div>
+<!-- Left Side Viewport Controls -->
+<div class="absolute left-margin bottom-margin z-30 flex flex-col gap-sm">
+<div class="glass-panel flex flex-col rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+<button class="p-md hover:bg-gray-100 transition-colors border-b border-gray-200">
+<span class="material-symbols-outlined text-on-surface-variant">videocam</span>
+</button>
+<button class="p-md hover:bg-gray-100 transition-colors border-b border-gray-200">
+<span class="material-symbols-outlined text-on-surface-variant">photo_camera</span>
+</button>
+<button class="p-md hover:bg-gray-100 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">view_quilt</span>
+</button>
+</div>
+</div>
+</main>
+<style>
+        /* Custom styles for the interactive toolbar buttons */
+        .control-btn {
+            @apply relative w-12 h-12 flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-gray-100 transition-all active:scale-95;
+        }
+        .control-btn.active {
+            @apply bg-primary-container text-white shadow-md;
+        }
+        .tooltip {
+            @apply absolute -top-12 left-1/2 -translate-x-1/2 px-sm py-xs bg-inverse-surface text-inverse-on-surface text-[11px] rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap;
+        }
+        .tooltip::after {
+            content: '';
+            @apply absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-inverse-surface;
+        }
+    </style>
+<script>
+        // Micro-interactions for the UI
+        function toggleHotspot() {
+            const card = document.getElementById('hotspot-card');
+            if (card.classList.contains('opacity-0')) {
+                card.classList.remove('opacity-0', 'invisible', 'scale-95');
+                card.classList.add('opacity-100', 'visible', 'scale-100');
+            } else {
+                card.classList.add('opacity-0', 'invisible', 'scale-95');
+                card.classList.remove('opacity-100', 'visible', 'scale-100');
+            }
+        }
+
+        let isLocked = false;
+        function toggleLock() {
+            isLocked = !isLocked;
+            const icon = document.getElementById('lock-icon');
+            const btn = document.getElementById('lock-btn');
+            
+            if (isLocked) {
+                icon.innerText = 'lock';
+                btn.classList.add('bg-warning/20', 'text-warning');
+            } else {
+                icon.innerText = 'lock_open';
+                btn.classList.remove('bg-warning/20', 'text-warning');
+            }
+        }
+
+        // Active state handling for transform controls
+        const controlButtons = document.querySelectorAll('.control-btn[data-action]');
+        controlButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                controlButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // Simulation for "3D dragging" cursor change
+        const viewport = document.querySelector('.ar-viewport');
+        viewport.addEventListener('mousedown', () => {
+            if(!isLocked) viewport.style.cursor = 'grabbing';
+        });
+        viewport.addEventListener('mouseup', () => {
+            viewport.style.cursor = 'grab';
+        });
+    </script>
+</body></html>

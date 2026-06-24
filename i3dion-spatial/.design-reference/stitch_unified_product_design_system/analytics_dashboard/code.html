@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>I3DION Spatial - Analytics Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#5c647a",
+                        "gray-100": "#F8FAFC",
+                        "surface-tint": "#0053db",
+                        "surface-container-highest": "#e1e2ed",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-container": "#ffede6",
+                        "on-surface": "#191b23",
+                        "background": "#faf8ff",
+                        "inverse-primary": "#b4c5ff",
+                        "outline": "#737686",
+                        "on-tertiary-fixed-variant": "#7d2d00",
+                        "on-primary-container": "#eeefff",
+                        "secondary": "#565e74",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "secondary-fixed": "#dae2fd",
+                        "error-container": "#ffdad6",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#f3f3fe",
+                        "primary-container": "#2563eb",
+                        "gray-200": "#E2E8F0",
+                        "tertiary-container": "#bc4800",
+                        "surface-container": "#ededf9",
+                        "surface-bright": "#faf8ff",
+                        "inverse-surface": "#2e3039",
+                        "warning": "#F59E0B",
+                        "surface": "#faf8ff",
+                        "on-surface-variant": "#434655",
+                        "inverse-on-surface": "#f0f0fb",
+                        "on-primary-fixed": "#00174b",
+                        "tertiary": "#943700",
+                        "error": "#EF4444",
+                        "on-tertiary-fixed": "#360f00",
+                        "on-background": "#191b23",
+                        "secondary-container": "#dae2fd",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "on-secondary-fixed": "#131b2e",
+                        "surface-dim": "#d9d9e5",
+                        "on-error-container": "#93000a",
+                        "primary-fixed": "#dbe1ff",
+                        "on-primary": "#ffffff",
+                        "primary": "#004ac6",
+                        "outline-variant": "#c3c6d7",
+                        "surface-container-high": "#e7e7f3",
+                        "tertiary-fixed": "#ffdbcd",
+                        "tertiary-fixed-dim": "#ffb596",
+                        "success": "#22C55E",
+                        "gray-400": "#94A3B8",
+                        "on-secondary": "#ffffff",
+                        "gray-700": "#334155",
+                        "surface-variant": "#e1e2ed"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "2xl": "48px",
+                        "md": "16px",
+                        "4xl": "96px",
+                        "sm": "8px",
+                        "3xl": "64px",
+                        "lg": "24px",
+                        "gutter": "16px",
+                        "xs": "4px",
+                        "margin": "24px",
+                        "base": "8px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "h2": ["Inter"], "h3": ["Inter"], "caption": ["Inter"], "body-lg": ["Inter"], "h1-mobile": ["Inter"], "h1": ["Inter"], "label": ["Inter"], "display": ["Inter"], "h4": ["Inter"], "body-reg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "h2": ["30px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "h3": ["24px", {"lineHeight": "1.35", "fontWeight": "600"}],
+                        "caption": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "h1-mobile": ["30px", {"lineHeight": "1.25", "fontWeight": "600"}],
+                        "h1": ["36px", {"lineHeight": "1.25", "fontWeight": "600"}],
+                        "label": ["14px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                        "display": ["48px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "h4": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "body-reg": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .chart-bar-hover:hover {
+            filter: brightness(1.1);
+        }
+        .metric-card {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+        }
+    </style>
+</head>
+<body class="bg-background font-body-reg text-on-surface">
+<!-- TopNavBar Shell -->
+<header class="flex justify-between items-center w-full px-margin h-[64px] z-40 bg-surface fixed top-0 border-b border-gray-200">
+<div class="flex items-center gap-4">
+<span class="font-h3 text-h3 font-bold text-primary">I3DION Spatial</span>
+<div class="hidden md:flex ml-8 gap-6">
+<a class="text-on-surface-variant font-label text-label hover:bg-surface-container-low transition-colors px-2 py-1 cursor-pointer">Dashboard</a>
+<a class="text-primary font-semibold border-b-2 border-primary font-label text-label px-2 py-1 cursor-pointer">Analytics</a>
+<a class="text-on-surface-variant font-label text-label hover:bg-surface-container-low transition-colors px-2 py-1 cursor-pointer">Settings</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-body-reg">search</span>
+<input class="h-10 pl-10 pr-4 rounded-lg border border-gray-200 bg-surface-container-low focus:ring-2 focus:ring-primary focus:border-transparent outline-none w-64 text-label" placeholder="Search data..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-outline cursor-pointer active:opacity-80">notifications</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200">
+<img class="w-full h-full object-cover" data-alt="A professional business headshot of a user in a modern industrial setting, clean studio lighting, high resolution portrait for an enterprise software profile image, professional and approachable expression." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjkj9eXhl9sZlxArTENW4ycDZn8Nl8J_QmoT4QeMLPQdqBZF2RNcT7ctTIW1lmGdc71elJAzdj1eu3eCsykH47CkewCF_-6LppS0MfQLiHu4HIb0aLPDX0fUAIGLJfqtHLfCHPiIYH-eLcO6160oxiAcRGamKf1B9-RX-NHK3F0L-fFL8xuTxTUCvSFu2Y1TRKSKoYY64CwHsfZY53bQIycfF9Di167L2ydJW9mMLPGaTDvJ3cLIEcWfkbYgTsrBrWOd-zSCKBF0Zc"/>
+</div>
+</div>
+</header>
+<div class="flex pt-[64px] min-h-screen">
+<!-- SideNavBar Shell -->
+<nav class="hidden md:flex flex-col h-[calc(100vh-64px)] py-6 px-4 fixed left-0 w-64 bg-gray-100 border-r border-gray-200">
+<div class="flex flex-col gap-1 flex-1">
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-gray-200 rounded-lg transition-all font-label text-label cursor-pointer">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-gray-200 rounded-lg transition-all font-label text-label cursor-pointer">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Products</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-gray-200 rounded-lg transition-all font-label text-label cursor-pointer">
+<span class="material-symbols-outlined">menu_book</span>
+<span>Catalogs</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-gray-200 rounded-lg transition-all font-label text-label cursor-pointer">
+<span class="material-symbols-outlined">qr_code_2</span>
+<span>QR Codes</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-gray-200 rounded-lg transition-all font-label text-label cursor-pointer">
+<span class="material-symbols-outlined">person_search</span>
+<span>Leads</span>
+</a>
+<a class="flex items-center gap-3 bg-secondary-container text-on-secondary-fixed font-semibold rounded-lg px-3 py-2 transition-all font-label text-label cursor-pointer">
+<span class="material-symbols-outlined">monitoring</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-gray-200 rounded-lg transition-all font-label text-label cursor-pointer">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</div>
+<div class="mt-auto border-t border-gray-200 pt-4 flex flex-col gap-1">
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-gray-200 rounded-lg transition-all font-label text-label cursor-pointer">
+<span class="material-symbols-outlined">contact_support</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-gray-200 rounded-lg transition-all font-label text-label cursor-pointer">
+<span class="material-symbols-outlined">logout</span>
+<span>Sign Out</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 p-lg">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-xl gap-4">
+<div>
+<h1 class="font-h1 text-h1 text-on-surface">Spatial Analytics</h1>
+<p class="text-on-surface-variant font-body-reg">Performance insights for your industrial AR ecosystem.</p>
+</div>
+<div class="flex gap-3">
+<div class="flex items-center gap-2 bg-surface border border-gray-200 rounded-lg px-4 h-10 font-label text-label cursor-pointer hover:bg-gray-100">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+<span>Last 30 Days</span>
+<span class="material-symbols-outlined text-[18px]">expand_more</span>
+</div>
+<button class="bg-primary text-on-primary h-10 px-lg rounded-lg font-label text-label hover:opacity-90 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span>Export Report</span>
+</button>
+</div>
+</div>
+<!-- Bento Grid - Primary Metrics -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-xl">
+<div class="metric-card bg-white p-lg rounded-xl flex flex-col justify-between border border-gray-200">
+<div>
+<div class="flex justify-between items-start mb-2">
+<span class="text-on-surface-variant font-label text-label">Total AR Sessions</span>
+<span class="text-success flex items-center font-label text-caption">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+                                12.5%
+                            </span>
+</div>
+<h2 class="font-h2 text-h2">24,892</h2>
+</div>
+<div class="mt-4 h-1 bg-gray-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[75%] rounded-full"></div>
+</div>
+</div>
+<div class="metric-card bg-white p-lg rounded-xl flex flex-col justify-between border border-gray-200">
+<div>
+<div class="flex justify-between items-start mb-2">
+<span class="text-on-surface-variant font-label text-label">QR Scan Rate</span>
+<span class="text-success flex items-center font-label text-caption">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+                                8.2%
+                            </span>
+</div>
+<h2 class="font-h2 text-h2">15,403</h2>
+</div>
+<div class="mt-4 h-1 bg-gray-100 rounded-full overflow-hidden">
+<div class="h-full bg-warning w-[60%] rounded-full"></div>
+</div>
+</div>
+<div class="metric-card bg-white p-lg rounded-xl flex flex-col justify-between border border-gray-200">
+<div>
+<div class="flex justify-between items-start mb-2">
+<span class="text-on-surface-variant font-label text-label">Avg. Session Time</span>
+<span class="text-error flex items-center font-label text-caption">
+<span class="material-symbols-outlined text-[14px]">trending_down</span>
+                                2.1%
+                            </span>
+</div>
+<h2 class="font-h2 text-h2">4m 32s</h2>
+</div>
+<div class="mt-4 h-1 bg-gray-100 rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[85%] rounded-full"></div>
+</div>
+</div>
+<div class="metric-card bg-primary-container text-on-primary-container p-lg rounded-xl flex flex-col justify-between shadow-lg">
+<div>
+<div class="flex justify-between items-start mb-2">
+<span class="opacity-80 font-label text-label">Conversion (AR to Lead)</span>
+<span class="flex items-center font-label text-caption">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+                                5.4%
+                            </span>
+</div>
+<h2 class="font-h2 text-h2">18.2%</h2>
+</div>
+<div class="mt-4 h-1 bg-white/20 rounded-full overflow-hidden">
+<div class="h-full bg-white w-[40%] rounded-full"></div>
+</div>
+</div>
+</div>
+<!-- Visualization Row 1: Main Engagement -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-xl">
+<!-- Session Engagement Chart -->
+<div class="lg:col-span-2 bg-white p-lg rounded-xl border border-gray-200 flex flex-col h-[400px]">
+<div class="flex justify-between items-center mb-lg">
+<h3 class="font-h4 text-h4">Engagement Over Time</h3>
+<div class="flex gap-2">
+<span class="flex items-center gap-1 font-label text-caption"><span class="w-3 h-3 rounded-full bg-primary"></span> AR Sessions</span>
+<span class="flex items-center gap-1 font-label text-caption"><span class="w-3 h-3 rounded-full bg-secondary"></span> Leads</span>
+</div>
+</div>
+<div class="flex-1 flex items-end justify-between gap-2 px-4 relative">
+<!-- Chart Lines (Simulated with div strips) -->
+<div class="absolute inset-x-4 inset-y-0 border-b border-gray-100 flex flex-col justify-between py-2 pointer-events-none">
+<div class="border-t border-gray-100 w-full h-0"></div>
+<div class="border-t border-gray-100 w-full h-0"></div>
+<div class="border-t border-gray-100 w-full h-0"></div>
+<div class="border-t border-gray-100 w-full h-0"></div>
+</div>
+<!-- Bar chart columns -->
+<div class="flex-1 group relative flex flex-col items-center justify-end h-full">
+<div class="w-full bg-primary/20 rounded-t-sm h-[40%] chart-bar-hover transition-all"></div>
+<div class="w-full bg-primary rounded-t-sm h-[20%] -mt-1 chart-bar-hover transition-all"></div>
+<span class="mt-2 font-label text-caption opacity-60">Mon</span>
+</div>
+<div class="flex-1 group relative flex flex-col items-center justify-end h-full">
+<div class="w-full bg-primary/20 rounded-t-sm h-[65%] chart-bar-hover"></div>
+<div class="w-full bg-primary rounded-t-sm h-[35%] -mt-1 chart-bar-hover"></div>
+<span class="mt-2 font-label text-caption opacity-60">Tue</span>
+</div>
+<div class="flex-1 group relative flex flex-col items-center justify-end h-full">
+<div class="w-full bg-primary/20 rounded-t-sm h-[45%] chart-bar-hover"></div>
+<div class="w-full bg-primary rounded-t-sm h-[25%] -mt-1 chart-bar-hover"></div>
+<span class="mt-2 font-label text-caption opacity-60">Wed</span>
+</div>
+<div class="flex-1 group relative flex flex-col items-center justify-end h-full">
+<div class="w-full bg-primary/20 rounded-t-sm h-[80%] chart-bar-hover"></div>
+<div class="w-full bg-primary rounded-t-sm h-[45%] -mt-1 chart-bar-hover"></div>
+<span class="mt-2 font-label text-caption opacity-60">Thu</span>
+</div>
+<div class="flex-1 group relative flex flex-col items-center justify-end h-full">
+<div class="w-full bg-primary/20 rounded-t-sm h-[55%] chart-bar-hover"></div>
+<div class="w-full bg-primary rounded-t-sm h-[30%] -mt-1 chart-bar-hover"></div>
+<span class="mt-2 font-label text-caption opacity-60">Fri</span>
+</div>
+<div class="flex-1 group relative flex flex-col items-center justify-end h-full">
+<div class="w-full bg-primary/20 rounded-t-sm h-[40%] chart-bar-hover"></div>
+<div class="w-full bg-primary rounded-t-sm h-[15%] -mt-1 chart-bar-hover"></div>
+<span class="mt-2 font-label text-caption opacity-60">Sat</span>
+</div>
+<div class="flex-1 group relative flex flex-col items-center justify-end h-full">
+<div class="w-full bg-primary/20 rounded-t-sm h-[35%] chart-bar-hover"></div>
+<div class="w-full bg-primary rounded-t-sm h-[10%] -mt-1 chart-bar-hover"></div>
+<span class="mt-2 font-label text-caption opacity-60">Sun</span>
+</div>
+</div>
+</div>
+<!-- Top Viewed Products List -->
+<div class="bg-white p-lg rounded-xl border border-gray-200 h-[400px] flex flex-col">
+<h3 class="font-h4 text-h4 mb-lg">Top Viewed Products</h3>
+<div class="flex-1 space-y-4 overflow-y-auto">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded bg-gray-100 flex-shrink-0">
+<img class="w-full h-full object-cover rounded" data-alt="A professional product shot of an industrial pump assembly, clean white background, high-end technical photography for an AR catalog, metallic surfaces and realistic lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_AwrMG26_tOn8RPM3wWiuvV3sBanJtcNTtgqKwRF4qOj010quNm1I68POtAKN-OXB0uJAqqFsMBwQQSjmUYxI-gIQNnxMwXydT7SD6vfJj6wkj7V-cZt29KP3Nf8d2FqDv7FG0jmGIQbdl0SiH5dC65WfOs9IQ1ecco6IRj0Mxwl8_DznxXiAKJYUH4YWUk10bwkXqfkQAh4qsgSZMKVXVR8EetpE7RedeJmWoqFH9JT5K_4vNjaxty-7vMHSqs14R0Q_YrMBFlJN"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-label text-label truncate">P-500 Centrifugal Pump</p>
+<p class="text-caption text-on-surface-variant">2,401 views</p>
+</div>
+<div class="text-right">
+<span class="text-success font-label text-caption">+14%</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded bg-gray-100 flex-shrink-0">
+<img class="w-full h-full object-cover rounded" data-alt="A technical visualization of a solar inverter unit, industrial grey casing with digital interfaces, professional marketing product shot, soft shadows and clean composition." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgBetQIxVN87LEO_R2t7ErKK2L-pi_SqeGv1SIlk3JvAS0a2C-mLNaBp2XygeGuPqTwoQugI0LZjGf9Evjepe8_yviWdJDXfJPhUI3WAaI94u9UVnt882sHbB1lQTrYSfogiydkHtB5P9_ia0ME-YmY6anwYJ8Fl_O0IShn0oaU4kLkMGn5YZMYmLA33aTmF0uVjUojXDIOAX657lGUvWcJhY45ugPcGC38e5b9xwdSb4yTwNKr6U1oRKMCoCKs1yVf8JXZcv82Io2"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-label text-label truncate">X-Core Solar Inverter</p>
+<p class="text-caption text-on-surface-variant">1,988 views</p>
+</div>
+<div class="text-right">
+<span class="text-success font-label text-caption">+08%</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded bg-gray-100 flex-shrink-0">
+<img class="w-full h-full object-cover rounded" data-alt="A macro shot of a complex industrial valve system, brushed steel texture, technical precision photography, isolated on a light neutral background for a sleek UI display." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNPfWrGWUnkTJvdvAVYQ__UfanIakyFOKfjAN7RiefkUA0iBw8z5-HPHV8J5IXb8XRQGDCZ98nh2u7pSSLrHVSKlyOFfEHYYkhe3doK_dLN1U3_CZra7ee-0jpXElK9CIUfD56KB8uPk3KcZdpO9l1pT0FC_TURwqj1gh9cHx3T8W3JXRgvNzD5mlpo56UceC3Jd9biWQext33JxDzuuIgiqZvm-BWirimHD3CE8TB3loSrdqd6lMBiY79qny34uNJxYSlJ6Bi5rDo"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-label text-label truncate">Valve Matrix Alpha</p>
+<p class="text-caption text-on-surface-variant">1,245 views</p>
+</div>
+<div class="text-right">
+<span class="text-error font-label text-caption">-03%</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded bg-gray-100 flex-shrink-0">
+<img class="w-full h-full object-cover rounded" data-alt="An industrial motor unit with copper wiring visible, high detailed 3D render style, technical lighting, highlighting engineering excellence." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4Strc0I5rquTDJPvGLzFOUtdqrVvM45zreLOtSjRc400b900bNql6NNeJgfd-4KaQtDf_Ot3xvP8ask5vfmkwSY-JYH67ucfDP9T46T9lPmyPStyHjK4fSZrgl0b-qBDG8EF9SY8HCReFsw7TE2aSjIzMkz6caF-R3oPE-u6Wf3c7xtS7vVh3Kbn9VE2qSLVTbU8FT40-_GlcbAeo0-d6dGZbas5QepzvKhy6hphOPBhNtN1fGpByBM_ijMA1Ld4f2PlfwQInCfOR"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-label text-label truncate">M-Series Power Motor</p>
+<p class="text-caption text-on-surface-variant">892 views</p>
+</div>
+<div class="text-right">
+<span class="text-success font-label text-caption">+22%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Visualization Row 2: Geospatial & Conversion -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+<!-- Map Visualization -->
+<div class="bg-white p-lg rounded-xl border border-gray-200 h-[450px] flex flex-col">
+<div class="flex justify-between items-center mb-lg">
+<h3 class="font-h4 text-h4">QR Scans by Location</h3>
+<div class="text-caption font-label text-on-surface-variant">Heatmap Density</div>
+</div>
+<div class="flex-1 rounded-lg overflow-hidden relative border border-gray-100">
+<div class="w-full h-full" data-alt="A stylized minimalist choropleth map of North America and Europe, clean industrial design aesthetic, high contrast between landmass and water, glowing dots indicating scan hotspots in major cities like New York, Berlin, and San Francisco." data-location="North America" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDy9Bw9qot-GRo_90UJvdwquZaxeDixY2jRkEz40PgkmJUzXL3bxDzIxzwKW_L9RwDjn44fzKHLQhObu6gY88IfWNPSurC18HN0D2EKleIm36WuzRwgrNFb7Nd2sJ-HrEWGk07VL4nlaa1k8PAL-CyFa5mfeo3N5GREVIduNfv3b1sE0tFtxuApHSpRLmaQEXq_swy3hZGdeDQeVodS3oFtCJdvjAEJxFbVMKAK9rlISrB0dLcmIgSr7Prf4T_HJshSjTjLgcoL7f2V')"></div>
+<div class="absolute bottom-4 left-4 p-3 glass-panel rounded-lg border border-gray-200 shadow-sm max-w-[200px]">
+<p class="font-label text-caption text-on-surface">Primary Market: <span class="font-bold">United States</span></p>
+<p class="text-caption text-on-surface-variant mt-1">Chicago HQ Hub: 4.2k scans</p>
+</div>
+</div>
+</div>
+<!-- Conversion & Lead Quality -->
+<div class="bg-white p-lg rounded-xl border border-gray-200 h-[450px] flex flex-col">
+<h3 class="font-h4 text-h4 mb-lg">Lead Generation Funnel</h3>
+<div class="flex-1 flex flex-col gap-6 py-4">
+<div class="space-y-2">
+<div class="flex justify-between font-label text-label">
+<span>Total Visitors</span>
+<span class="font-bold">120.4k</span>
+</div>
+<div class="h-8 bg-gray-100 rounded flex overflow-hidden">
+<div class="w-full bg-primary/20 h-full flex items-center px-3 text-on-primary-fixed-variant text-caption font-semibold">100% Top of Funnel</div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between font-label text-label">
+<span>AR Visualizations Started</span>
+<span class="font-bold">24.8k</span>
+</div>
+<div class="h-8 bg-gray-100 rounded flex overflow-hidden">
+<div class="w-[20%] bg-primary h-full flex items-center px-3 text-white text-caption font-semibold whitespace-nowrap">20.6% Activation</div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between font-label text-label">
+<span>Lead Submissions</span>
+<span class="font-bold">4.5k</span>
+</div>
+<div class="h-8 bg-gray-100 rounded flex overflow-hidden">
+<div class="w-[4%] bg-warning h-full flex items-center px-3 text-on-surface text-caption font-semibold whitespace-nowrap">18.2% Conversion</div>
+</div>
+</div>
+<div class="mt-auto grid grid-cols-2 gap-4">
+<div class="bg-surface-container-low p-4 rounded-lg border border-gray-100">
+<p class="text-caption text-on-surface-variant font-label">Cost per Lead</p>
+<p class="text-h4 font-h4">$12.45</p>
+</div>
+<div class="bg-surface-container-low p-4 rounded-lg border border-gray-100">
+<p class="text-caption text-on-surface-variant font-label">Lead Quality Score</p>
+<p class="text-h4 font-h4 text-success">High</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Floating Action Button Contextual (Not rendered on analytics detail screens per instructions, but let's assume this is the main dashboard view where "New Visualization" makes sense) -->
+<button class="fixed bottom-margin right-margin bg-primary text-on-primary w-14 h-14 rounded-full shadow-2xl flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-transform z-50 md:hidden">
+<span class="material-symbols-outlined">add</span>
+</button>
+<script>
+        // Micro-interaction for sidebar tabs
+        document.querySelectorAll('nav a').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('nav a').forEach(t => {
+                    t.classList.remove('bg-secondary-container', 'text-on-secondary-fixed', 'font-semibold');
+                    t.classList.add('text-on-surface-variant');
+                });
+                this.classList.add('bg-secondary-container', 'text-on-secondary-fixed', 'font-semibold');
+                this.classList.remove('text-on-surface-variant');
+            });
+        });
+
+        // Simple animation logic for numbers on load
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start).toLocaleString();
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const h2s = document.querySelectorAll('h2');
+            if(h2s[0]) animateValue(h2s[0], 23000, 24892, 1000);
+            if(h2s[1]) animateValue(h2s[1], 14000, 15403, 1000);
+        });
+    </script>
+</body></html>

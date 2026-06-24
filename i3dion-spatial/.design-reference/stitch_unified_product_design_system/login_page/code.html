@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login | I3DION Spatial</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "on-secondary-container": "#5c647a",
+                "gray-100": "#F8FAFC",
+                "surface-tint": "#0053db",
+                "surface-container-highest": "#e1e2ed",
+                "on-tertiary": "#ffffff",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary-container": "#ffede6",
+                "on-surface": "#191b23",
+                "background": "#faf8ff",
+                "inverse-primary": "#b4c5ff",
+                "outline": "#737686",
+                "on-tertiary-fixed-variant": "#7d2d00",
+                "on-primary-container": "#eeefff",
+                "secondary": "#565e74",
+                "on-primary-fixed-variant": "#003ea8",
+                "primary-fixed-dim": "#b4c5ff",
+                "secondary-fixed": "#dae2fd",
+                "error-container": "#ffdad6",
+                "on-error": "#ffffff",
+                "surface-container-low": "#f3f3fe",
+                "primary-container": "#2563eb",
+                "gray-200": "#E2E8F0",
+                "tertiary-container": "#bc4800",
+                "surface-container": "#ededf9",
+                "surface-bright": "#faf8ff",
+                "inverse-surface": "#2e3039",
+                "warning": "#F59E0B",
+                "surface": "#faf8ff",
+                "on-surface-variant": "#434655",
+                "inverse-on-surface": "#f0f0fb",
+                "on-primary-fixed": "#00174b",
+                "tertiary": "#943700",
+                "error": "#EF4444",
+                "on-tertiary-fixed": "#360f00",
+                "on-background": "#191b23",
+                "secondary-container": "#dae2fd",
+                "on-secondary-fixed-variant": "#3f465c",
+                "secondary-fixed-dim": "#bec6e0",
+                "on-secondary-fixed": "#131b2e",
+                "surface-dim": "#d9d9e5",
+                "on-error-container": "#93000a",
+                "primary-fixed": "#dbe1ff",
+                "on-primary": "#ffffff",
+                "primary": "#004ac6",
+                "outline-variant": "#c3c6d7",
+                "surface-container-high": "#e7e7f3",
+                "tertiary-fixed": "#ffdbcd",
+                "tertiary-fixed-dim": "#ffb596",
+                "success": "#22C55E",
+                "gray-400": "#94A3B8",
+                "on-secondary": "#ffffff",
+                "gray-700": "#334155",
+                "surface-variant": "#e1e2ed"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "spacing": {
+                "2xl": "48px",
+                "md": "16px",
+                "4xl": "96px",
+                "sm": "8px",
+                "3xl": "64px",
+                "lg": "24px",
+                "gutter": "16px",
+                "xs": "4px",
+                "margin": "24px",
+                "base": "8px",
+                "xl": "32px"
+            },
+            "fontFamily": {
+                "h2": ["Inter"], "h3": ["Inter"], "caption": ["Inter"], "body-lg": ["Inter"], "h1-mobile": ["Inter"], "h1": ["Inter"], "label": ["Inter"], "display": ["Inter"], "h4": ["Inter"], "body-reg": ["Inter"]
+            },
+            "fontSize": {
+                "h2": ["30px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                "h3": ["24px", {"lineHeight": "1.35", "fontWeight": "600"}],
+                "caption": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                "h1-mobile": ["30px", {"lineHeight": "1.25", "fontWeight": "600"}],
+                "h1": ["36px", {"lineHeight": "1.25", "fontWeight": "600"}],
+                "label": ["14px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                "display": ["48px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                "h4": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                "body-reg": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #faf8ff;
+            font-family: 'Inter', sans-serif;
+        }
+        .login-card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03), 0 20px 25px -5px rgba(0, 0, 0, 0.08);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .subtle-grid {
+            background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+<!-- Atmospheric Background Decoration -->
+<div class="absolute inset-0 z-0 subtle-grid opacity-40"></div>
+<div class="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl"></div>
+<div class="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-secondary/5 rounded-full blur-3xl"></div>
+<main class="relative z-10 w-full max-w-[440px] px-margin">
+<!-- Brand Identity Container -->
+<div class="flex flex-col items-center mb-xl">
+<div class="w-14 h-14 bg-primary rounded-xl flex items-center justify-center mb-md shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-on-primary text-[32px]" data-icon="spatial_tracking">spatial_tracking</span>
+</div>
+<h1 class="font-h3 text-h3 text-on-surface tracking-tight">I3DION Spatial</h1>
+<p class="font-caption text-caption text-on-surface-variant mt-xs">Enterprise AR Catalog &amp; Sales Visualization</p>
+</div>
+<!-- Login Card -->
+<div class="bg-white rounded-xl border border-gray-200 login-card-shadow p-xl">
+<header class="mb-lg">
+<h2 class="font-h4 text-h4 text-on-surface">Welcome back</h2>
+<p class="font-label text-label text-on-surface-variant">Please enter your details to sign in.</p>
+</header>
+<form class="space-y-lg" id="loginForm" onsubmit="return false">
+<!-- Email Field -->
+<div class="space-y-xs">
+<label class="font-label text-label text-on-surface" for="email">Email Address</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px]" data-icon="mail">mail</span>
+<input class="w-full h-[48px] pl-xl pr-md bg-white border border-gray-200 rounded-xl font-body-reg text-body-reg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" id="email" placeholder="name@company.com" required="" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="space-y-xs">
+<div class="flex justify-between items-center">
+<label class="font-label text-label text-on-surface" for="password">Password</label>
+<a class="font-label text-label text-primary hover:underline transition-all" href="#">Forgot password?</a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px]" data-icon="lock">lock</span>
+<input class="w-full h-[48px] pl-xl pr-xl bg-white border border-gray-200 rounded-xl font-body-reg text-body-reg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" id="password" placeholder="••••••••" required="" type="password"/>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="visibility">visibility</span>
+</button>
+</div>
+</div>
+<!-- Remember Me -->
+<div class="flex items-center gap-base">
+<input class="w-5 h-5 rounded border-gray-200 text-primary focus:ring-primary cursor-pointer" id="remember" type="checkbox"/>
+<label class="font-label text-label text-on-surface-variant cursor-pointer" for="remember">Remember for 30 days</label>
+</div>
+<!-- Submit Button -->
+<button class="w-full h-[48px] bg-primary text-on-primary font-label text-label rounded-xl hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center justify-center gap-base shadow-lg shadow-primary/10" type="submit">
+                    Sign In
+                    <span class="material-symbols-outlined text-[18px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<!-- SSO Divider -->
+<div class="relative flex items-center py-md">
+<div class="flex-grow border-t border-gray-200"></div>
+<span class="flex-shrink mx-md font-label text-label text-outline uppercase tracking-widest text-[10px]">Or continue with</span>
+<div class="flex-grow border-t border-gray-200"></div>
+</div>
+<!-- Secondary SSO Options -->
+<div class="grid grid-cols-2 gap-md">
+<button class="flex items-center justify-center gap-base h-[48px] border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors" type="button">
+<div class="w-5 h-5 bg-cover bg-center" data-alt="Official Google company logo symbol in its original four colors, clean vector style on a white background for a professional enterprise login screen." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDN9Iivfk3GaoIGrHUmlSDfhS2TJDORhV28TDyZdKdDemKufFmojBOTOgLNJD0xbeNXOBDA__uIotxDFEsVf2XmWMwwJJHC6Mmfa34O3V7xC5R-zB2Ts73gg_5-dllXo0xBplT7FeurwIrPVVepjyrKZy86-spjvwbLscqpxemOd8hAfrrf5Y9AJKYnjfTqsIUy_DVnkJC1th_sWs_kNoSGP4l0gti-ck0BVLixQcptT9cEaThghH_ywbJ5YxMCwcNOVuaqFKhsMFRN')"></div>
+<span class="font-label text-label text-on-surface">Google</span>
+</button>
+<button class="flex items-center justify-center gap-base h-[48px] border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors" type="button">
+<div class="w-5 h-5 bg-cover bg-center" data-alt="Official Microsoft company logo symbol with four colored squares, clean vector style on a white background, signifying professional enterprise identity for an AR platform." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD5RugMtl2AYG8yMDhRjy1plX_d_s43faJNfYEmd2TORQNrTVGEknf2SezFb1t7tzkaghRbLxuk2-Nz2iLm6LLQL1DPSOgIhXZsJ6okLLXQBBPga3rlQesTUkwr06Tl_4x7D5l_EjJg2cXDum_9OV2jwgYB-bwbKs57EC8vhJXfLguDT0-_idU8WRzC79L_W94C2C8QE6XyWOT_dx-zEFryxW45S6LAPFDtTz73biu5o4rCsfvyDOOvjg8iDofzbkpjg_DJGeFEwNz6')"></div>
+<span class="font-label text-label text-on-surface">Azure</span>
+</button>
+</div>
+</form>
+</div>
+<!-- Footer Link -->
+<div class="mt-xl text-center">
+<p class="font-label text-label text-on-surface-variant">
+                Don't have an account? 
+                <a class="text-primary font-semibold hover:underline" href="#">Create Account</a>
+</p>
+</div>
+<!-- System Footer -->
+<footer class="mt-4xl flex items-center justify-center gap-xl">
+<div class="flex items-center gap-xs text-outline">
+<span class="material-symbols-outlined text-[16px]" data-icon="shield_with_heart">shield_with_heart</span>
+<span class="font-caption text-caption">Enterprise Security</span>
+</div>
+<div class="flex items-center gap-xs text-outline">
+<span class="material-symbols-outlined text-[16px]" data-icon="public">public</span>
+<span class="font-caption text-caption">Global Deployment</span>
+</div>
+</footer>
+</main>
+<script>
+        // Micro-interaction for form inputs
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.querySelector('.material-symbols-outlined').style.color = '#004ac6';
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.querySelector('.material-symbols-outlined').style.color = '#737686';
+            });
+        });
+
+        // Simple visibility toggle for password
+        const togglePass = document.querySelector('button[type="button"] .material-symbols-outlined[data-icon="visibility"]');
+        const passInput = document.getElementById('password');
+        if (togglePass) {
+            togglePass.parentElement.addEventListener('click', () => {
+                const isPass = passInput.type === 'password';
+                passInput.type = isPass ? 'text' : 'password';
+                togglePass.textContent = isPass ? 'visibility_off' : 'visibility';
+            });
+        }
+    </script>
+</body></html>
