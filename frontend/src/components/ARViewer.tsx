@@ -1,16 +1,25 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Lock, Unlock, RotateCcw, Move, Maximize, MousePointer2 } from 'lucide-react';
+import { Lock, Unlock, RotateCcw, Move, Maximize } from 'lucide-react';
 import { Button } from './ui';
 
 // Add type for model-viewer custom element
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      'model-viewer': any;
+      'model-viewer': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+        src?: string;
+        poster?: string;
+        alt?: string;
+        ar?: boolean;
+        'ar-modes'?: string;
+        'camera-controls'?: string;
+        'shadow-intensity'?: string;
+        autoplay?: boolean;
+        class?: string;
+      };
     }
   }
 }
-declare module '@google/model-viewer';
 
 interface ARViewerProps {
   modelUrl: string;
@@ -26,17 +35,12 @@ export function ARViewer({ modelUrl, posterUrl, altText, title, onExitAR }: ARVi
   const [isAR, setIsAR] = useState(false);
 
   useEffect(() => {
-    // Import model-viewer dynamically so it doesn't block main bundle
-    import('@google/model-viewer').catch(() => {
-      // In case the package is not in node_modules, we can inject a script tag.
-      // But typically enterprise apps have it installed.
-      if (!customElements.get('model-viewer')) {
-        const script = document.createElement('script');
-        script.type = 'module';
-        script.src = 'https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js';
-        document.head.appendChild(script);
-      }
-    });
+    if (!customElements.get('model-viewer')) {
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = 'https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js';
+      document.head.appendChild(script);
+    }
   }, []);
 
   useEffect(() => {
@@ -79,6 +83,7 @@ export function ARViewer({ modelUrl, posterUrl, altText, title, onExitAR }: ARVi
 
   return (
     <div className="relative w-full h-full min-h-[400px] bg-slate-100 rounded-3xl overflow-hidden shadow-inner flex flex-col">
+      {/* @ts-ignore */}
       <model-viewer
         ref={modelViewerRef}
         src={modelUrl}
@@ -88,7 +93,7 @@ export function ARViewer({ modelUrl, posterUrl, altText, title, onExitAR }: ARVi
         ar-modes="webxr scene-viewer quick-look"
         camera-controls={!isLocked ? 'true' : undefined}
         shadow-intensity="1"
-        autoplay
+        {...{ autoplay: true } as any}
         class="w-full h-full flex-1 outline-none"
         style={{ '--poster-color': 'transparent', width: '100%', height: '100%' } as React.CSSProperties}
       >
