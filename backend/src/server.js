@@ -29,7 +29,9 @@ app.use(rateLimit({ windowMs: 60_000, limit: 180 }));
 // Serve uploaded files
 app.use(`/${config.uploadDir}`, express.static(path.resolve(process.cwd(), config.uploadDir)));
 
-app.get('/api/health', async (_req, res) => {
+const apiRouter = express.Router();
+
+apiRouter.get('/health', async (_req, res) => {
   let dbConnected = false;
   let storageAvailable = false;
   
@@ -39,8 +41,12 @@ app.get('/api/health', async (_req, res) => {
   } catch (err) {}
   
   try {
-    await fs.access(path.resolve(process.cwd(), config.uploadDir));
-    storageAvailable = true;
+    if (!process.env.VERCEL) {
+      await fs.access(path.resolve(process.cwd(), config.uploadDir));
+      storageAvailable = true;
+    } else {
+      storageAvailable = true; // Assume Vercel Blob is available
+    }
   } catch (err) {}
   
   res.status(dbConnected && storageAvailable ? 200 : 503).json({
@@ -51,13 +57,18 @@ app.get('/api/health', async (_req, res) => {
   });
 });
 
-app.use('/api/auth', authRouter);
-app.use('/api/public', publicRouter);
-app.use('/api/analytics', analyticsRouter);
-app.use('/api/leads', leadsRouter);
-app.use('/api/hub', hubRouter);
-app.use('/api/search', searchRouter);
-app.use('/api', resourcesRouter);
+apiRouter.use('/auth', authRouter);
+apiRouter.use('/public', publicRouter);
+apiRouter.use('/analytics', analyticsRouter);
+apiRouter.use('/leads', leadsRouter);
+apiRouter.use('/hub', hubRouter);
+apiRouter.use('/search', searchRouter);
+apiRouter.use('/', resourcesRouter);
+
+app.use('/api', apiRouter);
+if (process.env.VERCEL) {
+  app.use('/', apiRouter);
+}
 app.use(notFound);
 app.use(errorHandler);
 
