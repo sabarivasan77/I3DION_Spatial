@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
 
 // Register standard fonts

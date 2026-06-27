@@ -1,3 +1,4 @@
+
 import type { LucideIcon } from 'lucide-react';
 
 export type ProductStatus = 'Published' | 'Draft' | 'Archived';
@@ -99,3 +100,4 @@ export interface Activity {
   detail: string;
   time: string;
 }
+

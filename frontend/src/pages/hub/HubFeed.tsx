@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MessageSquare, Download, Share2, Box as BoxIcon, ExternalLink } from 'lucide-react';
+import { Heart, Download, Box as BoxIcon } from 'lucide-react';
 import { hubApi, HubProduct } from '../../services/hubApi';
-import { Card, SectionTitle, Button } from '../../components/ui';
+import { Card, SectionTitle } from '../../components/ui';
 
 export function HubFeed() {
   const [feed, setFeed] = useState<HubProduct[]>([]);
@@ -50,12 +50,12 @@ export function HubFeed() {
       <h2 className="text-xl font-bold text-slate-900 mb-4">Community Feed</h2>
 
       <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
-        {feed.map(item => (
+        {(feed || []).map(item => (
           <Card key={item.id} className="break-inside-avoid overflow-hidden hover:shadow-lg transition-all duration-300 border-slate-200">
             {/* Header */}
             <div className="p-4 flex items-center space-x-3 border-b border-slate-100">
               <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold overflow-hidden">
-                {item.creator_avatar ? <img src={item.creator_avatar} alt="" className="w-full h-full object-cover" /> : item.creator_name?.charAt(0) || item.company_name.charAt(0)}
+                {item.creator_avatar ? <img src={item.creator_avatar} alt="" className="w-full h-full object-cover" /> : item.creator_name?.charAt(0) || item.company_name?.charAt(0) || '?'}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-slate-900 truncate">{item.creator_name || item.company_name}</p>
@@ -93,7 +93,7 @@ export function HubFeed() {
               {/* Actions */}
               <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                 <div className="flex space-x-4 text-slate-500">
-                  <button className="flex items-center hover:text-rose-500 transition-colors">
+                  <button onClick={(e) => { e.preventDefault(); alert('Like coming soon!'); }} className="flex items-center hover:text-rose-500 transition-colors">
                     <Heart className="w-4 h-4 mr-1.5" />
                     <span className="text-xs font-medium">{item.likes_count}</span>
                   </button>

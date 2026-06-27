@@ -49,7 +49,7 @@ export function SalesIntelligencePage() {
         action={
           <div className="flex gap-3">
             <Button variant="secondary" onClick={() => navigate('/leads')}><Users size={18} />Manage Leads</Button>
-            <Button variant="secondary"><Download size={18} />Export Report</Button>
+            <Button variant="secondary" onClick={() => alert('Export report coming soon!')}><Download size={18} />Export Report</Button>
           </div>
         }
       />

@@ -129,11 +129,11 @@ export function HubProductDetail() {
             <Heart className={`w-6 h-6 mb-1 ${liked ? 'fill-current' : ''}`} />
             <span className="text-xs font-bold">{product.likes_count}</span>
           </button>
-          <button className="flex flex-col items-center p-2 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors">
+          <button onClick={() => alert('Comments coming soon!')} className="flex flex-col items-center p-2 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors">
             <MessageSquare className="w-6 h-6 mb-1" />
             <span className="text-xs font-bold">{comments.length}</span>
           </button>
-          <button className="flex flex-col items-center p-2 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors">
+          <button onClick={() => alert('Share coming soon!')} className="flex flex-col items-center p-2 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors">
             <Share2 className="w-6 h-6 mb-1" />
             <span className="text-xs font-bold">Share</span>
           </button>
@@ -150,13 +150,13 @@ export function HubProductDetail() {
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Published By</h3>
           <div className="flex items-center gap-4">
              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl overflow-hidden">
-                {product.creator_avatar ? <img src={product.creator_avatar} alt="" className="w-full h-full object-cover" /> : product.creator_name?.charAt(0) || product.company_name.charAt(0)}
+                {product.creator_avatar ? <img src={product.creator_avatar} alt="" className="w-full h-full object-cover" /> : product.creator_name?.charAt(0) || product.company_name?.charAt(0) || '?'}
               </div>
               <div className="flex-1">
                 <h4 className="font-bold text-slate-900">{product.creator_name || product.company_name}</h4>
                 <p className="text-sm text-slate-500">{product.company_name}</p>
               </div>
-              <Button variant="secondary" className="text-xs px-2 py-1 h-auto">Follow</Button>
+              <Button onClick={() => alert('Follow coming soon!')} variant="secondary" className="text-xs px-2 py-1 h-auto">Follow</Button>
           </div>
         </Card>
 
@@ -183,7 +183,7 @@ export function HubProductDetail() {
               comments.map(c => (
                 <div key={c.id} className="flex gap-3">
                   <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-xs font-bold text-slate-500">
-                    {c.user_name.charAt(0)}
+                    {c.user_name?.charAt(0) || '?'}
                   </div>
                   <div>
                     <div className="bg-slate-50 rounded-xl p-3 inline-block">

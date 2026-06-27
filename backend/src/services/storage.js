@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { put, del } from '@vercel/blob';
 import { config } from '../config.js';
 import { ApiError } from '../utils/errors.js';
 
@@ -123,35 +124,54 @@ export async function storeBuffer(file, preferredCategory) {
   const filename = `${crypto.randomUUID()}.${extension}`;
   const folder = categoryFolders[preferredCategory ?? category] ?? categoryFolders.image;
   const objectKey = `${folder}/${filename}`;
-  const absolutePath = path.resolve(process.cwd(), config.uploadDir, objectKey);
-
-  await ensureBucket();
-  await fs.writeFile(absolutePath, file.buffer);
-
-  const url = `${config.apiUrl}/${config.uploadDir}/${objectKey}`;
-  return { category, checksum, objectKey, url };
+  
+  if (process.env.VERCEL) {
+    const { url } = await put(objectKey, file.buffer, { access: 'public' });
+    return { category, checksum, objectKey, url };
+  } else {
+    const absolutePath = path.resolve(process.cwd(), config.uploadDir, objectKey);
+    await ensureBucket();
+    await fs.writeFile(absolutePath, file.buffer);
+    const url = `${config.apiUrl}/${config.uploadDir}/${objectKey}`;
+    return { category, checksum, objectKey, url };
+  }
 }
 
 export async function writeTextFile({ contents, filename, folder = 'qr', mimeType = 'image/svg+xml' }) {
-  await ensureBucket();
   const objectKey = `${folder}/${filename}`;
-  const absolutePath = path.resolve(process.cwd(), config.uploadDir, objectKey);
-  await fs.writeFile(absolutePath, contents);
-  return {
-    objectKey,
-    mimeType,
-    url: `${config.apiUrl}/${config.uploadDir}/${objectKey}`,
-    checksum: crypto.createHash('sha256').update(contents).digest('hex'),
-  };
+  const checksum = crypto.createHash('sha256').update(contents).digest('hex');
+  
+  if (process.env.VERCEL) {
+    const { url } = await put(objectKey, contents, { access: 'public', contentType: mimeType });
+    return { objectKey, mimeType, url, checksum };
+  } else {
+    await ensureBucket();
+    const absolutePath = path.resolve(process.cwd(), config.uploadDir, objectKey);
+    await fs.writeFile(absolutePath, contents);
+    return {
+      objectKey,
+      mimeType,
+      url: `${config.apiUrl}/${config.uploadDir}/${objectKey}`,
+      checksum,
+    };
+  }
 }
 
 export async function deleteObject(objectKey) {
-  try {
-    const absolutePath = path.resolve(process.cwd(), config.uploadDir, objectKey);
-    await fs.unlink(absolutePath);
-  } catch (err) {
-    if (err.code !== 'ENOENT') {
-      throw err;
+  if (process.env.VERCEL) {
+    try {
+      await del(objectKey);
+    } catch (err) {
+      console.error('Failed to delete from Vercel Blob:', err);
+    }
+  } else {
+    try {
+      const absolutePath = path.resolve(process.cwd(), config.uploadDir, objectKey);
+      await fs.unlink(absolutePath);
+    } catch (err) {
+      if (err.code !== 'ENOENT') {
+        throw err;
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   BarChart3,
@@ -14,7 +14,6 @@ import {
   Users,
   Globe,
   X,
-  User,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
@@ -121,10 +120,8 @@ export default function AppShell() {
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useNavigate();
-  const { pathname } = useLocation();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  const title = navItems.find((item) => pathname.startsWith(item.path))?.label ?? 'Workspace';
 
   // Avatar initial
   const initials = user?.name

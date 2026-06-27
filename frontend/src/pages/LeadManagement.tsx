@@ -656,16 +656,7 @@ export function LeadManagementPage() {
     }
   }
 
-  async function quickStatusUpdate(lead: Lead, status: LeadStatus) {
-    if (!token) return;
-    try {
-      await api.updateLead(token, lead.id, { status });
-      setLeads((c) => c.map((l) => l.id === lead.id ? { ...l, status } : l));
-      if (selectedLead?.id === lead.id) setSelectedLead({ ...selectedLead, status });
-    } catch {
-      showError('Update failed', 'Could not update status');
-    }
-  }
+
 
   // KPI summary
   const kpis = useMemo(() => {
@@ -820,7 +811,7 @@ export function LeadManagementPage() {
               >
                 {/* Avatar */}
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white font-bold text-sm">
-                  {lead.name.charAt(0).toUpperCase()}
+                  {lead.name?.charAt(0)?.toUpperCase() || '?'}
                 </div>
                 {/* Info */}
                 <div className="min-w-0 flex-1">

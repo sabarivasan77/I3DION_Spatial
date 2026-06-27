@@ -78,8 +78,16 @@ export const productSchema = z.object({
     specs: z.record(z.string()).default({}),
     imageUrl: z.string().url().optional().or(z.literal('')),
     modelUrl: z.string().url().optional().or(z.literal('')),
+    usdzUrl: z.string().url().optional().or(z.literal('')),
     documentUrl: z.string().url().optional().or(z.literal('')),
     videoUrl: z.string().url().optional().or(z.literal('')),
+    dimensions: z.object({
+      width: z.number().optional(),
+      height: z.number().optional(),
+      depth: z.number().optional(),
+      scale: z.number().optional(),
+      units: z.string().optional()
+    }).optional(),
   }),
 });
 

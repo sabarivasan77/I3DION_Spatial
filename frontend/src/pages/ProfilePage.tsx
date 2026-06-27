@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import {
-  User, Camera, Check, Mail, Phone, Building2, Globe, MapPin,
-  Shield, Clock, Calendar, Link2, Twitter, Linkedin, Github,
+  User, Camera, Mail, Phone, Building2, Globe, MapPin,
+  Clock, Calendar, Twitter, Linkedin, Github,
   Save, RefreshCw, Edit2, CheckCircle2, AlertCircle, Lock,
   Monitor, Smartphone, LogOut,
 } from 'lucide-react';
@@ -484,7 +484,7 @@ export function ProfilePage() {
                         { key: 'linkedin', label: 'LinkedIn', icon: Linkedin, ph: 'https://linkedin.com/in/username' },
                         { key: 'twitter', label: 'Twitter / X', icon: Twitter, ph: 'https://twitter.com/username' },
                         { key: 'github', label: 'GitHub', icon: Github, ph: 'https://github.com/username' },
-                      ].map(({ key, label, icon: Icon, ph }) => (
+                      ].map(({ key, icon: Icon, ph }) => (
                         <div key={key} className="flex items-center gap-3">
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
                             <Icon size={17} />

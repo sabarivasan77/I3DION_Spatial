@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
 const API_TIMEOUT_MS = 15000;
 
 export class ApiClientError extends Error {
@@ -44,8 +44,8 @@ export interface ProfileResponse {
 
 export interface UploadedFile {
   id: string;
-  file_category: 'image' | 'video' | 'model' | 'document' | 'thumbnail' | 'qr_png' | 'qr_svg';
-  asset_type?: 'thumbnail' | 'image' | 'model' | 'document' | 'qr_png' | 'qr_svg';
+  file_category: 'image' | 'video' | 'model' | 'usdz_model' | 'document' | 'thumbnail' | 'qr_png' | 'qr_svg';
+  asset_type?: 'thumbnail' | 'image' | 'model' | 'usdz_model' | 'document' | 'qr_png' | 'qr_svg';
   original_name: string;
   file_name?: string;
   file_path?: string;
@@ -66,8 +66,16 @@ export interface ProductPayload {
   specs: Record<string, string>;
   imageUrl?: string;
   modelUrl?: string;
+  usdzUrl?: string;
   documentUrl?: string;
   videoUrl?: string;
+  dimensions?: {
+    width?: number;
+    height?: number;
+    depth?: number;
+    scale?: number;
+    units?: string;
+  };
 }
 
 export type CatalogRecord = {
@@ -90,7 +98,7 @@ export interface ProductMetricRecord {
 export interface ProductAssetRecord {
   id: string;
   product_id: string;
-  asset_type: 'thumbnail' | 'image' | 'model' | 'document' | 'qr_png' | 'qr_svg';
+  asset_type: 'thumbnail' | 'image' | 'model' | 'usdz_model' | 'document' | 'qr_png' | 'qr_svg';
   original_name: string;
   file_name: string;
   file_path: string;
@@ -123,13 +131,22 @@ export interface ProductRecord {
   specs: Record<string, string>;
   image_url?: string | null;
   model_url?: string | null;
+  usdz_url?: string | null;
   document_url?: string | null;
   video_url?: string | null;
+  dimensions?: {
+    width?: number;
+    height?: number;
+    depth?: number;
+    scale?: number;
+    units?: string;
+  } | null;
   is_public?: boolean;
   slug?: string | null;
   public_url?: string | null;
   thumbnail_asset_id?: string | null;
   model_asset_id?: string | null;
+  usdz_asset_id?: string | null;
   qr_code_id?: string | null;
   created_at?: string;
   updated_at?: string;

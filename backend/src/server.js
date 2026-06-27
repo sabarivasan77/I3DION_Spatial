@@ -17,10 +17,10 @@ import { hubRouter } from './routes/hub.js';
 import { searchRouter } from './routes/search.js';
 import { errorHandler, notFound } from './utils/errors.js';
 
-const app = express();
+export const app = express();
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
-app.use(cors({ origin: config.appUrl, credentials: true }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
 app.use(morgan('dev'));
@@ -61,26 +61,33 @@ app.use('/api', resourcesRouter);
 app.use(notFound);
 app.use(errorHandler);
 
-try {
+if (process.env.VERCEL) {
+  // In Vercel, we export the app for serverless execution.
+  // We can try to run migrations, but usually they are done separately in CI/CD.
+  migrate().then(() => console.log('DB migration completed in Vercel')).catch(err => console.error('Migration failed in Vercel', err));
+} else {
+  // Local environment
   try {
-    await migrate();
-    console.log('Database migration completed.');
+    try {
+      await migrate();
+      console.log('Database migration completed.');
+    } catch (error) {
+      console.error('\nI3DION Spatial API started in degraded mode.');
+      console.error('Database migration or connection failed, but the HTTP server will still listen.');
+      console.error('\nExpected database URL:');
+      console.error(`  ${config.databaseUrl}\n`);
+      console.error(error);
+    }
+
+    app.listen(config.port, () => {
+      console.log(`I3DION Spatial API running on http://localhost:${config.port}`);
+    });
   } catch (error) {
-    console.error('\nI3DION Spatial API started in degraded mode.');
-    console.error('Database migration or connection failed, but the HTTP server will still listen.');
+    console.error('\nI3DION Spatial API could not start.');
+    console.error('Unexpected server startup failure.');
     console.error('\nExpected database URL:');
     console.error(`  ${config.databaseUrl}\n`);
     console.error(error);
+    process.exit(1);
   }
-
-  app.listen(config.port, () => {
-    console.log(`I3DION Spatial API running on http://localhost:${config.port}`);
-  });
-} catch (error) {
-  console.error('\nI3DION Spatial API could not start.');
-  console.error('Unexpected server startup failure.');
-  console.error('\nExpected database URL:');
-  console.error(`  ${config.databaseUrl}\n`);
-  console.error(error);
-  process.exit(1);
 }

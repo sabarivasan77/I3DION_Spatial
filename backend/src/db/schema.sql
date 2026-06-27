@@ -21,7 +21,7 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 DO $$ BEGIN
-  CREATE TYPE product_asset_type AS ENUM ('thumbnail', 'image', 'model', 'document', 'qr_png', 'qr_svg');
+  CREATE TYPE product_asset_type AS ENUM ('thumbnail', 'image', 'model', 'usdz_model', 'document', 'qr_png', 'qr_svg');
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 CREATE TABLE IF NOT EXISTS companies (
@@ -62,12 +62,15 @@ CREATE TABLE IF NOT EXISTS products (
   model_url text,
   document_url text,
   video_url text,
+  usdz_url text,
   is_public boolean NOT NULL DEFAULT false,
   slug text,
   public_url text,
   thumbnail_asset_id uuid,
   model_asset_id uuid,
+  usdz_asset_id uuid,
   qr_code_id uuid,
+  dimensions jsonb,
   created_by uuid REFERENCES users(id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
@@ -78,6 +81,9 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS slug text;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS public_url text;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS thumbnail_asset_id uuid;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS model_asset_id uuid;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS usdz_asset_id uuid;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS usdz_url text;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS dimensions jsonb;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS qr_code_id uuid;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_products_company_slug ON products(company_id, slug) WHERE slug IS NOT NULL;

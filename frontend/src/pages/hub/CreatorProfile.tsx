@@ -55,7 +55,7 @@ export function CreatorProfile() {
       {/* Profile Header */}
       <Card className="p-8 mb-8 flex flex-col md:flex-row items-center md:items-start gap-8 bg-gradient-to-br from-slate-50 to-white">
         <div className="h-32 w-32 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-5xl overflow-hidden shadow-lg border-4 border-white">
-          {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" /> : profile.name?.charAt(0) || profile.company_name?.charAt(0)}
+          {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" /> : profile.name?.charAt(0) || profile.company_name?.charAt(0) || '?'}
         </div>
         
         <div className="flex-1 text-center md:text-left">
@@ -80,7 +80,7 @@ export function CreatorProfile() {
             {following ? 'Following' : 'Follow Creator'}
           </Button>
           {profile.website && (
-             <Button variant="secondary" className="w-full flex items-center justify-center gap-2">
+             <Button onClick={() => window.open(profile.website, '_blank')} variant="secondary" className="w-full flex items-center justify-center gap-2">
                <Globe className="w-4 h-4" /> Visit Website
              </Button>
           )}

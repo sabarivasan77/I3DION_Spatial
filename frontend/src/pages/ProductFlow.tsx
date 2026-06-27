@@ -25,6 +25,7 @@ import {
   X,
 } from 'lucide-react';
 import ThreeProduct from '../components/ThreeProduct';
+import { ViewInARButton } from '../components/ViewInARButton';
 import { Badge, Button, Card, PageHeader, SectionTitle } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { api, ApiClientError, checkBackendHealth, uploadFileWithProgress, type ProductRecord, type ProductPayload } from '../services/api';
@@ -700,6 +701,7 @@ export function ProductUploadWizardPage() {
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [images, setImages] = useState<File[]>([]);
   const [model, setModel] = useState<File | null>(null);
+  const [usdzModel, setUsdzModel] = useState<File | null>(null);
   const [documents, setDocuments] = useState<File[]>([]);
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
@@ -804,6 +806,9 @@ export function ProductUploadWizardPage() {
     if (model) {
       finalProduct = await uploadAsset(model, 'model');
     }
+    if (usdzModel) {
+      finalProduct = await uploadAsset(usdzModel, 'usdz_model');
+    }
     // Navigate to step 3 regardless — show QR status
     if (finalProduct?.qr) {
       setStep(3);
@@ -846,7 +851,7 @@ export function ProductUploadWizardPage() {
         <div className="grid gap-3 md:grid-cols-3">
           {[
             { n: 1, title: 'Product Details', desc: 'Name, category, description, specs' },
-            { n: 2, title: 'Upload Assets', desc: 'Thumbnail, images, GLB, documents' },
+            { n: 2, title: 'Upload Assets', desc: 'Thumbnail, images, GLB, USDZ, documents' },
             { n: 3, title: 'QR Ready', desc: 'Download, scan, and open AR' },
           ].map((item) => (
             <button
@@ -908,7 +913,7 @@ export function ProductUploadWizardPage() {
                 <option value="public">Public Spatial Hub</option>
               </select>
             </label>
-            <div className="md:col-span-2 grid gap-4 md:grid-cols-3">
+            <div className="md:col-span-2 grid gap-4 md:grid-cols-2">
               <label className={cx('rounded-2xl border-2 border-dashed p-4 text-center cursor-pointer transition hover:border-blue-500', errors.thumbnail ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-slate-50')}>
                 <input type="file" className="sr-only" accept="image/jpeg,image/png,image/webp" onChange={(event) => setThumbnail(event.target.files?.[0] ?? null)} />
                 <Image className="mx-auto text-slate-400" size={24} />
@@ -923,12 +928,20 @@ export function ProductUploadWizardPage() {
                 <p className="text-xs text-slate-500">{images.length ? <span className="text-emerald-600">✓ {images.length} selected</span> : 'Add gallery images'}</p>
                 {errors.images ? <p className="mt-1 text-xs text-red-500">{errors.images}</p> : null}
               </label>
+            </div>
+            <div className="md:col-span-2 grid gap-4 md:grid-cols-2">
               <label className={cx('rounded-2xl border-2 border-dashed p-4 text-center cursor-pointer transition hover:border-blue-500', errors.model ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-slate-50')}>
                 <input type="file" className="sr-only" accept=".glb,.gltf" onChange={(event) => setModel(event.target.files?.[0] ?? null)} />
                 <Box className="mx-auto text-slate-400" size={24} />
                 <p className="mt-2 text-sm font-semibold text-slate-700">GLB Model *</p>
                 <p className="text-xs text-slate-500">{model ? <span className="text-emerald-600">✓ {model.name}</span> : 'Upload the 3D model'}</p>
                 {errors.model ? <p className="mt-1 text-xs text-red-500">{errors.model}</p> : null}
+              </label>
+              <label className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 text-center cursor-pointer transition hover:border-blue-500 block">
+                <input type="file" className="sr-only" accept=".usdz" onChange={(event) => setUsdzModel(event.target.files?.[0] ?? null)} />
+                <Box className="mx-auto text-slate-400" size={24} />
+                <p className="mt-2 text-sm font-semibold text-slate-700">USDZ Model (optional)</p>
+                <p className="text-xs text-slate-500">{usdzModel ? <span className="text-emerald-600">✓ {usdzModel.name}</span> : 'For Apple Quick Look'}</p>
               </label>
             </div>
             <div className="md:col-span-2">
@@ -970,7 +983,7 @@ export function ProductUploadWizardPage() {
               />
               <AssetUploader
                 title="GLB Model"
-                description="Required for QR generation and AR. Triggers auto QR after upload."
+                description="Required for QR generation and Android AR. Triggers auto QR."
                 accept=".glb,.gltf"
                 file={model}
                 onChange={(file) => setModel(file)}
@@ -981,6 +994,20 @@ export function ProductUploadWizardPage() {
                 }}
                 backendReady={backendHealth?.ok === true}
                 uploading={uploading.model}
+              />
+              <AssetUploader
+                title="USDZ Model"
+                description="Required for Apple Quick Look on iOS."
+                accept=".usdz"
+                file={usdzModel}
+                onChange={(file) => setUsdzModel(file)}
+                onUpload={async () => {
+                  if (!usdzModel) return;
+                  const refreshed = await uploadAsset(usdzModel, 'usdz_model');
+                  if (refreshed?.qr) setStep(3);
+                }}
+                backendReady={backendHealth?.ok === true}
+                uploading={uploading.usdz_model}
               />
               <MultiAssetUploader
                 title="Gallery Images"
@@ -1508,27 +1535,17 @@ export function PublicProductPage() {
               <p className="mt-4 text-base leading-7 text-slate-300">{product.description}</p>
 
               {/* AR Launch */}
-              {modelUrl ? (
+              {modelUrl || product.usdz_url ? (
                 <div className="mt-6 space-y-3">
                   <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Augmented Reality</p>
                   {isAndroidDevice() || isIOSDevice() ? (
                     <div>
-                      {/* model-viewer AR button trigger (works when model-viewer is in DOM) */}
-                      <button
-                        onClick={() => {
-                          // Find and click the model-viewer AR button programmatically
-                          const mv = document.querySelector('model-viewer');
-                          if (mv) {
-                            const arBtn = mv.shadowRoot?.querySelector('[slot="ar-button"], .ar-button, #ar-button');
-                            if (arBtn instanceof HTMLElement) arBtn.click();
-                          }
-                          void viewInAr();
-                        }}
-                        className="flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 py-4 text-base font-bold text-white shadow-lg transition hover:bg-blue-500 active:scale-[0.98]"
-                      >
-                        <Smartphone size={22} />
-                        View In AR
-                      </button>
+                      <ViewInARButton 
+                        modelUrl={modelUrl}
+                        usdzUrl={safeUrl(product.usdz_url)}
+                        title={product.name}
+                        className="w-full h-14 text-base"
+                      />
                       <p className="mt-2 text-xs text-center text-slate-500">
                         {isIOSDevice()
                           ? 'Opens in Quick Look AR on supported iOS devices'

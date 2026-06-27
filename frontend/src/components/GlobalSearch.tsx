@@ -363,7 +363,7 @@ export function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => 
                   <p className="mb-1 flex items-center gap-2 px-1 text-xs font-bold uppercase tracking-wide text-slate-400">
                     <Box size={12} /> Products ({results.products.length})
                   </p>
-                  {results.products.map((r, i) => {
+                  {results.products.map((r) => {
                     const idx = results.products.indexOf(r);
                     const globalIdx = idx;
                     return (

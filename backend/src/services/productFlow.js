@@ -89,13 +89,16 @@ export function serializeProduct(row, extra = {}) {
     specs: row.specs ?? {},
     image_url: row.image_url,
     model_url: row.model_url,
+    usdz_url: row.usdz_url,
     document_url: row.document_url,
     video_url: row.video_url,
+    dimensions: row.dimensions,
     is_public: row.is_public,
     slug: row.slug,
     public_url: row.public_url ?? (row.slug ? productPublicUrl(row.slug) : null),
     thumbnail_asset_id: row.thumbnail_asset_id,
     model_asset_id: row.model_asset_id,
+    usdz_asset_id: row.usdz_asset_id,
     qr_code_id: row.qr_code_id,
     created_by: row.created_by,
     created_at: row.created_at,
@@ -109,9 +112,9 @@ export async function createProduct(companyId, userId, body) {
   const publicUrl = productPublicUrl(slug);
   const { rows } = await query(
     `INSERT INTO products
-     (company_id, name, category, description, status, specs, image_url, model_url, document_url, video_url,
-      is_public, slug, public_url, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+     (company_id, name, category, description, status, specs, image_url, model_url, usdz_url, document_url, video_url,
+      dimensions, is_public, slug, public_url, created_by)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
      RETURNING *`,
     [
       companyId,
@@ -122,8 +125,10 @@ export async function createProduct(companyId, userId, body) {
       body.specs ?? {},
       body.imageUrl || null,
       body.modelUrl || null,
+      body.usdzUrl || null,
       body.documentUrl || null,
       body.videoUrl || null,
+      body.dimensions ?? null,
       body.isPublic ?? false,
       slug,
       publicUrl,
@@ -155,11 +160,13 @@ export async function updateProduct(companyId, id, body) {
          specs = $5,
          image_url = $6,
          model_url = $7,
-         document_url = $8,
-         video_url = $9,
-         is_public = $12,
+         usdz_url = $8,
+         document_url = $9,
+         video_url = $10,
+         dimensions = $11,
+         is_public = $14,
          updated_at = now()
-     WHERE id = $10 AND company_id = $11
+     WHERE id = $12 AND company_id = $13
      RETURNING *`,
     [
       body.name,
@@ -169,8 +176,10 @@ export async function updateProduct(companyId, id, body) {
       body.specs ?? {},
       body.imageUrl || null,
       body.modelUrl || null,
+      body.usdzUrl || null,
       body.documentUrl || null,
       body.videoUrl || null,
+      body.dimensions ?? null,
       id,
       companyId,
       body.isPublic ?? false,
@@ -475,6 +484,16 @@ export async function storeProductAsset({ productId, file, assetType }) {
       `UPDATE products
        SET model_url = $1,
            model_asset_id = $2,
+           is_public = true,
+           updated_at = now()
+       WHERE id = $3`,
+      [storage.url, asset.id, productId],
+    );
+  } else if (asset.asset_type === 'usdz_model') {
+    await query(
+      `UPDATE products
+       SET usdz_url = $1,
+           usdz_asset_id = $2,
            is_public = true,
            updated_at = now()
        WHERE id = $3`,
