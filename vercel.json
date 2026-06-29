@@ -1,5 +1,4 @@
 {
-  "installCommand": "npm install && npm --prefix frontend install",
   "outputDirectory": "frontend/dist",
   "functions": {
     "api/**/*.js": { "maxDuration": 30 }
