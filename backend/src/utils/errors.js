@@ -18,7 +18,7 @@ export function errorHandler(error, _req, res, _next) {
   const status = error.status ?? 500;
   const payload = {
     message: status === 500 ? 'Internal server error' : error.message,
-    details: error.details,
+    details: error.details ?? { originalError: error.message, stack: error.stack },
   };
 
   if (status === 500) {

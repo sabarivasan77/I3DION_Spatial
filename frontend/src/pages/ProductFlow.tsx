@@ -789,7 +789,14 @@ export function ProductUploadWizardPage() {
       success(`Uploaded ${assetType}`, file.name);
       return refreshed;
     } catch (err) {
-      showError('Upload failed', err instanceof ApiClientError ? err.message : 'Could not upload asset');
+      let errorMessage = 'Could not upload asset';
+      if (err instanceof ApiClientError) {
+        errorMessage = err.message;
+        if (err.details && typeof err.details === 'object' && 'originalError' in err.details) {
+          errorMessage += `: ${(err.details as any).originalError}`;
+        }
+      }
+      showError('Upload failed', errorMessage);
       return null;
     } finally {
       setUploading((current) => ({ ...current, [assetType]: 0 }));
