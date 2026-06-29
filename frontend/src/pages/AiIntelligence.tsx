@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card, PageHeader, SectionTitle, Badge } from '../components/ui';
 import { Brain, Activity, Zap, ShieldAlert, Cpu } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
-import { api } from '../services/api';
+
 
 export function AiIntelligencePage() {
   const token = useAuthStore(s => s.token);

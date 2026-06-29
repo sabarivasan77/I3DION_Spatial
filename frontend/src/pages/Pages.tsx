@@ -14,6 +14,7 @@ import {
   Building2, Lock, Image,
 } from 'lucide-react';
 import { Link, NavLink, useNavigate, useSearchParams } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -28,9 +29,6 @@ import {
 import { Tracker } from '../services/Tracker';
 import { useAuthStore } from '../store/authStore';
 import type { Lead, Product } from '../types';
-export { LandingPage } from './Landing';
-export { SupportDashboardPage } from './SupportDashboard';
-export { HelpCenterPage } from './HelpCenter';
 import { cx } from '../utils/format';
 
 // ─── Validation Helpers ──────────────────────────────────────────────────────
@@ -132,7 +130,10 @@ function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [mfaToken, setMfaToken] = useState('');
+  const [mfaRequired, setMfaRequired] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const { loginGoogle } = useAuthStore();
 
   useEffect(() => { clearError(); }, [mode]);
 
@@ -156,12 +157,27 @@ function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
         await signup({ name, companyName, email, password });
         Tracker.trackEvent('user_register', { email, name, companyName });
       } else {
-        await login(email, password);
+        await login(email, password, mfaToken || undefined);
         Tracker.trackEvent('user_login', { email });
       }
       navigate('/dashboard');
-    } catch {
-      showError('Authentication failed', authError ?? 'Please check your credentials');
+    } catch (err: any) {
+      if (err.status === 403 && err.message?.includes('MFA')) {
+        setMfaRequired(true);
+      } else {
+        showError('Authentication failed', authError ?? err.message ?? 'Please check your credentials');
+      }
+    }
+  }
+
+  async function handleGoogleSuccess(credentialResponse: any) {
+    try {
+      if (credentialResponse.credential) {
+        await loginGoogle(credentialResponse.credential);
+        navigate('/dashboard');
+      }
+    } catch (err: any) {
+      showError('Google Sign-In failed', err.message);
     }
   }
 
@@ -197,13 +213,37 @@ function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
                 <InputField label="Company Name" value={companyName} onChange={setCompanyName} placeholder="I3DION Industrial Solutions" error={errors.companyName} required />
               </>
             )}
-            <InputField label="Email" type="email" value={email} onChange={setEmail} placeholder="alex@i3dion.com" error={errors.email} required />
-            <InputField label="Password" type="password" value={password} onChange={setPassword} placeholder="Minimum 8 characters" error={errors.password} required />
-            {authError ? <p className="rounded-xl bg-red-50 p-3 text-sm font-medium text-red-700">{authError}</p> : null}
+            
+            {!mfaRequired ? (
+              <>
+                <InputField label="Email" type="email" value={email} onChange={setEmail} placeholder="alex@i3dion.com" error={errors.email} required />
+                <InputField label="Password" type="password" value={password} onChange={setPassword} placeholder="Minimum 8 characters" error={errors.password} required />
+              </>
+            ) : (
+              <InputField label="Authenticator Code" type="text" value={mfaToken} onChange={setMfaToken} placeholder="6-digit code" required />
+            )}
+
+            {authError && !mfaRequired ? <p className="rounded-xl bg-red-50 p-3 text-sm font-medium text-red-700">{authError}</p> : null}
             <Button className="w-full" type="submit" disabled={loading}>
-              {loading ? 'Working...' : isSignup ? 'Create Account' : 'Sign In'}
+              {loading ? 'Working...' : mfaRequired ? 'Verify & Sign In' : isSignup ? 'Create Account' : 'Sign In'}
               <ArrowRight size={18} />
             </Button>
+
+            {!isSignup && !mfaRequired && (
+              <div className="pt-4 border-t border-slate-100 flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-slate-500">Or continue with</p>
+                <div className="w-full flex justify-center mt-2">
+                  <GoogleLogin 
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => showError('Google Sign-In failed', 'Unable to authenticate with Google')}
+                    useOneTap
+                    shape="pill"
+                    text="continue_with"
+                    theme="outline"
+                  />
+                </div>
+              </div>
+            )}
           </form>
           <p className="mt-6 text-center text-sm text-slate-500">
             {isSignup ? 'Already have an account?' : 'New to I3DION Spatial?'}{' '}
@@ -307,7 +347,7 @@ export function ResetPasswordPage() {
 // ─── Landing Page ─────────────────────────────────────────────────────────────
 
 export function LandingPage() {
-  const industries = ['Manufacturing', 'Energy', 'Robotics', 'Heavy Equipment'];
+
   const [recommendations, setRecommendations] = useState<any[]>([]);
 
   useEffect(() => {

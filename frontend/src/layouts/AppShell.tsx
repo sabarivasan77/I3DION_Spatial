@@ -14,6 +14,7 @@ import {
   Users,
   Globe,
   Zap,
+  Shield,
   X,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -29,6 +30,7 @@ const navItems = [
   { label: 'Leads', path: '/leads', icon: Users },
   { label: 'Analytics', path: '/analytics', icon: BarChart3 },
   { label: 'AI Engine', path: '/ai', icon: Zap },
+  { label: 'Security', path: '/security', icon: Shield },
   { label: 'Settings', path: '/settings', icon: Settings },
 ];
 

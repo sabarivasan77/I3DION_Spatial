@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { X, ArrowRight, MessageSquare } from 'lucide-react';
 import { Tracker } from '../services/Tracker';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cx } from '../utils/format';
 
 export function ExitIntentSurvey() {
   const [isOpen, setIsOpen] = useState(false);

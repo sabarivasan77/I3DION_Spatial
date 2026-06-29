@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { PageHeader, Card } from '../components/ui';
-import { Search, Book, HelpCircle, ChevronRight, MessageSquare, Plus } from 'lucide-react';
+import { Search, Book, HelpCircle, ChevronRight, Plus } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
 export function HelpCenterPage() {

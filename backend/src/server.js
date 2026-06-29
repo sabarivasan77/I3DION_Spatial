@@ -17,6 +17,8 @@ import { hubRouter } from './routes/hub.js';
 import { searchRouter } from './routes/search.js';
 import { aiRouter } from './routes/ai.js';
 import { supportRouter } from './routes/support.js';
+import { deviceRouter } from './routes/device.js';
+import { securityRouter } from './routes/security.js';
 import { errorHandler, notFound } from './utils/errors.js';
 
 export const app = express();
@@ -33,6 +35,9 @@ app.use(rateLimit({ windowMs: 60_000, limit: 180 }));
 
 // Serve uploaded files
 app.use(`/${config.uploadDir}`, express.static(path.resolve(process.cwd(), config.uploadDir)));
+
+// Serve .well-known for Android App Links / iOS Universal Links
+app.use('/.well-known', express.static(path.resolve(process.cwd(), 'public/.well-known')));
 
 const apiRouter = express.Router();
 
@@ -70,6 +75,8 @@ apiRouter.use('/hub', hubRouter);
 apiRouter.use('/search', searchRouter);
 apiRouter.use('/ai', aiRouter);
 apiRouter.use('/support', supportRouter);
+apiRouter.use('/device', deviceRouter);
+apiRouter.use('/security', securityRouter);
 apiRouter.use('/', resourcesRouter);
 
 app.use('/api', apiRouter);

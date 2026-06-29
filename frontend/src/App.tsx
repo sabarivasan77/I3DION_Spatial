@@ -21,7 +21,6 @@ const AnalyticsDashboardPage = lazy(() => import('./pages/SalesIntelligence').th
 const AiIntelligencePage = lazy(() => import('./pages/AiIntelligence').then(m => ({ default: m.AiIntelligencePage })));
 const LeadsDashboardPage = lazy(() => import('./pages/LeadManagement').then(m => ({ default: m.LeadManagementPage })));
 const CompanySettingsPage = lazy(() => import('./pages/Pages').then(m => ({ default: m.CompanySettingsPage })));
-const SupportPage = lazy(() => import('./pages/Pages').then(m => ({ default: m.SupportPage })));
 const SupportDashboardPage = lazy(() => import('./pages/SupportDashboard').then(m => ({ default: m.SupportDashboardPage })));
 const HelpCenterPage = lazy(() => import('./pages/HelpCenter').then(m => ({ default: m.HelpCenterPage })));
 const HubFeedPage = lazy(() => import('./pages/hub/HubFeed').then(m => ({ default: m.HubFeed })));
@@ -29,6 +28,8 @@ const HubProductDetailPage = lazy(() => import('./pages/hub/HubProductDetail').t
 const HubSearchPage = lazy(() => import('./pages/hub/HubSearch').then(m => ({ default: m.HubSearch })));
 const CreatorProfilePage = lazy(() => import('./pages/hub/CreatorProfile').then(m => ({ default: m.CreatorProfile })));
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
+
+const SecurityDashboard = lazy(() => import('./pages/SecurityDashboard').then(m => ({ default: m.SecurityDashboard })));
 
 export default function App() {
   return (
@@ -64,6 +65,7 @@ export default function App() {
         <Route path="analytics" element={<AnalyticsDashboardPage />} />
         <Route path="ai" element={<AiIntelligencePage />} />
         <Route path="settings" element={<CompanySettingsPage />} />
+        <Route path="security" element={<SecurityDashboard />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="support" element={<SupportDashboardPage />} />
         <Route path="support/kb" element={<HelpCenterPage />} />

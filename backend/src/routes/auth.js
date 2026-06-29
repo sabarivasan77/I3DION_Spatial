@@ -1,6 +1,9 @@
 import bcrypt from 'bcryptjs';
 import { Router } from 'express';
-import { query } from '../db/pool.js';
+import { OAuth2Client } from 'google-auth-library';
+import { authenticator } from 'otplib';
+import qrcode from 'qrcode';
+import { query, pool } from '../db/pool.js';
 import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import {
@@ -8,31 +11,98 @@ import {
   loginSchema,
   resetPasswordSchema,
   signupSchema,
+  googleAuthSchema,
+  mfaVerifySchema
 } from '../schemas.js';
-import { createResetToken, hashToken, signAccessToken } from '../services/tokens.js';
+import { createResetToken, hashToken, signAccessToken, generateRefreshToken } from '../services/tokens.js';
 import { ApiError, asyncHandler } from '../utils/errors.js';
+import { logAudit, createSecurityAlert } from '../utils/audit.js';
 
 export const authRouter = Router();
 
-async function sessionPayload(user, req) {
-  const token = signAccessToken(user);
-  const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8'));
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || 'dummy-client-id');
+
+async function handleFailedLogin(email, ip) {
+  const { rows } = await query('SELECT id, company_id, failed_login_attempts FROM users WHERE email = $1', [email]);
+  if (!rows[0]) return;
+  const user = rows[0];
+  
+  const attempts = user.failed_login_attempts + 1;
+  let lockedUntil = null;
+
+  if (attempts >= 5) {
+    lockedUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+    createSecurityAlert({
+      companyId: user.company_id,
+      userId: user.id,
+      alertType: 'Brute Force Attempt',
+      severity: 'High',
+      details: { ip, email }
+    });
+  }
 
   await query(
-    `INSERT INTO user_sessions (user_id, company_id, token_hash, ip_address, user_agent, expires_at)
-     VALUES ($1, $2, $3, $4, $5, to_timestamp($6))`,
-    [
-      user.id,
-      user.company_id,
-      hashToken(token),
-      req.ip || null,
-      req.get('user-agent') || null,
-      decoded.exp,
-    ],
+    'UPDATE users SET failed_login_attempts = $1, locked_until = $2 WHERE id = $3',
+    [attempts, lockedUntil, user.id]
+  );
+}
+
+async function handleSuccessfulLogin(user, req, res) {
+  // Reset failed attempts
+  await query(
+    'UPDATE users SET failed_login_attempts = 0, locked_until = null, last_login_at = now(), last_login_ip = $1 WHERE id = $2',
+    [req.ip || null, user.id]
   );
 
+  const accessToken = signAccessToken(user);
+  const refreshToken = generateRefreshToken();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+  await query(
+    `INSERT INTO user_sessions (user_id, refresh_token_hash, device_info, ip_address, expires_at)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [
+      user.id,
+      hashToken(refreshToken),
+      req.get('user-agent') || 'Unknown',
+      req.ip || null,
+      expiresAt,
+    ]
+  );
+
+  // Set HTTP-Only cookie for refresh token
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    expires: expiresAt
+  });
+
+  // Track Mobile Device if provided
+  const { device_id, fcm_token, platform, os_version, app_version } = req.body;
+  if (device_id && platform) {
+    await query(
+      `INSERT INTO user_devices (user_id, device_id, fcm_token, platform, os_version, app_version, last_active_at)
+       VALUES ($1, $2, $3, $4, $5, $6, now())
+       ON CONFLICT (user_id, device_id)
+       DO UPDATE SET 
+         fcm_token = EXCLUDED.fcm_token,
+         os_version = EXCLUDED.os_version,
+         app_version = EXCLUDED.app_version,
+         last_active_at = now()`,
+      [user.id, device_id, fcm_token, platform, os_version, app_version]
+    );
+  }
+
+  logAudit({
+    companyId: user.company_id,
+    userId: user.id,
+    action: 'login',
+    req
+  });
+
   return {
-    token,
+    token: accessToken,
     user: {
       id: user.id,
       companyId: user.company_id,
@@ -57,12 +127,12 @@ authRouter.post(
     const company = await query('INSERT INTO companies (name) VALUES ($1) RETURNING *', [companyName]);
     const user = await query(
       `INSERT INTO users (company_id, name, email, password_hash, role)
-       VALUES ($1, $2, $3, $4, 'Admin')
+       VALUES ($1, $2, $3, $4, 'Company Admin')
        RETURNING id, company_id, name, email, role`,
       [company.rows[0].id, name, email, passwordHash],
     );
 
-    res.status(201).json(await sessionPayload(user.rows[0], req));
+    res.status(201).json(await handleSuccessfulLogin(user.rows[0], req, res));
   }),
 );
 
@@ -70,26 +140,147 @@ authRouter.post(
   '/login',
   validate(loginSchema),
   asyncHandler(async (req, res) => {
-    const { email, password } = req.validated.body;
+    const { email, password, mfaToken } = req.validated.body;
     const { rows } = await query(
-      'SELECT id, company_id, name, email, role, password_hash FROM users WHERE email = $1',
-      [email],
+      'SELECT * FROM users WHERE email = $1',
+      [email]
     );
     const user = rows[0];
 
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+    if (!user) {
       throw new ApiError(401, 'Invalid email or password');
     }
 
-    res.json(await sessionPayload(user, req));
+    if (user.locked_until && new Date(user.locked_until) > new Date()) {
+      throw new ApiError(403, 'Account temporarily locked due to multiple failed login attempts');
+    }
+
+    if (!(await bcrypt.compare(password, user.password_hash))) {
+      await handleFailedLogin(email, req.ip);
+      throw new ApiError(401, 'Invalid email or password');
+    }
+
+    if (user.mfa_enabled) {
+      if (!mfaToken) {
+        throw new ApiError(403, 'MFA token required');
+      }
+      const isValid = authenticator.verify({ token: mfaToken, secret: user.mfa_secret });
+      if (!isValid) {
+        await handleFailedLogin(email, req.ip);
+        throw new ApiError(401, 'Invalid MFA token');
+      }
+    }
+
+    res.json(await handleSuccessfulLogin(user, req, res));
   }),
+);
+
+authRouter.post(
+  '/google',
+  validate(googleAuthSchema),
+  asyncHandler(async (req, res) => {
+    const { idToken } = req.validated.body;
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID || 'dummy-client-id',
+      });
+      payload = ticket.getPayload();
+    } catch (err) {
+      throw new ApiError(401, 'Invalid Google ID token');
+    }
+
+    const { email, name, sub: googleId, picture } = payload;
+    
+    // Check if user exists
+    let { rows } = await query('SELECT * FROM users WHERE email = $1', [email]);
+    let user = rows[0];
+
+    if (user) {
+      // Link Google ID if not present
+      if (!user.google_id) {
+        await query('UPDATE users SET google_id = $1 WHERE id = $2', [googleId, user.id]);
+      }
+    } else {
+      // Auto create for Google Auth
+      const company = await query('INSERT INTO companies (name) VALUES ($1) RETURNING *', [`${name}'s Company`]);
+      const result = await query(
+        `INSERT INTO users (company_id, name, email, password_hash, role, google_id, avatar_url)
+         VALUES ($1, $2, $3, $4, 'Company Admin', $5, $6)
+         RETURNING *`,
+        [company.rows[0].id, name, email, await bcrypt.hash(Math.random().toString(36), 12), googleId, picture]
+      );
+      user = result.rows[0];
+    }
+
+    if (user.locked_until && new Date(user.locked_until) > new Date()) {
+      throw new ApiError(403, 'Account temporarily locked');
+    }
+
+    res.json(await handleSuccessfulLogin(user, req, res));
+  }),
+);
+
+authRouter.get(
+  '/mfa/setup',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const secret = authenticator.generateSecret();
+    const otpauth = authenticator.keyuri(req.user.email, 'I3DION Spatial', secret);
+    const qrCodeUrl = await qrcode.toDataURL(otpauth);
+
+    // Save temporary secret to user (not fully enabled yet)
+    await query('UPDATE users SET mfa_secret = $1 WHERE id = $2', [secret, req.user.id]);
+
+    res.json({ qrCodeUrl, secret });
+  })
+);
+
+authRouter.post(
+  '/mfa/verify',
+  requireAuth,
+  validate(mfaVerifySchema),
+  asyncHandler(async (req, res) => {
+    const { token } = req.validated.body;
+    const { rows } = await query('SELECT mfa_secret FROM users WHERE id = $1', [req.user.id]);
+    const secret = rows[0]?.mfa_secret;
+
+    if (!secret) throw new ApiError(400, 'MFA setup not initiated');
+
+    const isValid = authenticator.verify({ token, secret });
+    if (!isValid) throw new ApiError(400, 'Invalid token');
+
+    await query('UPDATE users SET mfa_enabled = true WHERE id = $1', [req.user.id]);
+    
+    logAudit({
+      companyId: req.user.company_id,
+      userId: req.user.id,
+      action: 'mfa_enabled',
+      req
+    });
+
+    res.json({ message: 'MFA enabled successfully' });
+  })
 );
 
 authRouter.post(
   '/logout',
   requireAuth,
   asyncHandler(async (req, res) => {
-    await query('UPDATE user_sessions SET revoked_at = now() WHERE token_hash = $1', [req.tokenHash]);
+    const refreshToken = req.cookies.refreshToken;
+    if (refreshToken) {
+      await query('UPDATE user_sessions SET is_revoked = true WHERE refresh_token_hash = $1', [hashToken(refreshToken)]);
+    }
+    res.clearCookie('refreshToken');
+    
+    logAudit({
+      companyId: req.user.company_id,
+      userId: req.user.id,
+      action: 'logout',
+      req
+    });
+
     res.status(204).end();
   }),
 );

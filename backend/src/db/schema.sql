@@ -606,3 +606,118 @@ CREATE TABLE IF NOT EXISTS chatbot_sessions (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_chatbot_sessions_company ON chatbot_sessions(company_id, status);
+
+-- ==========================================
+-- MOBILE INTEGRATION & SYNC SCHEMA
+-- ==========================================
+
+-- 1. User Devices (For Push Notifications & Deep Linking)
+CREATE TABLE IF NOT EXISTS user_devices (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  device_id text NOT NULL,
+  fcm_token text,
+  platform text NOT NULL CHECK (platform IN ('Android', 'iOS', 'Web')),
+  os_version text,
+  app_version text,
+  last_active_at timestamptz NOT NULL DEFAULT now(),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(user_id, device_id)
+);
+
+-- 2. Upgrade Notifications for Mobile Sync
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS is_read_mobile boolean NOT NULL DEFAULT false;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS is_read_web boolean NOT NULL DEFAULT false;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS action_url text; -- Deep link target
+
+-- 3. Offline Sync Queue
+CREATE TABLE IF NOT EXISTS offline_sync_queue (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  device_id text NOT NULL,
+  entity_type text NOT NULL, -- 'analytics', 'lead', 'interaction'
+  operation text NOT NULL, -- 'create', 'update', 'delete'
+  payload jsonb NOT NULL,
+  status text NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Processed', 'Failed')),
+  error_message text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  processed_at timestamptz
+);
+CREATE INDEX IF NOT EXISTS idx_offline_sync_queue_status ON offline_sync_queue(user_id, status);
+
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- ZERO TRUST SECURITY & ENTERPRISE AUTHENTICATION SCHEMA
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- 1. Expand User Roles
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'Super Admin';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'Company Admin';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'Sales Executive';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'Support Executive';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'Marketing';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'Analytics Viewer';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'Read Only';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'Customer';
+
+-- 2. Expand Users Table for Google Auth & MFA
+ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id text UNIQUE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS mfa_enabled boolean NOT NULL DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS mfa_secret text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at timestamptz;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_ip text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts integer NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until timestamptz;
+
+-- 3. Session Management Table (Zero Trust tracking)
+CREATE TABLE IF NOT EXISTS user_sessions (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  refresh_token_hash text NOT NULL,
+  device_info text,
+  ip_address text,
+  is_revoked boolean NOT NULL DEFAULT false,
+  expires_at timestamptz NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_user ON user_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions(refresh_token_hash);
+
+-- 4. Audit Logs (Enterprise Compliance)
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  company_id uuid REFERENCES companies(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  action text NOT NULL, -- e.g., 'login_success', 'mfa_enabled', 'lead_deleted', 'qr_generated'
+  entity_type text, -- e.g., 'user', 'lead', 'product'
+  entity_id text,
+  details jsonb, -- Arbitrary metadata
+  ip_address text,
+  user_agent text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_company ON audit_logs(company_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at);
+
+-- 5. Security Alerts (Threat Detection)
+DO $$ BEGIN
+  CREATE TYPE alert_severity AS ENUM ('Low', 'Medium', 'High', 'Critical');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+CREATE TABLE IF NOT EXISTS security_alerts (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  company_id uuid REFERENCES companies(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  alert_type text NOT NULL, -- e.g., 'Brute Force Attempt', 'New Device Login'
+  severity alert_severity NOT NULL DEFAULT 'Medium',
+  is_resolved boolean NOT NULL DEFAULT false,
+  details jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  resolved_at timestamptz,
+  resolved_by uuid REFERENCES users(id) ON DELETE SET NULL
+);
+CREATE INDEX IF NOT EXISTS idx_security_alerts_company ON security_alerts(company_id, is_resolved);

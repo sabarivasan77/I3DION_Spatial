@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Send, User, Building, Mail, Phone, Lock } from 'lucide-react';
 import { Tracker } from '../services/Tracker';
-import { cx } from '../utils/format';
+
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function SmartLeadCapture() {

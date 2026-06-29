@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { PageHeader, Card } from '../components/ui';
-import { Bot, User, CheckCircle, AlertTriangle, MessageSquare, Ticket } from 'lucide-react';
+import { Bot, User, CheckCircle, MessageSquare, Ticket } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
 export function SupportDashboardPage() {

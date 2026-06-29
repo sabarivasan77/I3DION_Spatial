@@ -26,7 +26,8 @@ interface AuthState {
   user: SessionUser | null;
   loading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, mfaToken?: string) => Promise<void>;
+  loginGoogle: (idToken: string) => Promise<void>;
   signup: (payload: { name: string; email: string; password: string; companyName: string }) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
@@ -49,25 +50,35 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: readUser(),
   loading: false,
   error: null,
-  login: async (email, password) => {
+  login: async (email, password, mfaToken) => {
     set({ loading: true, error: null });
     try {
-      const session = await api.login(email, password);
+      const session = await api.login(email, password, mfaToken);
       localStorage.setItem(TOKEN_KEY, session.token);
       localStorage.setItem(USER_KEY, JSON.stringify(session.user));
       set({ token: session.token, user: session.user, loading: false });
     } catch (error) {
       if (error instanceof ApiClientError && error.status === 0) {
-        const session = createOfflineSession({
-          name: email.split('@')[0] || 'I3DION Admin',
-          email,
-        });
+        // Fallback intentionally left here for offline
+        const session = createOfflineSession({ name: 'Offline User', email });
         localStorage.setItem(TOKEN_KEY, session.token);
         localStorage.setItem(USER_KEY, JSON.stringify(session.user));
-        set({ token: session.token, user: session.user, loading: false, error: null });
+        set({ token: session.token, user: session.user, loading: false });
         return;
       }
-      set({ error: error instanceof ApiClientError ? error.message : 'Unable to sign in', loading: false });
+      set({ error: error instanceof Error ? error.message : 'Login failed', loading: false });
+      throw error;
+    }
+  },
+  loginGoogle: async (idToken) => {
+    set({ loading: true, error: null });
+    try {
+      const session = await api.loginGoogle(idToken);
+      localStorage.setItem(TOKEN_KEY, session.token);
+      localStorage.setItem(USER_KEY, JSON.stringify(session.user));
+      set({ token: session.token, user: session.user, loading: false });
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : 'Google Login failed', loading: false });
       throw error;
     }
   },

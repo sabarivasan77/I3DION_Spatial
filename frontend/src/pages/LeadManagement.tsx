@@ -3,9 +3,9 @@ import {
   Search, RefreshCw, User, Users, Plus, Trash2, Edit2, Box,
   X, Check, AlertCircle, Phone, Mail, Building2, Star,
   TrendingUp, Clock, MessageSquare, Filter,
-  Target, Flame, Zap, Snowflake, Activity,
+  Target, Flame, Zap, Snowflake, Activity, Smartphone, Download,
 } from 'lucide-react';
-import { Button, Card, PageHeader } from '../components/ui';
+import { Button, Card, PageHeader, Badge } from '../components/ui';
 import { api, ApiClientError } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { useToast } from '../components/Toast';
@@ -330,7 +330,7 @@ function LeadDetailPanel({
 }) {
   const [journey, setJourney] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'journey' | 'notes' | 'stats'>('journey');
+  const [activeTab, setActiveTab] = useState<'journey' | 'interests' | 'notes' | 'stats'>('journey');
   const [loadingJourney, setLoadingJourney] = useState(false);
   const [note, setNote] = useState('');
   const [addingNote, setAddingNote] = useState(false);
@@ -522,10 +522,10 @@ function LeadDetailPanel({
                       </div>
                       <div className="flex gap-2">
                         {journey.some(e => e.product_name === productName && e.event_type === 'ar_launch') && (
-                          <Badge variant="blue"><Smartphone size={10} className="mr-1" /> AR</Badge>
+                          <Badge variant="info"><Smartphone size={10} className="mr-1" /> AR</Badge>
                         )}
                         {journey.some(e => e.product_name === productName && e.event_type === 'model_download') && (
-                          <Badge variant="green"><Download size={10} className="mr-1" /> DL</Badge>
+                          <Badge variant="success"><Download size={10} className="mr-1" /> DL</Badge>
                         )}
                       </div>
                     </div>

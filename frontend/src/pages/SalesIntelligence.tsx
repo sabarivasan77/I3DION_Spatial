@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Eye, Sparkles, Users, Download, Brain, AlertCircle, Box, Activity, ArrowRight, BarChart3, Search } from 'lucide-react';
+import { Eye, Sparkles, Users, Download, Brain, AlertCircle, Box, Activity, BarChart3, Search } from 'lucide-react';
 import { Button, Card, KpiCard, PageHeader, SectionTitle, Badge } from '../components/ui';
 import { api } from '../services/api';
 import { useAuthStore } from '../store/authStore';
@@ -20,7 +20,7 @@ export function SalesIntelligencePage() {
   const [trends, setTrends] = useState<any[]>([]);
   const [searches, setSearches] = useState<any[]>([]);
   const [funnel, setFunnel] = useState<any>(null);
-  const [downloads, setDownloads] = useState<any[]>([]);
+
   
   const [loading, setLoading] = useState(true);
 
@@ -35,14 +35,13 @@ export function SalesIntelligencePage() {
       api.getAnalyticsSearches(token).catch(() => []),
       api.getAnalyticsFunnel(token).catch(() => null),
       api.getAnalyticsDownloads(token).catch(() => []),
-    ]).then(([dashData, insightsData, productsData, trendsData, searchesData, funnelData, downloadsData]: any[]) => {
+    ]).then(([dashData, insightsData, productsData, trendsData, searchesData, funnelData]: any[]) => {
       setDashboard(dashData);
       setInsights(insightsData);
       setTopProducts(productsData);
       setTrends(trendsData);
       setSearches(searchesData);
       setFunnel(funnelData);
-      setDownloads(downloadsData);
       setLoading(false);
     });
   }, [token]);
@@ -142,7 +141,7 @@ export function SalesIntelligencePage() {
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                   />
                   <Bar dataKey="value" name="Count" radius={[0, 8, 8, 0]} barSize={32}>
-                    {funnelData.map((entry, index) => (
+                    {funnelData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={ANALYTICS_COLORS[index % ANALYTICS_COLORS.length]} />
                     ))}
                   </Bar>
@@ -195,7 +194,7 @@ export function SalesIntelligencePage() {
                        <Search size={14} className="text-slate-400 group-hover:text-blue-500 transition" />
                        <span className="text-sm font-medium text-slate-700">{s.query}</span>
                     </div>
-                    <Badge variant="blue">{s.count}</Badge>
+                    <Badge variant="info">{s.count}</Badge>
                   </div>
                 ))
              )}

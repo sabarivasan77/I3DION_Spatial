@@ -15,7 +15,28 @@ export const loginSchema = z.object({
   body: z.object({
     email: z.string().email(),
     password: z.string().min(8),
+    mfaToken: z.string().optional(),
+    device_id: z.string().optional(),
+    fcm_token: z.string().optional(),
+    platform: z.enum(['Android', 'iOS', 'Web']).optional(),
+    os_version: z.string().optional(),
+    app_version: z.string().optional(),
   }),
+});
+
+export const googleAuthSchema = z.object({
+  body: z.object({
+    idToken: z.string(),
+    device_id: z.string().optional(),
+    fcm_token: z.string().optional(),
+    platform: z.enum(['Android', 'iOS', 'Web']).optional(),
+  })
+});
+
+export const mfaVerifySchema = z.object({
+  body: z.object({
+    token: z.string()
+  })
 });
 
 export const forgotPasswordSchema = z.object({

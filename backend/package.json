@@ -15,10 +15,12 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
+    "google-auth-library": "^10.9.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "otplib": "^13.4.1",
     "pg": "^8.13.1",
     "qrcode": "^1.5.4",
     "zod": "^3.24.2"

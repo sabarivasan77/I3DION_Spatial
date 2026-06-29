@@ -384,10 +384,23 @@ export async function apiRequest<T>(
 }
 
 export const api = {
-  login: (email: string, password: string) =>
+  login: (email: string, password: string, mfaToken?: string) =>
     apiRequest<AuthResponse>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, mfaToken }),
+    }),
+  loginGoogle: (idToken: string) =>
+    apiRequest<AuthResponse>('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ idToken }),
+    }),
+  mfaSetup: (token: string) =>
+    apiRequest<{ qrCodeUrl: string; secret: string }>('/auth/mfa/setup', {
+      token, method: 'GET',
+    }),
+  mfaVerify: (token: string, mfaToken: string) =>
+    apiRequest<{ message: string }>('/auth/mfa/verify', {
+      token, method: 'POST', body: JSON.stringify({ token: mfaToken }),
     }),
   signup: (payload: { name: string; email: string; password: string; companyName: string }) =>
     apiRequest<AuthResponse>('/auth/signup', {
