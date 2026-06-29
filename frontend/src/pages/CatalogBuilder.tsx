@@ -12,6 +12,7 @@ export function CatalogBuilderPage() {
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
   const { success, error: showError } = useToast();
+  const baseUrl = import.meta.env.VITE_APP_URL ?? window.location.origin;
 
   const [products, setProducts] = useState<any[]>([]);
   const [catalogs, setCatalogs] = useState<CatalogRecord[]>([]);
@@ -44,7 +45,7 @@ export function CatalogBuilderPage() {
       setSelectedProducts(prev => prev.filter(p => p.id !== product.id));
     } else {
       // Generate preview QR code immediately so it shows up in the live preview
-      const targetUrl = `http://localhost:5173/product/${product.slug}?source=catalog_qr&catalog=preview`;
+      const targetUrl = `${baseUrl}/product/${product.slug}?source=catalog_qr&catalog=preview`;
       const qrDataUri = await QRCode.toDataURL(targetUrl, { width: 400, margin: 1 });
       setSelectedProducts(prev => [...prev, { ...product, _catalogQrDataUri: qrDataUri }]);
     }
@@ -62,7 +63,7 @@ export function CatalogBuilderPage() {
       imageUrl: p.image_url,
       specs: p.specs,
       qrUrl: p._catalogQrDataUri || null,
-      url: `http://localhost:5173/product/${p.slug}?source=catalog`
+      url: `${baseUrl}/product/${p.slug}?source=catalog`
     }))
   }), [name, description, user, template, selectedProducts]);
 
@@ -82,7 +83,7 @@ export function CatalogBuilderPage() {
 
       // 2. Refresh custom QR codes with actual catalog ID before rendering final PDF
       const enrichedProducts = await Promise.all(selectedProducts.map(async (p) => {
-        const targetUrl = `http://localhost:5173/product/${p.slug}?source=catalog_qr&catalog=${catalogRecord.id}`;
+        const targetUrl = `${baseUrl}/product/${p.slug}?source=catalog_qr&catalog=${catalogRecord.id}`;
         const qrDataUri = await QRCode.toDataURL(targetUrl, { width: 400, margin: 1 });
         return { ...p, _catalogQrDataUri: qrDataUri };
       }));
@@ -104,7 +105,7 @@ export function CatalogBuilderPage() {
           imageUrl: p.image_url,
           specs: p.specs,
           qrUrl: p._catalogQrDataUri,
-          url: `http://localhost:5173/product/${p.slug}?source=catalog`
+          url: `${baseUrl}/product/${p.slug}?source=catalog`
         }))
       }} />).toBlob();
 

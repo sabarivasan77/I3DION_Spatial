@@ -103,14 +103,13 @@ function Sidebar({
           <Headphones size={20} />
           Support
         </button>
-        <NavLink
-          to="/login"
+        <button
           onClick={onLogout}
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-rose-300 hover:bg-rose-500/10"
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-rose-300 hover:bg-rose-500/10"
         >
           <LogOut size={20} />
           Sign Out
-        </NavLink>
+        </button>
       </div>
     </aside>
   );
@@ -128,10 +127,15 @@ export default function AppShell() {
     ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : 'U';
 
+  async function handleLogout() {
+    await logout();
+    navigate('/login', { replace: true });
+  }
+
   return (
     <div className="min-h-screen bg-background text-slate-950">
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
-      <Sidebar open={open} onClose={() => setOpen(false)} onLogout={() => void logout()} onSupport={() => navigate('/support')} />
+      <Sidebar open={open} onClose={() => setOpen(false)} onLogout={handleLogout} onSupport={() => navigate('/support')} />
       <div className="lg:pl-64">
         <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-8">
           <div className="flex flex-1 items-center gap-4">

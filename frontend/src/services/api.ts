@@ -363,10 +363,10 @@ export async function apiRequest<T>(
   try {
     response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers, body, signal: controller.signal });
   } catch (error) {
-    if (isApiUnavailable(error)) {
-      return offlineFallback<T>(path, options);
-    }
-    if ((error as Error)?.name === 'AbortError') {
+    if (isApiUnavailable(error) || (error as Error)?.name === 'AbortError') {
+      if (import.meta.env.VITE_OFFLINE_MODE !== 'true') {
+        throw new ApiClientError(0, 'Server unavailable. Please try again.');
+      }
       return offlineFallback<T>(path, options);
     }
     throw error;

@@ -258,7 +258,8 @@ export function ForgotPasswordPage() {
 }
 
 export function ResetPasswordPage() {
-  const [token, setToken] = useState('');
+  const [searchParams] = useSearchParams();
+  const [token, setToken] = useState(searchParams.get('token') ?? '');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [message, setMessage] = useState('');
@@ -288,9 +289,8 @@ export function ResetPasswordPage() {
     <main className="flex min-h-screen items-center justify-center px-4 pt-16">
       <Card className="w-full max-w-lg p-8">
         <h1 className="text-3xl font-bold">Reset Password</h1>
-        <p className="mt-2 text-slate-500">Enter your reset token and a new password.</p>
+        <p className="mt-2 text-slate-500">Enter a new password for your account.</p>
         <form className="mt-8 space-y-4" onSubmit={submit}>
-          <InputField label="Reset Token" value={token} onChange={setToken} placeholder="Paste your reset token" error={errors.token} required />
           <InputField label="New Password" type="password" value={password} onChange={setPassword} placeholder="Minimum 8 characters" error={errors.password} required />
           <InputField label="Confirm Password" type="password" value={confirm} onChange={setConfirm} placeholder="Repeat your new password" error={errors.confirm} required />
           {message ? <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">{message}</p> : null}
@@ -390,7 +390,7 @@ export function DashboardPage() {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    if (!token || token === 'offline-dev-token') return;
+    if (!token) return;
     api.getAnalyticsSummary(token).then((d: any) => setSummary(d)).catch(() => null);
     api.listProducts(token).then((rows: any) => setProducts((rows as any[]).map(mapProductRow))).catch(() => null);
   }, [token]);
@@ -401,10 +401,10 @@ export function DashboardPage() {
     const totalDownloads = products.reduce((a, b) => a + (b.downloads || 0), 0);
     
     return [
-      { label: 'Public Hub Products', value: String(publicProducts || 0), change: '+0%', icon: Box, tone: 'neutral' as const },
-      { label: 'Hub Downloads', value: String(totalDownloads || 0), change: '+12%', icon: Download, tone: 'positive' as const },
-      { label: 'AR Sessions', value: String(SAMPLE_ANALYTICS.reduce((a, b) => a + b.ar, 0)), change: '+8%', icon: Sparkles, tone: 'positive' as const },
-      { label: 'Leads Captured', value: String(totalLeads || SAMPLE_ANALYTICS.reduce((a, b) => a + b.leads, 0)), change: '+5%', icon: Users, tone: 'positive' as const },
+      { label: 'Public Hub Products', value: String(publicProducts || 0), change: '—', icon: Box, tone: 'neutral' as const },
+      { label: 'Hub Downloads', value: String(totalDownloads || 0), change: '—', icon: Download, tone: 'neutral' as const },
+      { label: 'AR Sessions', value: '0', change: '—', icon: Sparkles, tone: 'neutral' as const },
+      { label: 'Leads Captured', value: String(totalLeads || 0), change: '—', icon: Users, tone: 'neutral' as const },
     ];
   }, [summary, products]);
 
@@ -575,10 +575,7 @@ export function ProductManagementPage() {
   async function quickStatus(product: Product, status: Product['status']) {
     setIsSaving(true);
     try {
-      const saved = await api.updateProduct(token!, product.id, {
-        name: product.name, category: product.category, description: '', status,
-        specs: product.specs, imageUrl: product.image || undefined,
-      });
+      const saved = await api.patchProductStatus(token!, product.id, status);
       const mapped = mapProductRow(saved as unknown as Record<string, unknown>);
       setLiveProducts((c) => c.map((p) => p.id === product.id ? mapped : p));
       success(status === 'Published' ? 'Product published' : 'Product archived');
@@ -682,7 +679,7 @@ function ProductFormModal({ product, isSaving, token, onClose, onSave }: {
 }) {
   const [name, setName] = useState(product?.name ?? '');
   const [category, setCategory] = useState(product?.category ?? '');
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState(product?.description ?? '');
   const [status, setStatus] = useState<Product['status']>(product?.status ?? 'Draft');
   const [specs, setSpecs] = useState<Record<string, string>>(product?.specs ?? {});
   const [imageUrl, setImageUrl] = useState(product?.image ?? '');
@@ -1287,9 +1284,11 @@ export function ProductExperiencePage() {
     if (!token || !id) return;
     try {
       const res: any = await api.createQr(token, 'product', id);
-      const win = window.open();
-      if (win) win.document.write(`<img src="${res.qr_data_url}" style="width:300px"/>`);
-      success('QR Code opened in new tab');
+      const a = document.createElement('a');
+      a.href = res.qr_data_url;
+      a.download = `qr-${product.name}.png`;
+      a.click();
+      success('QR Code downloaded');
     } catch (err) {
       showError('QR failed', err instanceof ApiClientError ? err.message : 'Could not generate QR');
     }

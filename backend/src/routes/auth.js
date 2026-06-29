@@ -109,7 +109,6 @@ authRouter.post(
 
     res.json({
       message: 'If an account exists, a reset link has been generated.',
-      resetToken: token,
     });
   }),
 );
