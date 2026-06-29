@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { Router } from 'express';
 import { OAuth2Client } from 'google-auth-library';
-import { authenticator } from 'otplib';
+import { generateSecret, generateURI, verifySync } from 'otplib';
 import qrcode from 'qrcode';
 import { query, pool } from '../db/pool.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -164,8 +164,8 @@ authRouter.post(
       if (!mfaToken) {
         throw new ApiError(403, 'MFA token required');
       }
-      const isValid = authenticator.verify({ token: mfaToken, secret: user.mfa_secret });
-      if (!isValid) {
+      const { valid } = verifySync({ token: mfaToken, secret: user.mfa_secret });
+      if (!valid) {
         await handleFailedLogin(email, req.ip);
         throw new ApiError(401, 'Invalid MFA token');
       }
@@ -226,8 +226,8 @@ authRouter.get(
   '/mfa/setup',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const secret = authenticator.generateSecret();
-    const otpauth = authenticator.keyuri(req.user.email, 'I3DION Spatial', secret);
+    const secret = generateSecret();
+    const otpauth = generateURI({ label: req.user.email, issuer: 'I3DION Spatial', secret });
     const qrCodeUrl = await qrcode.toDataURL(otpauth);
 
     // Save temporary secret to user (not fully enabled yet)
@@ -248,8 +248,8 @@ authRouter.post(
 
     if (!secret) throw new ApiError(400, 'MFA setup not initiated');
 
-    const isValid = authenticator.verify({ token, secret });
-    if (!isValid) throw new ApiError(400, 'Invalid token');
+    const { valid } = verifySync({ token, secret });
+    if (!valid) throw new ApiError(400, 'Invalid MFA code');
 
     await query('UPDATE users SET mfa_enabled = true WHERE id = $1', [req.user.id]);
     

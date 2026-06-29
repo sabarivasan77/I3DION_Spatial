@@ -1,4 +1,4 @@
-import { AppError } from '../utils/errors.js';
+import { ApiError } from '../utils/errors.js';
 import { logAudit, createSecurityAlert } from '../utils/audit.js';
 
 /**
@@ -31,7 +31,7 @@ export function requireRole(roles) {
           details: { path: req.originalUrl, method: req.method }
         });
 
-        throw new AppError(403, 'Insufficient permissions to access this resource');
+        next(new ApiError(403, 'You do not have permission to perform this action.'));
       }
 
       next();
