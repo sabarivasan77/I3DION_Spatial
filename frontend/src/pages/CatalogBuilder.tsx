@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { PDFViewer, pdf } from '@react-pdf/renderer';
-import { BookOpen, Download, Plus, CheckCircle2, Box, Layers, Briefcase, ArrowRight, Sparkles, Search, ArrowUp, ArrowDown, Loader2, LayoutTemplate, ExternalLink } from 'lucide-react';
+import { BookOpen, Download, Plus, CheckCircle2, Box, Layers, Briefcase, Sparkles, Search, ArrowUp, ArrowDown, Loader2, LayoutTemplate, ExternalLink } from 'lucide-react';
 import QRCode from 'qrcode';
 import { Button, Card, PageHeader, SectionTitle } from '../components/ui';
 import { api, CatalogRecord } from '../services/api';
