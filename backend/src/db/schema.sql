@@ -85,6 +85,13 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS usdz_asset_id uuid;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS usdz_url text;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS dimensions jsonb;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS qr_code_id uuid;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS document_url text;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url text;
+
+ALTER TYPE product_asset_type ADD VALUE IF NOT EXISTS 'document';
+ALTER TYPE product_asset_type ADD VALUE IF NOT EXISTS 'usdz_model';
+ALTER TYPE product_asset_type ADD VALUE IF NOT EXISTS 'qr_png';
+ALTER TYPE product_asset_type ADD VALUE IF NOT EXISTS 'qr_svg';
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_products_company_slug ON products(company_id, slug) WHERE slug IS NOT NULL;
 
