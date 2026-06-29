@@ -465,6 +465,10 @@ export const api = {
   getAnalyticsDashboard: (token: string) => apiRequest('/analytics/dashboard', { token }),
   getAnalyticsInsights: (token: string) => apiRequest('/analytics/insights', { token }),
   getTopProducts: (token: string) => apiRequest('/analytics/top-products', { token }),
+  getAnalyticsTrends: (token: string) => apiRequest('/analytics/charts/trends', { token }),
+  getAnalyticsSearches: (token: string) => apiRequest('/analytics/charts/searches', { token }),
+  getAnalyticsFunnel: (token: string) => apiRequest('/analytics/charts/funnel', { token }),
+  getAnalyticsDownloads: (token: string) => apiRequest('/analytics/charts/downloads', { token }),
   updateCompany: (token: string, payload: unknown) =>
     apiRequest('/company', { token, method: 'PUT', body: JSON.stringify(payload) }),
   getCompany: (token: string) => apiRequest('/company', { token }),

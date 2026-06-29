@@ -15,6 +15,8 @@ import { analyticsRouter } from './routes/analytics.js';
 import { leadsRouter } from './routes/leads.js';
 import { hubRouter } from './routes/hub.js';
 import { searchRouter } from './routes/search.js';
+import { aiRouter } from './routes/ai.js';
+import { supportRouter } from './routes/support.js';
 import { errorHandler, notFound } from './utils/errors.js';
 
 export const app = express();
@@ -66,6 +68,8 @@ apiRouter.use('/analytics', analyticsRouter);
 apiRouter.use('/leads', leadsRouter);
 apiRouter.use('/hub', hubRouter);
 apiRouter.use('/search', searchRouter);
+apiRouter.use('/ai', aiRouter);
+apiRouter.use('/support', supportRouter);
 apiRouter.use('/', resourcesRouter);
 
 app.use('/api', apiRouter);

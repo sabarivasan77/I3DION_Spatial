@@ -13,6 +13,7 @@ import {
   Settings,
   Users,
   Globe,
+  Zap,
   X,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -27,6 +28,7 @@ const navItems = [
   { label: 'Catalogs', path: '/catalog-builder', icon: BookOpen },
   { label: 'Leads', path: '/leads', icon: Users },
   { label: 'Analytics', path: '/analytics', icon: BarChart3 },
+  { label: 'AI Engine', path: '/ai', icon: Zap },
   { label: 'Settings', path: '/settings', icon: Settings },
 ];
 
@@ -101,8 +103,16 @@ function Sidebar({
       <div className="mt-6 space-y-1 border-t border-slate-800 pt-6">
         <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-400 hover:bg-slate-800/60 hover:text-white" onClick={onSupport}>
           <Headphones size={20} />
-          Support
+          Support Dashboard
         </button>
+        <NavLink 
+          to="/support/kb" 
+          onClick={onClose}
+          className={({ isActive }) => cx("flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-slate-800/60 transition", isActive ? "bg-slate-800/60 text-white" : "text-slate-400")}
+        >
+          <BookOpen size={20} />
+          Knowledge Base
+        </NavLink>
         <button
           onClick={onLogout}
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-rose-300 hover:bg-rose-500/10"

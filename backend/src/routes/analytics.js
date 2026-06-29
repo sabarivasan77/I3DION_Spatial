@@ -83,3 +83,75 @@ analyticsRouter.get(
     res.json(metrics[0]);
   })
 );
+
+// GET /api/analytics/charts/trends - Visitor trend and daily sessions
+analyticsRouter.get(
+  '/charts/trends',
+  asyncHandler(async (req, res) => {
+    const { companyId } = req.user;
+    const { rows: trends } = await query(
+      `SELECT DATE(created_at) as date,
+              COUNT(DISTINCT visitor_id) as visitors,
+              COUNT(*) as sessions
+       FROM analytics_events
+       WHERE company_id = $1 AND created_at >= NOW() - INTERVAL '30 days'
+       GROUP BY DATE(created_at)
+       ORDER BY DATE(created_at) ASC`,
+      [companyId]
+    );
+    res.json(trends);
+  })
+);
+
+// GET /api/analytics/charts/searches - Search trends
+analyticsRouter.get(
+  '/charts/searches',
+  asyncHandler(async (req, res) => {
+    const { companyId } = req.user;
+    const { rows: searches } = await query(
+      `SELECT metadata->>'query' as query, COUNT(*) as count
+       FROM analytics_events
+       WHERE company_id = $1 AND event_type = 'search'
+       GROUP BY metadata->>'query'
+       ORDER BY count DESC
+       LIMIT 10`,
+      [companyId]
+    );
+    res.json(searches);
+  })
+);
+
+// GET /api/analytics/charts/funnel - Conversion funnel
+analyticsRouter.get(
+  '/charts/funnel',
+  asyncHandler(async (req, res) => {
+    const { companyId } = req.user;
+    const { rows: funnel } = await query(
+      `SELECT
+        COUNT(DISTINCT visitor_id) as visitors,
+        COUNT(DISTINCT CASE WHEN event_type IN ('page_view', 'product_view') THEN visitor_id END) as product_views,
+        COUNT(DISTINCT CASE WHEN event_type = 'ar_launch' THEN visitor_id END) as ar_launches,
+        COUNT(DISTINCT lead_id) as leads
+       FROM analytics_events
+       WHERE company_id = $1 AND created_at >= NOW() - INTERVAL '30 days'`,
+      [companyId]
+    );
+    res.json(funnel[0]);
+  })
+);
+
+// GET /api/analytics/charts/downloads - Downloads breakdown
+analyticsRouter.get(
+  '/charts/downloads',
+  asyncHandler(async (req, res) => {
+    const { companyId } = req.user;
+    const { rows: downloads } = await query(
+      `SELECT event_type as type, COUNT(*) as count
+       FROM analytics_events
+       WHERE company_id = $1 AND event_type IN ('brochure_download', 'model_download')
+       GROUP BY event_type`,
+      [companyId]
+    );
+    res.json(downloads);
+  })
+);

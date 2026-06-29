@@ -1,0 +1,6 @@
+{
+  "name": "I3DION Spatial",
+  "description": "I3DION Spatial is a premium enterprise-grade industrial product experience and AR visualization app, designed to showcase advanced 3D models of machinery, pumps, automation systems, and generators.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

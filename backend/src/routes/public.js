@@ -29,7 +29,11 @@ const publicEventSchema = z.object({
       'quote_request',
       'time_spent',
       'button_click',
-      'model_rotation'
+      'model_rotation',
+      'search',
+      'exit_intent',
+      'contact_sales',
+      'model_download'
     ]),
     metadata: z.record(z.unknown()).optional().default({}),
     durationSeconds: z.number().int().min(0).optional(),

@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">I3DION Spatial</string>
+    <string name="splash_tagline">Industrial AR Product Experience</string>
+    <string name="home_hero_title">Explore Industrial Products in AR</string>
+    <string name="home_hero_subtitle">Visualize premium products in your space using advanced Augmented Reality.</string>
+    <string name="btn_view_details">View Details</string>
+    <string name="btn_download_model">Download Model</string>
+    <string name="btn_view_in_ar">View in AR</string>
+    <string name="txt_downloading_model">Downloading Model…</string>
+    <string name="txt_search_placeholder">Search industrial equipment…</string>
+    <string name="product_overview">Product Overview</string>
+    <string name="tech_specs">Technical Specifications</string>
+    <string name="product_benefits">Key Benefits</string>
+    <string name="documents_section">Documentation &amp; Manuals</string>
+    <string name="camera_permission_required">Camera Permission Required</string>
+    <string name="camera_permission_rationale">This application requires camera access to detect surfaces and visualize industrial models in Augmented Reality (AR).</string>
+</resources>

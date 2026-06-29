@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { query } from '../db/pool.js';
 import { requireAuth } from '../middleware/auth.js';
 import { asyncHandler } from '../utils/errors.js';
+import { searchEngine } from '../services/searchEngine.js';
 
 export const searchRouter = Router();
 
@@ -23,21 +24,8 @@ searchRouter.get(
     const results = { products: [], catalogs: [], leads: [], total: 0 };
 
     if (type === 'all' || type === 'products') {
-      const { rows } = await query(
-        `SELECT id, name, category, description, status, image_url, tags, created_at
-         FROM products
-         WHERE company_id = $1
-           AND (name ILIKE $2 OR category ILIKE $2 OR description ILIKE $2 
-                OR specs::text ILIKE $2
-                OR tags::text ILIKE $2)
-         ORDER BY 
-           CASE WHEN name ILIKE $3 THEN 0 ELSE 1 END,
-           views_count DESC,
-           updated_at DESC
-         LIMIT $4`,
-        [companyId, likePattern, `%${searchTerm}%`, Math.ceil(limit / (type === 'all' ? 3 : 1))]
-      );
-      results.products = rows.map(r => ({ ...r, _type: 'product' }));
+      const semanticProducts = await searchEngine.semanticSearch(companyId, searchTerm);
+      results.products = semanticProducts.map(r => ({ ...r, _type: 'product' })).slice(0, Math.ceil(limit / (type === 'all' ? 3 : 1)));
     }
 
     if (type === 'all' || type === 'catalogs') {

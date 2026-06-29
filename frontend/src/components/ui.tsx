@@ -91,9 +91,20 @@ export function KpiCard({ item }: { item: Kpi }) {
   );
 }
 
-export function Badge({ children, className }: { children: React.ReactNode; className?: string }) {
+export function Badge({ children, className, variant }: { children: React.ReactNode; className?: string; variant?: 'success' | 'warning' | 'danger' | 'info' | 'neutral' }) {
+  const variantStyles: Record<string, string> = {
+    success: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    warning: 'border-amber-200 bg-amber-50 text-amber-700',
+    danger: 'border-red-200 bg-red-50 text-red-700',
+    info: 'border-blue-200 bg-blue-50 text-blue-700',
+    neutral: 'border-slate-200 bg-slate-50 text-slate-600',
+  };
+
+  const autoClass = typeof children === 'string' && !variant ? statusClass(children) : '';
+  const appliedClass = variant ? variantStyles[variant] : autoClass;
+
   return (
-    <span className={cx('rounded-full border px-3 py-1 text-xs font-semibold', typeof children === 'string' ? statusClass(children) : '', className)}>
+    <span className={cx('rounded-full border px-3 py-1 text-xs font-semibold', appliedClass, className)}>
       {children}
     </span>
   );

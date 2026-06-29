@@ -4,6 +4,7 @@ import AppShell from './layouts/AppShell';
 import PublicLayout from './layouts/PublicLayout';
 import { Suspense, lazy } from 'react';
 import RouteTracker from './components/RouteTracker';
+import { ChatbotWidget } from './components/ChatbotWidget';
 
 const LandingPage = lazy(() => import('./pages/Pages').then(m => ({ default: m.LandingPage })));
 const LoginPage = lazy(() => import('./pages/Pages').then(m => ({ default: m.LoginPage })));
@@ -17,9 +18,12 @@ const CatalogBuilderPage = lazy(() => import('./pages/CatalogBuilder').then(m =>
 const ProductExperiencePage = lazy(() => import('./pages/ProductFlow').then(m => ({ default: m.ProductExperiencePage })));
 const PublicProductPage = lazy(() => import('./pages/ProductFlow').then(m => ({ default: m.PublicProductPage })));
 const AnalyticsDashboardPage = lazy(() => import('./pages/SalesIntelligence').then(m => ({ default: m.SalesIntelligencePage })));
+const AiIntelligencePage = lazy(() => import('./pages/AiIntelligence').then(m => ({ default: m.AiIntelligencePage })));
 const LeadsDashboardPage = lazy(() => import('./pages/LeadManagement').then(m => ({ default: m.LeadManagementPage })));
 const CompanySettingsPage = lazy(() => import('./pages/Pages').then(m => ({ default: m.CompanySettingsPage })));
 const SupportPage = lazy(() => import('./pages/Pages').then(m => ({ default: m.SupportPage })));
+const SupportDashboardPage = lazy(() => import('./pages/SupportDashboard').then(m => ({ default: m.SupportDashboardPage })));
+const HelpCenterPage = lazy(() => import('./pages/HelpCenter').then(m => ({ default: m.HelpCenterPage })));
 const HubFeedPage = lazy(() => import('./pages/hub/HubFeed').then(m => ({ default: m.HubFeed })));
 const HubProductDetailPage = lazy(() => import('./pages/hub/HubProductDetail').then(m => ({ default: m.HubProductDetail })));
 const HubSearchPage = lazy(() => import('./pages/hub/HubSearch').then(m => ({ default: m.HubSearch })));
@@ -58,12 +62,15 @@ export default function App() {
 
         <Route path="leads" element={<LeadsDashboardPage />} />
         <Route path="analytics" element={<AnalyticsDashboardPage />} />
+        <Route path="ai" element={<AiIntelligencePage />} />
         <Route path="settings" element={<CompanySettingsPage />} />
         <Route path="profile" element={<ProfilePage />} />
-        <Route path="support" element={<SupportPage />} />
+        <Route path="support" element={<SupportDashboardPage />} />
+        <Route path="support/kb" element={<HelpCenterPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <ChatbotWidget />
     </Suspense>
   );
 }

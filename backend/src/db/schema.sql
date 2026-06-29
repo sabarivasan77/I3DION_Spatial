@@ -407,7 +407,7 @@ ALTER TABLE catalogs ADD COLUMN IF NOT EXISTS downloads_count integer NOT NULL D
 
 -- Update event_type constraint in analytics_events
 ALTER TABLE analytics_events DROP CONSTRAINT IF EXISTS analytics_events_event_type_check;
-ALTER TABLE analytics_events ADD CONSTRAINT analytics_events_event_type_check CHECK (event_type IN ('page_view', 'product_view', 'catalog_view', 'catalog_generated', 'catalog_downloaded', 'product_visit_from_catalog', 'qr_scan_from_catalog', 'qr_scan', 'qr_preview', 'qr_download', 'ar_launch', 'ar_session', 'session_duration', 'lead_created', 'hotspot_view', 'animation_play', 'user_register', 'user_login', 'brochure_download', 'quote_request', 'time_spent', 'button_click', 'model_rotation', 'like', 'comment', 'share', 'download', 'follow', 'bookmark'));
+ALTER TABLE analytics_events ADD CONSTRAINT analytics_events_event_type_check CHECK (event_type IN ('page_view', 'product_view', 'catalog_view', 'catalog_generated', 'catalog_downloaded', 'product_visit_from_catalog', 'qr_scan_from_catalog', 'qr_scan', 'qr_preview', 'qr_download', 'ar_launch', 'ar_session', 'session_duration', 'lead_created', 'hotspot_view', 'animation_play', 'user_register', 'user_login', 'brochure_download', 'quote_request', 'time_spent', 'button_click', 'model_rotation', 'like', 'comment', 'share', 'download', 'follow', 'bookmark', 'search', 'exit_intent', 'contact_sales'));
 
 -- 2. Creator Profiles
 CREATE TABLE IF NOT EXISTS creator_profiles (
@@ -500,3 +500,109 @@ CREATE INDEX IF NOT EXISTS idx_products_fts ON products USING gin(to_tsvector('e
 CREATE INDEX IF NOT EXISTS idx_catalogs_fts ON catalogs USING gin(to_tsvector('english', name || ' ' || COALESCE(description,'')));
 CREATE INDEX IF NOT EXISTS idx_leads_fts ON leads USING gin(to_tsvector('english', name || ' ' || COALESCE(company,'') || ' ' || email));
 
+
+-- ==========================================
+-- AI ENGINE & ML PIPELINE SCHEMA
+-- ==========================================
+
+-- 1. ML Feature Store
+CREATE TABLE IF NOT EXISTS ml_feature_store (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  entity_type text NOT NULL CHECK (entity_type IN ('user', 'lead', 'product', 'catalog', 'session')),
+  entity_id uuid NOT NULL,
+  feature_name text NOT NULL,
+  feature_value numeric,
+  feature_vector jsonb,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(entity_type, entity_id, feature_name)
+);
+
+-- 2. ML Models Registry
+CREATE TABLE IF NOT EXISTS ml_models (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name text NOT NULL,
+  version text NOT NULL,
+  description text,
+  status text NOT NULL DEFAULT 'Training' CHECK (status IN ('Training', 'Active', 'Archived', 'Failed')),
+  metrics jsonb NOT NULL DEFAULT '{}'::jsonb,
+  model_data bytea, -- serialized model or external reference
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(name, version)
+);
+
+-- 3. AI Predictions Cache
+CREATE TABLE IF NOT EXISTS ai_predictions (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  model_id uuid REFERENCES ml_models(id) ON DELETE CASCADE,
+  entity_type text NOT NULL,
+  entity_id uuid NOT NULL,
+  prediction_type text NOT NULL, -- e.g., 'conversion_probability', 'category_affinity'
+  prediction_value numeric,
+  prediction_data jsonb,
+  confidence numeric,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  expires_at timestamptz,
+  UNIQUE(model_id, entity_type, entity_id, prediction_type)
+);
+
+-- 4. AI Insights Log (for Sales Assistant)
+CREATE TABLE IF NOT EXISTS ai_insights_log (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  entity_type text NOT NULL, -- 'lead', 'product', 'company'
+  entity_id uuid NOT NULL,
+  insight_type text NOT NULL, -- 'action_required', 'trend_spotted', 'anomaly'
+  message text NOT NULL,
+  urgency text NOT NULL DEFAULT 'medium' CHECK (urgency IN ('low', 'medium', 'high', 'critical')),
+  is_dismissed boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Indexes for AI Tables
+CREATE INDEX IF NOT EXISTS idx_ml_feature_store_entity ON ml_feature_store(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_ai_predictions_entity ON ai_predictions(entity_type, entity_id, prediction_type);
+CREATE INDEX IF NOT EXISTS idx_ai_insights_log_company ON ai_insights_log(company_id, is_dismissed);
+
+-- ==========================================
+-- AI SUPPORT CENTER SCHEMA
+-- ==========================================
+
+-- 1. Modify Support Tickets
+ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS conversation_history jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS sentiment text DEFAULT 'Neutral' CHECK (sentiment IN ('Happy', 'Neutral', 'Confused', 'Frustrated', 'Angry', 'Urgent'));
+ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS priority text DEFAULT 'Low' CHECK (priority IN ('Low', 'Medium', 'High', 'Critical'));
+ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS resolution_time integer;
+ALTER TABLE support_tickets DROP CONSTRAINT IF EXISTS support_tickets_category_check;
+
+-- 2. Knowledge Base
+CREATE TABLE IF NOT EXISTS knowledge_base (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  company_id uuid REFERENCES companies(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  content text NOT NULL,
+  category text NOT NULL,
+  tags text[] NOT NULL DEFAULT '{}',
+  is_published boolean NOT NULL DEFAULT true,
+  view_count integer NOT NULL DEFAULT 0,
+  helpful_count integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_knowledge_base_company ON knowledge_base(company_id);
+
+-- 3. Chatbot Sessions
+CREATE TABLE IF NOT EXISTS chatbot_sessions (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  company_id uuid REFERENCES companies(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  visitor_id text,
+  current_page text,
+  context_data jsonb NOT NULL DEFAULT '{}'::jsonb,
+  message_history jsonb NOT NULL DEFAULT '[]'::jsonb,
+  status text NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Resolved', 'Escalated')),
+  escalated_ticket_id uuid REFERENCES support_tickets(id) ON DELETE SET NULL,
+  started_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_chatbot_sessions_company ON chatbot_sessions(company_id, status);

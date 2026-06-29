@@ -4,25 +4,29 @@ export const SCORE_WEIGHTS = {
   user_register: 30,
   user_login: 10,
   page_view: 1,
-  product_view: 2,
+  product_view: 2, // Modified
   catalog_view: 2,
   qr_scan: 10,
-  ar_launch: 15,
+  ar_launch: 10, // Modified
   ar_session: 5,
-  brochure_download: 20,
-  quote_request: 50,
+  brochure_download: 8, // Modified (PDF)
+  model_download: 15, // New
+  quote_request: 50, // Modified
+  contact_sales: 60, // New
+  specification_view: 4, // New
+  return_visit: 15, // New
   time_spent: 0, // Calculated separately
   button_click: 1,
   model_rotation: 2,
   hotspot_view: 2,
-  animation_play: 2
+  animation_play: 5 // Modified
 };
 
 export function getLeadCategory(score) {
-  if (score >= 80) return 'High Intent';
-  if (score >= 50) return 'SQL';
-  if (score >= 30) return 'Hot';
-  if (score >= 10) return 'Warm';
+  if (score >= 100) return 'Sales Ready';
+  if (score >= 70) return 'Qualified';
+  if (score >= 40) return 'Hot';
+  if (score >= 20) return 'Warm';
   return 'Cold';
 }
 
@@ -69,6 +73,7 @@ export async function recalculateLeadScore(leadId, companyId) {
         }
         break;
       case 'brochure_download':
+      case 'model_download':
         total_downloads++;
         break;
     }

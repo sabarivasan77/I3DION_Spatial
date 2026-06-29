@@ -34,6 +34,8 @@ import { Tracker } from '../services/Tracker';
 import { useAuthStore } from '../store/authStore';
 import { cx } from '../utils/format';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SmartLeadCapture } from '../components/SmartLeadCapture';
+import { ExitIntentSurvey } from '../components/ExitIntentSurvey';
 
 type WizardStep = 1 | 2 | 3;
 
@@ -1519,6 +1521,8 @@ export function PublicProductPage() {
         </div>
 
       </div>
+      <SmartLeadCapture />
+      <ExitIntentSurvey />
     </main>
   );
 }

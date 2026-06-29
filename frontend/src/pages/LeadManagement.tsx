@@ -442,21 +442,22 @@ function LeadDetailPanel({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-100">
+        <div className="flex border-b border-slate-100 overflow-x-auto scrollbar-hide">
           {[
-            { key: 'journey', label: 'Journey', icon: Activity },
+            { key: 'journey', label: 'Timeline', icon: Activity },
+            { key: 'interests', label: 'Interests', icon: Box },
             { key: 'notes', label: 'Notes', icon: MessageSquare },
-            { key: 'stats', label: 'Source', icon: TrendingUp },
+            { key: 'stats', label: 'Profile Data', icon: User },
           ].map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key as any)}
               className={cx(
-                'flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition',
+                'flex flex-none items-center justify-center gap-1.5 px-4 py-3 text-xs font-semibold transition',
                 activeTab === key ? 'border-b-2 border-blue-500 text-blue-600' : 'text-slate-500 hover:text-slate-700',
               )}
             >
-              <Icon size={13} />{label}
+              <Icon size={14} />{label}
             </button>
           ))}
         </div>
@@ -496,6 +497,42 @@ function LeadDetailPanel({
                 </div>
               )}
             </>
+          )}
+
+          {activeTab === 'interests' && (
+            <div className="space-y-4">
+              <h4 className="text-sm font-bold text-slate-800">Product Interests</h4>
+              {journey.filter(e => e.event_type === 'product_view' || e.event_type === 'ar_launch' || e.event_type === 'model_download').length === 0 ? (
+                <div className="py-6 text-center text-slate-400">
+                  <Box size={24} className="mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">No product interactions recorded</p>
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {Array.from(new Set(journey.filter(e => e.product_name).map(e => e.product_name))).map(productName => (
+                    <div key={productName} className="flex items-center justify-between rounded-xl border border-slate-100 p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-blue-50 p-2 text-blue-600"><Box size={16} /></div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-800">{productName}</p>
+                          <p className="text-xs text-slate-500">
+                            Viewed {journey.filter(e => e.product_name === productName && e.event_type === 'product_view').length} times
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        {journey.some(e => e.product_name === productName && e.event_type === 'ar_launch') && (
+                          <Badge variant="blue"><Smartphone size={10} className="mr-1" /> AR</Badge>
+                        )}
+                        {journey.some(e => e.product_name === productName && e.event_type === 'model_download') && (
+                          <Badge variant="green"><Download size={10} className="mr-1" /> DL</Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           {activeTab === 'notes' && (
@@ -566,7 +603,12 @@ export function LeadManagementPage() {
   const [filter, setFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | LeadStatus>('All');
   const [priorityFilter, setPriorityFilter] = useState<'All' | LeadPriority>('All');
-  const [sortBy, setSortBy] = useState<'score' | 'name' | 'date' | 'priority'>('score');
+  const [sortBy, setSortBy] = useState<'date' | 'score' | 'name' | 'priority'>('score');
+  
+  const [activeTab, setActiveTab] = useState<'Leads' | 'Queries'>('Leads');
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [loadingTickets, setLoadingTickets] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [formLead, setFormLead] = useState<Lead | null>(null); // null = create, Lead = edit
@@ -589,7 +631,23 @@ export function LeadManagementPage() {
     }
   }, [token]);
 
-  useEffect(() => { loadLeads(); }, [loadLeads]);
+  const loadTickets = useCallback(async () => {
+    if (!token) return;
+    setLoadingTickets(true);
+    try {
+      const res = await fetch('/api/support/tickets', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      setTickets(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingTickets(false);
+    }
+  }, [token]);
+
+  useEffect(() => { loadLeads(); loadTickets(); }, [loadLeads, loadTickets]);
 
   const filteredLeads = useMemo(() => {
     return leads.filter((l) => {
@@ -686,25 +744,42 @@ export function LeadManagementPage() {
         }
       />
 
-      {/* KPI bar */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {[
-          { label: 'Total Leads', value: kpis.total, color: 'text-blue-600', bg: 'bg-blue-50', icon: Users },
-          { label: 'Hot & Above', value: kpis.hot, color: 'text-orange-600', bg: 'bg-orange-50', icon: Flame },
-          { label: 'Qualified', value: kpis.qualified, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: Check },
-          { label: 'Avg Score', value: kpis.avgScore, color: 'text-purple-600', bg: 'bg-purple-50', icon: Star },
-        ].map(({ label, value, color, bg, icon: Icon }) => (
-          <Card key={label} className="p-5">
-            <div className={cx('mb-3 inline-flex h-9 w-9 items-center justify-center rounded-xl', bg, color)}>
-              <Icon size={18} />
-            </div>
-            <p className="text-2xl font-bold text-slate-900">{value}</p>
-            <p className="mt-0.5 text-xs font-medium text-slate-500">{label}</p>
-          </Card>
-        ))}
+      <div className="flex space-x-6 border-b border-slate-200">
+        <button
+          onClick={() => setActiveTab('Leads')}
+          className={cx("pb-3 text-sm font-semibold transition-colors border-b-2", activeTab === 'Leads' ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-700")}
+        >
+          Lead Pipeline
+        </button>
+        <button
+          onClick={() => setActiveTab('Queries')}
+          className={cx("pb-3 text-sm font-semibold transition-colors border-b-2", activeTab === 'Queries' ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-700")}
+        >
+          Customer Queries (Support)
+        </button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      {activeTab === 'Leads' ? (
+        <>
+          {/* KPI bar */}
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {[
+              { label: 'Total Leads', value: kpis.total, color: 'text-blue-600', bg: 'bg-blue-50', icon: Users },
+              { label: 'Hot & Above', value: kpis.hot, color: 'text-orange-600', bg: 'bg-orange-50', icon: Flame },
+              { label: 'Qualified', value: kpis.qualified, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: Check },
+              { label: 'Avg Score', value: kpis.avgScore, color: 'text-purple-600', bg: 'bg-purple-50', icon: Star },
+            ].map(({ label, value, color, bg, icon: Icon }) => (
+              <Card key={label} className="p-5">
+                <div className={cx('mb-3 inline-flex h-9 w-9 items-center justify-center rounded-xl', bg, color)}>
+                  <Icon size={18} />
+                </div>
+                <p className="text-2xl font-bold text-slate-900">{value}</p>
+                <p className="mt-0.5 text-xs font-medium text-slate-500">{label}</p>
+              </Card>
+            ))}
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         {/* Left: Lead Table */}
         <Card className="flex flex-col overflow-hidden">
           {/* Filters */}
@@ -877,6 +952,42 @@ export function LeadManagementPage() {
           )}
         </div>
       </div>
+      </>
+      ) : (
+        <Card className="flex flex-col overflow-hidden h-[600px]">
+          <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+            <h3 className="font-bold text-slate-700 flex items-center gap-2"><MessageSquare size={18} className="text-primary" /> Active Customer Queries</h3>
+            <span className="text-xs text-slate-500">{tickets.length} support tickets</span>
+          </div>
+          <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+            {loadingTickets ? (
+               <div className="p-8 text-center text-slate-400">Loading queries...</div>
+            ) : tickets.length === 0 ? (
+               <div className="p-8 text-center text-slate-400 flex flex-col items-center">
+                 <AlertCircle size={32} className="mb-2 opacity-50" />
+                 <p>No customer queries found.</p>
+               </div>
+            ) : (
+              tickets.map((t) => (
+                <div key={t.id} className="p-4 hover:bg-slate-50 transition cursor-pointer flex justify-between items-start">
+                  <div>
+                    <h4 className="font-bold text-sm text-slate-900">{t.subject}</h4>
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-1">{t.message}</p>
+                    <div className="flex items-center gap-3 mt-3">
+                      <span className={cx("text-[10px] px-2 py-0.5 rounded-full font-bold", t.priority === 'Critical' ? "bg-red-100 text-red-700" : "bg-blue-50 text-blue-700")}>{t.priority}</span>
+                      <span className="text-[10px] text-slate-400">{new Date(t.created_at).toLocaleDateString()}</span>
+                      {t.customer_name && <span className="text-[10px] text-slate-400 flex items-center gap-1"><User size={10} /> {t.customer_name}</span>}
+                    </div>
+                  </div>
+                  <div className="text-xs font-semibold px-2 py-1 bg-slate-100 text-slate-600 rounded">
+                    {t.status}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+      )}
 
       {/* FAB */}
       <button
