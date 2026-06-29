@@ -259,7 +259,7 @@ export function ForgotPasswordPage() {
 
 export function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
-  const [token, setToken] = useState(searchParams.get('token') ?? '');
+  const token = searchParams.get('token') ?? '';
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [message, setMessage] = useState('');
@@ -1286,7 +1286,7 @@ export function ProductExperiencePage() {
       const res: any = await api.createQr(token, 'product', id);
       const a = document.createElement('a');
       a.href = res.qr_data_url;
-      a.download = `qr-${product.name}.png`;
+      a.download = `qr-${product?.name || 'product'}.png`;
       a.click();
       success('QR Code downloaded');
     } catch (err) {
