@@ -1,13 +1,17 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { put, del } from '@vercel/blob';
+import { createClient } from '@supabase/supabase-js';
 import { config } from '../config.js';
 import { ApiError } from '../utils/errors.js';
 
 const megabyte = 1024 * 1024;
 
 export const maxFileSizeBytes = config.maxFileSize;
+
+const supabase = (config.supabaseUrl && config.supabaseKey)
+  ? createClient(config.supabaseUrl, config.supabaseKey)
+  : null;
 
 const fileRules = {
   image: {
@@ -125,8 +129,14 @@ export async function storeBuffer(file, preferredCategory) {
   const folder = categoryFolders[preferredCategory ?? category] ?? categoryFolders.image;
   const objectKey = `${folder}/${filename}`;
   
-  if (process.env.VERCEL) {
-    const { url } = await put(objectKey, file.buffer, { access: 'public' });
+  if (supabase) {
+    const { error } = await supabase.storage.from(config.supabaseBucket).upload(objectKey, file.buffer, {
+      contentType: file.mimetype,
+      upsert: true,
+    });
+    if (error) throw error;
+    
+    const { data: { publicUrl: url } } = supabase.storage.from(config.supabaseBucket).getPublicUrl(objectKey);
     return { category, checksum, objectKey, url };
   } else {
     const absolutePath = path.resolve(process.cwd(), config.uploadDir, objectKey);
@@ -141,8 +151,14 @@ export async function writeTextFile({ contents, filename, folder = 'qr', mimeTyp
   const objectKey = `${folder}/${filename}`;
   const checksum = crypto.createHash('sha256').update(contents).digest('hex');
   
-  if (process.env.VERCEL) {
-    const { url } = await put(objectKey, contents, { access: 'public', contentType: mimeType });
+  if (supabase) {
+    const { error } = await supabase.storage.from(config.supabaseBucket).upload(objectKey, contents, {
+      contentType: mimeType,
+      upsert: true,
+    });
+    if (error) throw error;
+    
+    const { data: { publicUrl: url } } = supabase.storage.from(config.supabaseBucket).getPublicUrl(objectKey);
     return { objectKey, mimeType, url, checksum };
   } else {
     await ensureBucket();
@@ -158,11 +174,12 @@ export async function writeTextFile({ contents, filename, folder = 'qr', mimeTyp
 }
 
 export async function deleteObject(objectKey) {
-  if (process.env.VERCEL) {
+  if (supabase) {
     try {
-      await del(objectKey);
+      const { error } = await supabase.storage.from(config.supabaseBucket).remove([objectKey]);
+      if (error) throw error;
     } catch (err) {
-      console.error('Failed to delete from Vercel Blob:', err);
+      console.error('Failed to delete from Supabase Storage:', err);
     }
   } else {
     try {

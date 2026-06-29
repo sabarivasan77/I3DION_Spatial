@@ -25,4 +25,7 @@ export const config = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
   uploadDir: process.env.UPLOAD_DIR ?? 'uploads',
   maxFileSize: Number(process.env.MAX_FILE_SIZE ?? 150 * 1024 * 1024),
+  supabaseUrl: process.env.SUPABASE_URL,
+  supabaseKey: process.env.SUPABASE_KEY,
+  supabaseBucket: process.env.SUPABASE_BUCKET ?? 'uploads',
 };
