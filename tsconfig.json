@@ -7,6 +7,10 @@
     "allowJs": true,
     "noEmit": true
   },
+  "include": [
+    "api/**/*",
+    "backend/**/*"
+  ],
   "exclude": [
     "frontend",
     "node_modules",
