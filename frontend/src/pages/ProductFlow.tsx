@@ -23,15 +23,17 @@ import {
   Upload,
   View,
   X,
+  Info,
+  Expand
 } from 'lucide-react';
-import ThreeProduct from '../components/ThreeProduct';
-import { ViewInARButton } from '../components/ViewInARButton';
+import ThreeProduct, { xrStore } from '../components/ThreeProduct';
 import { Badge, Button, Card, PageHeader, SectionTitle } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { api, ApiClientError, checkBackendHealth, uploadFileWithProgress, type ProductRecord, type ProductPayload } from '../services/api';
 import { Tracker } from '../services/Tracker';
 import { useAuthStore } from '../store/authStore';
 import { cx } from '../utils/format';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type WizardStep = 1 | 2 | 3;
 
@@ -63,14 +65,6 @@ function specsToText(specs: Record<string, string>) {
 
 function formatMetric(value?: number) {
   return Number(value ?? 0).toLocaleString();
-}
-
-function isAndroidDevice() {
-  return /Android/i.test(navigator.userAgent);
-}
-
-function isIOSDevice() {
-  return /iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
 function readSessionId(scope: string) {
@@ -1309,14 +1303,12 @@ export function PublicProductPage() {
   const [searchParams] = useSearchParams();
   const [product, setProduct] = useState<ProductRecord | null>(null);
   const [loading, setLoading] = useState(true);
-  const [leadFormState, setLeadFormState] = useState<'idle' | 'submitting' | 'success'>('idle');
-  const [leadEmail, setLeadEmail] = useState('');
+  const [infoOpen, setInfoOpen] = useState(true);
   const startedAt = useRef(Date.now());
   const durationSent = useRef(false);
   const sessionId = useMemo(() => readSessionId(`product-${slug}`), [slug]);
   const { error: showError } = useToast();
 
-  // Determine traffic source
   const isFromQr = searchParams.get('source') === 'qr';
   const isFromCatalog = searchParams.get('source') === 'catalog';
   const isFromCatalogQr = searchParams.get('source') === 'catalog_qr';
@@ -1330,12 +1322,9 @@ export function PublicProductPage() {
       .finally(() => setLoading(false));
   }, [slug]);
 
-  // Update page title and meta when product loads
   useEffect(() => {
     if (!product) return;
     document.title = `${product.name} — I3DION Spatial`;
-
-    // Open Graph / social meta
     let ogTitle = document.querySelector('meta[property="og:title"]');
     if (!ogTitle) {
       ogTitle = document.createElement('meta');
@@ -1371,7 +1360,6 @@ export function PublicProductPage() {
     if (!product?.slug) return;
     const productSlug = product.slug ?? slug;
 
-    // Fire appropriate source events
     if (isFromCatalogQr) {
       sendPublicEvent({ slug: productSlug, eventType: 'qr_scan_from_catalog', sessionId, metadata: { entry: 'catalog-qr' } });
     } else if (isFromQr) {
@@ -1396,52 +1384,16 @@ export function PublicProductPage() {
     };
   }, [product?.slug, sessionId, slug, isFromQr]);
 
-  async function viewInAr() {
-    if (!product?.slug) return;
-    const productSlug = product.slug ?? slug;
-    sendPublicEvent({ slug: productSlug, eventType: 'ar_launch', sessionId, metadata: { device: navigator.userAgent } });
-    // model-viewer handles the actual AR launch via its button — this just tracks the event
-  }
-
   const modelUrl = safeUrl(product?.model_url);
 
-  async function handleLeadCapture(e: FormEvent) {
-    e.preventDefault();
-    if (!leadEmail || !product?.slug) return;
-    setLeadFormState('submitting');
-    try {
-      await fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api'}/public/analytics/events`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          slug: product.slug ?? slug,
-          eventType: 'quote_request',
-          sessionId,
-          metadata: { email: leadEmail, companyId: product.company_id, visitorId: Tracker.getVisitorId() }
-        })
-      });
-      setLeadFormState('success');
-    } catch (err) {
-      setLeadFormState('idle');
-      showError('Failed', 'Could not submit request');
-    }
-  }
-
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-950 text-white">
-        <div className="text-center">
-          <RefreshCw className="mx-auto mb-4 animate-spin text-blue-400" size={32} />
-          <p className="text-slate-400">Loading product experience...</p>
-        </div>
-      </div>
-    );
+    return <div className="h-screen w-screen bg-slate-950" />;
   }
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-slate-950 px-4 py-16 text-white">
-        <Card className="mx-auto max-w-2xl bg-slate-900 p-8 text-center border-slate-800">
+      <div className="flex h-screen items-center justify-center bg-slate-950 text-white">
+        <Card className="mx-auto max-w-lg bg-slate-900 p-8 text-center border-slate-800">
           <h1 className="text-2xl font-bold text-white">Product not found</h1>
           <p className="mt-3 text-sm text-slate-400">The QR link may be broken or the product has been removed.</p>
           <Link className="mt-6 inline-flex" to="/"><Button>Return home</Button></Link>
@@ -1450,178 +1402,123 @@ export function PublicProductPage() {
     );
   }
 
+  const galleryImages = (product.assets ?? []).filter((a) => a.asset_type === 'image' || a.asset_type === 'thumbnail');
+
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
-      {/* Hero — 3D Model Viewer */}
-      <section className="relative">
-        {modelUrl ? (
-          <div className="relative h-[60vh] min-h-[400px]">
-            {/* model-viewer for 3D + AR */}
-            <model-viewer
-              src={modelUrl}
-              alt={product.name}
-              ar
-              ar-modes="scene-viewer quick-look webxr"
-              camera-controls
-              auto-rotate
-              shadow-intensity="1"
-              exposure="0.8"
-              style={{ width: '100%', height: '100%', background: 'transparent' }}
+    <main className="relative h-[100dvh] w-screen overflow-hidden bg-[#050a15] font-sans">
+      {/* 3D Background */}
+      <div className="absolute inset-0 z-0">
+        <ThreeProduct modelUrl={modelUrl} productName={product.name} autoRotate={!infoOpen} />
+      </div>
+
+      {/* Floating UI Overlay */}
+      <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-4 md:p-6 lg:p-8">
+        
+        {/* Top Header */}
+        <header className="flex items-start justify-between pointer-events-auto">
+          <div className="flex items-center gap-4">
+             <Link to="/products" className="h-12 w-12 rounded-2xl bg-white/5 backdrop-blur-xl flex items-center justify-center text-white border border-white/10 shadow-2xl transition hover:bg-white/10 active:scale-95">
+                <Box size={22} />
+             </Link>
+             <div>
+               <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight drop-shadow-md">{product.name}</h1>
+               <div className="flex items-center gap-2 mt-1">
+                 <span className="rounded-full bg-blue-500/20 px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-widest text-blue-300 border border-blue-500/20 backdrop-blur-md">
+                   {product.category}
+                 </span>
+               </div>
+             </div>
+          </div>
+
+          {/* Desktop Controls (Top Right) */}
+          <div className="hidden md:flex gap-2">
+            <button className="h-12 w-12 rounded-2xl bg-white/5 backdrop-blur-xl flex items-center justify-center text-white border border-white/10 shadow-2xl transition hover:bg-white/10 active:scale-95 group relative">
+              <Camera size={20} className="group-hover:text-blue-400 transition" />
+              <span className="absolute -bottom-8 scale-0 rounded bg-slate-800 px-2 py-1 text-xs text-white opacity-0 transition group-hover:scale-100 group-hover:opacity-100">Screenshot</span>
+            </button>
+            <button className="h-12 w-12 rounded-2xl bg-white/5 backdrop-blur-xl flex items-center justify-center text-white border border-white/10 shadow-2xl transition hover:bg-white/10 active:scale-95 group relative">
+              <RefreshCw size={20} className="group-hover:text-blue-400 transition" />
+              <span className="absolute -bottom-8 scale-0 rounded bg-slate-800 px-2 py-1 text-xs text-white opacity-0 transition group-hover:scale-100 group-hover:opacity-100">Reset Camera</span>
+            </button>
+            <button 
+               onClick={() => setInfoOpen(!infoOpen)}
+               className={cx("h-12 w-12 rounded-2xl backdrop-blur-xl flex items-center justify-center text-white border shadow-2xl transition hover:bg-white/10 active:scale-95", infoOpen ? "bg-white/20 border-white/30 text-blue-300" : "bg-white/5 border-white/10")}
             >
-              {/* AR Button — only visible when AR is supported */}
-              <button
-                slot="ar-button"
-                onClick={() => void viewInAr()}
-                className="absolute bottom-6 right-6 flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-blue-500 active:scale-[0.97]"
-              >
-                <Smartphone size={18} />
-                View In AR
-              </button>
-            </model-viewer>
-            {/* Overlay header */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-slate-950/80 to-transparent p-6 text-white">
-              <p className="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-semibold tracking-[0.18em] backdrop-blur">
-                MOBILE PRODUCT EXPERIENCE
-              </p>
-            </div>
+               <Info size={20} />
+            </button>
           </div>
-        ) : (
-          <div className="flex h-[40vh] items-center justify-center bg-slate-900 text-slate-600">
-            <div className="text-center">
-              <Box size={48} className="mx-auto mb-4" />
-              <p>3D model not yet available</p>
-            </div>
-          </div>
-        )}
-      </section>
+        </header>
 
-      {/* Product Info */}
-      <section className="mx-auto max-w-7xl px-4 pb-16 pt-8 md:px-6">
-        <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
-          {/* Left: Images */}
-          <div className="space-y-6">
-            {(product.assets ?? []).filter((a) => a.asset_type === 'image' || a.asset_type === 'thumbnail').length > 0 && (
-              <div>
-                <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-slate-400">Product Gallery</h2>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {(product.assets ?? [])
-                    .filter((a) => a.asset_type === 'image' || a.asset_type === 'thumbnail')
-                    .map((asset) => (
-                      <div key={asset.id} className="overflow-hidden rounded-3xl border border-slate-700 bg-slate-800">
-                        <img src={asset.public_url} alt={asset.original_name} className="h-52 w-full object-cover" />
-                      </div>
-                    ))}
-                </div>
+        {/* Info Panel Slide Over */}
+        <AnimatePresence>
+          {infoOpen && (
+            <motion.div
+              initial={{ x: '100%', opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="pointer-events-auto absolute bottom-4 right-4 top-24 md:bottom-8 md:right-8 w-[calc(100%-2rem)] md:w-96 overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 backdrop-blur-2xl shadow-2xl flex flex-col"
+            >
+              <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
+                 <p className="text-sm leading-relaxed text-slate-300 mb-8">{product.description}</p>
+                 
+                 {galleryImages.length > 0 && (
+                   <div className="mb-8">
+                     <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-4">Gallery</h3>
+                     <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x">
+                        {galleryImages.map((img) => (
+                          <div key={img.id} className="h-28 w-36 shrink-0 snap-start rounded-2xl overflow-hidden relative group cursor-pointer border border-white/5 bg-slate-800/50">
+                            <img src={img.public_url} className="h-full w-full object-cover transition duration-500 group-hover:scale-110" loading="lazy" />
+                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center">
+                              <Expand size={16} className="text-white drop-shadow-md" />
+                            </div>
+                          </div>
+                        ))}
+                     </div>
+                   </div>
+                 )}
+
+                 {Object.keys(product.specs ?? {}).length > 0 && (
+                   <div className="mb-4">
+                     <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-4">Specifications</h3>
+                     <div className="space-y-3">
+                       {Object.entries(product.specs!).map(([k, v]) => (
+                         <div key={k} className="flex justify-between items-center border-b border-white/5 pb-3 text-sm">
+                           <span className="text-slate-400 font-medium">{k}</span>
+                           <span className="font-semibold text-white text-right max-w-[50%]">{v}</span>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 )}
               </div>
-            )}
 
-            {/* Specs */}
-            {Object.keys(product.specs ?? {}).length > 0 && (
-              <div>
-                <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-slate-400">Specifications</h2>
-                <div className="space-y-2">
-                  {Object.entries(product.specs).map(([key, value]) => (
-                    <div key={key} className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-3">
-                      <span className="text-sm text-slate-400">{key}</span>
-                      <span className="text-sm font-semibold text-white">{value}</span>
-                    </div>
-                  ))}
-                </div>
+              {/* Action Bar */}
+              <div className="bg-slate-950/60 p-5 border-t border-white/10 backdrop-blur-xl">
+                 <button onClick={() => xrStore.enterAR()} className="w-full flex items-center justify-center gap-2 rounded-2xl bg-blue-600 py-4 text-sm font-bold text-white shadow-lg shadow-blue-900/30 transition hover:bg-blue-500 hover:shadow-blue-900/50 active:scale-[0.98]">
+                   <Smartphone size={18} />
+                   View in AR
+                 </button>
+                 <button onClick={() => xrStore.enterVR()} className="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/5 py-4 text-sm font-bold text-white border border-white/10 transition hover:bg-white/10 active:scale-[0.98]">
+                   <Box size={18} />
+                   Enter VR Mode
+                 </button>
               </div>
-            )}
-          </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-          {/* Right: Product details + AR CTA */}
-          <div className="space-y-6">
-            <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="rounded-full bg-blue-600/20 px-3 py-1 text-xs font-semibold text-blue-400">{product.category}</span>
-                <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-semibold text-slate-400">{product.status}</span>
-              </div>
-              <h1 className="text-3xl font-bold text-white md:text-4xl">{product.name}</h1>
-              <p className="mt-4 text-base leading-7 text-slate-300">{product.description}</p>
-
-              {/* AR Launch */}
-              {modelUrl || product.usdz_url ? (
-                <div className="mt-6 space-y-3">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Augmented Reality</p>
-                  {isAndroidDevice() || isIOSDevice() ? (
-                    <div>
-                      <ViewInARButton 
-                        modelUrl={modelUrl}
-                        usdzUrl={safeUrl(product.usdz_url)}
-                        title={product.name}
-                        className="w-full h-14 text-base"
-                      />
-                      <p className="mt-2 text-xs text-center text-slate-500">
-                        {isIOSDevice()
-                          ? 'Opens in Quick Look AR on supported iOS devices'
-                          : 'Opens in Google Scene Viewer AR'}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="rounded-2xl border border-slate-700 bg-slate-800 p-4 text-sm text-slate-400">
-                      <p className="font-semibold text-slate-300">AR is available on mobile</p>
-                      <p className="mt-1">Scan the QR code with your iPhone or Android camera to launch the AR experience.</p>
-                    </div>
-                  )}
-                </div>
-              ) : null}
-
-              {/* 3D viewer scroll link */}
-              <button
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-700 py-3 text-sm font-semibold text-slate-300 transition hover:bg-slate-800"
-              >
-                <View size={18} />
-                View 3D Model
-              </button>
-            </div>
-
-            {/* Public URL info */}
-            {product.public_url ? (
-              <div className="rounded-3xl border border-slate-800 bg-slate-900/50 p-5">
-                <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2">Product URL</p>
-                <p className="break-all text-xs font-mono text-slate-400">{product.public_url}</p>
-              </div>
-            ) : null}
-
-            {/* Lead Capture Form */}
-            <div className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-800 to-slate-900 p-6 shadow-xl">
-              <h3 className="text-lg font-bold text-white mb-2">Interested in {product.name}?</h3>
-              <p className="text-sm text-slate-400 mb-4">Request a quote or download the detailed specifications brochure.</p>
-              
-              {leadFormState === 'success' ? (
-                <div className="rounded-xl border border-emerald-900 bg-emerald-950 p-4 text-center">
-                  <Check className="mx-auto text-emerald-500 mb-2" size={24} />
-                  <p className="text-sm font-semibold text-emerald-400">Request Sent</p>
-                  <p className="text-xs text-emerald-500 mt-1">Our sales team will contact you shortly.</p>
-                </div>
-              ) : (
-                <form onSubmit={handleLeadCapture} className="space-y-3">
-                  <input
-                    type="email"
-                    required
-                    placeholder="Enter your email address"
-                    value={leadEmail}
-                    onChange={(e) => setLeadEmail(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  />
-                  <button
-                    type="submit"
-                    disabled={leadFormState === 'submitting'}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-100 py-3 text-sm font-bold text-slate-900 transition hover:bg-white active:scale-[0.98] disabled:opacity-50"
-                  >
-                    <Send size={16} />
-                    {leadFormState === 'submitting' ? 'Sending...' : 'Request Quote'}
-                  </button>
-                </form>
-              )}
-            </div>
-
-          </div>
+        {/* Mobile Info Toggle */}
+        <div className="md:hidden flex justify-end pointer-events-auto">
+          <button 
+             onClick={() => setInfoOpen(!infoOpen)}
+             className="h-14 w-14 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center text-white border border-white/20 shadow-2xl active:scale-95"
+          >
+             {infoOpen ? <X size={24} /> : <Info size={24} />}
+          </button>
         </div>
-      </section>
+
+      </div>
     </main>
   );
 }
