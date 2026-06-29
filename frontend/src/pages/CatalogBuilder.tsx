@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { PDFViewer, pdf } from '@react-pdf/renderer';
-import { BookOpen, Download, Plus, CheckCircle2, Box } from 'lucide-react';
+import { BookOpen, Download, Plus, CheckCircle2, Box, Layers, MonitorPlay, Briefcase, ArrowRight, Sparkles } from 'lucide-react';
 import QRCode from 'qrcode';
 import { Button, Card, PageHeader, SectionTitle } from '../components/ui';
 import { api, CatalogRecord } from '../services/api';
@@ -170,17 +170,105 @@ export function CatalogBuilderPage() {
 
           <Card className="p-6">
             <SectionTitle title="Template Style" />
-            <div className="mt-4 grid grid-cols-3 gap-4">
-              {['IndustrialClassic', 'ModernShowcase', 'SalesBrochure'].map(t => (
-                <div 
-                  key={t}
-                  onClick={() => setTemplate(t as any)}
-                  className={`cursor-pointer rounded-xl border-2 p-4 text-center transition-all ${template === t ? 'border-blue-500 bg-blue-50' : 'border-slate-100 hover:border-slate-300'}`}
-                >
-                  <div className={`mx-auto mb-2 h-16 w-12 rounded bg-white shadow-sm border ${template === t ? 'border-blue-200' : 'border-slate-200'}`} />
-                  <p className="text-xs font-semibold text-slate-700">{t.replace(/([A-Z])/g, ' $1').trim()}</p>
-                </div>
-              ))}
+            <div className="mt-6 grid grid-cols-3 gap-6">
+              {[
+                {
+                  id: 'IndustrialClassic',
+                  name: 'Industrial Classic',
+                  description: 'A structural layout focused on exact technical specifications and engineering precision.',
+                  badge: 'POPULAR',
+                  features: ['Technical Specs', 'Grid Layout', 'Data Heavy'],
+                  icon: Layers,
+                },
+                {
+                  id: 'ModernShowcase',
+                  name: 'Modern Showcase',
+                  description: 'Visually striking presentation tailored for high-end product demonstrations and clients.',
+                  badge: 'FEATURED',
+                  features: ['Full Bleed Images', 'Minimal UI', 'Spatial Ready'],
+                  icon: MonitorPlay,
+                },
+                {
+                  id: 'SalesBrochure',
+                  name: 'Sales Brochure',
+                  description: 'Optimized for field sales with clear CTAs, pricing structures, and feature highlights.',
+                  badge: 'ENTERPRISE',
+                  features: ['Conversion Focused', 'Lead Capture', 'Analytics'],
+                  icon: Briefcase,
+                }
+              ].map(t => {
+                const Icon = t.icon;
+                const isSelected = template === t.id;
+                return (
+                  <div
+                    key={t.id}
+                    onClick={() => setTemplate(t.id as any)}
+                    className={`group relative cursor-pointer overflow-hidden rounded-[24px] border bg-gradient-to-b transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-2xl ${
+                      isSelected
+                        ? 'border-blue-500/40 from-blue-50/40 to-white shadow-xl shadow-blue-500/10'
+                        : 'border-slate-200/80 from-white to-slate-50/40 shadow-lg shadow-slate-200/40 hover:border-blue-300/50 hover:from-white hover:to-blue-50/30'
+                    }`}
+                  >
+                    {/* Badge */}
+                    <div className="absolute right-5 top-5">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-500 ${
+                        isSelected 
+                          ? 'bg-gradient-to-r from-blue-500 to-cyan-400 text-white shadow-sm shadow-blue-500/20' 
+                          : 'bg-slate-100 text-slate-500 group-hover:bg-blue-100/80 group-hover:text-blue-700'
+                      }`}>
+                        {t.badge}
+                      </span>
+                    </div>
+              
+                    <div className="p-7">
+                      {/* Icon */}
+                      <div className={`mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl border transition-all duration-500 group-hover:scale-110 group-hover:shadow-md ${
+                        isSelected 
+                          ? 'border-blue-200/60 bg-blue-100/50 text-blue-600 shadow-sm' 
+                          : 'border-slate-200/80 bg-white text-slate-500 group-hover:border-blue-200 group-hover:bg-blue-50/50 group-hover:text-blue-500'
+                      }`}>
+                        <Icon strokeWidth={1.5} size={26} />
+                      </div>
+              
+                      {/* Text */}
+                      <h3 className={`mb-2 text-xl font-bold tracking-tight transition-colors duration-500 ${isSelected ? 'text-blue-950' : 'text-slate-900 group-hover:text-blue-950'}`}>{t.name}</h3>
+                      <p className="mb-7 text-[13px] leading-relaxed text-slate-500/90 line-clamp-2">{t.description}</p>
+              
+                      {/* Features */}
+                      <div className="mb-8 flex flex-wrap gap-2">
+                        {t.features.map(f => (
+                          <span key={f} className="inline-flex items-center rounded-full border border-slate-200/60 bg-white/80 px-3 py-1.5 text-[10px] font-medium text-slate-600 shadow-sm backdrop-blur-md transition-colors duration-300 group-hover:border-slate-300/50">
+                            <CheckCircle2 size={12} className="mr-1.5 text-cyan-500 opacity-80" />
+                            {f}
+                          </span>
+                        ))}
+                      </div>
+              
+                      {/* Button */}
+                      <button
+                        className={`mt-auto flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-500 ${
+                          isSelected
+                            ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25'
+                            : 'border border-slate-200/80 bg-white text-slate-700 shadow-sm group-hover:border-blue-200/80 group-hover:bg-blue-50/40 group-hover:text-blue-600 group-hover:shadow-md'
+                        }`}
+                      >
+                        {isSelected ? (
+                          <>
+                            <Sparkles size={16} className="animate-pulse" /> Selected
+                          </>
+                        ) : (
+                          <>
+                            Select Template <ArrowRight size={16} className="transition-transform duration-500 group-hover:translate-x-1" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    
+                    {/* Active Glow overlay */}
+                    <div className={`pointer-events-none absolute inset-0 rounded-[24px] border-2 transition-opacity duration-500 ${isSelected ? 'border-blue-500/20 opacity-100' : 'border-transparent opacity-0'}`} />
+                  </div>
+                );
+              })}
             </div>
           </Card>
 
