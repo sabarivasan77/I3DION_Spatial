@@ -1,9 +1,9 @@
 {
   "functions": {
-    "backend/api/index.js": { "maxDuration": 30 }
+    "api/**/*.js": { "maxDuration": 30 }
   },
   "routes": [
-    { "src": "/api/(.*)", "dest": "/backend/api/index.js" },
+    { "src": "/api/(.*)", "dest": "/api/index.js" },
     { "src": "/(.*)", "dest": "/frontend/dist/index.html" }
   ]
 }
