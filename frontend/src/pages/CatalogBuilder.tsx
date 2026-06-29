@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { PDFViewer, pdf } from '@react-pdf/renderer';
-import { BookOpen, Download, Plus, CheckCircle2, Box, Layers, MonitorPlay, Briefcase, ArrowRight, Sparkles } from 'lucide-react';
+import { BookOpen, Download, Plus, CheckCircle2, Box, Layers, Briefcase, ArrowRight, Sparkles } from 'lucide-react';
 import QRCode from 'qrcode';
 import { Button, Card, PageHeader, SectionTitle } from '../components/ui';
 import { api, CatalogRecord } from '../services/api';
@@ -174,27 +174,51 @@ export function CatalogBuilderPage() {
               {[
                 {
                   id: 'IndustrialClassic',
-                  name: 'Industrial Classic',
-                  description: 'A structural layout focused on exact technical specifications and engineering precision.',
-                  badge: 'POPULAR',
-                  features: ['Technical Specs', 'Grid Layout', 'Data Heavy'],
+                  name: 'Tech Blueprint',
+                  emoji: '⚙️',
+                  description: 'A highly technical layout focused on exact specifications, robust engineering data, and structural clarity.',
+                  badge: 'ENGINEERING',
+                  features: ['Precise Grids', 'Data Heavy', 'Technical Specs'],
                   icon: Layers,
+                  gradient: 'from-slate-900 via-slate-800 to-slate-900',
+                  accentText: 'text-emerald-400',
+                  accentBg: 'bg-emerald-500/20',
+                  accentBorder: 'border-emerald-500/50',
+                  shadowHover: 'group-hover:shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)]',
+                  activeRing: 'ring-2 ring-emerald-500 shadow-[0_0_40px_-5px_rgba(16,185,129,0.5)]',
+                  buttonActive: 'bg-gradient-to-r from-emerald-600 to-emerald-400 text-white shadow-emerald-500/25',
                 },
                 {
                   id: 'ModernShowcase',
-                  name: 'Modern Showcase',
-                  description: 'Visually striking presentation tailored for high-end product demonstrations and clients.',
-                  badge: 'FEATURED',
-                  features: ['Full Bleed Images', 'Minimal UI', 'Spatial Ready'],
-                  icon: MonitorPlay,
+                  name: 'Creative Showcase',
+                  emoji: '✨',
+                  description: 'A visually stunning, fun and vibrant presentation tailored to wow your clients with full bleed AR models.',
+                  badge: 'FUN & MASSIVE',
+                  features: ['Vibrant Colors', 'Minimal UI', 'Spatial Ready'],
+                  icon: Sparkles,
+                  gradient: 'from-purple-900 via-indigo-900 to-purple-900',
+                  accentText: 'text-pink-400',
+                  accentBg: 'bg-pink-500/20',
+                  accentBorder: 'border-pink-500/50',
+                  shadowHover: 'group-hover:shadow-[0_0_40px_-10px_rgba(236,72,153,0.5)]',
+                  activeRing: 'ring-2 ring-pink-500 shadow-[0_0_40px_-5px_rgba(236,72,153,0.5)]',
+                  buttonActive: 'bg-gradient-to-r from-pink-600 to-pink-400 text-white shadow-pink-500/25',
                 },
                 {
                   id: 'SalesBrochure',
-                  name: 'Sales Brochure',
-                  description: 'Optimized for field sales with clear CTAs, pricing structures, and feature highlights.',
-                  badge: 'ENTERPRISE',
-                  features: ['Conversion Focused', 'Lead Capture', 'Analytics'],
+                  name: 'Corporate Elite',
+                  emoji: '💼',
+                  description: 'Highly professional and polished. Optimized for enterprise sales, clear CTAs, and executive summaries.',
+                  badge: 'PROFESSIONAL',
+                  features: ['Executive Style', 'Lead Capture', 'Conversion'],
                   icon: Briefcase,
+                  gradient: 'from-blue-950 via-slate-900 to-blue-950',
+                  accentText: 'text-blue-400',
+                  accentBg: 'bg-blue-500/20',
+                  accentBorder: 'border-blue-500/50',
+                  shadowHover: 'group-hover:shadow-[0_0_40px_-10px_rgba(59,130,246,0.5)]',
+                  activeRing: 'ring-2 ring-blue-500 shadow-[0_0_40px_-5px_rgba(59,130,246,0.5)]',
+                  buttonActive: 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-blue-500/25',
                 }
               ].map(t => {
                 const Icon = t.icon;
@@ -203,42 +227,53 @@ export function CatalogBuilderPage() {
                   <div
                     key={t.id}
                     onClick={() => setTemplate(t.id as any)}
-                    className={`group relative cursor-pointer overflow-hidden rounded-[24px] border bg-gradient-to-b transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-2xl ${
+                    className={`group relative cursor-pointer overflow-hidden rounded-[24px] border transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] ${
                       isSelected
-                        ? 'border-blue-500/40 from-blue-50/40 to-white shadow-xl shadow-blue-500/10'
-                        : 'border-slate-200/80 from-white to-slate-50/40 shadow-lg shadow-slate-200/40 hover:border-blue-300/50 hover:from-white hover:to-blue-50/30'
+                        ? `border-transparent bg-gradient-to-br ${t.gradient} ${t.activeRing}`
+                        : `border-slate-200/80 bg-white hover:border-transparent hover:bg-gradient-to-br hover:${t.gradient} ${t.shadowHover}`
                     }`}
                   >
+                    {/* Background glows */}
+                    <div className="absolute -left-10 -top-10 h-32 w-32 rounded-full bg-white/5 opacity-0 blur-2xl transition-opacity duration-700 group-hover:opacity-100" />
+                    <div className="absolute -bottom-10 -right-10 h-32 w-32 rounded-full bg-white/5 opacity-0 blur-2xl transition-opacity duration-700 group-hover:opacity-100" />
+
                     {/* Badge */}
-                    <div className="absolute right-5 top-5">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-500 ${
+                    <div className="absolute right-5 top-5 z-10">
+                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider transition-all duration-500 backdrop-blur-md ${
                         isSelected 
-                          ? 'bg-gradient-to-r from-blue-500 to-cyan-400 text-white shadow-sm shadow-blue-500/20' 
-                          : 'bg-slate-100 text-slate-500 group-hover:bg-blue-100/80 group-hover:text-blue-700'
+                          ? `${t.accentBg} ${t.accentText} border border-transparent` 
+                          : `bg-slate-100 text-slate-500 border border-slate-200 group-hover:${t.accentBg} group-hover:${t.accentText} group-hover:${t.accentBorder}`
                       }`}>
                         {t.badge}
                       </span>
                     </div>
               
-                    <div className="p-7">
-                      {/* Icon */}
-                      <div className={`mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl border transition-all duration-500 group-hover:scale-110 group-hover:shadow-md ${
-                        isSelected 
-                          ? 'border-blue-200/60 bg-blue-100/50 text-blue-600 shadow-sm' 
-                          : 'border-slate-200/80 bg-white text-slate-500 group-hover:border-blue-200 group-hover:bg-blue-50/50 group-hover:text-blue-500'
-                      }`}>
-                        <Icon strokeWidth={1.5} size={26} />
+                    <div className="relative z-10 p-7 h-full flex flex-col">
+                      {/* Icon & Emoji */}
+                      <div className="mb-6 flex items-center justify-between">
+                        <div className={`flex h-14 w-14 items-center justify-center rounded-2xl border transition-all duration-500 group-hover:scale-110 group-hover:shadow-lg ${
+                          isSelected 
+                            ? `${t.accentBg} ${t.accentText} ${t.accentBorder}`
+                            : `border-slate-200/80 bg-slate-50 text-slate-400 group-hover:${t.accentBg} group-hover:${t.accentText} group-hover:${t.accentBorder}`
+                        }`}>
+                          <Icon strokeWidth={1.5} size={28} />
+                        </div>
+                        <span className="text-4xl filter drop-shadow-md transition-transform duration-500 group-hover:scale-125 group-hover:rotate-12">{t.emoji}</span>
                       </div>
               
                       {/* Text */}
-                      <h3 className={`mb-2 text-xl font-bold tracking-tight transition-colors duration-500 ${isSelected ? 'text-blue-950' : 'text-slate-900 group-hover:text-blue-950'}`}>{t.name}</h3>
-                      <p className="mb-7 text-[13px] leading-relaxed text-slate-500/90 line-clamp-2">{t.description}</p>
+                      <h3 className={`mb-2 text-2xl font-black tracking-tight transition-colors duration-500 ${isSelected ? 'text-white' : 'text-slate-900 group-hover:text-white'}`}>{t.name}</h3>
+                      <p className={`mb-8 text-sm leading-relaxed transition-colors duration-500 ${isSelected ? 'text-slate-300' : 'text-slate-500 group-hover:text-slate-300'}`}>{t.description}</p>
               
                       {/* Features */}
                       <div className="mb-8 flex flex-wrap gap-2">
                         {t.features.map(f => (
-                          <span key={f} className="inline-flex items-center rounded-full border border-slate-200/60 bg-white/80 px-3 py-1.5 text-[10px] font-medium text-slate-600 shadow-sm backdrop-blur-md transition-colors duration-300 group-hover:border-slate-300/50">
-                            <CheckCircle2 size={12} className="mr-1.5 text-cyan-500 opacity-80" />
+                          <span key={f} className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-sm transition-colors duration-300 ${
+                            isSelected
+                              ? 'border-white/10 bg-white/5 text-white'
+                              : 'border-slate-200/60 bg-slate-50 text-slate-600 group-hover:border-white/10 group-hover:bg-white/5 group-hover:text-white'
+                          }`}>
+                            <CheckCircle2 size={14} className={`mr-1.5 transition-colors duration-300 ${isSelected ? t.accentText : 'text-cyan-500 group-hover:' + t.accentText}`} />
                             {f}
                           </span>
                         ))}
@@ -246,26 +281,23 @@ export function CatalogBuilderPage() {
               
                       {/* Button */}
                       <button
-                        className={`mt-auto flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-500 ${
+                        className={`mt-auto flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-500 ${
                           isSelected
-                            ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25'
-                            : 'border border-slate-200/80 bg-white text-slate-700 shadow-sm group-hover:border-blue-200/80 group-hover:bg-blue-50/40 group-hover:text-blue-600 group-hover:shadow-md'
+                            ? `${t.buttonActive} shadow-lg`
+                            : `border border-slate-200/80 bg-white text-slate-700 shadow-sm group-hover:border-transparent group-hover:bg-white/10 group-hover:text-white group-hover:backdrop-blur-md`
                         }`}
                       >
                         {isSelected ? (
                           <>
-                            <Sparkles size={16} className="animate-pulse" /> Selected
+                            <Sparkles size={18} className="animate-pulse" /> Activated
                           </>
                         ) : (
                           <>
-                            Select Template <ArrowRight size={16} className="transition-transform duration-500 group-hover:translate-x-1" />
+                            Select Template <ArrowRight size={18} className="transition-transform duration-500 group-hover:translate-x-1" />
                           </>
                         )}
                       </button>
                     </div>
-                    
-                    {/* Active Glow overlay */}
-                    <div className={`pointer-events-none absolute inset-0 rounded-[24px] border-2 transition-opacity duration-500 ${isSelected ? 'border-blue-500/20 opacity-100' : 'border-transparent opacity-0'}`} />
                   </div>
                 );
               })}
