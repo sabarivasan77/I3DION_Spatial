@@ -9,6 +9,7 @@
     "dev:frontend": "npm --prefix frontend run dev -- --host 127.0.0.1",
     "dev:backend": "npm --prefix backend run dev",
     "build": "npm --prefix frontend run build",
-    "preview": "npm --prefix frontend run preview -- --host 127.0.0.1"
+    "preview": "npm --prefix frontend run preview -- --host 127.0.0.1",
+    "postinstall": "npm --prefix frontend install && npm --prefix backend install"
   }
 }
