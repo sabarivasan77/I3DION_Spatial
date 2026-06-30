@@ -233,14 +233,16 @@ function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
               <div className="pt-4 border-t border-slate-100 flex flex-col items-center gap-3">
                 <p className="text-sm font-medium text-slate-500">Or continue with</p>
                 <div className="w-full flex justify-center mt-2">
-                  <GoogleLogin 
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => showError('Google Sign-In failed', 'Unable to authenticate with Google')}
-                    useOneTap
-                    shape="pill"
-                    text="continue_with"
-                    theme="outline"
-                  />
+                  {useMemo(() => (
+                    <GoogleLogin 
+                      onSuccess={handleGoogleSuccess}
+                      onError={() => showError('Google Sign-In failed', 'Unable to authenticate with Google')}
+                      useOneTap
+                      shape="pill"
+                      text="continue_with"
+                      theme="outline"
+                    />
+                  ), [])}
                 </div>
               </div>
             )}
