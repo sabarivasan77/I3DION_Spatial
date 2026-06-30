@@ -1,116 +1,19 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import {
-  ArrowRight, Calendar, Check, ChevronRight, Box, Bell, Eye,
-  Download, FileText, Layers, Mail, Plus,
-  QrCode, Save, Search, Settings, Sparkles, Trash2, Upload,
-  Users, Edit2, X, RefreshCw, AlertCircle, Phone,
-  Building2, Lock, Image,
-} from 'lucide-react';
-import { Link, NavLink, useNavigate, useSearchParams } from 'react-router-dom';
-import { GoogleLogin } from '@react-oauth/google';
-import {
-  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart,
-  ResponsiveContainer, Tooltip, XAxis, YAxis,
-} from 'recharts';
+import { useEffect, useState } from 'react';
+import { ArrowRight, Sparkles, Layers, Users, Box } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Badge, Card } from '../components/ui';
 import ThreeProduct from '../components/ThreeProduct';
-import { Badge, Button, Card, KpiCard, PageHeader, SectionTitle } from '../components/ui';
-import { useToast } from '../components/Toast';
-import {
-  api, ApiClientError, uploadFileWithProgress,
-  type ProductPayload, type UploadedFile,
-} from '../services/api';
-import { Tracker } from '../services/Tracker';
-import { useAuthStore } from '../store/authStore';
-import type { Lead, Product } from '../types';
-import { cx } from '../utils/format';
-
-
-// ─── Validation Helpers ───
-
-
-function validateEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-function validatePhone(phone: string) {
-  return !phone || /^\+?[\d\s\-().]{7,20}$/.test(phone);
-}
-function validateUrl(url: string) {
-  if (!url) return true;
-  try { new URL(url); return true; } catch { return false; }
-}
-
-
-// ─── Shared Empty State ───
-
-
-function EmptyState({ icon: Icon, title, description, action }: {
-  icon: typeof Box; title: string; description: string; action?: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-16 text-center">
-      <div className="rounded-2xl bg-slate-100 p-4 text-slate-400">
-        <Icon size={32} />
-      </div>
-      <h3 className="mt-4 text-lg font-semibold text-slate-700">{title}</h3>
-      <p className="mt-2 max-w-sm text-sm text-slate-500">{description}</p>
-      {action ? <div className="mt-6">{action}</div> : null}
-    </div>
-  );
-}
-
-
-// ─── Confirmation Dialog ───
-
-
-function ConfirmDialog({ title, message, onConfirm, onCancel, loading }: {
-  title: string; message: string; onConfirm: () => void; onCancel: () => void; loading?: boolean;
-}) {
-  return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/50 p-4">
-      <Card className="w-full max-w-md p-6">
-        <div className="flex items-start gap-4">
-          <div className="rounded-xl bg-red-50 p-2 text-red-500"><AlertCircle size={22} /></div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-950">{title}</h3>
-            <p className="mt-2 text-sm text-slate-500">{message}</p>
-          </div>
-        </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="secondary" onClick={onCancel} disabled={loading}>Cancel</Button>
-          <Button variant="danger" onClick={onConfirm} disabled={loading}>
-            {loading ? 'Deleting...' : 'Delete'}
-          </Button>
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-
-// ─── Landing Page ───
-
 
 export function LandingPage() {
-
   const [recommendations, setRecommendations] = useState<any[]>([]);
 
   useEffect(() => {
-    // Attempt to fetch AI recommendations if possible (requires auth or anon session tracking in a real app)
-    // For demonstration, we'll try to fetch from ai endpoint and fallback to mock if unauth
     fetch('/api/ai/recommendations')
       .then(r => r.json())
       .then(d => {
         if (d.recommendations?.length > 0) {
           setRecommendations(d.recommendations);
         } else {
-          // Mock shelves for public landing display
           setRecommendations([
             { id: '1', name: 'Rotary Air Compressor', category: 'Energy', score: 0.95 },
             { id: '2', name: 'Centrifugal Pump X-1', category: 'Manufacturing', score: 0.88 },
@@ -155,7 +58,6 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* AI Dynamic Shelves */}
       <section className="bg-slate-50 px-4 py-20 md:px-6 border-y border-slate-200">
         <div className="mx-auto max-w-7xl">
           <div className="mb-12">
@@ -184,7 +86,7 @@ export function LandingPage() {
             <div>
               <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2 mb-4"><Layers className="text-emerald-500" /> Trending in Your Industry</h2>
               <div className="space-y-4">
-                {[1,2,3].map(i => (
+                {[1, 2, 3].map(i => (
                   <Card key={i} className="p-4 flex gap-4 items-center">
                     <div className="w-16 h-16 bg-slate-100 rounded-lg" />
                     <div>
@@ -199,7 +101,7 @@ export function LandingPage() {
             <div>
               <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2 mb-4"><Users className="text-blue-500" /> People Also Viewed</h2>
               <div className="space-y-4">
-                {[4,5,6].map(i => (
+                {[4, 5, 6].map(i => (
                   <Card key={i} className="p-4 flex gap-4 items-center">
                     <div className="w-16 h-16 bg-slate-100 rounded-lg" />
                     <div>
@@ -223,4 +125,3 @@ export function LandingPage() {
     </main>
   );
 }
-

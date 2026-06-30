@@ -72,8 +72,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       throw error;
     }
   },
-    }
-  },
   logout: async () => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (token) {

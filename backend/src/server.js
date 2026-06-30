@@ -33,7 +33,7 @@ if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
   process.exit(1);
 }
 if (process.env.NODE_ENV !== 'production' && allowedOrigins.length === 0) {
-  allowedOrigins.push('http://localhost:5173', 'http://localhost:4173', config.appUrl);
+  allowedOrigins.push('http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:4173', config.appUrl);
 }
 
 app.use(cors({

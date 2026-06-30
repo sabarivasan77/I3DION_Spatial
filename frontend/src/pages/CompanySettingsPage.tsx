@@ -1,98 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import {
-  ArrowRight, Calendar, Check, ChevronRight, Box, Bell, Eye,
-  Download, FileText, Layers, Mail, Plus,
-  QrCode, Save, Search, Settings, Sparkles, Trash2, Upload,
-  Users, Edit2, X, RefreshCw, AlertCircle, Phone,
-  Building2, Lock, Image,
-} from 'lucide-react';
-import { Link, NavLink, useNavigate, useSearchParams } from 'react-router-dom';
-import { GoogleLogin } from '@react-oauth/google';
-import {
-  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart,
-  ResponsiveContainer, Tooltip, XAxis, YAxis,
-} from 'recharts';
-import ThreeProduct from '../components/ThreeProduct';
-import { Badge, Button, Card, KpiCard, PageHeader, SectionTitle } from '../components/ui';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Building2, Lock, Save, Bell, Settings, Sparkles, RefreshCw, Upload } from 'lucide-react';
+import { Button, Card, PageHeader, SectionTitle } from '../components/ui';
 import { useToast } from '../components/Toast';
-import {
-  api, ApiClientError, uploadFileWithProgress,
-  type ProductPayload, type UploadedFile,
-} from '../services/api';
-import { Tracker } from '../services/Tracker';
+import { api, ApiClientError, uploadFileWithProgress } from '../services/api';
 import { useAuthStore } from '../store/authStore';
-import type { Lead, Product } from '../types';
 import { cx } from '../utils/format';
-
-
-// ─── Validation Helpers ───
-
-
-function validateEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-function validatePhone(phone: string) {
-  return !phone || /^\+?[\d\s\-().]{7,20}$/.test(phone);
-}
-function validateUrl(url: string) {
-  if (!url) return true;
-  try { new URL(url); return true; } catch { return false; }
-}
-
-
-// ─── Shared Empty State ───
-
-
-function EmptyState({ icon: Icon, title, description, action }: {
-  icon: typeof Box; title: string; description: string; action?: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-16 text-center">
-      <div className="rounded-2xl bg-slate-100 p-4 text-slate-400">
-        <Icon size={32} />
-      </div>
-      <h3 className="mt-4 text-lg font-semibold text-slate-700">{title}</h3>
-      <p className="mt-2 max-w-sm text-sm text-slate-500">{description}</p>
-      {action ? <div className="mt-6">{action}</div> : null}
-    </div>
-  );
-}
-
-
-// ─── Confirmation Dialog ───
-
-
-function ConfirmDialog({ title, message, onConfirm, onCancel, loading }: {
-  title: string; message: string; onConfirm: () => void; onCancel: () => void; loading?: boolean;
-}) {
-  return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/50 p-4">
-      <Card className="w-full max-w-md p-6">
-        <div className="flex items-start gap-4">
-          <div className="rounded-xl bg-red-50 p-2 text-red-500"><AlertCircle size={22} /></div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-950">{title}</h3>
-            <p className="mt-2 text-sm text-slate-500">{message}</p>
-          </div>
-        </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="secondary" onClick={onCancel} disabled={loading}>Cancel</Button>
-          <Button variant="danger" onClick={onConfirm} disabled={loading}>
-            {loading ? 'Deleting...' : 'Delete'}
-          </Button>
-        </div>
-      </Card>
-    </div>
-  );
-}
-
 
 // ─── Settings ───
 
