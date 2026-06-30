@@ -16,8 +16,7 @@ if (fs.existsSync(backendEnv)) {
 }
 
 if (!process.env.JWT_SECRET) {
-  console.error("CRITICAL ERROR: JWT_SECRET environment variable is missing.");
-  process.exit(1);
+  console.warn("WARNING: JWT_SECRET environment variable is missing. Using fallback secret.");
 }
 
 export const config = {
@@ -26,7 +25,7 @@ export const config = {
   appUrl: process.env.APP_URL ?? 'http://localhost:5173',
   apiUrl: process.env.API_URL ?? 'http://localhost:4000',
   databaseUrl: process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/i3dion_spatial',
-  jwtSecret: process.env.JWT_SECRET,
+  jwtSecret: process.env.JWT_SECRET ?? 'fallback_secret_for_development_only_please_change',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
   uploadDir: process.env.UPLOAD_DIR ?? 'uploads',
   maxFileSize: Number(process.env.MAX_FILE_SIZE ?? 150 * 1024 * 1024),

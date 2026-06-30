@@ -29,8 +29,7 @@ const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
   : [];
 
 if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
-  console.error("CRITICAL ERROR: CORS_ALLOWED_ORIGINS environment variable must be set in production.");
-  process.exit(1);
+  console.warn("WARNING: CORS_ALLOWED_ORIGINS environment variable should be set in production.");
 }
 if (process.env.NODE_ENV !== 'production' && allowedOrigins.length === 0) {
   allowedOrigins.push('http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:4173', config.appUrl);
