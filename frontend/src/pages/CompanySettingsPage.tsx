@@ -8,6 +8,17 @@ import { cx } from '../utils/format';
 
 // ─── Settings ───
 
+function validateEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function validatePhone(phone: string) {
+  return /^\+?[0-9\s\-()]{7,20}$/.test(phone);
+}
+
+function validateUrl(url: string) {
+  return /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(url);
+}
 
 export function CompanySettingsPage() {
   const token = useAuthStore((s) => s.token);
