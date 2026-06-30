@@ -29,6 +29,7 @@ interface AuthState {
   login: (email: string, password: string, mfaToken?: string) => Promise<void>;
   loginGoogle: (idToken: string) => Promise<void>;
   signup: (payload: { name: string; email: string; password: string; companyName: string }) => Promise<void>;
+  devLogin: () => void;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -107,6 +108,21 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
       throw error;
     }
+  },
+  devLogin: () => {
+    const session = {
+      token: 'dev-quick-login-token',
+      user: {
+        id: 'dev-admin-id',
+        companyId: 'dev-company-id',
+        name: 'Development Admin',
+        email: 'admin@dev.local',
+        role: 'Admin' as 'Admin',
+      }
+    };
+    localStorage.setItem(TOKEN_KEY, session.token);
+    localStorage.setItem(USER_KEY, JSON.stringify(session.user));
+    set({ token: session.token, user: session.user, loading: false, error: null });
   },
   logout: async () => {
     const token = localStorage.getItem(TOKEN_KEY);

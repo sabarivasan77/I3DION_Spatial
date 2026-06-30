@@ -133,7 +133,7 @@ function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const [mfaToken, setMfaToken] = useState('');
   const [mfaRequired, setMfaRequired] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { loginGoogle } = useAuthStore();
+  const { loginGoogle, devLogin } = useAuthStore();
 
   useEffect(() => { clearError(); }, [mode]);
 
@@ -244,6 +244,22 @@ function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
                     />
                   ), [])}
                 </div>
+              </div>
+            )}
+            
+            {import.meta.env.DEV && !isSignup && (
+              <div className="pt-4 mt-4 border-t border-slate-100 flex flex-col items-center gap-3">
+                <Button 
+                  type="button"
+                  variant="secondary"
+                  className="w-full bg-slate-900 text-white hover:bg-slate-800 border-none"
+                  onClick={() => {
+                    devLogin();
+                    navigate('/dashboard');
+                  }}
+                >
+                  🚀 Developer Quick Login
+                </Button>
               </div>
             )}
           </form>
