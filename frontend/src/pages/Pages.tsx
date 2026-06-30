@@ -229,7 +229,7 @@ function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
               <ArrowRight size={18} />
             </Button>
 
-            {!isSignup && !mfaRequired && (
+            {!mfaRequired && (
               <div className="pt-4 border-t border-slate-100 flex flex-col items-center gap-3">
                 <p className="text-sm font-medium text-slate-500">Or continue with</p>
                 <div className="w-full flex justify-center mt-2">
