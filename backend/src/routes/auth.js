@@ -20,7 +20,7 @@ import { logAudit, createSecurityAlert } from '../utils/audit.js';
 
 export const authRouter = Router();
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || 'dummy-client-id');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || '436054253649-9sjuvp1a77mal61eqmaev2ltkuk3p06i.apps.googleusercontent.com');
 
 async function handleFailedLogin(email, ip) {
   const { rows } = await query('SELECT id, company_id, failed_login_attempts FROM users WHERE email = $1', [email]);
@@ -184,7 +184,7 @@ authRouter.post(
     try {
       const ticket = await googleClient.verifyIdToken({
         idToken,
-        audience: process.env.GOOGLE_CLIENT_ID || 'dummy-client-id',
+        audience: process.env.GOOGLE_CLIENT_ID || '436054253649-9sjuvp1a77mal61eqmaev2ltkuk3p06i.apps.googleusercontent.com',
       });
       payload = ticket.getPayload();
     } catch (err) {
