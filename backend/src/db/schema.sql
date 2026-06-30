@@ -262,17 +262,23 @@ CREATE TABLE IF NOT EXISTS lead_activities (
 
 CREATE TABLE IF NOT EXISTS audit_logs (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid REFERENCES companies(id) ON DELETE SET NULL,
+  company_id uuid REFERENCES companies(id) ON DELETE CASCADE,
   user_id uuid REFERENCES users(id) ON DELETE SET NULL,
-  action audit_action NOT NULL,
-  entity_type text NOT NULL,
-  entity_id uuid,
-  before_data jsonb,
-  after_data jsonb,
-  ip_address inet,
+  action text NOT NULL,
+  entity_type text,
+  entity_id text,
+  details jsonb,
+  ip_address text,
   user_agent text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS action text NOT NULL DEFAULT 'unknown';
+ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS entity_type text;
+ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS entity_id text;
+ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS details jsonb;
+ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS ip_address text;
+ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS user_agent text;
 
 CREATE TABLE IF NOT EXISTS company_preferences (
   company_id uuid PRIMARY KEY REFERENCES companies(id) ON DELETE CASCADE,
@@ -326,13 +332,21 @@ CREATE TABLE IF NOT EXISTS user_sessions (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   company_id uuid REFERENCES companies(id) ON DELETE CASCADE,
-  token_hash text NOT NULL UNIQUE,
-  ip_address inet,
-  user_agent text,
+  refresh_token_hash text NOT NULL,
+  device_info text,
+  ip_address text,
+  is_revoked boolean NOT NULL DEFAULT false,
   expires_at timestamptz NOT NULL,
-  revoked_at timestamptz,
-  created_at timestamptz NOT NULL DEFAULT now()
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS company_id uuid REFERENCES companies(id) ON DELETE CASCADE;
+ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS refresh_token_hash text;
+ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS device_info text;
+ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS ip_address text;
+ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS is_revoked boolean NOT NULL DEFAULT false;
+ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
 
 CREATE TABLE IF NOT EXISTS viewer_sessions (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -671,33 +685,12 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts integer NOT NUL
 ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until timestamptz;
 
 -- 3. Session Management Table (Zero Trust tracking)
-CREATE TABLE IF NOT EXISTS user_sessions (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  refresh_token_hash text NOT NULL,
-  device_info text,
-  ip_address text,
-  is_revoked boolean NOT NULL DEFAULT false,
-  expires_at timestamptz NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
+-- (Schema unified in main definitions above)
 CREATE INDEX IF NOT EXISTS idx_user_sessions_user ON user_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions(refresh_token_hash);
 
 -- 4. Audit Logs (Enterprise Compliance)
-CREATE TABLE IF NOT EXISTS audit_logs (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid REFERENCES companies(id) ON DELETE CASCADE,
-  user_id uuid REFERENCES users(id) ON DELETE SET NULL,
-  action text NOT NULL, -- e.g., 'login_success', 'mfa_enabled', 'lead_deleted', 'qr_generated'
-  entity_type text, -- e.g., 'user', 'lead', 'product'
-  entity_id text,
-  details jsonb, -- Arbitrary metadata
-  ip_address text,
-  user_agent text,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
+-- (Schema unified in main definitions above)
 CREATE INDEX IF NOT EXISTS idx_audit_logs_company ON audit_logs(company_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);

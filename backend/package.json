@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "node src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "migrate": "node src/migrate.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",

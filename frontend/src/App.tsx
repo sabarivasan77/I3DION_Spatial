@@ -6,12 +6,12 @@ import { Suspense, lazy } from 'react';
 import RouteTracker from './components/RouteTracker';
 import { ChatbotWidget } from './components/ChatbotWidget';
 
-const LandingPage = lazy(() => import('./pages/Pages').then(m => ({ default: m.LandingPage })));
-const LoginPage = lazy(() => import('./pages/Pages').then(m => ({ default: m.LoginPage })));
-const SignupPage = lazy(() => import('./pages/Pages').then(m => ({ default: m.SignupPage })));
-const ForgotPasswordPage = lazy(() => import('./pages/Pages').then(m => ({ default: m.ForgotPasswordPage })));
-const ResetPasswordPage = lazy(() => import('./pages/Pages').then(m => ({ default: m.ResetPasswordPage })));
-const DashboardPage = lazy(() => import('./pages/Pages').then(m => ({ default: m.DashboardPage })));
+const LandingPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
+const LoginPage = lazy(() => import('./pages/auth/AuthPages').then(m => ({ default: m.LoginPage })));
+const SignupPage = lazy(() => import('./pages/auth/AuthPages').then(m => ({ default: m.SignupPage })));
+const ForgotPasswordPage = lazy(() => import('./pages/auth/AuthPages').then(m => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage = lazy(() => import('./pages/auth/AuthPages').then(m => ({ default: m.ResetPasswordPage })));
+const DashboardPage = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const ProductManagementPage = lazy(() => import('./pages/ProductFlow').then(m => ({ default: m.ProductManagementPage })));
 const ProductUploadWizardPage = lazy(() => import('./pages/ProductFlow').then(m => ({ default: m.ProductUploadWizardPage })));
 const CatalogBuilderPage = lazy(() => import('./pages/CatalogBuilder').then(m => ({ default: m.CatalogBuilderPage })));
@@ -20,7 +20,7 @@ const PublicProductPage = lazy(() => import('./pages/ProductFlow').then(m => ({ 
 const AnalyticsDashboardPage = lazy(() => import('./pages/SalesIntelligence').then(m => ({ default: m.SalesIntelligencePage })));
 const AiIntelligencePage = lazy(() => import('./pages/AiIntelligence').then(m => ({ default: m.AiIntelligencePage })));
 const LeadsDashboardPage = lazy(() => import('./pages/LeadManagement').then(m => ({ default: m.LeadManagementPage })));
-const CompanySettingsPage = lazy(() => import('./pages/Pages').then(m => ({ default: m.CompanySettingsPage })));
+const CompanySettingsPage = lazy(() => import('./pages/CompanySettingsPage').then(m => ({ default: m.CompanySettingsPage })));
 const SupportDashboardPage = lazy(() => import('./pages/SupportDashboard').then(m => ({ default: m.SupportDashboardPage })));
 const HelpCenterPage = lazy(() => import('./pages/HelpCenter').then(m => ({ default: m.HelpCenterPage })));
 const HubFeedPage = lazy(() => import('./pages/hub/HubFeed').then(m => ({ default: m.HubFeed })));

@@ -14,6 +14,7 @@ import {
   Globe2,
   Image,
   QrCode,
+  Mail,
   RefreshCw,
   ScanLine,
   Send,
@@ -1496,15 +1497,27 @@ export function PublicProductPage() {
               </div>
 
               {/* Action Bar */}
-              <div className="bg-slate-950/60 p-5 border-t border-white/10 backdrop-blur-xl">
-                 <button onClick={() => xrStore.enterAR()} className="w-full flex items-center justify-center gap-2 rounded-2xl bg-blue-600 py-4 text-sm font-bold text-white shadow-lg shadow-blue-900/30 transition hover:bg-blue-500 hover:shadow-blue-900/50 active:scale-[0.98]">
+              <div className="bg-slate-950/60 p-5 border-t border-white/10 backdrop-blur-xl grid grid-cols-2 gap-3">
+                 <button onClick={() => xrStore.enterAR()} className="col-span-2 flex items-center justify-center gap-2 rounded-2xl bg-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-900/30 transition hover:bg-blue-500 hover:shadow-blue-900/50 active:scale-[0.98]">
                    <Smartphone size={18} />
                    View in AR
                  </button>
-                 <button onClick={() => xrStore.enterVR()} className="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/5 py-4 text-sm font-bold text-white border border-white/10 transition hover:bg-white/10 active:scale-[0.98]">
+                 <button onClick={() => xrStore.enterVR()} className="flex items-center justify-center gap-2 rounded-2xl bg-white/5 py-3.5 text-sm font-bold text-white border border-white/10 transition hover:bg-white/10 active:scale-[0.98]">
                    <Box size={18} />
-                   Enter VR Mode
+                   VR Mode
                  </button>
+                 <button onClick={() => {
+                   document.dispatchEvent(new CustomEvent('open-lead-capture', { detail: { type: 'quote' } }));
+                 }} className="flex items-center justify-center gap-2 rounded-2xl bg-white/5 py-3.5 text-sm font-bold text-white border border-white/10 transition hover:bg-white/10 active:scale-[0.98]">
+                   <Mail size={18} />
+                   Quote
+                 </button>
+                 {product.document_url && (
+                   <a href={product.document_url} target="_blank" rel="noreferrer" className="col-span-2 flex items-center justify-center gap-2 rounded-2xl bg-white/5 py-3.5 text-sm font-bold text-white border border-white/10 transition hover:bg-white/10 active:scale-[0.98]">
+                     <FileText size={18} />
+                     Datasheet
+                   </a>
+                 )}
               </div>
             </motion.div>
           )}

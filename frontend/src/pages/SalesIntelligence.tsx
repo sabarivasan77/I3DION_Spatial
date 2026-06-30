@@ -66,6 +66,20 @@ export function SalesIntelligencePage() {
     ];
   }, [funnel]);
 
+  const handleExport = () => {
+    if (!dashboard || !trends.length) return alert('No data to export');
+    const header = "Date,Visitors,Sessions\n";
+    const rows = trends.map(t => `${new Date(t.date).toLocaleDateString()},${t.visitors},${t.sessions}`).join("\n");
+    const csv = header + rows;
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `analytics_export_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-8 pb-12">
       <PageHeader 
@@ -74,7 +88,7 @@ export function SalesIntelligencePage() {
         action={
           <div className="flex gap-3">
             <Button variant="secondary" onClick={() => navigate('/leads')}><Users size={18} />Manage Leads</Button>
-            <Button variant="secondary" onClick={() => alert('Export report coming soon!')}><Download size={18} />Export Report</Button>
+            <Button variant="secondary" onClick={handleExport}><Download size={18} />Export Report</Button>
           </div>
         }
       />

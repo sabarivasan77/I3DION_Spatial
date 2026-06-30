@@ -14,22 +14,23 @@ const roleRank = {
 export async function requireAuth(req, _res, next) {
   try {
     const header = req.headers.authorization;
-    const token = header?.startsWith('Bearer ') ? header.slice(7) : req.cookies?.accessToken;
+    const token = req.cookies?.accessToken || (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : null);
+    const refreshToken = req.cookies?.refreshToken;
 
     if (!token) {
       throw new ApiError(401, 'Authentication required');
     }
 
     const payload = jwt.verify(token, config.jwtSecret);
+    
+    // Verify user exists and has a valid session if refresh token is present
     const { rows } = await query(
       `SELECT u.id, u.company_id, u.name, u.email, u.role
        FROM users u
-       JOIN user_sessions s ON s.user_id = u.id
+       ${refreshToken ? 'JOIN user_sessions s ON s.user_id = u.id' : ''}
        WHERE u.id = $1
-         AND s.token_hash = $2
-         AND s.revoked_at IS NULL
-         AND s.expires_at > now()`,
-      [payload.sub, hashToken(token)],
+         ${refreshToken ? 'AND s.refresh_token_hash = $2 AND s.is_revoked = false AND s.expires_at > now()' : ''}`,
+      refreshToken ? [payload.sub, hashToken(refreshToken)] : [payload.sub],
     );
 
     if (!rows[0]) {

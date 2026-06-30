@@ -24,8 +24,26 @@ import { errorHandler, notFound } from './utils/errors.js';
 export const app = express();
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS 
+  ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(s => s.trim()) 
+  : [];
+
+if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
+  console.error("CRITICAL ERROR: CORS_ALLOWED_ORIGINS environment variable must be set in production.");
+  process.exit(1);
+}
+if (process.env.NODE_ENV !== 'production' && allowedOrigins.length === 0) {
+  allowedOrigins.push('http://localhost:5173', 'http://localhost:4173', config.appUrl);
+}
+
 app.use(cors({
-  origin: [config.appUrl, 'http://localhost:5173', 'http://localhost:4173'],
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '2mb' }));
@@ -80,30 +98,13 @@ apiRouter.use('/security', securityRouter);
 apiRouter.use('/', resourcesRouter);
 
 app.use('/api', apiRouter);
-if (process.env.VERCEL) {
-  app.use('/', apiRouter);
-}
 app.use(notFound);
 app.use(errorHandler);
 
-if (process.env.VERCEL) {
-  // In Vercel, we export the app for serverless execution.
-  // We can try to run migrations, but usually they are done separately in CI/CD.
-  migrate().then(() => console.log('DB migration completed in Vercel')).catch(err => console.error('Migration failed in Vercel', err));
-} else {
-  // Local environment
+if (!process.env.VERCEL) {
+  // Local environment startup
   try {
-    try {
-      await migrate();
-      console.log('Database migration completed.');
-    } catch (error) {
-      console.error('\nI3DION Spatial API started in degraded mode.');
-      console.error('Database migration or connection failed, but the HTTP server will still listen.');
-      console.error('\nExpected database URL:');
-      console.error(`  ${config.databaseUrl}\n`);
-      console.error(error);
-    }
-
+    console.log('\nI3DION Spatial API starting...');
     app.listen(config.port, () => {
       console.log(`I3DION Spatial API running on http://localhost:${config.port}`);
     });

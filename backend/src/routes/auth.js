@@ -70,12 +70,20 @@ async function handleSuccessfulLogin(user, req, res) {
     ]
   );
 
-  // Set HTTP-Only cookie for refresh token
+  // Set HTTP-Only cookies for tokens
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
     expires: expiresAt
+  });
+  
+  res.cookie('accessToken', accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    // Access tokens are typically short-lived, but we use the same config or default 7d
+    expires: expiresAt 
   });
 
   // Track Mobile Device if provided
