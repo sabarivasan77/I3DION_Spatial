@@ -2,9 +2,10 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import AppShell from './layouts/AppShell';
 import PublicLayout from './layouts/PublicLayout';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import RouteTracker from './components/RouteTracker';
 import { ChatbotWidget } from './components/ChatbotWidget';
+import { useAuthStore } from './store/authStore';
 
 const LandingPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
 const LoginPage = lazy(() => import('./pages/auth/AuthPages').then(m => ({ default: m.LoginPage })));
@@ -32,6 +33,17 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ defaul
 const SecurityDashboard = lazy(() => import('./pages/SecurityDashboard').then(m => ({ default: m.SecurityDashboard })));
 
 export default function App() {
+  const initialize = useAuthStore(state => state.initialize);
+  const initialized = useAuthStore(state => state.initialized);
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
+  if (!initialized) {
+    return <div className="flex h-screen items-center justify-center text-slate-500">Initializing App...</div>;
+  }
+
   return (
     <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-500">Loading...</div>}>
       <RouteTracker />

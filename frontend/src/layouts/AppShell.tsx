@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { Logo } from '../components/Logo';
 import {
   BarChart3,
   Bell,
@@ -54,15 +55,7 @@ function Sidebar({
     >
       <div className="mb-8 flex items-center justify-between px-2">
         <NavLink to="/dashboard" className="flex items-center gap-3" onClick={onClose}>
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-            <Box size={22} />
-          </div>
-          <div>
-            <p className="text-lg font-bold leading-tight">I3DION Spatial</p>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-              Enterprise AR
-            </p>
-          </div>
+          <Logo theme="dark" />
         </NavLink>
         <button className="rounded-lg p-2 text-slate-300 lg:hidden" onClick={onClose}>
           <X size={20} />

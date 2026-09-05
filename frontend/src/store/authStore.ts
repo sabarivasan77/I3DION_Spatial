@@ -1,85 +1,105 @@
 import { create } from 'zustand';
-import { api, ApiClientError, type SessionUser } from '../services/api';
-
-const TOKEN_KEY = 'i3dion.accessToken';
-const USER_KEY = 'i3dion.user';
+import { supabase } from '../lib/supabase';
+import type { SessionUser } from '../services/api';
 
 interface AuthState {
   token: string | null;
   user: SessionUser | null;
   loading: boolean;
   error: string | null;
-  login: (email: string, password: string, mfaToken?: string) => Promise<void>;
-  loginGoogle: (idToken: string) => Promise<void>;
+  initialized: boolean;
+  initialize: () => void;
+  login: (email: string, password: string) => Promise<void>;
+  loginGoogle: () => Promise<void>;
   signup: (payload: { name: string; email: string; password: string; companyName: string }) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
 
-function readUser() {
-  const raw = localStorage.getItem(USER_KEY);
-  if (!raw) return null;
-
-  try {
-    return JSON.parse(raw) as SessionUser;
-  } catch {
-    localStorage.removeItem(USER_KEY);
-    return null;
-  }
-}
+const mapSupabaseUser = (user: any): SessionUser => {
+  return {
+    id: user.id,
+    email: user.email || '',
+    name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+    companyId: user.user_metadata?.companyId || 'default-company',
+    role: user.user_metadata?.role || 'Company Admin',
+  };
+};
 
 export const useAuthStore = create<AuthState>((set) => ({
-  token: localStorage.getItem(TOKEN_KEY),
-  user: readUser(),
+  token: null,
+  user: null,
   loading: false,
   error: null,
-  login: async (email, password, mfaToken) => {
+  initialized: false,
+  
+  initialize: () => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        set({ token: session.access_token, user: mapSupabaseUser(session.user), initialized: true });
+      } else {
+        set({ token: null, user: null, initialized: true });
+      }
+    });
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        set({ token: session.access_token, user: mapSupabaseUser(session.user) });
+      } else {
+        set({ token: null, user: null });
+      }
+    });
+  },
+
+  login: async (email, password) => {
     set({ loading: true, error: null });
-    try {
-      const session = await api.login(email, password, mfaToken);
-      localStorage.setItem(TOKEN_KEY, session.token);
-      localStorage.setItem(USER_KEY, JSON.stringify(session.user));
-      set({ token: session.token, user: session.user, loading: false });
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Login failed', loading: false });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      set({ error: error.message, loading: false });
       throw error;
     }
+    set({ loading: false });
   },
-  loginGoogle: async (idToken) => {
+  
+  loginGoogle: async () => {
     set({ loading: true, error: null });
-    try {
-      const session = await api.loginGoogle(idToken);
-      localStorage.setItem(TOKEN_KEY, session.token);
-      localStorage.setItem(USER_KEY, JSON.stringify(session.user));
-      set({ token: session.token, user: session.user, loading: false });
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Google Login failed', loading: false });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+    if (error) {
+      set({ error: error.message, loading: false });
       throw error;
     }
+    // Note: OAuth redirects, so loading state stays true until redirect
   },
+  
   signup: async (payload) => {
     set({ loading: true, error: null });
-    try {
-      const session = await api.signup(payload);
-      localStorage.setItem(TOKEN_KEY, session.token);
-      localStorage.setItem(USER_KEY, JSON.stringify(session.user));
-      set({ token: session.token, user: session.user, loading: false });
-    } catch (error) {
-      set({
-        error: error instanceof ApiClientError ? error.message : 'Unable to create account',
-        loading: false,
-      });
+    const { error } = await supabase.auth.signUp({
+      email: payload.email,
+      password: payload.password,
+      options: {
+        data: {
+          name: payload.name,
+          companyName: payload.companyName,
+          role: 'Company Admin',
+        }
+      }
+    });
+    if (error) {
+      set({ error: error.message, loading: false });
       throw error;
     }
+    set({ loading: false });
   },
+  
   logout: async () => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (token) {
-      await api.logout(token).catch(() => undefined);
-    }
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    await supabase.auth.signOut();
     set({ token: null, user: null, error: null });
   },
+  
   clearError: () => set({ error: null }),
 }));

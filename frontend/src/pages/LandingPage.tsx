@@ -3,6 +3,7 @@ import { ArrowRight, Sparkles, Layers, Users, Box } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge, Card } from '../components/ui';
 import ThreeProduct from '../components/ThreeProduct';
+import { Logo } from '../components/Logo';
 
 export function LandingPage() {
   const [recommendations, setRecommendations] = useState<any[]>([]);
@@ -117,8 +118,8 @@ export function LandingPage() {
       </section>
 
       <footer className="border-t border-slate-200 bg-white px-4 py-8 text-sm text-slate-500 md:px-6">
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 md:flex-row">
-          <p className="font-semibold text-slate-700">I3DION Spatial</p>
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 md:flex-row">
+          <Logo />
           <p>Industrial AI Intelligence Platform</p>
         </div>
       </footer>
