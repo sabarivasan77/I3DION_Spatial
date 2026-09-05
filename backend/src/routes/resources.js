@@ -37,12 +37,42 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: max
 resourcesRouter.use(requireAuth);
 
 resourcesRouter.get('/me', asyncHandler(async (req, res) => {
-  const { rows } = await query(
+  let { rows } = await query(
     `SELECT id, company_id, name, email, phone, avatar_url, role, designation, department, bio,
             banner_url, website, location, social_links, email_verified, last_login_at, created_at, updated_at
      FROM users WHERE id = $1`,
     [req.user.id]
   );
+  
+  if (!rows[0]) {
+    // Just-In-Time Provisioning: Sync Supabase user to local DB
+    // 1. Ensure company exists or create a default one
+    let companyId = req.user.company_id;
+    if (companyId === 'default-company') {
+      const companyRes = await query(
+        `INSERT INTO companies (name) VALUES ('Default Company') RETURNING id`
+      );
+      companyId = companyRes.rows[0].id;
+    }
+
+    // 2. Insert the user
+    await query(
+      `INSERT INTO users (id, company_id, name, email, role, password_hash)
+       VALUES ($1, $2, $3, $4, $5, 'supabase_managed')
+       ON CONFLICT (id) DO NOTHING`,
+      [req.user.id, companyId, req.user.name || 'User', req.user.email, 'Company Admin']
+    );
+
+    // 3. Fetch again
+    const newRows = await query(
+      `SELECT id, company_id, name, email, phone, avatar_url, role, designation, department, bio,
+              banner_url, website, location, social_links, email_verified, last_login_at, created_at, updated_at
+       FROM users WHERE id = $1`,
+      [req.user.id]
+    );
+    rows = newRows.rows;
+  }
+  
   if (!rows[0]) return res.status(404).json({ message: 'User not found' });
   const u = rows[0];
   res.json({
