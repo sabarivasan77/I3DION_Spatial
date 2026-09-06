@@ -407,7 +407,12 @@ export const api = {
   signup: (payload: { name: string; email: string; password: string; companyName: string }) =>
     apiRequest<AuthResponse>('/auth/signup', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        name: payload.name,
+        email: payload.email,
+        password: payload.password,
+        organizationName: payload.companyName,
+      }),
     }),
   forgotPassword: (email: string) =>
     apiRequest<{ message: string; resetToken?: string }>('/auth/forgot-password', {
