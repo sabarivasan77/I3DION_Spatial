@@ -120,12 +120,15 @@ export default function ThreeProduct({
   autoRotate?: boolean;
   productName?: string;
 }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
   return (
-    <div className="relative w-full h-full bg-slate-900 overflow-hidden rounded-inherit">
+    <div ref={containerRef} className="relative w-full h-full bg-slate-900 overflow-hidden rounded-inherit">
       {/* Premium Loading Overlay */}
       <LoadingOverlay productName={productName} />
 
       <Canvas 
+        eventSource={containerRef}
         shadows 
         camera={{ position: [4, 2, 5], fov: 45 }}
         gl={{ preserveDrawingBuffer: true, antialias: true }}

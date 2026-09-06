@@ -23,6 +23,7 @@ import { errorHandler, notFound } from './utils/errors.js';
 
 export const app = express();
 
+app.set('trust proxy', 1); // Trust Vercel's proxy for express-rate-limit
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS 
   ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(s => s.trim()) 

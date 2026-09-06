@@ -16,7 +16,7 @@ for (const key of keys) {
   spawnSync('npx.cmd', ['vercel', 'env', 'rm', key, 'production', '-y'], { cwd: process.cwd(), encoding: 'utf8' });
 }
 
-addEnv('DATABASE_URL', 'postgresql://postgres:Kdsv1986%40123@db.ytjqaasskfwtrnyxttso.supabase.co:5432/postgres');
+addEnv('DATABASE_URL', 'postgresql://postgres.ytjqaasskfwtrnyxttso:Kdsv1986%40123@aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres');
 addEnv('SUPABASE_URL', 'https://ytjqaasskfwtrnyxttso.supabase.co');
 addEnv('SUPABASE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0anFhYXNza2Z3dHJueXh0dHNvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODYwNTkyNiwiZXhwIjoyMTA0MTgxOTI2fQ.KYCuDbm_wkKTzqqvHpRr7DwKR4EgLaByDRvN2dXX5PQ');
 addEnv('SUPABASE_BUCKET', 'uploads');

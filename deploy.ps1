@@ -1,0 +1,3 @@
+npx vercel env rm SUPABASE_KEY --yes
+npx vercel env add SUPABASE_KEY production --value "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0anFhYXNza2Z3dHJueXh0dHNvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODYwNTkyNiwiZXhwIjoyMTA0MTgxOTI2fQ.KYCuDbm_wkKTzqqvHpRr7DwKR4EgLaByDRvN2dXX5PQ" --yes
+npx vercel deploy --prod --yes
