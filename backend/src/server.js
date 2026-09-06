@@ -80,7 +80,13 @@ apiRouter.get('/health', async (_req, res) => {
     ok: dbConnected && storageAvailable,
     service: 'i3dion-spatial-api',
     dbConnected,
-    storageAvailable
+    storageAvailable,
+    debug: {
+      supabaseUrl: config.supabaseUrl,
+      supabaseKeyLength: config.supabaseKey?.length,
+      vercelUrl: config.appUrl,
+      dbUrl: config.databaseUrl?.substring(0, 30) + '...'
+    }
   });
 });
 
