@@ -56,6 +56,7 @@ export async function requireAuth(req, _res, next) {
     
     next();
   } catch (error) {
+    console.error('requireAuth error:', error);
     next(error instanceof ApiError ? error : new ApiError(401, 'Invalid or expired token'));
   }
 }
