@@ -30,3 +30,6 @@ Thumbs.db
 
 # Custom
 arch_swiss_knife.py
+
+.vercel
+.env*
