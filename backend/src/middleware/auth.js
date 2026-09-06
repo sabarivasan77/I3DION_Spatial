@@ -1,57 +1,57 @@
-import { createClient } from '@supabase/supabase-js';
+import jwt from 'jsonwebtoken';
 import { config } from '../config.js';
 import { ApiError } from '../utils/errors.js';
 import { query } from '../db/pool.js';
+
+const JWT_SECRET = config.jwtSecret || 'dev_jwt_secret_do_not_use_in_prod';
 
 const roleRank = {
   Viewer: 1,
   'Sales User': 2,
   Manager: 3,
   Admin: 4,
-  'Company Admin': 4,
+  'Company Admin': 4, // Keep for backward compatibility if needed
 };
-
-// Initialize Supabase client with fallbacks to prevent server crash on startup
-const supabaseUrl = config.supabaseUrl || 'https://xyzcompany.supabase.co';
-const supabaseKey = config.supabaseKey || 'public-anon-key';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function requireAuth(req, _res, next) {
   try {
-    const token = req.cookies?.accessToken || (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : null);
-
+    const headerToken = req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : null;
+    const token = headerToken || req.cookies?.accessToken;
     if (!token) {
       throw new ApiError(401, 'Authentication required');
     }
 
-    // Verify user exists and token is valid via Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-
-    if (error || !user) {
+    // Verify local JWT
+    let payload;
+    try {
+      payload = jwt.verify(token, JWT_SECRET);
+    } catch (err) {
       throw new ApiError(401, 'Invalid or expired session');
     }
 
-    // Map Supabase user object back to our expected shape
+    // Fetch user and current membership
+    const userRes = await query(
+      'SELECT id, name, email, organization_id, role FROM users WHERE id = $1',
+      [payload.userId]
+    );
+    const user = userRes.rows[0];
+
+    if (!user) {
+      throw new ApiError(401, 'User no longer exists');
+    }
+
     req.user = {
       id: user.id,
+      name: user.name,
       email: user.email,
-      name: user.user_metadata?.name || user.email?.split('@')[0],
-      role: user.user_metadata?.role || 'Company Admin',
+      role: user.role,
+      organization_id: user.organization_id, // Main canonical tenant context
     };
     req.token = token;
 
-    // Fetch company_id from local DB
-    const dbUser = await query('SELECT company_id FROM users WHERE id = $1', [user.id]);
-    if (dbUser.rows[0]?.company_id) {
-        req.user.company_id = dbUser.rows[0].company_id;
-    } else {
-        const defaultCompany = await query("SELECT id FROM companies WHERE name = 'Default Company' LIMIT 1");
-        if (defaultCompany.rows[0]) {
-            req.user.company_id = defaultCompany.rows[0].id;
-        } else {
-            const companyRes = await query("INSERT INTO companies (name) VALUES ('Default Company') RETURNING id");
-            req.user.company_id = companyRes.rows[0].id;
-        }
+    if (!req.user.organization_id) {
+       // Should be resolved during login, but as a fallback
+       throw new ApiError(403, 'No active organization found for user');
     }
     
     next();
