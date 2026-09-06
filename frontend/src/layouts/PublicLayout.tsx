@@ -10,8 +10,8 @@ export default function PublicLayout() {
   const location = useLocation();
 
   useEffect(() => {
-    // Only redirect to dashboard if they are on /, /login, or /signup and already logged in
-    if (user && (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/signup')) {
+    // Only redirect to dashboard if they are on /login or /signup and already logged in
+    if (user && (location.pathname === '/login' || location.pathname === '/signup')) {
       navigate('/dashboard', { replace: true });
     }
   }, [user, location.pathname, navigate]);
@@ -38,12 +38,20 @@ export default function PublicLayout() {
             <Search size={17} className="mr-2 text-outline" />
             <input className="w-40 bg-transparent text-sm outline-none" placeholder="Search catalog..." />
           </div>
-          <NavLink className="text-sm font-semibold text-slate-600" to="/login">
-            Login
-          </NavLink>
-          <NavLink className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white" to="/signup">
-            Sign up
-          </NavLink>
+          {user ? (
+            <NavLink className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600" to="/dashboard">
+              Go to Dashboard
+            </NavLink>
+          ) : (
+            <>
+              <NavLink className="text-sm font-semibold text-slate-600" to="/login">
+                Login
+              </NavLink>
+              <NavLink className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600" to="/signup">
+                Sign up
+              </NavLink>
+            </>
+          )}
           <HelpCircle className="hidden text-primary sm:block" size={21} />
         </div>
       </nav>

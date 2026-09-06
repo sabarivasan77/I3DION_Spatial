@@ -30,8 +30,6 @@ const navItems = [
   { label: 'Catalogs', path: '/catalog-builder', icon: BookOpen },
   { label: 'Leads', path: '/leads', icon: Users },
   { label: 'Analytics', path: '/analytics', icon: BarChart3 },
-  { label: 'AI Engine', path: '/ai', icon: Zap },
-  { label: 'Security', path: '/security', icon: Shield },
   { label: 'Settings', path: '/settings', icon: Settings },
 ];
 
@@ -108,12 +106,12 @@ function Sidebar({
           <BookOpen size={20} />
           Knowledge Base
         </NavLink>
-        <button
-          onClick={onLogout}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-rose-300 hover:bg-rose-500/10"
+        <button 
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition" 
+          onClick={() => { onClose(); onLogout(); }}
         >
           <LogOut size={20} />
-          Sign Out
+          Log Out
         </button>
       </div>
     </aside>
@@ -159,11 +157,10 @@ export default function AppShell() {
           <div className="flex items-center gap-3">
             <button
               className="relative rounded-full p-2 text-slate-600 hover:bg-slate-100"
-              onClick={() => navigate('/support')}
+              onClick={() => alert('No new notifications')}
               title="Notifications"
             >
               <Bell size={20} />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
             </button>
             <button
               className="rounded-full p-2 text-slate-600 hover:bg-slate-100"
