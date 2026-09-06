@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { config } from '../config.js';
 import { ApiError } from '../utils/errors.js';
+import { query } from '../db/pool.js';
 
 const roleRank = {
   Viewer: 1,
@@ -35,10 +36,23 @@ export async function requireAuth(req, _res, next) {
       id: user.id,
       email: user.email,
       name: user.user_metadata?.name || user.email?.split('@')[0],
-      company_id: user.user_metadata?.companyId || 'default-company',
       role: user.user_metadata?.role || 'Company Admin',
     };
     req.token = token;
+
+    // Fetch company_id from local DB
+    const dbUser = await query('SELECT company_id FROM users WHERE id = $1', [user.id]);
+    if (dbUser.rows[0]?.company_id) {
+        req.user.company_id = dbUser.rows[0].company_id;
+    } else {
+        const defaultCompany = await query("SELECT id FROM companies WHERE name = 'Default Company' LIMIT 1");
+        if (defaultCompany.rows[0]) {
+            req.user.company_id = defaultCompany.rows[0].id;
+        } else {
+            const companyRes = await query("INSERT INTO companies (name) VALUES ('Default Company') RETURNING id");
+            req.user.company_id = companyRes.rows[0].id;
+        }
+    }
     
     next();
   } catch (error) {

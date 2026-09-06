@@ -328,7 +328,7 @@ CREATE TABLE IF NOT EXISTS integrations (
   UNIQUE (company_id, provider)
 );
 
-// The user_sessions and user_devices tables have been removed to migrate to Supabase Auth.
+-- The user_sessions and user_devices tables have been removed to migrate to Supabase Auth.
 
 -- 2. Upgrade Notifications for Mobile Sync
 ALTER TABLE notifications ADD COLUMN IF NOT EXISTS is_read_mobile boolean NOT NULL DEFAULT false;
@@ -374,11 +374,19 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at timestamptz;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_ip text;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts integer NOT NULL DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until timestamptz;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS designation text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS department text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bio text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS banner_url text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS website text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS location text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS social_links jsonb;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAULT false;
 
 -- 3. Session Management Table (Zero Trust tracking)
 -- (Schema unified in main definitions above)
-CREATE INDEX IF NOT EXISTS idx_user_sessions_user ON user_sessions(user_id);
-CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions(refresh_token_hash);
+-- CREATE INDEX IF NOT EXISTS idx_user_sessions_user ON user_sessions(user_id);
+-- CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions(refresh_token_hash);
 
 -- 4. Audit Logs (Enterprise Compliance)
 -- (Schema unified in main definitions above)

@@ -9,7 +9,8 @@ const megabyte = 1024 * 1024;
 
 export const maxFileSizeBytes = config.maxFileSize;
 
-const supabase = (config.supabaseUrl && config.supabaseKey)
+const useSupabaseStorage = config.supabaseUrl && config.supabaseKey && process.env.USE_LOCAL_STORAGE !== 'true';
+const supabase = useSupabaseStorage
   ? createClient(config.supabaseUrl, config.supabaseKey)
   : null;
 
