@@ -32,16 +32,20 @@ const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
 if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
   console.warn("WARNING: CORS_ALLOWED_ORIGINS environment variable should be set in production.");
 }
+if (config.appUrl && !allowedOrigins.includes(config.appUrl)) {
+  allowedOrigins.push(config.appUrl);
+}
 if (process.env.NODE_ENV !== 'production' && allowedOrigins.length === 0) {
-  allowedOrigins.push('http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:4173', config.appUrl);
+  allowedOrigins.push('http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:4173');
 }
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Also allow same-origin requests (where origin matches config.appUrl) or Vercel preview deployments
+    if (!origin || allowedOrigins.includes(origin) || origin === config.appUrl || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
     }
   },
   credentials: true,

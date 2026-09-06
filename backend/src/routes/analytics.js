@@ -19,7 +19,7 @@ analyticsRouter.get(
       `SELECT
         (SELECT COUNT(*) FROM leads WHERE company_id = $1) as total_leads,
         (SELECT COUNT(*) FROM leads WHERE company_id = $1 AND status != 'Closed' AND status != 'Lost') as active_leads,
-        (SELECT COUNT(*) FROM lead_intelligence li JOIN leads l ON li.lead_id = l.id WHERE l.company_id = $1 AND li.lead_category IN ('Hot', 'SQL', 'High Intent')) as hot_leads,
+        (SELECT COUNT(*) FROM leads WHERE company_id = $1 AND score >= 80) as hot_leads,
         (SELECT COUNT(*) FROM analytics_events WHERE company_id = $1 AND event_type = 'qr_scan') as qr_scans,
         (SELECT COUNT(*) FROM analytics_events WHERE company_id = $1 AND event_type = 'ar_launch') as ar_launches,
         (SELECT COUNT(*) FROM analytics_events WHERE company_id = $1 AND event_type IN ('page_view', 'product_view')) as product_views
