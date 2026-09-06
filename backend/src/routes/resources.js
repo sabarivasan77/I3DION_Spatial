@@ -25,6 +25,7 @@ import {
   listProductsWithMetrics,
   patchProductStatus,
   recordAnalyticsEvent,
+  serializeAsset,
   serializeProduct,
   storeProductAsset,
   updateProduct,
@@ -431,6 +432,106 @@ resourcesRouter.post(
       req.validated.params.id,
     ]);
     res.json({ pdf_url: stored.url });
+  }),
+);
+
+resourcesRouter.post(
+  '/uploads/record',
+  requireRole('Company Admin', 'Sales User'),
+  asyncHandler(async (req, res) => {
+    const { objectKey, url, originalName, mimeType, size, productId, assetType, checksum } = req.body;
+    if (!objectKey || !url) throw new ApiError(400, 'Missing objectKey or url');
+
+    if (productId) {
+      const productResult = await query('SELECT * FROM products WHERE id = $1 LIMIT 1', [productId]);
+      const product = productResult.rows[0];
+      if (!product) throw new ApiError(404, 'Product not found');
+      
+      const inferredAssetType = assetType || (mimeType?.startsWith('image/') ? 'thumbnail' : (mimeType?.includes('pdf') ? 'document' : '3d_model'));
+      
+      const assetResult = await query(
+        `INSERT INTO product_assets
+         (company_id, product_id, asset_type, original_name, file_name, file_path, public_url, mime_type, size_bytes, checksum_sha256, metadata)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+         RETURNING *`,
+        [
+          product.company_id,
+          productId,
+          inferredAssetType,
+          originalName || objectKey.split('/').pop(),
+          objectKey.split('/').pop(),
+          objectKey,
+          url,
+          mimeType || 'application/octet-stream',
+          size || 0,
+          checksum || null,
+          { source: 'upload' },
+        ],
+      );
+      
+      const asset = assetResult.rows[0];
+
+      if (asset.asset_type === 'thumbnail') {
+        await query(
+          `UPDATE products SET image_url = $1, thumbnail_asset_id = $2, updated_at = now() WHERE id = $3`,
+          [url, asset.id, productId],
+        );
+      } else if (asset.asset_type === 'image') {
+        await query(
+          `UPDATE products SET image_url = COALESCE(image_url, $1), thumbnail_asset_id = COALESCE(thumbnail_asset_id, $2), updated_at = now() WHERE id = $3`,
+          [url, asset.id, productId],
+        );
+      } else if (asset.asset_type === 'model') {
+        await query(
+          `UPDATE products SET model_url = $1, model_asset_id = $2, is_public = true, updated_at = now() WHERE id = $3`,
+          [url, asset.id, productId],
+        );
+      } else if (asset.asset_type === 'usdz_model') {
+        await query(
+          `UPDATE products SET usdz_url = $1, usdz_asset_id = $2, is_public = true, updated_at = now() WHERE id = $3`,
+          [url, asset.id, productId],
+        );
+      } else if (asset.asset_type === 'document') {
+        await query(
+          `UPDATE products SET document_url = COALESCE(document_url, $1), updated_at = now() WHERE id = $2`,
+          [url, productId],
+        );
+      }
+
+      let qr = null;
+      if (asset.asset_type === 'model') {
+        qr = await ensureProductQr(productId);
+      }
+
+      const updatedProduct = await getProductById(product.company_id, productId);
+
+      res.status(201).json({
+        ...serializeAsset(asset),
+        url: url,
+        product: updatedProduct,
+        qr
+      });
+      return;
+    }
+
+    const category = mimeType?.startsWith('image/') ? 'image' : (mimeType?.includes('pdf') ? 'document' : 'other');
+    const { rows } = await query(
+      `INSERT INTO files (company_id, product_id, file_category, original_name, object_key, url, mime_type, size_bytes, checksum_sha256)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       RETURNING *`,
+      [
+        req.user.company_id,
+        null,
+        category,
+        originalName || objectKey.split('/').pop(),
+        objectKey,
+        url,
+        mimeType || 'application/octet-stream',
+        size || 0,
+        checksum || null,
+      ],
+    );
+    res.status(201).json(rows[0]);
   }),
 );
 

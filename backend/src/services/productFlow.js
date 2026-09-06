@@ -43,7 +43,7 @@ export function productQrTargetUrl(slug) {
   return `${config.appUrl}/product/${slug}?source=qr`;
 }
 
-function serializeAsset(row) {
+export function serializeAsset(row) {
   return {
     id: row.id,
     company_id: row.company_id,

@@ -6,8 +6,9 @@ import { useToast } from '../../components/Toast';
 import { Tracker } from '../../services/Tracker';
 import { useAuthStore } from '../../store/authStore';
 import { cx } from '../../utils/format';
-import { supabase } from '../../lib/supabase';
+import { api } from '../../services/api';
 import { Logo } from '../../components/Logo';
+import { useGoogleLogin } from '@react-oauth/google';
 
 // ─── Auth Pages ───
 
@@ -49,7 +50,7 @@ const features = [
 function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const isSignup = mode === 'signup';
   const navigate = useNavigate();
-  const { login, signup, loading, error: authError, clearError, loginGoogle } = useAuthStore();
+  const { login, signup, loginGoogle, loading, error: authError, clearError } = useAuthStore();
   const { error: showError } = useToast();
 
   const [name, setName] = useState('');
@@ -91,14 +92,18 @@ function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
     }
   }
 
-  async function handleGoogleLogin() {
-    try {
-      await loginGoogle();
-      // loginGoogle redirects automatically via Supabase OAuth
-    } catch (err: any) {
-      showError('Google Sign-In failed', err.message);
-    }
-  }
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        await loginGoogle(tokenResponse.access_token);
+        Tracker.trackEvent('user_login', { method: 'google' });
+        navigate('/dashboard');
+      } catch (err: any) {
+        showError('Google Sign-In failed', err.message);
+      }
+    },
+    onError: () => showError('Google Sign-In failed', 'Could not connect to Google'),
+  });
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4 pt-16">
@@ -146,7 +151,7 @@ function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
 
             <div className="pt-4 border-t border-slate-100 flex flex-col items-center gap-3">
               <p className="text-sm font-medium text-slate-500">Or continue with</p>
-              <Button type="button" onClick={handleGoogleLogin} variant="secondary" className="w-full relative flex items-center justify-center gap-2">
+              <Button type="button" onClick={() => handleGoogleLogin()} variant="secondary" className="w-full relative flex items-center justify-center gap-2" disabled={loading}>
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -189,10 +194,7 @@ export function ForgotPasswordPage() {
     if (!validateEmail(email)) { setError('Please enter a valid email address'); return; }
     setError(''); setLoading(true);
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      if (resetError) throw resetError;
+      await api.forgotPassword(email);
       setMessage('If an account exists, a reset link has been generated.');
     } catch (err: any) {
       setError(err.message || 'Unable to request reset');
@@ -233,8 +235,8 @@ export function ResetPasswordPage() {
     setErrors({}); setLoading(true);
     
     try {
-      const { error: updateError } = await supabase.auth.updateUser({ password });
-      if (updateError) throw updateError;
+      const token = new URLSearchParams(window.location.search).get('token') || '';
+      await api.resetPassword(token, password);
       setMessage('Password reset successfully');
       setTimeout(() => navigate('/login'), 2000);
     } catch (err: any) {

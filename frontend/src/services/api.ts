@@ -1,5 +1,7 @@
+import { supabase } from '../lib/supabase';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
-const API_TIMEOUT_MS = 15000;
+const API_TIMEOUT_MS = 60000; // Increased to 60s for 3D model uploads
 
 export class ApiClientError extends Error {
   status: number;
@@ -389,10 +391,10 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ email, password, mfaToken }),
     }),
-  loginGoogle: (idToken: string) =>
+  loginGoogle: (accessToken: string) =>
     apiRequest<AuthResponse>('/auth/google', {
       method: 'POST',
-      body: JSON.stringify({ idToken }),
+      body: JSON.stringify({ accessToken }),
     }),
   mfaSetup: (token: string) =>
     apiRequest<{ qrCodeUrl: string; secret: string }>('/auth/mfa/setup', {
@@ -504,7 +506,7 @@ export const api = {
     apiRequest('/public/analytics/events', { method: 'POST', body: JSON.stringify(payload) }),
 };
 
-export function uploadFileWithProgress({
+export async function uploadFileWithProgress({
   token,
   file,
   productId,
@@ -516,25 +518,73 @@ export function uploadFileWithProgress({
   productId?: string;
   assetType?: string;
   onProgress: (progress: number) => void;
-}) {
+}): Promise<UploadedFile> {
+  const extension = file.name.split('.').pop() || '';
+  const timestamp = Date.now();
+  const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+  const objectKey = `${timestamp}_${safeName}`;
+
   return new Promise<UploadedFile>((resolve, reject) => {
+    // 1. Upload to Supabase Storage using XMLHttpRequest to track progress
     const request = new XMLHttpRequest();
-    const formData = new FormData();
-    formData.append('file', file);
-    if (productId) formData.append('productId', productId);
-    if (assetType) formData.append('assetType', assetType);
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ytjqaasskfwtrnyxttso.supabase.co';
+    const uploadUrl = `${supabaseUrl}/storage/v1/object/uploads/${objectKey}`;
+
+    let mimeType = file.type;
+    if (!mimeType || mimeType === 'application/octet-stream') {
+      const ext = extension.toLowerCase();
+      if (ext === 'glb') mimeType = 'model/gltf-binary';
+      else if (ext === 'usdz') mimeType = 'model/vnd.usdz+zip';
+      else if (ext === 'pdf') mimeType = 'application/pdf';
+      else mimeType = 'application/octet-stream';
+    }
 
     request.upload.onprogress = (event) => {
       if (event.lengthComputable) {
-        onProgress(Math.round((event.loaded / event.total) * 100));
+        // Report up to 90% progress for the file upload portion
+        onProgress(Math.round((event.loaded / event.total) * 90));
       }
     };
 
-    request.onload = () => {
-      const data = JSON.parse(request.responseText || '{}');
+    request.onload = async () => {
+      let data: any = {};
+      try {
+        data = JSON.parse(request.responseText || '{}');
+      } catch (e) {
+        reject(new ApiClientError(request.status, 'Invalid server response from Supabase.'));
+        return;
+      }
+
       if (request.status >= 200 && request.status < 300) {
-        onProgress(100);
-        resolve(data as UploadedFile);
+        // Upload successful. Now record it in the backend database.
+        const fileUrl = `${supabaseUrl}/storage/v1/object/public/uploads/${objectKey}`;
+        
+        try {
+          const res = await fetch(`${API_BASE_URL}/uploads/record`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              objectKey,
+              url: fileUrl,
+              originalName: file.name,
+              mimeType: mimeType,
+              size: file.size,
+              productId,
+              assetType
+            })
+          });
+
+          const recordData = await res.json();
+          if (!res.ok) throw new ApiClientError(res.status, recordData.message || 'Failed to record upload in database.');
+          
+          onProgress(100);
+          resolve(recordData as UploadedFile);
+        } catch (dbError) {
+          reject(dbError);
+        }
         return;
       }
 
@@ -542,15 +592,18 @@ export function uploadFileWithProgress({
     };
 
     request.onerror = () => {
-      reject(new ApiClientError(0, 'Backend API is not reachable. Make sure the backend and PostgreSQL are running before uploading files.'));
+      reject(new ApiClientError(0, 'Storage API is not reachable. Check your connection.'));
     };
     request.timeout = API_TIMEOUT_MS;
     request.ontimeout = () => {
-      reject(new ApiClientError(0, 'Upload timed out. Check the backend and database, then try again.'));
+      reject(new ApiClientError(0, 'Upload timed out. Check your connection and try again.'));
     };
 
-    request.open('POST', `${API_BASE_URL}/uploads`);
+    request.open('POST', uploadUrl);
+    // Use the Supabase token which is also the backend token
     request.setRequestHeader('Authorization', `Bearer ${token}`);
-    request.send(formData);
+    
+    request.setRequestHeader('Content-Type', mimeType);
+    request.send(file);
   });
 }
