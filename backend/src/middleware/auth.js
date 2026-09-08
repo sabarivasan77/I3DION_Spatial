@@ -46,6 +46,7 @@ export async function requireAuth(req, _res, next) {
       email: user.email,
       role: user.role,
       organization_id: user.organization_id, // Main canonical tenant context
+      organizationId: user.organization_id,
     };
     req.token = token;
 

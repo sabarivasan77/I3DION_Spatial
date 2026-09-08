@@ -13,5 +13,7 @@ export function requireTenant(req, res, next) {
 
   // Bind normalized organization_id
   req.organizationId = req.user.organization_id || req.user.organizationId;
+  req.user.organization_id = req.organizationId;
+  req.user.organizationId = req.organizationId;
   next();
 }

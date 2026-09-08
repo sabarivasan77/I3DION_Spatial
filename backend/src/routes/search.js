@@ -12,7 +12,7 @@ searchRouter.use(requireAuth);
 searchRouter.get(
   '/',
   asyncHandler(async (req, res) => {
-    const { organizationId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
     const { q = '', type = 'all', limit = 20 } = req.query;
 
     if (!q || q.trim().length < 2) {

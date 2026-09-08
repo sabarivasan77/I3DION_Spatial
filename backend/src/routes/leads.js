@@ -12,7 +12,7 @@ leadsRouter.use(requireAuth);
 leadsRouter.get(
   '/',
   asyncHandler(async (req, res) => {
-    const { organizationId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
     const { status, priority, search, sortBy = 'score', sortOrder = 'desc', limit = 100, offset = 0 } = req.query;
 
     let whereClause = 'WHERE l.organization_id = $1';
@@ -68,7 +68,7 @@ leadsRouter.get(
 leadsRouter.get(
   '/:id',
   asyncHandler(async (req, res) => {
-    const { organizationId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
     const { id } = req.params;
 
     const { rows: leads } = await query(
@@ -101,7 +101,7 @@ leadsRouter.get(
 leadsRouter.post(
   '/',
   asyncHandler(async (req, res) => {
-    const { organizationId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
     const {
       name, email, phone, company, designation, productId, catalogId,
       status = 'New', source = 'Manual', score = 0, notes, priority = 'Normal'
@@ -145,7 +145,7 @@ leadsRouter.post(
 leadsRouter.get(
   '/:id/journey',
   asyncHandler(async (req, res) => {
-    const { organizationId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
     const { id } = req.params;
 
     const { rows: leads } = await query(
@@ -173,7 +173,7 @@ leadsRouter.get(
 leadsRouter.get(
   '/:id/activities',
   asyncHandler(async (req, res) => {
-    const { organizationId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
     const { id } = req.params;
 
     const { rows: leads } = await query(
@@ -198,7 +198,8 @@ leadsRouter.get(
 leadsRouter.post(
   '/:id/activities',
   asyncHandler(async (req, res) => {
-    const { organizationId, id: userId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
+    const userId = req.user?.id;
     const { id } = req.params;
     const { activityType = 'note', subject, body } = req.body;
 
@@ -223,7 +224,7 @@ leadsRouter.post(
 leadsRouter.put(
   '/:id',
   asyncHandler(async (req, res) => {
-    const { organizationId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
     const { id } = req.params;
     const { status, notes, priority, designation, company, phone, assignedTo, name, email, source } = req.body;
 
@@ -257,7 +258,7 @@ leadsRouter.put(
 leadsRouter.delete(
   '/:id',
   asyncHandler(async (req, res) => {
-    const { organizationId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
     const { id } = req.params;
 
     const { rowCount } = await query(

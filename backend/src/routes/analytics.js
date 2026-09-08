@@ -12,7 +12,7 @@ analyticsRouter.use(requireAuth);
 analyticsRouter.get(
   '/dashboard',
   asyncHandler(async (req, res) => {
-    const { organizationId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
 
     // Aggregate counts
     const { rows: metrics } = await query(
@@ -35,7 +35,7 @@ analyticsRouter.get(
 analyticsRouter.get(
   '/insights',
   asyncHandler(async (req, res) => {
-    const { organizationId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
     const insights = await generateInsights(organizationId);
     res.json(insights);
   })
@@ -45,7 +45,7 @@ analyticsRouter.get(
 analyticsRouter.get(
   '/top-products',
   asyncHandler(async (req, res) => {
-    const { organizationId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
     const { rows: topProducts } = await query(
       `SELECT p.id, p.name, p.slug, COUNT(a.id) as interactions,
         COUNT(CASE WHEN a.event_type = 'ar_launch' THEN 1 END) as ar_launches,
@@ -66,7 +66,7 @@ analyticsRouter.get(
 analyticsRouter.get(
   '/product/:id',
   asyncHandler(async (req, res) => {
-    const { organizationId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
     const productId = req.params.id;
 
     const { rows: metrics } = await query(
@@ -88,7 +88,7 @@ analyticsRouter.get(
 analyticsRouter.get(
   '/charts/trends',
   asyncHandler(async (req, res) => {
-    const { organizationId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
     const { rows: trends } = await query(
       `SELECT DATE(created_at) as date,
               COUNT(DISTINCT visitor_id) as visitors,
@@ -107,7 +107,7 @@ analyticsRouter.get(
 analyticsRouter.get(
   '/charts/searches',
   asyncHandler(async (req, res) => {
-    const { organizationId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
     const { rows: searches } = await query(
       `SELECT metadata->>'query' as query, COUNT(*) as count
        FROM analytics_events
@@ -125,7 +125,7 @@ analyticsRouter.get(
 analyticsRouter.get(
   '/charts/funnel',
   asyncHandler(async (req, res) => {
-    const { organizationId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
     const { rows: funnel } = await query(
       `SELECT
         COUNT(DISTINCT visitor_id) as visitors,
@@ -144,7 +144,7 @@ analyticsRouter.get(
 analyticsRouter.get(
   '/charts/downloads',
   asyncHandler(async (req, res) => {
-    const { organizationId } = req.user;
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
     const { rows: downloads } = await query(
       `SELECT event_type as type, COUNT(*) as count
        FROM analytics_events
