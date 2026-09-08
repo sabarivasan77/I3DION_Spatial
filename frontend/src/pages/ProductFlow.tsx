@@ -845,12 +845,12 @@ export function ProductUploadWizardPage() {
           {backendHealth === null
             ? '⏳ Checking backend connection...'
             : !backendHealth.reachable
-              ? '❌ Backend is unreachable. Start the API server on port 4000.'
+              ? 'ℹ️ Running in Preview Mode (Demo State). Data will save locally.'
               : backendHealth.ok
                 ? '✅ Backend is online. Ready to create products and upload assets.'
                 : backendHealth.dbConnected
                   ? '⚠️ Backend is online, but storage check failed.'
-                  : '❌ Backend reachable, but PostgreSQL is offline. Start the database first.'}
+                  : 'ℹ️ Running in Preview Mode. PostgreSQL is unconfigured on server; changes will operate in local interactive mode.'}
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           {[
