@@ -6,7 +6,7 @@ export function signAccessToken(user, sessionId = crypto.randomUUID()) {
   return jwt.sign(
     {
       role: user.role,
-      companyId: user.company_id,
+      organizationId: user.organization_id,
       sid: sessionId,
     },
     config.jwtSecret,

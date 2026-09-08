@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Building2, Lock, Save, Bell, Settings, Sparkles, RefreshCw, Upload } from 'lucide-react';
+import { Building2, Lock, Save, Bell, Settings, Sparkles, RefreshCw, Upload, LogOut } from 'lucide-react';
 import { Button, Card, PageHeader, SectionTitle } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { api, ApiClientError, uploadFileWithProgress } from '../services/api';
@@ -172,12 +172,26 @@ export function CompanySettingsPage() {
     <div className="space-y-8">
       <PageHeader title="Settings" eyebrow="Manage workspace branding, profile, security, and preferences." />
       <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
-        <Card className="p-3 h-fit">
-          {tabs.map(({ key, label, icon: Icon }) => (
-            <button key={key} onClick={() => setTab(key as any)} className={cx('mb-1 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold transition', tab === key ? 'bg-blue-50 text-primary' : 'text-slate-600 hover:bg-slate-50')}>
-              <Icon size={18} />{label}
+        <Card className="p-3 h-fit flex flex-col justify-between min-h-[400px]">
+          <div>
+            {tabs.map(({ key, label, icon: Icon }) => (
+              <button key={key} onClick={() => setTab(key as any)} className={cx('mb-1 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold transition', tab === key ? 'bg-blue-50 text-primary' : 'text-slate-600 hover:bg-slate-50')}>
+                <Icon size={18} />{label}
+              </button>
+            ))}
+          </div>
+          <div className="mt-8 pt-4 border-t border-slate-100">
+            <button 
+              onClick={async () => {
+                const logout = useAuthStore.getState().logout;
+                await logout();
+                window.location.href = '/login';
+              }}
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-rose-500 hover:bg-rose-50 transition"
+            >
+              <LogOut size={18} />Log Out
             </button>
-          ))}
+          </div>
         </Card>
         <Card className="p-6">
           {tab === 'profile' && (

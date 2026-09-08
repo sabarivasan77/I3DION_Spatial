@@ -30,11 +30,11 @@ export function getLeadCategory(score) {
   return 'Cold';
 }
 
-export async function recalculateLeadScore(leadId, companyId) {
+export async function recalculateLeadScore(leadId, organizationId) {
   // 1. Get all events for the lead
   const { rows: events } = await query(
-    `SELECT event_type, metadata FROM analytics_events WHERE lead_id = $1 AND company_id = $2`,
-    [leadId, companyId]
+    `SELECT event_type, metadata FROM analytics_events WHERE lead_id = $1 AND organization_id = $2`,
+    [leadId, organizationId]
   );
 
   let behavior_score = 0;

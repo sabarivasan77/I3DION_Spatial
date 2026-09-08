@@ -76,7 +76,7 @@ publicRouter.post(
     };
 
     const event = await trackEvent({
-      companyId: product ? product.company_id : (metadata.companyId || null),
+      organizationId: product ? product.organization_id : (metadata.organizationId || null),
       productId: product ? product.id : null,
       visitorId: visitorId || metadata.visitorId || null,
       eventType,

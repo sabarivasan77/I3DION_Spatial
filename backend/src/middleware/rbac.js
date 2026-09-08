@@ -16,7 +16,7 @@ export function requireRole(roles) {
         
         // Log unauthorized attempt
         logAudit({
-          companyId: req.user.company_id,
+          organizationId: req.user.organization_id,
           userId: req.user.id,
           action: 'unauthorized_access_attempt',
           details: { path: req.originalUrl, requiredRoles: roles, userRole: req.user.role },
@@ -24,7 +24,7 @@ export function requireRole(roles) {
         });
         
         createSecurityAlert({
-          companyId: req.user.company_id,
+          organizationId: req.user.organization_id,
           userId: req.user.id,
           alertType: 'RBAC Violation',
           severity: 'Low',
@@ -51,16 +51,16 @@ export function requireCompanyAccess() {
         throw new AppError(401, 'Authentication required');
       }
 
-      const targetCompanyId = req.params.companyId || req.body.companyId || req.query.companyId;
+      const targetCompanyId = req.params.organizationId || req.body.organizationId || req.query.organizationId;
 
       if (!targetCompanyId) {
         return next(); // Nothing to validate against
       }
 
-      if (req.user.role !== 'Super Admin' && req.user.company_id !== targetCompanyId) {
+      if (req.user.role !== 'Super Admin' && req.user.organization_id !== targetCompanyId) {
         
         logAudit({
-          companyId: req.user.company_id,
+          organizationId: req.user.organization_id,
           userId: req.user.id,
           action: 'cross_company_access_attempt',
           details: { path: req.originalUrl, targetCompanyId },
@@ -68,7 +68,7 @@ export function requireCompanyAccess() {
         });
 
         createSecurityAlert({
-          companyId: req.user.company_id,
+          organizationId: req.user.organization_id,
           userId: req.user.id,
           alertType: 'Cross-Tenant Access Attempt',
           severity: 'High',

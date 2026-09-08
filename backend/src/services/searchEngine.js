@@ -6,7 +6,7 @@ class SearchEngine {
    * Maps synonymous terms, extracts industry keywords, and ranks by ML feature score
    * combined with standard text search.
    */
-  async semanticSearch(companyId, query) {
+  async semanticSearch(organizationId, query) {
     if (!query) return [];
     
     // 1. Semantic Synonym Expansion (Hardcoded mock for demonstration without LLMs)
@@ -36,7 +36,7 @@ class SearchEngine {
             id, name, category, image_url,
             ts_rank(to_tsvector('english', name || ' ' || COALESCE(category,'') || ' ' || COALESCE(description,'')), to_tsquery('english', $1)) as text_rank
           FROM products
-          WHERE company_id = $2 AND status = 'Published'
+          WHERE organization_id = $2 AND status = 'Published'
             AND to_tsvector('english', name || ' ' || COALESCE(category,'') || ' ' || COALESCE(description,'')) @@ to_tsquery('english', $1)
         )
         SELECT 
@@ -50,11 +50,11 @@ class SearchEngine {
           AND mf.feature_name = 'overall_popularity'
         ORDER BY final_score DESC
         LIMIT 20
-      `, [tsQueryStr, companyId]);
+      `, [tsQueryStr, organizationId]);
 
       // If no results found, log it for Keyword Discovery
       if (res.rows.length === 0) {
-        await this.logKeywordDiscovery(companyId, query, 'low_result_keyword');
+        await this.logKeywordDiscovery(organizationId, query, 'low_result_keyword');
       }
 
       return res.rows;
@@ -67,12 +67,12 @@ class SearchEngine {
   /**
    * Log searches for AI Keyword Discovery
    */
-  async logKeywordDiscovery(companyId, keyword, type = 'trending_keyword') {
+  async logKeywordDiscovery(organizationId, keyword, type = 'trending_keyword') {
     try {
       await pool.query(`
-        INSERT INTO ai_insights_log (company_id, entity_type, entity_id, insight_type, message, urgency)
+        INSERT INTO ai_insights_log (organization_id, entity_type, entity_id, insight_type, message, urgency)
         VALUES ($1, 'search', '00000000-0000-0000-0000-000000000000', $2, $3, 'low')
-      `, [companyId, type, `Keyword "${keyword}" was searched but yielded no results. Consider adding related products.`]);
+      `, [organizationId, type, `Keyword "${keyword}" was searched but yielded no results. Consider adding related products.`]);
     } catch (err) {
       console.error('[SearchEngine] Failed to log keyword:', err);
     }

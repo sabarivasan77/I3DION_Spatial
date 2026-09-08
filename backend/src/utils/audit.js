@@ -4,7 +4,7 @@ import { pool } from '../db/pool.js';
  * Log a critical event to the audit_logs table asynchronously.
  * 
  * @param {Object} options
- * @param {string} options.companyId
+ * @param {string} options.organizationId
  * @param {string} options.userId
  * @param {string} options.action
  * @param {string} [options.entityType]
@@ -12,7 +12,7 @@ import { pool } from '../db/pool.js';
  * @param {Object} [options.details]
  * @param {import('express').Request} [options.req]
  */
-export async function logAudit({ companyId, userId, action, entityType = null, entityId = null, details = null, req = null }) {
+export async function logAudit({ organizationId, userId, action, entityType = null, entityId = null, details = null, req = null }) {
   // Fire and forget (don't block the main request thread)
   setImmediate(async () => {
     try {
@@ -24,9 +24,9 @@ export async function logAudit({ companyId, userId, action, entityType = null, e
       }
 
       await pool.query(
-        `INSERT INTO audit_logs (company_id, user_id, action, entity_type, entity_id, details, ip_address, user_agent) 
+        `INSERT INTO audit_logs (organization_id, user_id, action, entity_type, entity_id, details, ip_address, user_agent) 
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [companyId, userId, action, entityType, entityId, details, ip, userAgent]
+        [organizationId, userId, action, entityType, entityId, details, ip, userAgent]
       );
     } catch (err) {
       console.error('[Audit Logger Error]', err);
@@ -37,13 +37,13 @@ export async function logAudit({ companyId, userId, action, entityType = null, e
 /**
  * Create a security alert asynchronously.
  */
-export async function createSecurityAlert({ companyId, userId, alertType, severity = 'Medium', details = null }) {
+export async function createSecurityAlert({ organizationId, userId, alertType, severity = 'Medium', details = null }) {
   setImmediate(async () => {
     try {
       await pool.query(
-        `INSERT INTO security_alerts (company_id, user_id, alert_type, severity, details) 
+        `INSERT INTO security_alerts (organization_id, user_id, alert_type, severity, details) 
          VALUES ($1, $2, $3, $4, $5)`,
-        [companyId, userId, alertType, severity, details]
+        [organizationId, userId, alertType, severity, details]
       );
     } catch (err) {
       console.error('[Security Alert Error]', err);

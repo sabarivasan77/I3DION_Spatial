@@ -12,7 +12,7 @@ searchRouter.use(requireAuth);
 searchRouter.get(
   '/',
   asyncHandler(async (req, res) => {
-    const { companyId } = req.user;
+    const { organizationId } = req.user;
     const { q = '', type = 'all', limit = 20 } = req.query;
 
     if (!q || q.trim().length < 2) {
@@ -24,7 +24,7 @@ searchRouter.get(
     const results = { products: [], catalogs: [], leads: [], total: 0 };
 
     if (type === 'all' || type === 'products') {
-      const semanticProducts = await searchEngine.semanticSearch(companyId, searchTerm);
+      const semanticProducts = await searchEngine.semanticSearch(organizationId, searchTerm);
       results.products = semanticProducts.map(r => ({ ...r, _type: 'product' })).slice(0, Math.ceil(limit / (type === 'all' ? 3 : 1)));
     }
 
@@ -34,14 +34,14 @@ searchRouter.get(
                 COUNT(cp.product_id) as product_count
          FROM catalogs c
          LEFT JOIN catalog_products cp ON c.id = cp.catalog_id
-         WHERE c.company_id = $1
+         WHERE c.organization_id = $1
            AND (c.name ILIKE $2 OR c.description ILIKE $2)
          GROUP BY c.id
          ORDER BY
            CASE WHEN c.name ILIKE $3 THEN 0 ELSE 1 END,
            c.updated_at DESC
          LIMIT $4`,
-        [companyId, likePattern, `%${searchTerm}%`, Math.ceil(limit / (type === 'all' ? 3 : 1))]
+        [organizationId, likePattern, `%${searchTerm}%`, Math.ceil(limit / (type === 'all' ? 3 : 1))]
       );
       results.catalogs = rows.map(r => ({ ...r, _type: 'catalog' }));
     }
@@ -52,14 +52,14 @@ searchRouter.get(
                 li.behavior_score as score, li.lead_category as intent_level
          FROM leads l
          LEFT JOIN lead_intelligence li ON l.id = li.lead_id
-         WHERE l.company_id = $1
+         WHERE l.organization_id = $1
            AND (l.name ILIKE $2 OR l.company ILIKE $2 OR l.email ILIKE $2)
          ORDER BY
            CASE WHEN l.name ILIKE $3 THEN 0 ELSE 1 END,
            li.behavior_score DESC NULLS LAST,
            l.created_at DESC
          LIMIT $4`,
-        [companyId, likePattern, `%${searchTerm}%`, Math.ceil(limit / (type === 'all' ? 3 : 1))]
+        [organizationId, likePattern, `%${searchTerm}%`, Math.ceil(limit / (type === 'all' ? 3 : 1))]
       );
       results.leads = rows.map(r => ({ ...r, _type: 'lead' }));
     }

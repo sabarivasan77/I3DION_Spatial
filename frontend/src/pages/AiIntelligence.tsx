@@ -12,12 +12,12 @@ export function AiIntelligencePage() {
   useEffect(() => {
     if (!token) return;
     
-    // Fetch AI Metrics (Models)
+    // Fetch Metrics (Models)
     fetch('/api/ai/dashboard', {
       headers: { Authorization: `Bearer ${token}` }
     }).then(r => r.json()).then(setMetrics).catch(console.error);
 
-    // Fetch AI Sales Insights
+    // Fetch Sales Insights
     fetch('/api/ai/insights', {
       headers: { Authorization: `Bearer ${token}` }
     }).then(r => r.json()).then(d => setInsights(d.insights)).catch(console.error);
@@ -97,9 +97,9 @@ export function AiIntelligencePage() {
           </div>
         </Card>
 
-        {/* AI Sales Insights Assistant */}
+        {/* Sales Insights Assistant */}
         <Card className="p-6">
-          <SectionTitle title="AI Sales Assistant" meta="Actionable insights generated from behavior" />
+          <SectionTitle title="Predictive Sales Assistant" meta="Actionable insights generated from behavior" />
           <div className="space-y-4 mt-4 h-[400px] overflow-y-auto pr-2">
             {insights?.length ? insights.map((insight: any) => (
               <div key={insight.id} className="p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white transition-colors hover:shadow-sm">

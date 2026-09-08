@@ -8,16 +8,16 @@ export const supportRouter = Router();
 
 // Chatbot endpoint (Public/Authenticated)
 supportRouter.post('/chat', asyncHandler(async (req, res) => {
-  const companyId = req.user?.companyId || req.body.companyId; // Allow anonymous via body
+  const organizationId = req.user?.organizationId || req.body.organizationId; // Allow anonymous via body
   const { sessionId, message, contextData } = req.body;
   const userId = req.user?.id || null;
 
-  if (!companyId) {
+  if (!organizationId) {
     return res.status(400).json({ message: 'Missing company ID' });
   }
 
   // 1. Process message through AI
-  const aiResult = await supportAiEngine.processChatMessage(companyId, sessionId, message, contextData);
+  const aiResult = await supportAiEngine.processChatMessage(organizationId, sessionId, message, contextData);
 
   // 2. Load or create session
   let currentSessionId = sessionId;
@@ -25,9 +25,9 @@ supportRouter.post('/chat', asyncHandler(async (req, res) => {
 
   if (!currentSessionId) {
     const { rows } = await query(
-      `INSERT INTO chatbot_sessions (company_id, user_id, current_page, context_data, message_history)
+      `INSERT INTO chatbot_sessions (organization_id, user_id, current_page, context_data, message_history)
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [companyId, userId, contextData?.currentPage || '', contextData || {}, JSON.stringify([{ role: 'user', content: message }, { role: 'ai', content: aiResult.reply }])]
+      [organizationId, userId, contextData?.currentPage || '', contextData || {}, JSON.stringify([{ role: 'user', content: message }, { role: 'ai', content: aiResult.reply }])]
     );
     sessionRecord = rows[0];
     currentSessionId = sessionRecord.id;
@@ -49,10 +49,10 @@ supportRouter.post('/chat', asyncHandler(async (req, res) => {
     
     // Create Support Ticket
     await query(
-      `INSERT INTO support_tickets (company_id, user_id, category, subject, message, conversation_history, sentiment, priority)
+      `INSERT INTO support_tickets (organization_id, user_id, category, subject, message, conversation_history, sentiment, priority)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
-        companyId, 
+        organizationId, 
         userId, 
         aiResult.intent, 
         'Escalated Chat: ' + message.substring(0, 30), 
@@ -78,7 +78,7 @@ supportRouter.get('/tickets', requireAuth, asyncHandler(async (req, res) => {
     `SELECT t.*, u.name as customer_name, u.email as customer_email
      FROM support_tickets t
      LEFT JOIN users u ON t.user_id = u.id
-     WHERE t.company_id = $1
+     WHERE t.organization_id = $1
      ORDER BY 
        CASE priority 
          WHEN 'Critical' THEN 1 
@@ -87,7 +87,7 @@ supportRouter.get('/tickets', requireAuth, asyncHandler(async (req, res) => {
          ELSE 4 
        END ASC,
        t.created_at DESC`,
-    [req.user.companyId]
+    [req.user.organizationId]
   );
   res.json(rows);
 }));
@@ -98,16 +98,16 @@ supportRouter.get('/tickets/:id/suggestion', requireAuth, asyncHandler(async (re
 }));
 
 supportRouter.get('/analytics', requireAuth, asyncHandler(async (req, res) => {
-  const companyId = req.user.companyId;
+  const organizationId = req.user.organizationId;
 
   // Total Tickets
-  const { rows: totalRows } = await query(`SELECT COUNT(*) FROM support_tickets WHERE company_id = $1`, [companyId]);
+  const { rows: totalRows } = await query(`SELECT COUNT(*) FROM support_tickets WHERE organization_id = $1`, [organizationId]);
   
   // Escalated Sessions
-  const { rows: escalations } = await query(`SELECT COUNT(*) FROM chatbot_sessions WHERE company_id = $1 AND status = 'Escalated'`, [companyId]);
+  const { rows: escalations } = await query(`SELECT COUNT(*) FROM chatbot_sessions WHERE organization_id = $1 AND status = 'Escalated'`, [organizationId]);
   
   // Resolved Sessions (AI Handled)
-  const { rows: resolved } = await query(`SELECT COUNT(*) FROM chatbot_sessions WHERE company_id = $1 AND status = 'Resolved'`, [companyId]);
+  const { rows: resolved } = await query(`SELECT COUNT(*) FROM chatbot_sessions WHERE organization_id = $1 AND status = 'Resolved'`, [organizationId]);
 
   res.json({
     total_tickets: parseInt(totalRows[0].count),
@@ -117,10 +117,10 @@ supportRouter.get('/analytics', requireAuth, asyncHandler(async (req, res) => {
 }));
 
 supportRouter.get('/kb', asyncHandler(async (req, res) => {
-  const companyId = req.user?.companyId || req.query.companyId;
+  const organizationId = req.user?.organizationId || req.query.organizationId;
   const { rows } = await query(
-    `SELECT * FROM knowledge_base WHERE company_id = $1 AND is_published = true ORDER BY created_at DESC`,
-    [companyId]
+    `SELECT * FROM knowledge_base WHERE organization_id = $1 AND is_published = true ORDER BY created_at DESC`,
+    [organizationId]
   );
   res.json(rows);
 }));

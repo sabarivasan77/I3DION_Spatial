@@ -1,6 +1,6 @@
 import { query } from '../db/pool.js';
 
-export async function generateInsights(companyId) {
+export async function generateInsights(organizationId) {
   const insights = [];
 
   try {
@@ -9,11 +9,11 @@ export async function generateInsights(companyId) {
       `SELECT p.name, COUNT(a.id) as interactions
        FROM products p
        LEFT JOIN analytics_events a ON p.id = a.product_id
-       WHERE p.company_id = $1
+       WHERE p.organization_id = $1
        GROUP BY p.id
        ORDER BY interactions DESC
        LIMIT 1`,
-      [companyId]
+      [organizationId]
     );
 
     if (topProducts.length > 0 && topProducts[0].interactions > 0) {
@@ -28,8 +28,8 @@ export async function generateInsights(companyId) {
     const { rows: hotLeads } = await query(
       `SELECT COUNT(*) as count FROM lead_intelligence li
        JOIN leads l ON li.lead_id = l.id
-       WHERE l.company_id = $1 AND li.lead_category IN ('Hot', 'SQL', 'High Intent') AND l.status = 'New'`,
-      [companyId]
+       WHERE l.organization_id = $1 AND li.lead_category IN ('Hot', 'SQL', 'High Intent') AND l.status = 'New'`,
+      [organizationId]
     );
 
     if (hotLeads.length > 0 && hotLeads[0].count > 0) {
@@ -46,8 +46,8 @@ export async function generateInsights(companyId) {
         COUNT(DISTINCT CASE WHEN a.event_type = 'ar_launch' THEN a.lead_id END) as ar_leads,
         COUNT(DISTINCT a.lead_id) as total_leads
        FROM analytics_events a
-       WHERE a.company_id = $1 AND a.lead_id IS NOT NULL`,
-      [companyId]
+       WHERE a.organization_id = $1 AND a.lead_id IS NOT NULL`,
+      [organizationId]
     );
 
     if (arImpact.length > 0 && arImpact[0].total_leads > 0 && arImpact[0].ar_leads > 0) {
@@ -63,11 +63,11 @@ export async function generateInsights(companyId) {
     const { rows: sources } = await query(
       `SELECT source, COUNT(*) as count 
        FROM leads 
-       WHERE company_id = $1
+       WHERE organization_id = $1
        GROUP BY source
        ORDER BY count DESC
        LIMIT 1`,
-      [companyId]
+      [organizationId]
     );
 
     if (sources.length > 0 && sources[0].count > 0) {

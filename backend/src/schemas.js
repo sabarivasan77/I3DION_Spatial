@@ -50,7 +50,7 @@ export const resetPasswordSchema = z.object({
   }),
 });
 
-export const companySchema = z.object({
+export const organizationSchema = z.object({
   body: z.object({
     name: z.string().min(2),
     website: z.string().url().optional().or(z.literal('')),

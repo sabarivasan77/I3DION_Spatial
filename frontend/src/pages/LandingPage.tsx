@@ -31,12 +31,12 @@ export function LandingPage() {
         <div className="absolute inset-0 hero-gradient" />
         <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-2">
           <div className="relative z-10">
-            <p className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary px-3 py-1 text-sm font-semibold text-white"><Sparkles size={16} />AI Intelligence Engine is Live</p>
+            <p className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary px-3 py-1 text-sm font-semibold text-white"><Sparkles size={16} />Predictive Intelligence Engine is Live</p>
             <h1 className="text-4xl font-bold leading-tight text-slate-950 md:text-6xl">Self-Learning <span className="text-primary">Industrial</span> Platform</h1>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">Every interaction builds customer profiles, trains AI models, and predicts conversion intent automatically.</p>
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-              <Link to="/signup" className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-600 active:scale-[0.98]">
-                Start AI Workspace <ArrowRight size={18} />
+            <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">Every interaction builds customer profiles, trains predictive models, and predicts conversion intent automatically.</p>
+            <div className="mt-10 flex items-center gap-x-6">
+              <Link to="/login" className="flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+                Start Smart Workspace <ArrowRight size={18} />
               </Link>
               <Link to="/login" className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50">
                 Sign In
@@ -120,7 +120,7 @@ export function LandingPage() {
       <footer className="border-t border-slate-200 bg-white px-4 py-8 text-sm text-slate-500 md:px-6">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 md:flex-row">
           <Logo />
-          <p>Industrial AI Intelligence Platform</p>
+          <p>Industrial Intelligence Platform</p>
         </div>
       </footer>
     </main>

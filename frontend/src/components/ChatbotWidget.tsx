@@ -1,19 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot, User, Loader2 } from 'lucide-react';
 import { cx } from '../utils/format';
-import { useAuthStore } from '../store/authStore';
 
 export function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<{ role: 'user' | 'ai'; content: string }[]>([
-    { role: 'ai', content: 'Hi there! I am your AI Support Assistant. How can I help you today?' }
+  const [messages, setMessages] = useState<{ role: 'user' | 'bot'; content: string }[]>([
+    { role: 'bot', content: 'Hi there! I am your Support Chatbot. How can I help you today?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const token = useAuthStore(s => s.token);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -25,7 +22,27 @@ export function ChatbotWidget() {
     }
   }, [messages, isOpen]);
 
-  const handleSend = async (e: React.FormEvent) => {
+  const getBotResponse = (query: string) => {
+    const q = query.toLowerCase();
+    if (q.includes('price') || q.includes('cost') || q.includes('pricing')) {
+      return "You can view our pricing options by contacting sales or checking the 'Pricing' tab in the main menu.";
+    }
+    if (q.includes('catalog') || q.includes('products') || q.includes('items')) {
+      return "You can browse our full 3D and 2D product catalog by navigating to the 'Products' section in the top menu, or by clicking the 'Search' bar.";
+    }
+    if (q.includes('hello') || q.includes('hi ') || q.trim() === 'hi') {
+      return "Hello! How can I assist you today?";
+    }
+    if (q.includes('support') || q.includes('help') || q.includes('contact')) {
+      return "If you need human assistance, please reach out to us at support@i3dion.com or leave your email here.";
+    }
+    if (q.includes('ar') || q.includes('3d') || q.includes('view')) {
+      return "We offer high-quality 3D models and Augmented Reality (AR) viewing for supported devices directly from the product pages!";
+    }
+    return "I am a simple Support Chatbot and I'm still learning. For complex queries, please contact our support team.";
+  };
+
+  const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
@@ -34,35 +51,12 @@ export function ChatbotWidget() {
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setIsLoading(true);
 
-    try {
-      const res = await fetch('/api/support/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          sessionId,
-          message: userMessage,
-          contextData: { currentPage: window.location.pathname }
-        })
-      });
-      
-      const data = await res.json();
-      
-      if (data.sessionId) setSessionId(data.sessionId);
-      
-      setMessages(prev => [...prev, { role: 'ai', content: data.reply || "Sorry, I couldn't process that." }]);
-      
-      if (data.needsEscalation) {
-        setMessages(prev => [...prev, { role: 'ai', content: 'A support ticket has been created for you.' }]);
-      }
-    } catch (err) {
-      console.error('Chat error:', err);
-      setMessages(prev => [...prev, { role: 'ai', content: 'Connection error. Please try again later.' }]);
-    } finally {
+    // Simulate network delay
+    setTimeout(() => {
+      const response = getBotResponse(userMessage);
+      setMessages(prev => [...prev, { role: 'bot', content: response }]);
       setIsLoading(false);
-    }
+    }, 800);
   };
 
   return (
@@ -88,7 +82,7 @@ export function ChatbotWidget() {
                 <Bot size={18} className="text-blue-300" />
               </div>
               <div>
-                <h3 className="font-semibold text-sm">Support Assistant</h3>
+                <h3 className="font-semibold text-sm">Support Chatbot</h3>
                 <p className="text-[10px] text-blue-300 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Online
                 </p>
@@ -126,7 +120,7 @@ export function ChatbotWidget() {
                 </div>
                 <div className="p-3 rounded-2xl bg-white border border-slate-100 shadow-sm text-slate-700 rounded-tl-sm flex items-center gap-2">
                   <Loader2 size={14} className="animate-spin text-slate-400" />
-                  <span className="text-slate-400 text-xs italic">AI is typing...</span>
+                  <span className="text-slate-400 text-xs italic">Typing...</span>
                 </div>
               </div>
             )}
@@ -155,3 +149,4 @@ export function ChatbotWidget() {
     </>
   );
 }
+

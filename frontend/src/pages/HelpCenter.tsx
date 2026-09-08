@@ -14,7 +14,8 @@ export function HelpCenterPage() {
         const res = await fetch('/api/support/kb', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setArticles(await res.json());
+        const data = await res.json();
+        setArticles(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error(err);
       }
@@ -31,7 +32,7 @@ export function HelpCenterPage() {
     <div className="space-y-6">
       <PageHeader 
         title="Knowledge Base" 
-        eyebrow="Manage support documentation used by the AI chatbot to answer customer queries."
+        eyebrow="Manage support documentation used by the automated chatbot to answer customer queries."
         action={
           <button className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-600 transition">
             <Plus size={16} /> New Article
@@ -88,9 +89,9 @@ export function HelpCenterPage() {
               How this works
             </h3>
             <p className="text-sm text-slate-300 leading-relaxed">
-              Articles added here are automatically indexed into the AI Support Engine using Retrieval-Augmented Generation (RAG). 
+              Articles added here are automatically indexed into the Automated Support Engine. 
               <br/><br/>
-              When customers ask questions in the chat widget, the AI searches this knowledge base first to provide instant answers without human intervention.
+              When customers ask questions in the chat widget, the algorithm searches this knowledge base first to provide instant answers without human intervention.
             </p>
           </Card>
 

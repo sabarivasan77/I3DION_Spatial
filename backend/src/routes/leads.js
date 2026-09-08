@@ -12,11 +12,11 @@ leadsRouter.use(requireAuth);
 leadsRouter.get(
   '/',
   asyncHandler(async (req, res) => {
-    const { companyId } = req.user;
+    const { organizationId } = req.user;
     const { status, priority, search, sortBy = 'score', sortOrder = 'desc', limit = 100, offset = 0 } = req.query;
 
-    let whereClause = 'WHERE l.company_id = $1';
-    const params = [companyId];
+    let whereClause = 'WHERE l.organization_id = $1';
+    const params = [organizationId];
     let paramCount = 1;
 
     if (status) {
@@ -68,7 +68,7 @@ leadsRouter.get(
 leadsRouter.get(
   '/:id',
   asyncHandler(async (req, res) => {
-    const { companyId } = req.user;
+    const { organizationId } = req.user;
     const { id } = req.params;
 
     const { rows: leads } = await query(
@@ -85,8 +85,8 @@ leadsRouter.get(
        FROM leads l
        LEFT JOIN lead_intelligence li ON l.id = li.lead_id
        LEFT JOIN users u ON l.assigned_to = u.id
-       WHERE l.id = $1 AND l.company_id = $2`,
-      [id, companyId]
+       WHERE l.id = $1 AND l.organization_id = $2`,
+      [id, organizationId]
     );
 
     if (leads.length === 0) {
@@ -101,7 +101,7 @@ leadsRouter.get(
 leadsRouter.post(
   '/',
   asyncHandler(async (req, res) => {
-    const { companyId } = req.user;
+    const { organizationId } = req.user;
     const {
       name, email, phone, company, designation, productId, catalogId,
       status = 'New', source = 'Manual', score = 0, notes, priority = 'Normal'
@@ -114,25 +114,30 @@ leadsRouter.post(
     const validStatuses = ['New', 'Contacted', 'Qualified', 'Proposal Sent', 'Closed', 'Lost'];
     if (!validStatuses.includes(status)) throw new ApiError(400, 'Invalid status');
 
-    const { rows: created } = await query(
-      `INSERT INTO leads (company_id, name, email, phone, company, designation, product_id, catalog_id, status, source, score, notes, priority)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-       RETURNING *`,
-      [companyId, name.trim(), email.trim().toLowerCase(), phone || null, company || null, designation || null,
-       productId || null, catalogId || null, status, source, score, notes || null, priority]
-    );
+    try {
+      const { rows: created } = await query(
+        `INSERT INTO leads (organization_id, name, email, phone, company, designation, product_id, catalog_id, status, source, score, notes, priority)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+         RETURNING *`,
+        [organizationId, name.trim(), email.trim().toLowerCase(), phone || null, company || null, designation || null,
+         productId || null, catalogId || null, status, source, score || 0, notes || null, priority || 'Normal']
+      );
 
-    const lead = created[0];
+      const lead = created[0];
 
-    // Initialize lead intelligence record
-    await query(
-      `INSERT INTO lead_intelligence (lead_id, behavior_score, lead_category)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (lead_id) DO NOTHING`,
-      [lead.id, score, score >= 90 ? 'High Intent' : score >= 76 ? 'SQL' : score >= 51 ? 'Hot' : score >= 26 ? 'Warm' : 'Cold']
-    );
+      // Initialize lead intelligence record
+      await query(
+        `INSERT INTO lead_intelligence (lead_id, behavior_score, lead_category)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (lead_id) DO NOTHING`,
+        [lead.id, score || 0, (score || 0) >= 90 ? 'High Intent' : (score || 0) >= 76 ? 'SQL' : (score || 0) >= 51 ? 'Hot' : (score || 0) >= 26 ? 'Warm' : 'Cold']
+      );
 
-    res.status(201).json(lead);
+      res.status(201).json(lead);
+    } catch (err) {
+      console.error('Lead creation error:', err);
+      throw new ApiError(500, 'Failed to create lead in database: ' + (err.message || err));
+    }
   })
 );
 
@@ -140,12 +145,12 @@ leadsRouter.post(
 leadsRouter.get(
   '/:id/journey',
   asyncHandler(async (req, res) => {
-    const { companyId } = req.user;
+    const { organizationId } = req.user;
     const { id } = req.params;
 
     const { rows: leads } = await query(
-      `SELECT id FROM leads WHERE id = $1 AND company_id = $2`,
-      [id, companyId]
+      `SELECT id FROM leads WHERE id = $1 AND organization_id = $2`,
+      [id, organizationId]
     );
     if (leads.length === 0) {
       return res.status(404).json({ message: 'Lead not found' });
@@ -155,9 +160,9 @@ leadsRouter.get(
       `SELECT a.id, a.event_type, a.metadata, a.created_at, p.name as product_name
        FROM analytics_events a
        LEFT JOIN products p ON a.product_id = p.id
-       WHERE a.lead_id = $1 AND a.company_id = $2
+       WHERE a.lead_id = $1 AND a.organization_id = $2
        ORDER BY a.created_at ASC`,
-      [id, companyId]
+      [id, organizationId]
     );
 
     res.json(journey);
@@ -168,21 +173,21 @@ leadsRouter.get(
 leadsRouter.get(
   '/:id/activities',
   asyncHandler(async (req, res) => {
-    const { companyId } = req.user;
+    const { organizationId } = req.user;
     const { id } = req.params;
 
     const { rows: leads } = await query(
-      `SELECT id FROM leads WHERE id = $1 AND company_id = $2`,
-      [id, companyId]
+      `SELECT id FROM leads WHERE id = $1 AND organization_id = $2`,
+      [id, organizationId]
     );
     if (leads.length === 0) return res.status(404).json({ message: 'Lead not found' });
 
     const { rows: activities } = await query(
       `SELECT la.*, u.name as user_name FROM lead_activities la
        LEFT JOIN users u ON la.user_id = u.id
-       WHERE la.lead_id = $1 AND la.company_id = $2
+       WHERE la.lead_id = $1 AND la.organization_id = $2
        ORDER BY la.created_at DESC`,
-      [id, companyId]
+      [id, organizationId]
     );
 
     res.json(activities);
@@ -193,21 +198,21 @@ leadsRouter.get(
 leadsRouter.post(
   '/:id/activities',
   asyncHandler(async (req, res) => {
-    const { companyId, id: userId } = req.user;
+    const { organizationId, id: userId } = req.user;
     const { id } = req.params;
     const { activityType = 'note', subject, body } = req.body;
 
     const { rows: leads } = await query(
-      `SELECT id FROM leads WHERE id = $1 AND company_id = $2`,
-      [id, companyId]
+      `SELECT id FROM leads WHERE id = $1 AND organization_id = $2`,
+      [id, organizationId]
     );
     if (leads.length === 0) return res.status(404).json({ message: 'Lead not found' });
 
     const { rows: created } = await query(
-      `INSERT INTO lead_activities (company_id, lead_id, user_id, activity_type, subject, body)
+      `INSERT INTO lead_activities (organization_id, lead_id, user_id, activity_type, subject, body)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [companyId, id, userId, activityType, subject || null, body || null]
+      [organizationId, id, userId, activityType, subject || null, body || null]
     );
 
     res.status(201).json(created[0]);
@@ -218,7 +223,7 @@ leadsRouter.post(
 leadsRouter.put(
   '/:id',
   asyncHandler(async (req, res) => {
-    const { companyId } = req.user;
+    const { organizationId } = req.user;
     const { id } = req.params;
     const { status, notes, priority, designation, company, phone, assignedTo, name, email, source } = req.body;
 
@@ -235,9 +240,9 @@ leadsRouter.put(
            email = COALESCE($9, email),
            source = COALESCE($10, source),
            updated_at = now()
-       WHERE id = $11 AND company_id = $12
+       WHERE id = $11 AND organization_id = $12
        RETURNING *`,
-      [status, notes, priority, designation, company, phone, assignedTo || null, name, email, source, id, companyId]
+      [status, notes, priority, designation, company, phone, assignedTo || null, name, email, source, id, organizationId]
     );
 
     if (updated.length === 0) {
@@ -252,12 +257,12 @@ leadsRouter.put(
 leadsRouter.delete(
   '/:id',
   asyncHandler(async (req, res) => {
-    const { companyId } = req.user;
+    const { organizationId } = req.user;
     const { id } = req.params;
 
     const { rowCount } = await query(
-      `DELETE FROM leads WHERE id = $1 AND company_id = $2`,
-      [id, companyId]
+      `DELETE FROM leads WHERE id = $1 AND organization_id = $2`,
+      [id, organizationId]
     );
 
     if (rowCount === 0) {

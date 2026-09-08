@@ -7,7 +7,7 @@ export const supportAiEngine = {
    * In a real implementation, this would build a prompt with the chat history
    * and current page context, then call OpenAI/Claude.
    */
-  async processChatMessage(companyId, sessionId, userMessage, contextData) {
+  async processChatMessage(organizationId, sessionId, userMessage, contextData) {
     const messageLower = userMessage.toLowerCase();
     let intent = 'General Question';
     let priority = 'Low';
@@ -37,10 +37,10 @@ export const supportAiEngine = {
     // 3. RAG Retrieval Mock (Search knowledge base)
     const { rows: kbArticles } = await query(
       `SELECT title, content FROM knowledge_base 
-       WHERE company_id = $1 
+       WHERE organization_id = $1 
          AND (title ILIKE $2 OR content ILIKE $2)
        LIMIT 1`,
-      [companyId, `%${userMessage.split(' ')[0]}%`] // Very naive keyword match
+      [organizationId, `%${userMessage.split(' ')[0]}%`] // Very naive keyword match
     );
 
     let reply = "";

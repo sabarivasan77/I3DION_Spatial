@@ -12,19 +12,19 @@ analyticsRouter.use(requireAuth);
 analyticsRouter.get(
   '/dashboard',
   asyncHandler(async (req, res) => {
-    const { companyId } = req.user;
+    const { organizationId } = req.user;
 
     // Aggregate counts
     const { rows: metrics } = await query(
       `SELECT
-        (SELECT COUNT(*) FROM leads WHERE company_id = $1) as total_leads,
-        (SELECT COUNT(*) FROM leads WHERE company_id = $1 AND status != 'Closed' AND status != 'Lost') as active_leads,
-        (SELECT COUNT(*) FROM leads WHERE company_id = $1 AND score >= 80) as hot_leads,
-        (SELECT COUNT(*) FROM analytics_events WHERE company_id = $1 AND event_type = 'qr_scan') as qr_scans,
-        (SELECT COUNT(*) FROM analytics_events WHERE company_id = $1 AND event_type = 'ar_launch') as ar_launches,
-        (SELECT COUNT(*) FROM analytics_events WHERE company_id = $1 AND event_type IN ('page_view', 'product_view')) as product_views
+        (SELECT COUNT(*) FROM leads WHERE organization_id = $1) as total_leads,
+        (SELECT COUNT(*) FROM leads WHERE organization_id = $1 AND status != 'Closed' AND status != 'Lost') as active_leads,
+        (SELECT COUNT(*) FROM leads WHERE organization_id = $1 AND score >= 80) as hot_leads,
+        (SELECT COUNT(*) FROM analytics_events WHERE organization_id = $1 AND event_type = 'qr_scan') as qr_scans,
+        (SELECT COUNT(*) FROM analytics_events WHERE organization_id = $1 AND event_type = 'ar_launch') as ar_launches,
+        (SELECT COUNT(*) FROM analytics_events WHERE organization_id = $1 AND event_type IN ('page_view', 'product_view')) as product_views
       `,
-      [companyId]
+      [organizationId]
     );
 
     res.json(metrics[0]);
@@ -35,8 +35,8 @@ analyticsRouter.get(
 analyticsRouter.get(
   '/insights',
   asyncHandler(async (req, res) => {
-    const { companyId } = req.user;
-    const insights = await generateInsights(companyId);
+    const { organizationId } = req.user;
+    const insights = await generateInsights(organizationId);
     res.json(insights);
   })
 );
@@ -45,18 +45,18 @@ analyticsRouter.get(
 analyticsRouter.get(
   '/top-products',
   asyncHandler(async (req, res) => {
-    const { companyId } = req.user;
+    const { organizationId } = req.user;
     const { rows: topProducts } = await query(
       `SELECT p.id, p.name, p.slug, COUNT(a.id) as interactions,
         COUNT(CASE WHEN a.event_type = 'ar_launch' THEN 1 END) as ar_launches,
         COUNT(CASE WHEN a.event_type = 'qr_scan' THEN 1 END) as qr_scans
        FROM products p
        LEFT JOIN analytics_events a ON p.id = a.product_id
-       WHERE p.company_id = $1
+       WHERE p.organization_id = $1
        GROUP BY p.id
        ORDER BY interactions DESC
        LIMIT 5`,
-      [companyId]
+      [organizationId]
     );
     res.json(topProducts);
   })
@@ -66,7 +66,7 @@ analyticsRouter.get(
 analyticsRouter.get(
   '/product/:id',
   asyncHandler(async (req, res) => {
-    const { companyId } = req.user;
+    const { organizationId } = req.user;
     const productId = req.params.id;
 
     const { rows: metrics } = await query(
@@ -77,8 +77,8 @@ analyticsRouter.get(
         COUNT(CASE WHEN event_type = 'ar_launch' THEN 1 END) as ar_launches,
         COUNT(DISTINCT lead_id) as leads_generated
        FROM analytics_events
-       WHERE company_id = $1 AND product_id = $2`,
-      [companyId, productId]
+       WHERE organization_id = $1 AND product_id = $2`,
+      [organizationId, productId]
     );
     res.json(metrics[0]);
   })
@@ -88,16 +88,16 @@ analyticsRouter.get(
 analyticsRouter.get(
   '/charts/trends',
   asyncHandler(async (req, res) => {
-    const { companyId } = req.user;
+    const { organizationId } = req.user;
     const { rows: trends } = await query(
       `SELECT DATE(created_at) as date,
               COUNT(DISTINCT visitor_id) as visitors,
               COUNT(*) as sessions
        FROM analytics_events
-       WHERE company_id = $1 AND created_at >= NOW() - INTERVAL '30 days'
+       WHERE organization_id = $1 AND created_at >= NOW() - INTERVAL '30 days'
        GROUP BY DATE(created_at)
        ORDER BY DATE(created_at) ASC`,
-      [companyId]
+      [organizationId]
     );
     res.json(trends);
   })
@@ -107,15 +107,15 @@ analyticsRouter.get(
 analyticsRouter.get(
   '/charts/searches',
   asyncHandler(async (req, res) => {
-    const { companyId } = req.user;
+    const { organizationId } = req.user;
     const { rows: searches } = await query(
       `SELECT metadata->>'query' as query, COUNT(*) as count
        FROM analytics_events
-       WHERE company_id = $1 AND event_type = 'search'
+       WHERE organization_id = $1 AND event_type = 'search'
        GROUP BY metadata->>'query'
        ORDER BY count DESC
        LIMIT 10`,
-      [companyId]
+      [organizationId]
     );
     res.json(searches);
   })
@@ -125,7 +125,7 @@ analyticsRouter.get(
 analyticsRouter.get(
   '/charts/funnel',
   asyncHandler(async (req, res) => {
-    const { companyId } = req.user;
+    const { organizationId } = req.user;
     const { rows: funnel } = await query(
       `SELECT
         COUNT(DISTINCT visitor_id) as visitors,
@@ -133,8 +133,8 @@ analyticsRouter.get(
         COUNT(DISTINCT CASE WHEN event_type = 'ar_launch' THEN visitor_id END) as ar_launches,
         COUNT(DISTINCT lead_id) as leads
        FROM analytics_events
-       WHERE company_id = $1 AND created_at >= NOW() - INTERVAL '30 days'`,
-      [companyId]
+       WHERE organization_id = $1 AND created_at >= NOW() - INTERVAL '30 days'`,
+      [organizationId]
     );
     res.json(funnel[0]);
   })
@@ -144,13 +144,13 @@ analyticsRouter.get(
 analyticsRouter.get(
   '/charts/downloads',
   asyncHandler(async (req, res) => {
-    const { companyId } = req.user;
+    const { organizationId } = req.user;
     const { rows: downloads } = await query(
       `SELECT event_type as type, COUNT(*) as count
        FROM analytics_events
-       WHERE company_id = $1 AND event_type IN ('brochure_download', 'model_download')
+       WHERE organization_id = $1 AND event_type IN ('brochure_download', 'model_download')
        GROUP BY event_type`,
-      [companyId]
+      [organizationId]
     );
     res.json(downloads);
   })

@@ -14,20 +14,20 @@ function slugify(value) {
     .replace(/(^-|-$)/g, '');
 }
 
-async function slugExists(companyId, slug, excludeId) {
+async function slugExists(organizationId, slug, excludeId) {
   const { rows } = await query(
-    'SELECT id FROM products WHERE company_id = $1 AND slug = $2 LIMIT 1',
-    [companyId, slug],
+    'SELECT id FROM products WHERE organization_id = $1 AND slug = $2 LIMIT 1',
+    [organizationId, slug],
   );
   return Boolean(rows[0] && rows[0].id !== excludeId);
 }
 
-export async function makeUniqueSlug(companyId, name, excludeId) {
+export async function makeUniqueSlug(organizationId, name, excludeId) {
   const base = slugify(name) || `product-${crypto.randomUUID().slice(0, 8)}`;
   let candidate = base;
   let suffix = 2;
 
-  while (await slugExists(companyId, candidate, excludeId)) {
+  while (await slugExists(organizationId, candidate, excludeId)) {
     candidate = `${base}-${suffix}`;
     suffix += 1;
   }
@@ -46,7 +46,7 @@ export function productQrTargetUrl(slug) {
 export function serializeAsset(row) {
   return {
     id: row.id,
-    company_id: row.company_id,
+    organization_id: row.organization_id,
     product_id: row.product_id,
     asset_type: row.asset_type,
     original_name: row.original_name,
@@ -65,7 +65,7 @@ function serializeQr(row) {
   if (!row) return null;
   return {
     id: row.id,
-    company_id: row.company_id,
+    organization_id: row.organization_id,
     product_id: row.product_id,
     product_slug: row.product_slug,
     target_url: row.target_url,
@@ -81,7 +81,7 @@ function serializeQr(row) {
 export function serializeProduct(row, extra = {}) {
   return {
     id: row.id,
-    company_id: row.company_id,
+    organization_id: row.organization_id,
     name: row.name,
     category: row.category,
     description: row.description,
@@ -107,17 +107,17 @@ export function serializeProduct(row, extra = {}) {
   };
 }
 
-export async function createProduct(companyId, userId, body) {
-  const slug = await makeUniqueSlug(companyId, body.name);
+export async function createProduct(organizationId, userId, body) {
+  const slug = await makeUniqueSlug(organizationId, body.name);
   const publicUrl = productPublicUrl(slug);
   const { rows } = await query(
     `INSERT INTO products
-     (company_id, name, category, description, status, specs, image_url, model_url, usdz_url, document_url, video_url,
+     (organization_id, name, category, description, status, specs, image_url, model_url, usdz_url, document_url, video_url,
       dimensions, is_public, slug, public_url, created_by)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
      RETURNING *`,
     [
-      companyId,
+      organizationId,
       body.name,
       body.category,
       body.description ?? null,
@@ -144,11 +144,11 @@ export async function createProduct(companyId, userId, body) {
     await ensureProductQr(product.id).catch(() => null);
   }
 
-  return getProductById(companyId, product.id);
+  return getProductById(organizationId, product.id);
 }
 
-export async function updateProduct(companyId, id, body) {
-  const existing = await getProductById(companyId, id);
+export async function updateProduct(organizationId, id, body) {
+  const existing = await getProductById(organizationId, id);
   if (!existing) throw new ApiError(404, 'Product not found');
 
   const { rows } = await query(
@@ -166,7 +166,7 @@ export async function updateProduct(companyId, id, body) {
          dimensions = $11,
          is_public = $14,
          updated_at = now()
-     WHERE id = $12 AND company_id = $13
+     WHERE id = $12 AND organization_id = $13
      RETURNING *`,
     [
       body.name,
@@ -181,7 +181,7 @@ export async function updateProduct(companyId, id, body) {
       body.videoUrl || null,
       body.dimensions ?? null,
       id,
-      companyId,
+      organizationId,
       body.isPublic ?? false,
     ],
   );
@@ -194,13 +194,13 @@ export async function updateProduct(companyId, id, body) {
     await ensureProductQr(product.id).catch(() => null);
   }
 
-  return getProductById(companyId, product.id);
+  return getProductById(organizationId, product.id);
 }
 
 /**
  * Update only the status field of a product.
  */
-export async function patchProductStatus(companyId, id, status) {
+export async function patchProductStatus(organizationId, id, status) {
   const validStatuses = ['Draft', 'Published', 'Archived'];
   if (!validStatuses.includes(status)) {
     throw new ApiError(400, `Invalid status. Must be one of: ${validStatuses.join(', ')}`);
@@ -215,20 +215,20 @@ export async function patchProductStatus(companyId, id, status) {
            ELSE is_public
          END,
          updated_at = now()
-     WHERE id = $2 AND company_id = $3
+     WHERE id = $2 AND organization_id = $3
      RETURNING *`,
-    [status, id, companyId],
+    [status, id, organizationId],
   );
 
   const product = rows[0];
   if (!product) throw new ApiError(404, 'Product not found');
-  return getProductById(companyId, product.id);
+  return getProductById(organizationId, product.id);
 }
 
-export async function listProductsWithMetrics(companyId) {
+export async function listProductsWithMetrics(organizationId) {
   const [{ rows: products }, { rows: qrRows }, { rows: analyticsRows }] = await Promise.all([
-    query('SELECT * FROM products WHERE company_id = $1 ORDER BY created_at DESC', [companyId]),
-    query('SELECT * FROM qr_codes WHERE company_id = $1', [companyId]),
+    query('SELECT * FROM products WHERE organization_id = $1 ORDER BY created_at DESC', [organizationId]),
+    query('SELECT * FROM qr_codes WHERE organization_id = $1', [organizationId]),
     query(
       `SELECT product_id,
               count(*) FILTER (WHERE event_type = 'qr_scan')::int AS total_scans,
@@ -237,9 +237,9 @@ export async function listProductsWithMetrics(companyId) {
               count(*) FILTER (WHERE event_type = 'qr_download')::int AS qr_downloads,
               count(*) FILTER (WHERE event_type = 'session_duration')::int AS session_duration_events
        FROM analytics_events
-       WHERE company_id = $1
+       WHERE organization_id = $1
        GROUP BY product_id`,
-      [companyId],
+      [organizationId],
     ),
   ]);
 
@@ -264,20 +264,20 @@ export async function listProductsWithMetrics(companyId) {
   });
 }
 
-export async function getProductById(companyId, productId) {
-  const productResult = await query('SELECT * FROM products WHERE company_id = $1 AND id = $2 LIMIT 1', [
-    companyId,
+export async function getProductById(organizationId, productId) {
+  const productResult = await query('SELECT * FROM products WHERE organization_id = $1 AND id = $2 LIMIT 1', [
+    organizationId,
     productId,
   ]);
   const product = productResult.rows[0];
   if (!product) return null;
 
   const [assetsResult, qrResult, metricsResult] = await Promise.all([
-    query('SELECT * FROM product_assets WHERE company_id = $1 AND product_id = $2 ORDER BY created_at ASC', [
-      companyId,
+    query('SELECT * FROM product_assets WHERE organization_id = $1 AND product_id = $2 ORDER BY created_at ASC', [
+      organizationId,
       productId,
     ]),
-    query('SELECT * FROM qr_codes WHERE company_id = $1 AND product_id = $2 LIMIT 1', [companyId, productId]),
+    query('SELECT * FROM qr_codes WHERE organization_id = $1 AND product_id = $2 LIMIT 1', [organizationId, productId]),
     query(
       `SELECT
          count(*) FILTER (WHERE event_type = 'qr_scan')::int AS total_scans,
@@ -285,8 +285,8 @@ export async function getProductById(companyId, productId) {
          count(*) FILTER (WHERE event_type = 'ar_launch')::int AS ar_launch_count,
          count(*) FILTER (WHERE event_type = 'qr_download')::int AS qr_downloads
        FROM analytics_events
-       WHERE company_id = $1 AND product_id = $2`,
-      [companyId, productId],
+       WHERE organization_id = $1 AND product_id = $2`,
+      [organizationId, productId],
     ),
   ]);
 
@@ -311,7 +311,7 @@ export async function getProductBySlug(slug) {
   const productResult = await query('SELECT * FROM products WHERE slug = $1 LIMIT 1', [slug]);
   const product = productResult.rows[0];
   if (!product) return null;
-  return getProductById(product.company_id, product.id);
+  return getProductById(product.organization_id, product.id);
 }
 
 /**
@@ -356,11 +356,11 @@ export async function ensureProductQr(productId) {
 
   const pngAsset = await query(
     `INSERT INTO product_assets
-     (company_id, product_id, asset_type, original_name, file_name, file_path, public_url, mime_type, size_bytes, checksum_sha256, metadata)
+     (organization_id, product_id, asset_type, original_name, file_name, file_path, public_url, mime_type, size_bytes, checksum_sha256, metadata)
      VALUES ($1,$2,'qr_png',$3,$4,$5,$6,$7,$8,$9,$10)
      RETURNING *`,
     [
-      product.company_id,
+      product.organization_id,
       productId,
       `${product.slug}.png`,
       `${product.slug}.png`,
@@ -375,11 +375,11 @@ export async function ensureProductQr(productId) {
 
   const svgAsset = await query(
     `INSERT INTO product_assets
-     (company_id, product_id, asset_type, original_name, file_name, file_path, public_url, mime_type, size_bytes, checksum_sha256, metadata)
+     (organization_id, product_id, asset_type, original_name, file_name, file_path, public_url, mime_type, size_bytes, checksum_sha256, metadata)
      VALUES ($1,$2,'qr_svg',$3,$4,$5,$6,$7,$8,$9,$10)
      RETURNING *`,
     [
-      product.company_id,
+      product.organization_id,
       productId,
       `${product.slug}.svg`,
       `${product.slug}.svg`,
@@ -394,7 +394,7 @@ export async function ensureProductQr(productId) {
 
   const qrRow = await query(
     `INSERT INTO qr_codes
-     (company_id, product_id, product_slug, target_url, png_asset_id, svg_asset_id, png_url, svg_url, generated_at, updated_at)
+     (organization_id, product_id, product_slug, target_url, png_asset_id, svg_asset_id, png_url, svg_url, generated_at, updated_at)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,now(),now())
      ON CONFLICT (product_id) DO UPDATE SET
        product_slug = EXCLUDED.product_slug,
@@ -406,7 +406,7 @@ export async function ensureProductQr(productId) {
        updated_at = now()
      RETURNING *`,
     [
-      product.company_id,
+      product.organization_id,
       productId,
       product.slug,
       targetUrl,
@@ -440,11 +440,11 @@ export async function storeProductAsset({ productId, file, assetType }) {
 
   const assetResult = await query(
     `INSERT INTO product_assets
-     (company_id, product_id, asset_type, original_name, file_name, file_path, public_url, mime_type, size_bytes, checksum_sha256, metadata)
+     (organization_id, product_id, asset_type, original_name, file_name, file_path, public_url, mime_type, size_bytes, checksum_sha256, metadata)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
      RETURNING *`,
     [
-      product.company_id,
+      product.organization_id,
       productId,
       inferredAssetType,
       file.originalname,
@@ -515,7 +515,7 @@ export async function storeProductAsset({ productId, file, assetType }) {
     qr = await ensureProductQr(productId);
   }
 
-  const updatedProduct = await getProductById(product.company_id, productId);
+  const updatedProduct = await getProductById(product.organization_id, productId);
 
   return {
     ...serializeAsset(asset),
@@ -525,17 +525,17 @@ export async function storeProductAsset({ productId, file, assetType }) {
   };
 }
 
-export async function recordAnalyticsEvent({ companyId, productId, eventType, metadata = {} }) {
+export async function recordAnalyticsEvent({ organizationId, productId, eventType, metadata = {} }) {
   const { rows } = await query(
-    `INSERT INTO analytics_events (company_id, product_id, event_type, metadata)
+    `INSERT INTO analytics_events (organization_id, product_id, event_type, metadata)
      VALUES ($1,$2,$3,$4)
      RETURNING *`,
-    [companyId, productId, eventType, metadata],
+    [organizationId, productId, eventType, metadata],
   );
   return rows[0];
 }
 
-export async function getProductMetrics(companyId, productId) {
+export async function getProductMetrics(organizationId, productId) {
   const { rows } = await query(
     `SELECT
        count(*) FILTER (WHERE event_type = 'qr_scan')::int AS total_scans,
@@ -544,8 +544,8 @@ export async function getProductMetrics(companyId, productId) {
        count(*) FILTER (WHERE event_type = 'qr_download')::int AS qr_downloads,
        count(*) FILTER (WHERE event_type = 'session_duration')::int AS session_duration_events
      FROM analytics_events
-     WHERE company_id = $1 AND product_id = $2`,
-    [companyId, productId],
+     WHERE organization_id = $1 AND product_id = $2`,
+    [organizationId, productId],
   );
 
   return rows[0] ?? {

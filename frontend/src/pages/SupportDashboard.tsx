@@ -23,15 +23,15 @@ export function SupportDashboardPage() {
 
   if (!stats) return <div className="p-8">Loading Support Analytics...</div>;
 
-  const aiResolutionRate = stats.total_tickets + stats.ai_resolved_chats > 0 
-    ? Math.round((stats.ai_resolved_chats / (stats.total_tickets + stats.ai_resolved_chats)) * 100)
+  const aiResolutionRate = (stats.total_tickets || 0) + (stats.ai_resolved_chats || 0) > 0 
+    ? Math.round(((stats.ai_resolved_chats || 0) / ((stats.total_tickets || 0) + (stats.ai_resolved_chats || 0))) * 100)
     : 0;
 
   return (
     <div className="space-y-6">
       <PageHeader 
         title="Support Dashboard" 
-        eyebrow="AI vs Human resolution metrics and support pipeline."
+        eyebrow="Algorithm vs Human resolution metrics and support pipeline."
       />
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -41,7 +41,7 @@ export function SupportDashboardPage() {
           </div>
           <div>
             <p className="text-sm text-slate-500 font-medium">Total Chats</p>
-            <h3 className="text-2xl font-bold">{stats.ai_resolved_chats + stats.escalated_chats}</h3>
+            <h3 className="text-2xl font-bold">{(stats.ai_resolved_chats || 0) + (stats.escalated_chats || 0)}</h3>
           </div>
         </Card>
         <Card className="p-6 flex items-center gap-4">
@@ -49,8 +49,8 @@ export function SupportDashboardPage() {
             <Bot size={24} />
           </div>
           <div>
-            <p className="text-sm text-slate-500 font-medium">AI Resolved</p>
-            <h3 className="text-2xl font-bold">{stats.ai_resolved_chats}</h3>
+            <p className="text-sm text-slate-500 font-medium">Auto-Resolved</p>
+            <h3 className="text-2xl font-bold">{stats.ai_resolved_chats || 0}</h3>
           </div>
         </Card>
         <Card className="p-6 flex items-center gap-4">
@@ -59,7 +59,7 @@ export function SupportDashboardPage() {
           </div>
           <div>
             <p className="text-sm text-slate-500 font-medium">Human Escalations</p>
-            <h3 className="text-2xl font-bold">{stats.escalated_chats}</h3>
+            <h3 className="text-2xl font-bold">{stats.escalated_chats || 0}</h3>
           </div>
         </Card>
         <Card className="p-6 flex items-center gap-4">
@@ -68,20 +68,20 @@ export function SupportDashboardPage() {
           </div>
           <div>
             <p className="text-sm text-slate-500 font-medium">Active Tickets</p>
-            <h3 className="text-2xl font-bold">{stats.total_tickets}</h3>
+            <h3 className="text-2xl font-bold">{stats.total_tickets || 0}</h3>
           </div>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="p-6">
-          <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2"><Bot /> AI Deflection Rate</h3>
+          <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2"><Bot /> Automated Deflection Rate</h3>
           <div className="flex items-center gap-6">
-            <div className="w-32 h-32 rounded-full border-8 border-slate-100 relative flex items-center justify-center" style={{ borderTopColor: '#3b82f6', transform: 'rotate(-45deg)' }}>
+            <div className="relative w-24 h-24 rounded-full border-8 border-slate-100 flex items-center justify-center overflow-hidden">
               <div style={{ transform: 'rotate(45deg)' }} className="text-3xl font-bold text-blue-600">{aiResolutionRate}%</div>
             </div>
-            <div>
-              <p className="text-sm text-slate-600">AI successfully resolves {aiResolutionRate}% of incoming customer queries without human intervention.</p>
+            <div className="flex-1">
+              <p className="text-sm text-slate-600">Our algorithm successfully resolves {aiResolutionRate}% of incoming customer queries without human intervention.</p>
             </div>
           </div>
         </Card>

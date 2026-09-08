@@ -7,7 +7,7 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import {
   catalogSchema,
-  companySchema,
+  organizationSchema,
   eventSchema,
   idParam,
   leadSchema,
@@ -39,7 +39,7 @@ resourcesRouter.use(requireAuth);
 
 resourcesRouter.get('/me', asyncHandler(async (req, res) => {
   let { rows } = await query(
-    `SELECT id, company_id, name, email, phone, avatar_url, role, designation, department, bio,
+    `SELECT id, organization_id, name, email, phone, avatar_url, role, designation, department, bio,
             banner_url, website, location, social_links, email_verified, last_login_at, created_at, updated_at
      FROM users WHERE id = $1`,
     [req.user.id]
@@ -48,25 +48,25 @@ resourcesRouter.get('/me', asyncHandler(async (req, res) => {
   if (!rows[0]) {
     // Just-In-Time Provisioning: Sync Supabase user to local DB
     // 1. Ensure company exists or create a default one
-    let companyId = req.user.company_id;
-    if (companyId === 'default-company') {
+    let organizationId = req.user.organization_id;
+    if (organizationId === 'default-company') {
       const companyRes = await query(
-        `INSERT INTO companies (name) VALUES ('Default Company') RETURNING id`
+        `INSERT INTO organizations (name) VALUES ('Default Company') RETURNING id`
       );
-      companyId = companyRes.rows[0].id;
+      organizationId = companyRes.rows[0].id;
     }
 
     // 2. Insert the user
     await query(
-      `INSERT INTO users (id, company_id, name, email, role, password_hash)
+      `INSERT INTO users (id, organization_id, name, email, role, password_hash)
        VALUES ($1, $2, $3, $4, $5, 'supabase_managed')
        ON CONFLICT (id) DO NOTHING`,
-      [req.user.id, companyId, req.user.name || 'User', req.user.email, 'Company Admin']
+      [req.user.id, organizationId, req.user.name || 'User', req.user.email, 'Company Admin']
     );
 
     // 3. Fetch again
     const newRows = await query(
-      `SELECT id, company_id, name, email, phone, avatar_url, role, designation, department, bio,
+      `SELECT id, organization_id, name, email, phone, avatar_url, role, designation, department, bio,
               banner_url, website, location, social_links, email_verified, last_login_at, created_at, updated_at
        FROM users WHERE id = $1`,
       [req.user.id]
@@ -78,7 +78,7 @@ resourcesRouter.get('/me', asyncHandler(async (req, res) => {
   const u = rows[0];
   res.json({
     user: {
-      id: u.id, companyId: u.company_id, name: u.name, email: u.email, phone: u.phone,
+      id: u.id, organizationId: u.organization_id, name: u.name, email: u.email, phone: u.phone,
       avatarUrl: u.avatar_url, role: u.role, designation: u.designation, department: u.department,
       bio: u.bio, bannerUrl: u.banner_url, website: u.website, location: u.location,
       socialLinks: u.social_links ?? {}, emailVerified: u.email_verified,
@@ -94,8 +94,8 @@ resourcesRouter.put(
     const { name, email, phone, avatarUrl, currentPassword, newPassword } = req.validated.body;
     const { designation, department, bio, bannerUrl, website, location, socialLinks } = req.body;
 
-    const existing = await query('SELECT * FROM users WHERE id = $1 AND company_id = $2', [
-      req.user.id, req.user.company_id,
+    const existing = await query('SELECT * FROM users WHERE id = $1 AND organization_id = $2', [
+      req.user.id, req.user.organization_id,
     ]);
     const user = existing.rows[0];
     if (!user) throw new ApiError(404, 'User not found');
@@ -118,12 +118,12 @@ resourcesRouter.put(
              bio = COALESCE($8, bio), banner_url = COALESCE($9, banner_url),
              website = COALESCE($10, website), location = COALESCE($11, location),
              social_links = COALESCE($12, social_links), updated_at = now()
-         WHERE id = $13 AND company_id = $14`,
+         WHERE id = $13 AND organization_id = $14`,
         [name ?? null, email ?? null, phone ?? null, avatarUrl ?? null, passwordHash,
          designation ?? null, department ?? null, bio ?? null, bannerUrl ?? null,
          website ?? null, location ?? null,
          socialLinks ? JSON.stringify(socialLinks) : null,
-         req.user.id, req.user.company_id],
+         req.user.id, req.user.organization_id],
       );
     } else {
       await query(
@@ -134,17 +134,17 @@ resourcesRouter.put(
              bio = COALESCE($7, bio), banner_url = COALESCE($8, banner_url),
              website = COALESCE($9, website), location = COALESCE($10, location),
              social_links = COALESCE($11, social_links), updated_at = now()
-         WHERE id = $12 AND company_id = $13`,
+         WHERE id = $12 AND organization_id = $13`,
         [name ?? null, email ?? null, phone ?? null, avatarUrl ?? null,
          designation ?? null, department ?? null, bio ?? null, bannerUrl ?? null,
          website ?? null, location ?? null,
          socialLinks ? JSON.stringify(socialLinks) : null,
-         req.user.id, req.user.company_id],
+         req.user.id, req.user.organization_id],
       );
     }
 
     const { rows } = await query(
-      `SELECT id, company_id, name, email, phone, avatar_url, role, designation, department, bio,
+      `SELECT id, organization_id, name, email, phone, avatar_url, role, designation, department, bio,
               banner_url, website, location, social_links, email_verified, last_login_at, created_at
        FROM users WHERE id = $1`,
       [req.user.id]
@@ -152,7 +152,7 @@ resourcesRouter.put(
     const u = rows[0];
     res.json({
       user: {
-        id: u.id, companyId: u.company_id, name: u.name, email: u.email, phone: u.phone,
+        id: u.id, organizationId: u.organization_id, name: u.name, email: u.email, phone: u.phone,
         avatarUrl: u.avatar_url, role: u.role, designation: u.designation, department: u.department,
         bio: u.bio, bannerUrl: u.banner_url, website: u.website, location: u.location,
         socialLinks: u.social_links ?? {}, emailVerified: u.email_verified,
@@ -188,7 +188,7 @@ resourcesRouter.delete('/sessions', asyncHandler(async (req, res) => {
 resourcesRouter.get(
   '/company',
   asyncHandler(async (req, res) => {
-    const { rows } = await query('SELECT * FROM companies WHERE id = $1', [req.user.company_id]);
+    const { rows } = await query('SELECT * FROM organizations WHERE id = $1', [req.user.organization_id]);
     res.json(rows[0]);
   }),
 );
@@ -196,15 +196,15 @@ resourcesRouter.get(
 resourcesRouter.put(
   '/company',
   requireRole('Manager'),
-  validate(companySchema),
+  validate(organizationSchema),
   asyncHandler(async (req, res) => {
     const { name, website, logoUrl, primaryColor, profile } = req.validated.body;
     const { rows } = await query(
-      `UPDATE companies
+      `UPDATE organizations
        SET name = $1, website = $2, logo_url = $3, primary_color = $4, profile = $5, updated_at = now()
        WHERE id = $6
        RETURNING *`,
-      [name, website || null, logoUrl || null, primaryColor, profile || null, req.user.company_id],
+      [name, website || null, logoUrl || null, primaryColor, profile || null, req.user.organization_id],
     );
     res.json(rows[0]);
   }),
@@ -213,8 +213,8 @@ resourcesRouter.put(
 resourcesRouter.get(
   '/preferences',
   asyncHandler(async (req, res) => {
-    const { rows } = await query('SELECT * FROM company_preferences WHERE company_id = $1', [req.user.company_id]);
-    res.json(rows[0] ?? { company_id: req.user.company_id });
+    const { rows } = await query('SELECT * FROM organization_preferences WHERE organization_id = $1', [req.user.organization_id]);
+    res.json(rows[0] ?? { organization_id: req.user.organization_id });
   }),
 );
 
@@ -225,19 +225,19 @@ resourcesRouter.put(
   asyncHandler(async (req, res) => {
     const body = req.validated.body;
     const { rows } = await query(
-      `INSERT INTO company_preferences
-       (company_id, onboarding_enabled, default_brand_color, default_catalog_visibility, notification_preferences, appearance_preferences)
+      `INSERT INTO organization_preferences
+       (organization_id, onboarding_enabled, default_brand_color, default_catalog_visibility, notification_preferences, appearance_preferences)
        VALUES ($1, COALESCE($2, true), COALESCE($3, '#2563EB'), COALESCE($4, 'private'), COALESCE($5, '{}'::jsonb), COALESCE($6, '{}'::jsonb))
-       ON CONFLICT (company_id) DO UPDATE SET
-         onboarding_enabled = COALESCE(EXCLUDED.onboarding_enabled, company_preferences.onboarding_enabled),
-         default_brand_color = COALESCE(EXCLUDED.default_brand_color, company_preferences.default_brand_color),
-         default_catalog_visibility = COALESCE(EXCLUDED.default_catalog_visibility, company_preferences.default_catalog_visibility),
-         notification_preferences = COALESCE(EXCLUDED.notification_preferences, company_preferences.notification_preferences),
-         appearance_preferences = COALESCE(EXCLUDED.appearance_preferences, company_preferences.appearance_preferences),
+       ON CONFLICT (organization_id) DO UPDATE SET
+         onboarding_enabled = COALESCE(EXCLUDED.onboarding_enabled, organization_preferences.onboarding_enabled),
+         default_brand_color = COALESCE(EXCLUDED.default_brand_color, organization_preferences.default_brand_color),
+         default_catalog_visibility = COALESCE(EXCLUDED.default_catalog_visibility, organization_preferences.default_catalog_visibility),
+         notification_preferences = COALESCE(EXCLUDED.notification_preferences, organization_preferences.notification_preferences),
+         appearance_preferences = COALESCE(EXCLUDED.appearance_preferences, organization_preferences.appearance_preferences),
          updated_at = now()
        RETURNING *`,
       [
-        req.user.company_id,
+        req.user.organization_id,
         body.onboardingEnabled,
         body.defaultBrandColor,
         body.defaultCatalogVisibility,
@@ -252,8 +252,8 @@ resourcesRouter.put(
 resourcesRouter.get(
   '/support-tickets',
   asyncHandler(async (req, res) => {
-    const { rows } = await query('SELECT * FROM support_tickets WHERE company_id = $1 ORDER BY created_at DESC', [
-      req.user.company_id,
+    const { rows } = await query('SELECT * FROM support_tickets WHERE organization_id = $1 ORDER BY created_at DESC', [
+      req.user.organization_id,
     ]);
     res.json(rows);
   }),
@@ -265,9 +265,9 @@ resourcesRouter.post(
   asyncHandler(async (req, res) => {
     const { category, subject, message } = req.validated.body;
     const { rows } = await query(
-      `INSERT INTO support_tickets (company_id, user_id, category, subject, message)
+      `INSERT INTO support_tickets (organization_id, user_id, category, subject, message)
        VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-      [req.user.company_id, req.user.id, category, subject, message],
+      [req.user.organization_id, req.user.id, category, subject, message],
     );
     res.status(201).json(rows[0]);
   }),
@@ -276,7 +276,7 @@ resourcesRouter.post(
 resourcesRouter.get(
   '/products',
   asyncHandler(async (req, res) => {
-    const rows = await listProductsWithMetrics(req.user.company_id);
+    const rows = await listProductsWithMetrics(req.user.organization_id);
     res.json(rows);
   }),
 );
@@ -286,7 +286,7 @@ resourcesRouter.post(
   requireRole('Manager'),
   validate(productSchema),
   asyncHandler(async (req, res) => {
-    const saved = await createProduct(req.user.company_id, req.user.id, req.validated.body);
+    const saved = await createProduct(req.user.organization_id, req.user.id, req.validated.body);
     res.status(201).json(saved);
   }),
 );
@@ -295,7 +295,7 @@ resourcesRouter.get(
   '/products/:id',
   validate(idParam),
   asyncHandler(async (req, res) => {
-    const product = await getProductById(req.user.company_id, req.validated.params.id);
+    const product = await getProductById(req.user.organization_id, req.validated.params.id);
     if (!product) throw new ApiError(404, 'Product not found');
     res.json(product);
   }),
@@ -305,7 +305,7 @@ resourcesRouter.put(
   requireRole('Manager'),
   validate(idParam.merge(productSchema)),
   asyncHandler(async (req, res) => {
-    const saved = await updateProduct(req.user.company_id, req.validated.params.id, req.validated.body);
+    const saved = await updateProduct(req.user.organization_id, req.validated.params.id, req.validated.body);
     res.json(saved);
   }),
 );
@@ -320,7 +320,7 @@ resourcesRouter.patch(
     if (!status || !['Draft', 'Published', 'Archived'].includes(status)) {
       throw new ApiError(400, 'status must be Draft, Published, or Archived');
     }
-    const saved = await patchProductStatus(req.user.company_id, req.validated.params.id, status);
+    const saved = await patchProductStatus(req.user.organization_id, req.validated.params.id, status);
     res.json(saved);
   }),
 );
@@ -331,24 +331,24 @@ resourcesRouter.delete(
   validate(idParam),
   asyncHandler(async (req, res) => {
     const { rows } = await query(
-      'SELECT file_path FROM product_assets WHERE company_id = $1 AND product_id = $2',
-      [req.user.company_id, req.validated.params.id],
+      'SELECT file_path FROM product_assets WHERE organization_id = $1 AND product_id = $2',
+      [req.user.organization_id, req.validated.params.id],
     );
     for (const row of rows) {
       await deleteObject(row.file_path);
     }
 
-    const legacy = await query('SELECT object_key FROM files WHERE company_id = $1 AND product_id = $2', [
-      req.user.company_id,
+    const legacy = await query('SELECT object_key FROM files WHERE organization_id = $1 AND product_id = $2', [
+      req.user.organization_id,
       req.validated.params.id,
     ]);
     for (const row of legacy.rows) {
       await deleteObject(row.object_key);
     }
 
-    const deleted = await query('DELETE FROM products WHERE id = $1 AND company_id = $2 RETURNING id', [
+    const deleted = await query('DELETE FROM products WHERE id = $1 AND organization_id = $2 RETURNING id', [
       req.validated.params.id,
-      req.user.company_id,
+      req.user.organization_id,
     ]);
     if (!deleted.rows[0]) throw new ApiError(404, 'Product not found');
     res.status(204).end();
@@ -359,7 +359,7 @@ resourcesRouter.get(
   '/products/:id/metrics',
   validate(idParam),
   asyncHandler(async (req, res) => {
-    const metrics = await getProductMetrics(req.user.company_id, req.validated.params.id);
+    const metrics = await getProductMetrics(req.user.organization_id, req.validated.params.id);
     res.json(metrics);
   }),
 );
@@ -368,7 +368,7 @@ resourcesRouter.get(
   '/products/:id/qr',
   validate(idParam),
   asyncHandler(async (req, res) => {
-    const product = await getProductById(req.user.company_id, req.validated.params.id);
+    const product = await getProductById(req.user.organization_id, req.validated.params.id);
     if (!product) throw new ApiError(404, 'Product not found');
     // Return existing QR, or try to generate one, or return null if no model
     const qr = product.qr ?? await ensureProductQr(req.validated.params.id);
@@ -383,8 +383,8 @@ resourcesRouter.get(
 resourcesRouter.get(
   '/catalogs',
   asyncHandler(async (req, res) => {
-    const { rows } = await query('SELECT * FROM catalogs WHERE company_id = $1 ORDER BY created_at DESC', [
-      req.user.company_id,
+    const { rows } = await query('SELECT * FROM catalogs WHERE organization_id = $1 ORDER BY created_at DESC', [
+      req.user.organization_id,
     ]);
     res.json(rows);
   }),
@@ -394,9 +394,9 @@ resourcesRouter.get(
   '/catalogs/:id',
   validate(idParam),
   asyncHandler(async (req, res) => {
-    const { rows } = await query('SELECT * FROM catalogs WHERE id = $1 AND company_id = $2', [
+    const { rows } = await query('SELECT * FROM catalogs WHERE id = $1 AND organization_id = $2', [
       req.validated.params.id,
-      req.user.company_id,
+      req.user.organization_id,
     ]);
     if (!rows[0]) throw new ApiError(404, 'Catalog not found');
 
@@ -420,9 +420,9 @@ resourcesRouter.post(
   upload.single('file'),
   asyncHandler(async (req, res) => {
     if (!req.file) throw new ApiError(400, 'No PDF file provided');
-    const { rows } = await query('SELECT * FROM catalogs WHERE id = $1 AND company_id = $2', [
+    const { rows } = await query('SELECT * FROM catalogs WHERE id = $1 AND organization_id = $2', [
       req.validated.params.id,
-      req.user.company_id,
+      req.user.organization_id,
     ]);
     if (!rows[0]) throw new ApiError(404, 'Catalog not found');
 
@@ -451,11 +451,11 @@ resourcesRouter.post(
       
       const assetResult = await query(
         `INSERT INTO product_assets
-         (company_id, product_id, asset_type, original_name, file_name, file_path, public_url, mime_type, size_bytes, checksum_sha256, metadata)
+         (organization_id, product_id, asset_type, original_name, file_name, file_path, public_url, mime_type, size_bytes, checksum_sha256, metadata)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
          RETURNING *`,
         [
-          product.company_id,
+          product.organization_id,
           productId,
           inferredAssetType,
           originalName || objectKey.split('/').pop(),
@@ -503,7 +503,7 @@ resourcesRouter.post(
         qr = await ensureProductQr(productId);
       }
 
-      const updatedProduct = await getProductById(product.company_id, productId);
+      const updatedProduct = await getProductById(product.organization_id, productId);
 
       res.status(201).json({
         ...serializeAsset(asset),
@@ -516,11 +516,11 @@ resourcesRouter.post(
 
     const category = mimeType?.startsWith('image/') ? 'image' : (mimeType?.includes('pdf') ? 'document' : 'other');
     const { rows } = await query(
-      `INSERT INTO files (company_id, product_id, file_category, original_name, object_key, url, mime_type, size_bytes, checksum_sha256)
+      `INSERT INTO files (organization_id, product_id, file_category, original_name, object_key, url, mime_type, size_bytes, checksum_sha256)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
        RETURNING *`,
       [
-        req.user.company_id,
+        req.user.organization_id,
         null,
         category,
         originalName || objectKey.split('/').pop(),
@@ -552,11 +552,11 @@ resourcesRouter.post(
 
     const stored = await uploadBuffer(req.file);
     const { rows } = await query(
-      `INSERT INTO files (company_id, product_id, file_category, original_name, object_key, url, mime_type, size_bytes, checksum_sha256)
+      `INSERT INTO files (organization_id, product_id, file_category, original_name, object_key, url, mime_type, size_bytes, checksum_sha256)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
        RETURNING *`,
       [
-        req.user.company_id,
+        req.user.organization_id,
         null,
         stored.category,
         req.file.originalname,
@@ -577,7 +577,7 @@ resourcesRouter.delete(
   validate(idParam),
   asyncHandler(async (req, res) => {
     const { id } = req.validated.params;
-    const legacy = await query('SELECT object_key FROM files WHERE id = $1 AND company_id = $2', [id, req.user.company_id]);
+    const legacy = await query('SELECT object_key FROM files WHERE id = $1 AND organization_id = $2', [id, req.user.organization_id]);
     if (legacy.rows[0]) {
       await deleteObject(legacy.rows[0].object_key);
       await query('DELETE FROM files WHERE id = $1', [id]);
@@ -585,9 +585,9 @@ resourcesRouter.delete(
       return;
     }
 
-    const asset = await query('SELECT file_path FROM product_assets WHERE id = $1 AND company_id = $2', [
+    const asset = await query('SELECT file_path FROM product_assets WHERE id = $1 AND organization_id = $2', [
       id,
-      req.user.company_id,
+      req.user.organization_id,
     ]);
     if (!asset.rows[0]) throw new ApiError(404, 'File not found');
 
@@ -613,7 +613,7 @@ resourcesRouter.post(
       const qrDataUrl = await QRCode.toDataURL(targetUrl, { width: 1024, margin: 1 });
       res.status(201).json({
         id: `catalog-${id}`,
-        company_id: req.user.company_id,
+        organization_id: req.user.organization_id,
         product_id: null,
         product_slug: `catalog-${id}`,
         target_url: targetUrl,
@@ -630,8 +630,8 @@ resourcesRouter.post(
 resourcesRouter.get(
   '/leads',
   asyncHandler(async (req, res) => {
-    const { rows } = await query('SELECT * FROM leads WHERE company_id = $1 ORDER BY created_at DESC', [
-      req.user.company_id,
+    const { rows } = await query('SELECT * FROM leads WHERE organization_id = $1 ORDER BY created_at DESC', [
+      req.user.organization_id,
     ]);
     res.json(rows);
   }),
@@ -643,11 +643,11 @@ resourcesRouter.delete('/leads/:id', requireRole('Sales User'), validate(idParam
 resourcesRouter.post('/analytics/events', validate(eventSchema), asyncHandler(async (req, res) => {
   const event = req.validated.body;
   const { rows } = await query(
-    `INSERT INTO analytics_events (company_id, product_id, catalog_id, lead_id, event_type, metadata)
+    `INSERT INTO analytics_events (organization_id, product_id, catalog_id, lead_id, event_type, metadata)
      VALUES ($1,$2,$3,$4,$5,$6)
      RETURNING *`,
     [
-      req.user.company_id,
+      req.user.organization_id,
       event.productId ?? null,
       event.catalogId ?? null,
       event.leadId ?? null,
@@ -662,21 +662,21 @@ resourcesRouter.get('/analytics/summary', asyncHandler(async (req, res) => {
   const counts = await query(
     `SELECT event_type, count(*)::int AS count
      FROM analytics_events
-     WHERE company_id = $1
+     WHERE organization_id = $1
      GROUP BY event_type`,
-    [req.user.company_id],
+    [req.user.organization_id],
   );
-  const leads = await query('SELECT status, count(*)::int AS count FROM leads WHERE company_id=$1 GROUP BY status', [
-    req.user.company_id,
+  const leads = await query('SELECT status, count(*)::int AS count FROM leads WHERE organization_id=$1 GROUP BY status', [
+    req.user.organization_id,
   ]);
   res.json({ events: counts.rows, leads: leads.rows });
 }));
 
 function readOwned(table) {
   return asyncHandler(async (req, res) => {
-    const { rows } = await query(`SELECT * FROM ${table} WHERE id = $1 AND company_id = $2`, [
+    const { rows } = await query(`SELECT * FROM ${table} WHERE id = $1 AND organization_id = $2`, [
       req.validated.params.id,
-      req.user.company_id,
+      req.user.organization_id,
     ]);
     if (!rows[0]) throw new ApiError(404, 'Resource not found');
     res.json(rows[0]);
@@ -685,9 +685,9 @@ function readOwned(table) {
 
 function deleteOwned(table) {
   return asyncHandler(async (req, res) => {
-    const { rows } = await query(`DELETE FROM ${table} WHERE id = $1 AND company_id = $2 RETURNING id`, [
+    const { rows } = await query(`DELETE FROM ${table} WHERE id = $1 AND organization_id = $2 RETURNING id`, [
       req.validated.params.id,
-      req.user.company_id,
+      req.user.organization_id,
     ]);
     if (!rows[0]) throw new ApiError(404, 'Resource not found');
     res.status(204).end();
@@ -704,11 +704,11 @@ function saveCatalog(mode) {
     const result =
       mode === 'create'
         ? await query(
-            `INSERT INTO catalogs (company_id, name, description, status, slug, created_by, published_at)
+            `INSERT INTO catalogs (organization_id, name, description, status, slug, created_by, published_at)
              VALUES ($1,$2,$3,$4,$5,$6,$7)
              RETURNING *`,
             [
-              req.user.company_id,
+              req.user.organization_id,
               catalog.name,
               catalog.description ?? null,
               catalog.status,
@@ -721,8 +721,8 @@ function saveCatalog(mode) {
             `UPDATE catalogs SET name=$1, description=$2, status=$3,
              published_at = CASE WHEN $6::text='Published' THEN coalesce(published_at, now()) ELSE published_at END,
              updated_at=now()
-             WHERE id=$4 AND company_id=$5 RETURNING *`,
-            [catalog.name, catalog.description ?? null, catalog.status, req.validated.params.id, req.user.company_id, catalog.status],
+             WHERE id=$4 AND organization_id=$5 RETURNING *`,
+            [catalog.name, catalog.description ?? null, catalog.status, req.validated.params.id, req.user.organization_id, catalog.status],
           );
 
     const saved = result.rows[0];
@@ -746,7 +746,7 @@ async function saveLead(req, res) {
     ? await query(
         `UPDATE leads SET name=$1,email=$2,phone=$3,company=$4,product_id=$5,catalog_id=$6,status=$7,
          source=$8,score=$9,notes=$10,updated_at=now()
-         WHERE id=$11 AND company_id=$12 RETURNING *`,
+         WHERE id=$11 AND organization_id=$12 RETURNING *`,
         [
           lead.name,
           lead.email,
@@ -759,14 +759,14 @@ async function saveLead(req, res) {
           lead.score,
           lead.notes ?? null,
           req.validated.params.id,
-          req.user.company_id,
+          req.user.organization_id,
         ],
       )
     : await query(
-        `INSERT INTO leads (company_id, product_id, catalog_id, name, email, phone, company, status, source, score, notes)
+        `INSERT INTO leads (organization_id, product_id, catalog_id, name, email, phone, company, status, source, score, notes)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
         [
-          req.user.company_id,
+          req.user.organization_id,
           lead.productId ?? null,
           lead.catalogId ?? null,
           lead.name,

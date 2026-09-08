@@ -639,7 +639,7 @@ export function LeadManagementPage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
-      setTickets(data);
+      setTickets(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
     } finally {

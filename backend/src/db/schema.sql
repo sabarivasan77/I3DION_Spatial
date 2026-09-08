@@ -24,7 +24,7 @@ DO $$ BEGIN
   CREATE TYPE product_asset_type AS ENUM ('thumbnail', 'image', 'model', 'usdz_model', 'document', 'qr_png', 'qr_svg');
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-CREATE TABLE IF NOT EXISTS companies (
+CREATE TABLE IF NOT EXISTS organizations (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
   name text NOT NULL,
   website text,
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS companies (
 
 CREATE TABLE IF NOT EXISTS users (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid REFERENCES companies(id) ON DELETE SET NULL,
+  organization_id uuid REFERENCES organizations(id) ON DELETE SET NULL,
   name text NOT NULL,
   email text NOT NULL UNIQUE,
   phone text,
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS products (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   name text NOT NULL,
   category text NOT NULL,
   description text,
@@ -93,11 +93,11 @@ ALTER TYPE product_asset_type ADD VALUE IF NOT EXISTS 'usdz_model';
 ALTER TYPE product_asset_type ADD VALUE IF NOT EXISTS 'qr_png';
 ALTER TYPE product_asset_type ADD VALUE IF NOT EXISTS 'qr_svg';
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_products_company_slug ON products(company_id, slug) WHERE slug IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_products_company_slug ON products(organization_id, slug) WHERE slug IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS files (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   product_id uuid REFERENCES products(id) ON DELETE SET NULL,
   file_category text NOT NULL DEFAULT 'document' CHECK (file_category IN ('image', 'video', 'model', 'document')),
   original_name text NOT NULL,
@@ -116,7 +116,7 @@ ALTER TABLE files ADD CONSTRAINT files_file_category_check CHECK (file_category 
 
 CREATE TABLE IF NOT EXISTS product_assets (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   product_id uuid NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   asset_type product_asset_type NOT NULL,
   original_name text NOT NULL,
@@ -134,7 +134,7 @@ ALTER TABLE product_assets ADD COLUMN IF NOT EXISTS metadata jsonb NOT NULL DEFA
 
 CREATE TABLE IF NOT EXISTS catalogs (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   name text NOT NULL,
   description text,
   status product_status NOT NULL DEFAULT 'Draft',
@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS catalog_products (
 
 CREATE TABLE IF NOT EXISTS qr_codes (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   product_id uuid NOT NULL UNIQUE REFERENCES products(id) ON DELETE CASCADE,
   product_slug text NOT NULL,
   target_url text NOT NULL,
@@ -183,13 +183,13 @@ ALTER TABLE qr_codes DROP COLUMN IF EXISTS entity_id;
 
 CREATE TABLE IF NOT EXISTS leads (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   product_id uuid REFERENCES products(id) ON DELETE SET NULL,
   catalog_id uuid REFERENCES catalogs(id) ON DELETE SET NULL,
   name text NOT NULL,
   email text NOT NULL,
   phone text,
-  company text,
+  organization text,
   status lead_status NOT NULL DEFAULT 'New',
   source text NOT NULL DEFAULT 'Catalog',
   score integer NOT NULL DEFAULT 0,
@@ -200,7 +200,7 @@ CREATE TABLE IF NOT EXISTS leads (
 
 CREATE TABLE IF NOT EXISTS analytics_events (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid REFERENCES companies(id) ON DELETE CASCADE,
+  organization_id uuid REFERENCES organizations(id) ON DELETE CASCADE,
   product_id uuid REFERENCES products(id) ON DELETE SET NULL,
   catalog_id uuid REFERENCES catalogs(id) ON DELETE SET NULL,
   lead_id uuid REFERENCES leads(id) ON DELETE SET NULL,
@@ -218,7 +218,7 @@ ALTER TABLE analytics_events ADD CONSTRAINT analytics_events_event_type_check
 
 CREATE TABLE IF NOT EXISTS product_animations (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   product_id uuid NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   name text NOT NULL,
   animation_key text NOT NULL,
@@ -234,7 +234,7 @@ CREATE TABLE IF NOT EXISTS product_animations (
 
 CREATE TABLE IF NOT EXISTS product_hotspots (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   product_id uuid NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   title text NOT NULL,
   content text,
@@ -249,7 +249,7 @@ CREATE TABLE IF NOT EXISTS product_hotspots (
 
 CREATE TABLE IF NOT EXISTS lead_activities (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   lead_id uuid NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
   user_id uuid REFERENCES users(id) ON DELETE SET NULL,
   activity_type text NOT NULL CHECK (activity_type IN ('note', 'email', 'call', 'meeting', 'status_change', 'task')),
@@ -262,7 +262,7 @@ CREATE TABLE IF NOT EXISTS lead_activities (
 
 CREATE TABLE IF NOT EXISTS audit_logs (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid REFERENCES companies(id) ON DELETE CASCADE,
+  organization_id uuid REFERENCES organizations(id) ON DELETE CASCADE,
   user_id uuid REFERENCES users(id) ON DELETE SET NULL,
   action text NOT NULL,
   entity_type text,
@@ -281,7 +281,7 @@ ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS ip_address text;
 ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS user_agent text;
 
 CREATE TABLE IF NOT EXISTS company_preferences (
-  company_id uuid PRIMARY KEY REFERENCES companies(id) ON DELETE CASCADE,
+  organization_id uuid PRIMARY KEY REFERENCES organizations(id) ON DELETE CASCADE,
   onboarding_enabled boolean NOT NULL DEFAULT true,
   default_brand_color text NOT NULL DEFAULT '#2563EB',
   default_catalog_visibility text NOT NULL DEFAULT 'private' CHECK (default_catalog_visibility IN ('private', 'public')),
@@ -294,7 +294,7 @@ CREATE TABLE IF NOT EXISTS company_preferences (
 
 CREATE TABLE IF NOT EXISTS support_tickets (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   user_id uuid REFERENCES users(id) ON DELETE SET NULL,
   category text NOT NULL CHECK (category IN ('FAQ', 'Contact Support', 'Report Issue', 'Feature Request', 'Documentation')),
   subject text NOT NULL,
@@ -306,7 +306,7 @@ CREATE TABLE IF NOT EXISTS support_tickets (
 
 CREATE TABLE IF NOT EXISTS notifications (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   user_id uuid REFERENCES users(id) ON DELETE CASCADE,
   title text NOT NULL,
   body text,
@@ -317,7 +317,7 @@ CREATE TABLE IF NOT EXISTS notifications (
 
 CREATE TABLE IF NOT EXISTS integrations (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   provider text NOT NULL,
   status integration_status NOT NULL DEFAULT 'Inactive',
   config jsonb NOT NULL DEFAULT '{}'::jsonb,
@@ -325,7 +325,7 @@ CREATE TABLE IF NOT EXISTS integrations (
   last_sync_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (company_id, provider)
+  UNIQUE (organization_id, provider)
 );
 
 -- The user_sessions and user_devices tables have been removed to migrate to Supabase Auth.
@@ -390,7 +390,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAU
 
 -- 4. Audit Logs (Enterprise Compliance)
 -- (Schema unified in main definitions above)
-CREATE INDEX IF NOT EXISTS idx_audit_logs_company ON audit_logs(company_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_company ON audit_logs(organization_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at);
@@ -402,7 +402,7 @@ EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 CREATE TABLE IF NOT EXISTS security_alerts (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_id uuid REFERENCES companies(id) ON DELETE CASCADE,
+  organization_id uuid REFERENCES organizations(id) ON DELETE CASCADE,
   user_id uuid REFERENCES users(id) ON DELETE SET NULL,
   alert_type text NOT NULL, -- e.g., 'Brute Force Attempt', 'New Device Login'
   severity alert_severity NOT NULL DEFAULT 'Medium',
@@ -412,4 +412,25 @@ CREATE TABLE IF NOT EXISTS security_alerts (
   resolved_at timestamptz,
   resolved_by uuid REFERENCES users(id) ON DELETE SET NULL
 );
-CREATE INDEX IF NOT EXISTS idx_security_alerts_company ON security_alerts(company_id, is_resolved);
+CREATE INDEX IF NOT EXISTS idx_security_alerts_company ON security_alerts(organization_id, is_resolved);
+
+CREATE TABLE IF NOT EXISTS organization_members (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role user_role NOT NULL DEFAULT 'Viewer',
+  joined_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(organization_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS organization_domains (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  domain text NOT NULL,
+  verification_status text NOT NULL DEFAULT 'Pending',
+  verification_token text,
+  verified_at timestamptz,
+  auto_join_enabled boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(domain)
+);

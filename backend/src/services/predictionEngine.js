@@ -5,7 +5,7 @@ class PredictionEngine {
    * Predict conversion probability for a lead using heuristic ML feature weights.
    * A real model would use logistic regression or XGBoost.
    */
-  async predictLeadConversion(companyId, leadId) {
+  async predictLeadConversion(organizationId, leadId) {
     try {
       // Fetch lead's interaction history
       const res = await pool.query(`
@@ -18,9 +18,9 @@ class PredictionEngine {
         FROM leads l
         LEFT JOIN viewer_sessions vs ON vs.lead_id = l.id
         LEFT JOIN analytics_events a ON a.session_id = vs.visitor_id
-        WHERE l.id = $1 AND l.company_id = $2
+        WHERE l.id = $1 AND l.organization_id = $2
         GROUP BY l.id
-      `, [leadId, companyId]);
+      `, [leadId, organizationId]);
 
       if (res.rows.length === 0) return 0;
       

@@ -215,11 +215,11 @@ export function SalesIntelligencePage() {
           </div>
         </Card>
 
-        {/* AI Insights */}
+        {/* Predictive Insights */}
         <Card className="p-6 xl:col-span-1 bg-gradient-to-br from-slate-900 to-slate-800 text-white border-0 shadow-xl shadow-slate-900/20">
           <div className="flex items-center gap-2 mb-1">
              <Brain size={20} className="text-blue-400" />
-             <h3 className="text-lg font-bold">AI Recommendations</h3>
+             <h3 className="text-lg font-bold">Predictive Recommendations</h3>
           </div>
           <p className="text-sm text-slate-400 mb-6">Automatically generated from your data</p>
           

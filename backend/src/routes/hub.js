@@ -18,7 +18,7 @@ hubRouter.get(
              u.name as creator_name, u.avatar_url as creator_avatar,
              (p.likes_count * 5 + p.views_count * 1) as trending_score
       FROM products p
-      JOIN companies c ON p.company_id = c.id
+      JOIN organizations c ON p.organization_id = c.id
       LEFT JOIN users u ON p.created_by = u.id
       WHERE p.is_public = true AND p.status = 'Published'
       ORDER BY trending_score DESC, p.created_at DESC
@@ -40,7 +40,7 @@ hubRouter.get(
     let sql = `
       SELECT p.*, c.name as company_name, u.name as creator_name
       FROM products p
-      JOIN companies c ON p.company_id = c.id
+      JOIN organizations c ON p.organization_id = c.id
       LEFT JOIN users u ON p.created_by = u.id
       WHERE p.is_public = true AND p.status = 'Published'
     `;
@@ -76,7 +76,7 @@ hubRouter.get(
       SELECT p.*, c.name as company_name, c.logo_url as company_logo, 
              u.name as creator_name, u.avatar_url as creator_avatar
       FROM products p
-      JOIN companies c ON p.company_id = c.id
+      JOIN organizations c ON p.organization_id = c.id
       LEFT JOIN users u ON p.created_by = u.id
       WHERE p.id = $1 AND p.is_public = true AND p.status = 'Published'
     `, [id]);
