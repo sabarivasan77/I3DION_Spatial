@@ -21,10 +21,38 @@ export class EntitlementService {
       [organizationId]
     );
 
+    if (subRes.rows.length === 0) {
+      // Auto-repair missing or orphaned subscription record
+      await pool.query(
+        `INSERT INTO subscriptions (organization_id, plan_id, status)
+         VALUES ($1, 'FREE', 'active')
+         ON CONFLICT (organization_id) DO UPDATE SET plan_id = 'FREE', status = 'active'`,
+        [organizationId]
+      );
+
+      const retry = await pool.query(
+        `SELECT p.id as plan_id, p.name as plan_name, 
+                COALESCE(s.custom_max_products, p.max_products) as max_products, 
+                COALESCE(s.custom_max_catalogs, p.max_catalogs) as max_catalogs,
+                COALESCE(s.custom_max_3d_models, p.max_3d_models) as max_3d_models, 
+                COALESCE(s.custom_max_storage_bytes, p.max_storage_bytes) as max_storage_bytes, 
+                COALESCE(s.custom_max_team_members, p.max_team_members) as max_team_members, 
+                COALESCE(s.custom_features, p.features) as features,
+                s.custom_price_inr,
+                s.status as subscription_status
+         FROM subscriptions s
+         JOIN plans p ON s.plan_id = p.id
+         WHERE s.organization_id = $1`,
+        [organizationId]
+      );
+      subRes.rows = retry.rows;
+    }
+
     const sub = subRes.rows[0] || {
       plan_id: 'FREE',
+      plan_name: 'Free',
       max_products: 3,
-      max_catalogs: 2,
+      max_catalogs: 3,
       max_3d_models: 3,
       max_storage_bytes: 52428800,
       max_team_members: 1,

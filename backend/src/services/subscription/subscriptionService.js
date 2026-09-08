@@ -23,14 +23,30 @@ export class SubscriptionService {
     );
 
     if (res.rows.length === 0) {
-      // Fallback: create FREE subscription if missing
+      // Fix missing or orphaned subscription plan_id
       await pool.query(
         `INSERT INTO subscriptions (organization_id, plan_id, status)
          VALUES ($1, 'FREE', 'active')
-         ON CONFLICT (organization_id) DO NOTHING`,
+         ON CONFLICT (organization_id) DO UPDATE SET plan_id = 'FREE', status = 'active'`,
         [organizationId]
       );
-      return this.getOrganizationSubscription(organizationId);
+      
+      const retry = await pool.query(
+        `SELECT s.*, p.name as plan_name, p.description as plan_description, 
+                COALESCE(s.custom_price_inr, p.price_monthly_inr) as price_monthly_inr,
+                p.price_yearly_inr, 
+                COALESCE(s.custom_max_products, p.max_products) as max_products, 
+                COALESCE(s.custom_max_catalogs, p.max_catalogs) as max_catalogs, 
+                COALESCE(s.custom_max_3d_models, p.max_3d_models) as max_3d_models, 
+                COALESCE(s.custom_max_storage_bytes, p.max_storage_bytes) as max_storage_bytes, 
+                COALESCE(s.custom_max_team_members, p.max_team_members) as max_team_members, 
+                COALESCE(s.custom_features, p.features) as features
+         FROM subscriptions s
+         JOIN plans p ON s.plan_id = p.id
+         WHERE s.organization_id = $1`,
+        [organizationId]
+      );
+      return retry.rows[0];
     }
 
     return res.rows[0];
