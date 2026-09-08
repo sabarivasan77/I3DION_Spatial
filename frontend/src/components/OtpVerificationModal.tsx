@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ShieldCheck, KeyRound } from 'lucide-react';
+import { X, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface OtpVerificationModalProps {

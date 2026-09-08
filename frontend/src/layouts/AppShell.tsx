@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Logo } from '../components/Logo';
 import {
   BarChart3,
-  Bell,
   BookOpen,
   Box,
   CreditCard,

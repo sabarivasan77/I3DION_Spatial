@@ -1,8 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   Box,
-  Camera,
   FileText,
   Info,
   Mail,
@@ -12,11 +11,9 @@ import {
   Share2,
   Sparkles,
   X,
-  Phone,
   Building2,
   CheckCircle2,
-  Layers,
-  PlayCircle
+  Layers
 } from 'lucide-react';
 import ThreeProduct from '../components/ThreeProduct';
 import { ViewInARButton } from '../components/ViewInARButton';
@@ -27,7 +24,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export function PublicProductPage() {
   const { slug = '' } = useParams();
-  const [searchParams] = useSearchParams();
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -36,10 +32,9 @@ export function PublicProductPage() {
   const [autoRotate, setAutoRotate] = useState(true);
   const [leadModalOpen, setLeadModalOpen] = useState(false);
   const [leadIntent, setLeadIntent] = useState<'quote' | 'demo' | 'brochure' | 'contact'>('quote');
-  const [activeHotspot, setActiveHotspot] = useState<any>(null);
   const [copied, setCopied] = useState(false);
 
-  const { visitorId, returningVisitor, visitorInfo, trackEvent } = useVisitorSession(slug, product?.organization_id);
+  const { returningVisitor, visitorInfo, trackEvent } = useVisitorSession(slug, product?.organization_id);
 
   const containerRef = useRef<HTMLDivElement>(null);
 

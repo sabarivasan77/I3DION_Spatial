@@ -19,7 +19,6 @@ export const PublishingModal: React.FC<PublishingModalProps> = ({
   productId,
   productName,
   currentVisibility = 'PUBLIC',
-  currentApprovalStatus = 'PUBLISHED',
   onSuccess,
 }) => {
   const { token, user } = useAuthStore();
