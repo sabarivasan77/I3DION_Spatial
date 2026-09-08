@@ -1,5 +1,3 @@
-import { supabase } from '../lib/supabase';
-
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
 const API_TIMEOUT_MS = 60000; // Increased to 60s for 3D model uploads
 
@@ -612,3 +610,108 @@ export async function uploadFileWithProgress({
     request.send(file);
   });
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SAAS BILLING & ORGANIZATION CLIENT API
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface SaaSPlan {
+  id: string;
+  name: string;
+  description: string;
+  price_monthly_inr: number;
+  price_yearly_inr: number;
+  max_products: number;
+  max_catalogs: number;
+  max_3d_models: number;
+  max_storage_bytes: number;
+  max_team_members: number;
+  features: Record<string, boolean>;
+}
+
+export interface SaaSUsageAndPlan {
+  plan: {
+    id: string;
+    name: string;
+    limits: {
+      maxProducts: number;
+      maxCatalogs: number;
+      max3dModels: number;
+      maxStorageBytes: number;
+      maxTeamMembers: number;
+    };
+    features: Record<string, boolean>;
+    status: string;
+  };
+  usage: {
+    productsCount: number;
+    catalogsCount: number;
+    modelsCount: number;
+    storageBytesUsed: number;
+    teamMembersCount: number;
+  };
+}
+
+export async function fetchSaaSPlans(token: string): Promise<SaaSPlan[]> {
+  const res = await apiRequest<{ plans: SaaSPlan[] }>('/billing/plans', { token });
+  return res.plans;
+}
+
+export async function fetchSaaSUsage(token: string): Promise<SaaSUsageAndPlan> {
+  return apiRequest<SaaSUsageAndPlan>('/billing/usage', { token });
+}
+
+export async function initiateCheckoutOrder(
+  token: string,
+  planId: string,
+  billingCycle: 'monthly' | 'yearly' = 'monthly'
+) {
+  return apiRequest<any>('/billing/checkout', {
+    token,
+    method: 'POST',
+    body: JSON.stringify({ planId, billingCycle })
+  });
+}
+
+export async function verifyCheckoutPayment(token: string, payload: any) {
+  return apiRequest<any>('/billing/verify', {
+    token,
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function cancelSaaSSubscription(token: string) {
+  return apiRequest<any>('/billing/cancel', {
+    token,
+    method: 'POST'
+  });
+}
+
+export async function fetchOrganizationProfile(token: string) {
+  return apiRequest<{ organization: any; members: any[]; pendingInvitations: any[] }>('/organization', { token });
+}
+
+export async function updateOrganizationProfile(token: string, payload: any) {
+  return apiRequest<any>('/organization', {
+    token,
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function inviteTeamMember(token: string, email: string, role: string) {
+  return apiRequest<any>('/organization/invitations', {
+    token,
+    method: 'POST',
+    body: JSON.stringify({ email, role })
+  });
+}
+
+export async function removeTeamMember(token: string, userId: string) {
+  return apiRequest<any>(`/organization/members/${userId}`, {
+    token,
+    method: 'DELETE'
+  });
+}
+

@@ -31,6 +31,8 @@ const CreatorProfilePage = lazy(() => import('./pages/hub/CreatorProfile').then(
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
 
 const SecurityDashboard = lazy(() => import('./pages/SecurityDashboard').then(m => ({ default: m.SecurityDashboard })));
+const BillingSettingsPage = lazy(() => import('./pages/settings/BillingSettingsPage').then(m => ({ default: m.BillingSettingsPage })));
+const TeamManagementPage = lazy(() => import('./pages/settings/TeamManagementPage').then(m => ({ default: m.TeamManagementPage })));
 
 export default function App() {
   const initialize = useAuthStore(state => state.initialize);
@@ -77,6 +79,8 @@ export default function App() {
         <Route path="analytics" element={<AnalyticsDashboardPage />} />
         <Route path="ai" element={<AiIntelligencePage />} />
         <Route path="settings" element={<CompanySettingsPage />} />
+        <Route path="settings/billing" element={<BillingSettingsPage />} />
+        <Route path="settings/team" element={<TeamManagementPage />} />
         <Route path="security" element={<SecurityDashboard />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="support" element={<SupportDashboardPage />} />

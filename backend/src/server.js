@@ -95,6 +95,10 @@ apiRouter.get('/health', async (_req, res) => {
   });
 });
 
+import billingRouter from './routes/billing.js';
+import webhooksRouter from './routes/webhooks.js';
+import organizationRouter from './routes/organization.js';
+
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/public', publicRouter);
 apiRouter.use('/analytics', analyticsRouter);
@@ -105,6 +109,9 @@ apiRouter.use('/ai', aiRouter);
 apiRouter.use('/support', supportRouter);
 apiRouter.use('/device', deviceRouter);
 apiRouter.use('/security', securityRouter);
+apiRouter.use('/billing', billingRouter);
+apiRouter.use('/webhooks', webhooksRouter);
+apiRouter.use('/organization', organizationRouter);
 apiRouter.use('/', resourcesRouter);
 
 app.use('/api', apiRouter);

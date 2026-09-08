@@ -281,12 +281,17 @@ resourcesRouter.get(
   }),
 );
 
+import { enforceQuota } from '../middleware/entitlement.js';
+import { usageService } from '../services/usage/usageService.js';
+
 resourcesRouter.post(
   '/products',
   requireRole('Manager'),
+  enforceQuota('products'),
   validate(productSchema),
   asyncHandler(async (req, res) => {
     const saved = await createProduct(req.user.organization_id, req.user.id, req.validated.body);
+    await usageService.incrementCounter(req.user.organization_id, 'products', 1);
     res.status(201).json(saved);
   }),
 );

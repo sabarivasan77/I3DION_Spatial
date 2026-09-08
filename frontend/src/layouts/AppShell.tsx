@@ -6,6 +6,7 @@ import {
   Bell,
   BookOpen,
   Box,
+  CreditCard,
   Headphones,
   HelpCircle,
   LogOut,
@@ -14,8 +15,6 @@ import {
   Settings,
   Users,
   Globe,
-  Zap,
-  Shield,
   X,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -30,6 +29,8 @@ const navItems = [
   { label: 'Catalogs', path: '/catalog-builder', icon: BookOpen },
   { label: 'Leads', path: '/leads', icon: Users },
   { label: 'Analytics', path: '/analytics', icon: BarChart3 },
+  { label: 'Billing & Subscriptions', path: '/settings/billing', icon: CreditCard },
+  { label: 'Team Members', path: '/settings/team', icon: Users },
   { label: 'Settings', path: '/settings', icon: Settings },
 ];
 
