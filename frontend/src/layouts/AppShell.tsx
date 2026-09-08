@@ -99,21 +99,6 @@ function Sidebar({
           <Headphones size={20} />
           Support Dashboard
         </button>
-        <NavLink 
-          to="/support/kb" 
-          onClick={onClose}
-          className={({ isActive }) => cx("flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-slate-800/60 transition", isActive ? "bg-slate-800/60 text-white" : "text-slate-400")}
-        >
-          <BookOpen size={20} />
-          Knowledge Base
-        </NavLink>
-        <button 
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition" 
-          onClick={() => { onClose(); onLogout(); }}
-        >
-          <LogOut size={20} />
-          Log Out
-        </button>
       </div>
     </aside>
   );
