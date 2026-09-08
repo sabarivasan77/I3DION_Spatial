@@ -99,6 +99,8 @@ import billingRouter from './routes/billing.js';
 import webhooksRouter from './routes/webhooks.js';
 import organizationRouter from './routes/organization.js';
 import platformAdminRouter from './routes/platformAdmin.js';
+import publishingRouter from './routes/publishing.js';
+import notificationsRouter from './routes/notifications.js';
 
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/public', publicRouter);
@@ -114,6 +116,8 @@ apiRouter.use('/billing', billingRouter);
 apiRouter.use('/webhooks', webhooksRouter);
 apiRouter.use('/organization', organizationRouter);
 apiRouter.use('/platform-admin', platformAdminRouter);
+apiRouter.use('/publishing', publishingRouter);
+apiRouter.use('/notifications', notificationsRouter);
 apiRouter.use('/', resourcesRouter);
 
 app.use('/api', apiRouter);

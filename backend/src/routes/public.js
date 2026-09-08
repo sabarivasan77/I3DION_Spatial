@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { query } from '../db/pool.js';
 import { validate } from '../middleware/validate.js';
@@ -60,7 +61,19 @@ const publicLeadSchema = z.object({
 publicRouter.get(
   '/products/:slug',
   asyncHandler(async (req, res) => {
-    const product = await getPublicProductDetailsBySlug(req.params.slug);
+    let authenticatedUser = null;
+    const headerToken = req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : null;
+    if (headerToken) {
+      try {
+        const payload = jwt.verify(headerToken, process.env.JWT_SECRET || 'dev_jwt_secret_do_not_use_in_prod');
+        const userRes = await query('SELECT id, name, email, organization_id, role FROM users WHERE id = $1', [payload.userId]);
+        authenticatedUser = userRes.rows[0] || null;
+      } catch (err) {
+        // Unauthenticated or invalid token, proceed as anonymous
+      }
+    }
+
+    const product = await getPublicProductDetailsBySlug(req.params.slug, authenticatedUser);
     if (!product) throw new ApiError(404, 'Product not found or unavailable');
     res.json(product);
   }),

@@ -64,3 +64,49 @@ aiRouter.get('/dashboard', requireAuth, asyncHandler(async (req, res) => {
     active_models: activeModelRes.rows
   });
 }));
+
+// POST /api/ai/assistant/chat - Permission-Aware Workspace Assistant
+aiRouter.post('/assistant/chat', requireAuth, asyncHandler(async (req, res) => {
+  const { message } = req.body;
+  const user = req.user;
+  const prompt = (message || '').toLowerCase();
+
+  let reply = "I'm your I3DION Spatial Workspace Assistant. I can help you with 3D product management, catalog creation, AR publishing, billing, and lead analytics.";
+  let actionBtn = null;
+
+  // 1. Permission Check for Billing Queries
+  if (prompt.includes('billing') || prompt.includes('subscription') || prompt.includes('plan') || prompt.includes('payment') || prompt.includes('invoice')) {
+    if (user.role === 'Sales User' || user.role === 'Viewer') {
+      reply = "You don't have permission to access organization billing and subscription settings. Please contact your Organization Admin or Owner.";
+    } else {
+      reply = "You can view and manage your organization's subscription plan, custom entitlements, and invoice history in the Billing & Subscriptions settings.";
+      actionBtn = { text: 'Manage Billing', path: '/settings/billing' };
+    }
+  } 
+  // 2. Publishing Queries
+  else if (prompt.includes('publish') || prompt.includes('draft') || prompt.includes('visibility') || prompt.includes('internal')) {
+    reply = "Products and Catalogs support three visibility modes: Public (anyone with link), Organization Only (members of your company), and Restricted (Enterprise explicit teams/users). You can set visibility when editing a product.";
+    actionBtn = { text: 'View Products', path: '/products' };
+  } 
+  // 3. Lead & Analytics Queries
+  else if (prompt.includes('lead') || prompt.includes('qr') || prompt.includes('ar') || prompt.includes('scan') || prompt.includes('analytics')) {
+    reply = "Your spatial analytics track product 3D views, AR launch sessions, QR code scans, and intent-scored leads in real-time.";
+    actionBtn = { text: 'View Leads', path: '/leads' };
+  }
+  // 4. Team & Invite Queries
+  else if (prompt.includes('invite') || prompt.includes('member') || prompt.includes('role') || prompt.includes('team')) {
+    if (user.role === 'Viewer' || user.role === 'Sales User') {
+      reply = "Inviting team members and managing roles requires Admin or Manager permissions.";
+    } else {
+      reply = "You can invite new team members via email and assign roles (Admin, Manager, Sales User, Viewer) in Team Management.";
+      actionBtn = { text: 'Invite Team', path: '/settings/team' };
+    }
+  }
+
+  res.json({
+    reply,
+    userRole: user.role,
+    organizationId: user.organization_id,
+    actionBtn,
+  });
+}));

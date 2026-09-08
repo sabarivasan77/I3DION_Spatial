@@ -21,6 +21,7 @@ import { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { cx } from '../utils/format';
 import { GlobalSearch, SearchTrigger } from '../components/GlobalSearch';
+import { NotificationCenter } from '../components/NotificationCenter';
 
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: BarChart3 },
@@ -156,13 +157,7 @@ export default function AppShell() {
             </button>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              className="relative rounded-full p-2 text-slate-600 hover:bg-slate-100"
-              onClick={() => alert('No new notifications')}
-              title="Notifications"
-            >
-              <Bell size={20} />
-            </button>
+            <NotificationCenter />
             <button
               className="rounded-full p-2 text-slate-600 hover:bg-slate-100"
               onClick={() => navigate('/support')}

@@ -314,17 +314,104 @@ export async function getProductBySlug(slug) {
   return getProductById(product.organization_id, product.id);
 }
 
-export async function getPublicProductDetailsBySlug(slug) {
+export async function getPublishingAccessForProduct(productId) {
+  const { rows } = await query(
+    `SELECT * FROM publishing_access WHERE product_id = $1 ORDER BY created_at DESC LIMIT 1`,
+    [productId]
+  );
+  return rows[0] || {
+    visibility: 'PUBLIC',
+    approval_status: 'PUBLISHED',
+    restricted_user_ids: [],
+    restricted_team_ids: [],
+  };
+}
+
+export async function setPublishingAccessForProduct({
+  organizationId,
+  productId,
+  visibility = 'PUBLIC',
+  approvalStatus = 'PUBLISHED',
+  userId,
+  restrictedUserIds = [],
+  restrictedTeamIds = [],
+}) {
+  const { rows } = await query(
+    `INSERT INTO publishing_access (organization_id, product_id, visibility, approval_status, published_by, restricted_user_ids, restricted_team_ids)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     RETURNING *`,
+    [
+      organizationId,
+      productId,
+      visibility,
+      approvalStatus,
+      userId,
+      JSON.stringify(restrictedUserIds),
+      JSON.stringify(restrictedTeamIds),
+    ]
+  );
+
+  // Sync products status column
+  const isPublic = visibility === 'PUBLIC';
+  const status = approvalStatus === 'PUBLISHED' ? 'Published' : (approvalStatus === 'DRAFT' ? 'Draft' : 'Draft');
+  await query(
+    `UPDATE products SET status = $1, is_public = $2, updated_at = now() WHERE id = $3`,
+    [status, isPublic, productId]
+  );
+
+  return rows[0];
+}
+
+export async function getPublicProductDetailsBySlug(slug, authenticatedUser = null) {
   const productResult = await query(
     `SELECT p.*, o.name as org_name, o.logo_url as org_logo, o.primary_color as org_color, o.website as org_website
      FROM products p
      JOIN organizations o ON p.organization_id = o.id
-     WHERE p.slug = $1 AND (p.status = 'Published' OR p.is_public = true)
+     WHERE p.slug = $1
      LIMIT 1`,
     [slug]
   );
   const product = productResult.rows[0];
   if (!product) return null;
+
+  // Fetch publishing access policy
+  const pubAccess = await getPublishingAccessForProduct(product.id);
+
+  // Visibility Check:
+  // 1. DRAFT state is restricted unless user is authenticated member of the organization
+  if (product.status === 'Draft' || pubAccess.approval_status === 'DRAFT') {
+    if (!authenticatedUser || authenticatedUser.organization_id !== product.organization_id) {
+      return { restrictedReason: 'DRAFT_MODE', message: 'This product is currently a draft and is not public.' };
+    }
+  }
+
+  // 2. ORGANIZATION visibility requires authenticated member of owning organization
+  if (pubAccess.visibility === 'ORGANIZATION') {
+    if (!authenticatedUser || authenticatedUser.organization_id !== product.organization_id) {
+      return {
+        restrictedReason: 'ORGANIZATION_ONLY',
+        message: 'This product is restricted to authorized organization members.',
+        organizationName: product.org_name,
+      };
+    }
+  }
+
+  // 3. RESTRICTED visibility requires explicit user or team membership
+  if (pubAccess.visibility === 'RESTRICTED') {
+    if (!authenticatedUser || authenticatedUser.organization_id !== product.organization_id) {
+      return {
+        restrictedReason: 'RESTRICTED_ACCESS',
+        message: 'This product has restricted access policy.',
+      };
+    }
+    const allowedUsers = pubAccess.restricted_user_ids || [];
+    if (allowedUsers.length > 0 && !allowedUsers.includes(authenticatedUser.id) && authenticatedUser.role !== 'Super Admin' && authenticatedUser.role !== 'Company Admin') {
+      return {
+        restrictedReason: 'RESTRICTED_ACCESS',
+        message: 'You are not explicitly authorized to view this restricted spatial product.',
+      };
+    }
+  }
 
   const [hotspotsRes, animationsRes] = await Promise.all([
     query('SELECT * FROM product_hotspots WHERE product_id = $1 AND is_enabled = true ORDER BY sort_order ASC', [product.id]),
@@ -334,6 +421,7 @@ export async function getPublicProductDetailsBySlug(slug) {
   const baseProduct = serializeProduct(product);
   return {
     ...baseProduct,
+    publishing: pubAccess,
     organization: {
       id: product.organization_id,
       name: product.org_name,

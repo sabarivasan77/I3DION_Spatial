@@ -110,24 +110,38 @@ export function PublicProductPage() {
     );
   }
 
-  if (errorMsg || !product) {
+  if (errorMsg || !product || product.restrictedReason) {
+    const isRestricted = product?.restrictedReason === 'ORGANIZATION_ONLY' || product?.restrictedReason === 'RESTRICTED_ACCESS';
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#050a15] p-4 text-white">
+      <div className="flex h-screen w-screen items-center justify-center bg-[#030712] p-4 text-white">
         <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900/90 p-8 text-center shadow-2xl backdrop-blur-xl">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+          <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border ${
+            isRestricted ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+          }`}>
             <Box size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-white">Product Unavailable</h1>
+          <h1 className="text-2xl font-bold text-white">
+            {isRestricted ? 'Organization Restricted Access' : 'Product Unavailable'}
+          </h1>
           <p className="mt-2 text-sm text-slate-400 leading-relaxed">
-            {errorMsg || 'This 3D product experience is not available or has been unpublished.'}
+            {product?.message || errorMsg || 'This 3D product experience is not available or has been unpublished.'}
           </p>
-          <div className="mt-6">
-            <a
-              href="/"
-              className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white transition hover:bg-blue-500 shadow-lg shadow-blue-600/30"
-            >
-              Return Home
-            </a>
+          <div className="mt-6 flex justify-center gap-3">
+            {isRestricted ? (
+              <a
+                href="/login"
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white transition hover:bg-blue-500 shadow-lg shadow-blue-600/30"
+              >
+                Sign In to Organization
+              </a>
+            ) : (
+              <a
+                href="/"
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white transition hover:bg-blue-500 shadow-lg shadow-blue-600/30"
+              >
+                Return Home
+              </a>
+            )}
           </div>
         </div>
       </div>

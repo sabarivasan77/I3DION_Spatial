@@ -5,6 +5,7 @@ import { useToast } from '../components/Toast';
 import { api, ApiClientError, uploadFileWithProgress } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { cx } from '../utils/format';
+import { NotificationSettingsPage } from './settings/NotificationSettingsPage';
 
 // ─── Settings ───
 
@@ -291,28 +292,7 @@ export function CompanySettingsPage() {
               <Button type="submit" disabled={securitySaving}><Lock size={18} />{securitySaving ? 'Changing...' : 'Change Password'}</Button>
             </form>
           )}
-          {tab === 'notifications' && (
-            <div className="space-y-6">
-              <SectionTitle title="Notification Preferences" />
-              <div className="space-y-4">
-                {[
-                  { key: 'emailNotifications', label: 'Email Notifications', desc: 'Receive updates about leads, AR sessions, and catalog activity via email.' },
-                  { key: 'inAppNotifications', label: 'In-App Notifications', desc: 'Show real-time notifications inside the application.' },
-                  { key: 'onboardingEnabled', label: 'Guided Onboarding', desc: 'Show onboarding tips and walkthroughs for new team members.' },
-                ].map(({ key, label, desc }) => (
-                  <label key={key} className="flex items-start gap-4 rounded-2xl border border-slate-200 p-4 cursor-pointer hover:bg-slate-50 transition">
-                    <div className="relative mt-0.5">
-                      <input type="checkbox" className="sr-only peer" checked={Boolean((prefs as any)[key])} onChange={(e) => setPrefs({ ...prefs, [key]: e.target.checked })} />
-                      <div className="h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary transition" />
-                      <div className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition peer-checked:translate-x-5" />
-                    </div>
-                    <div><p className="font-semibold">{label}</p><p className="text-sm text-slate-500">{desc}</p></div>
-                  </label>
-                ))}
-              </div>
-              <Button onClick={() => void savePreferences()} disabled={prefsSaving}><Save size={18} />{prefsSaving ? 'Saving...' : 'Save Notifications'}</Button>
-            </div>
-          )}
+          {tab === 'notifications' && <NotificationSettingsPage />}
           {tab === 'appearance' && (
             <div className="space-y-6">
               <SectionTitle title="Appearance & Catalog Defaults" />

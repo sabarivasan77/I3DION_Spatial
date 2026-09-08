@@ -7,10 +7,17 @@ const JWT_SECRET = config.jwtSecret || 'dev_jwt_secret_do_not_use_in_prod';
 
 const roleRank = {
   Viewer: 1,
+  'Analytics Viewer': 1,
+  'Read Only': 1,
+  Customer: 1,
   'Sales User': 2,
+  'Sales Executive': 2,
+  'Support Executive': 2,
+  Marketing: 2,
   Manager: 3,
   Admin: 4,
-  'Company Admin': 4, // Keep for backward compatibility if needed
+  'Company Admin': 5,
+  'Super Admin': 6,
 };
 
 export async function requireAuth(req, _res, next) {
@@ -68,7 +75,13 @@ export function requireRole(...roles) {
       return next(new ApiError(401, 'Authentication required'));
     }
 
-    const allowed = roles.some((role) => (roleRank[req.user.role] || 0) >= (roleRank[role] || 0));
+    const userRole = req.user.role;
+    if (userRole === 'Super Admin' || userRole === 'Company Admin') {
+      return next();
+    }
+
+    const userRank = roleRank[userRole] || 0;
+    const allowed = roles.some((role) => userRank >= (roleRank[role] || 0));
     if (!allowed) {
       return next(new ApiError(403, 'Insufficient permissions'));
     }
