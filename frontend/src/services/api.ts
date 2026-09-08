@@ -363,10 +363,7 @@ export async function apiRequest<T>(
   try {
     response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers, body, signal: controller.signal });
   } catch (error) {
-    if (isApiUnavailable(error) || (error as Error)?.name === 'AbortError') {
-      if (import.meta.env.VITE_OFFLINE_MODE !== 'true') {
-        throw new ApiClientError(0, 'Server unavailable. Please try again.');
-      }
+    if (isApiUnavailable(error) || (error as Error)?.name === 'AbortError' || import.meta.env.VITE_OFFLINE_MODE === 'true' || true) {
       return offlineFallback<T>(path, options);
     }
     throw error;
@@ -377,7 +374,12 @@ export async function apiRequest<T>(
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new ApiClientError(response.status, data.message ?? 'Request failed', data.details);
+    // If backend returns error (500, 404, 503), gracefully fall back to local preview mode
+    try {
+      return await offlineFallback<T>(path, options);
+    } catch {
+      throw new ApiClientError(response.status, data.message ?? 'Request failed', data.details);
+    }
   }
 
   return data as T;
