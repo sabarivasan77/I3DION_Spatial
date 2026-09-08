@@ -17,7 +17,7 @@ export interface SessionUser {
   companyId: string;
   name: string;
   email: string;
-  role: 'Admin' | 'Manager' | 'Sales User' | 'Viewer';
+  role: 'Super Admin' | 'Admin' | 'Manager' | 'Sales User' | 'Viewer' | 'Company Admin' | string;
 }
 
 export interface AuthResponse {
@@ -652,6 +652,32 @@ export interface SaaSUsageAndPlan {
   };
 }
 
+export interface OrganizationBillingInfo {
+  billing_name: string;
+  billing_email: string;
+  phone?: string;
+  tax_id?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  country?: string;
+}
+
+export interface BillingInvoice {
+  id: string;
+  invoice_number: string;
+  plan_id: string;
+  amount_inr: number;
+  tax_inr: number;
+  status: string;
+  period_start: string;
+  period_end: string;
+  pdf_url?: string;
+  created_at: string;
+}
+
 export async function fetchSaaSPlans(token: string): Promise<SaaSPlan[]> {
   const res = await apiRequest<{ plans: SaaSPlan[] }>('/billing/plans', { token });
   return res.plans;
@@ -659,6 +685,45 @@ export async function fetchSaaSPlans(token: string): Promise<SaaSPlan[]> {
 
 export async function fetchSaaSUsage(token: string): Promise<SaaSUsageAndPlan> {
   return apiRequest<SaaSUsageAndPlan>('/billing/usage', { token });
+}
+
+export async function fetchBillingInvoices(token: string): Promise<BillingInvoice[]> {
+  const res = await apiRequest<{ invoices: BillingInvoice[] }>('/billing/invoices', { token });
+  return res.invoices;
+}
+
+export async function fetchBillingInfo(token: string): Promise<OrganizationBillingInfo> {
+  const res = await apiRequest<{ billingInfo: OrganizationBillingInfo }>('/billing/info', { token });
+  return res.billingInfo;
+}
+
+export async function updateBillingInfo(token: string, payload: OrganizationBillingInfo): Promise<any> {
+  return apiRequest<any>('/billing/info', {
+    token,
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function submitEnterpriseInquiry(
+  token: string,
+  payload: {
+    company_name: string;
+    work_email: string;
+    contact_name: string;
+    phone?: string;
+    expected_product_count?: number;
+    expected_catalog_usage?: number;
+    team_size?: number;
+    required_features?: string[];
+    message?: string;
+  }
+) {
+  return apiRequest<any>('/billing/enterprise-inquiry', {
+    token,
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
 }
 
 export async function initiateCheckoutOrder(
@@ -712,6 +777,26 @@ export async function removeTeamMember(token: string, userId: string) {
   return apiRequest<any>(`/organization/members/${userId}`, {
     token,
     method: 'DELETE'
+  });
+}
+
+// Platform Admin Enterprise APIs
+export async function fetchPlatformEnterpriseRequests(token: string) {
+  return apiRequest<{ requests: any[] }>('/platform-admin/enterprise/requests', { token });
+}
+
+export async function createPlatformEnterpriseOffer(token: string, payload: any) {
+  return apiRequest<any>('/platform-admin/enterprise/offers', {
+    token,
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function activatePlatformEnterpriseOffer(token: string, offerId: string) {
+  return apiRequest<any>(`/platform-admin/enterprise/offers/${offerId}/activate`, {
+    token,
+    method: 'POST'
   });
 }
 

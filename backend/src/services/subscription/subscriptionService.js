@@ -8,9 +8,14 @@ export class SubscriptionService {
   async getOrganizationSubscription(organizationId) {
     const res = await pool.query(
       `SELECT s.*, p.name as plan_name, p.description as plan_description, 
-              p.price_monthly_inr, p.price_yearly_inr, p.max_products, 
-              p.max_catalogs, p.max_3d_models, p.max_storage_bytes, 
-              p.max_team_members, p.features
+              COALESCE(s.custom_price_inr, p.price_monthly_inr) as price_monthly_inr,
+              p.price_yearly_inr, 
+              COALESCE(s.custom_max_products, p.max_products) as max_products, 
+              COALESCE(s.custom_max_catalogs, p.max_catalogs) as max_catalogs, 
+              COALESCE(s.custom_max_3d_models, p.max_3d_models) as max_3d_models, 
+              COALESCE(s.custom_max_storage_bytes, p.max_storage_bytes) as max_storage_bytes, 
+              COALESCE(s.custom_max_team_members, p.max_team_members) as max_team_members, 
+              COALESCE(s.custom_features, p.features) as features
        FROM subscriptions s
        JOIN plans p ON s.plan_id = p.id
        WHERE s.organization_id = $1`,
