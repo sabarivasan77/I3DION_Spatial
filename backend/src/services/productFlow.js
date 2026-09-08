@@ -314,6 +314,38 @@ export async function getProductBySlug(slug) {
   return getProductById(product.organization_id, product.id);
 }
 
+export async function getPublicProductDetailsBySlug(slug) {
+  const productResult = await query(
+    `SELECT p.*, o.name as org_name, o.logo_url as org_logo, o.primary_color as org_color, o.website as org_website
+     FROM products p
+     JOIN organizations o ON p.organization_id = o.id
+     WHERE p.slug = $1 AND (p.status = 'Published' OR p.is_public = true)
+     LIMIT 1`,
+    [slug]
+  );
+  const product = productResult.rows[0];
+  if (!product) return null;
+
+  const [hotspotsRes, animationsRes] = await Promise.all([
+    query('SELECT * FROM product_hotspots WHERE product_id = $1 AND is_enabled = true ORDER BY sort_order ASC', [product.id]),
+    query('SELECT * FROM product_animations WHERE product_id = $1 AND is_enabled = true ORDER BY sort_order ASC', [product.id]),
+  ]);
+
+  const baseProduct = serializeProduct(product);
+  return {
+    ...baseProduct,
+    organization: {
+      id: product.organization_id,
+      name: product.org_name,
+      logo_url: product.org_logo,
+      primary_color: product.org_color || '#2563EB',
+      website: product.org_website,
+    },
+    hotspots: hotspotsRes.rows || [],
+    animations: animationsRes.rows || [],
+  };
+}
+
 /**
  * Generate (or return existing) QR code for a product.
  * Returns null instead of throwing if the product has no model yet.

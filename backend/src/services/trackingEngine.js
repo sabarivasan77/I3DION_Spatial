@@ -59,27 +59,36 @@ export async function trackEvent({ organizationId, visitorId, eventType, metadat
       `UPDATE analytics_events SET lead_id = $1 WHERE visitor_id = $2 AND lead_id IS NULL AND organization_id = $3`,
       [finalLeadId, visitorId, organizationId]
     );
-    await query(
-      `UPDATE viewer_sessions SET lead_id = $1 WHERE visitor_id = $2 AND lead_id IS NULL AND organization_id = $3`,
-      [finalLeadId, visitorId, organizationId]
-    );
+    try {
+      await query(
+        `UPDATE visitor_sessions SET lead_id = $1 WHERE visitor_id = $2 AND lead_id IS NULL AND organization_id = $3`,
+        [finalLeadId, visitorId, organizationId]
+      );
+    } catch (err) {
+      console.warn('Could not update visitor_sessions lead_id:', err.message);
+    }
   }
 
   // 3. Insert the Event
-  const { rows: insertedEvent } = await query(
-    `INSERT INTO analytics_events (organization_id, product_id, catalog_id, lead_id, visitor_id, event_type, metadata)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
-     RETURNING *`,
-    [organizationId, productId, catalogId, finalLeadId, visitorId, eventType, metadata]
-  );
+  try {
+    const { rows: insertedEvent } = await query(
+      `INSERT INTO analytics_events (organization_id, product_id, catalog_id, lead_id, visitor_id, event_type, metadata)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [organizationId, productId, catalogId, finalLeadId, visitorId, eventType, metadata]
+    );
 
-  // 4. Trigger Lead Scoring if associated with a lead
-  if (finalLeadId) {
-    // Run asynchronously to not block tracking response
-    recalculateLeadScore(finalLeadId, organizationId).catch(err => {
-      console.error('Error recalculating lead score:', err);
-    });
+    // 4. Trigger Lead Scoring if associated with a lead
+    if (finalLeadId) {
+      // Run asynchronously to not block tracking response
+      recalculateLeadScore(finalLeadId, organizationId).catch(err => {
+        console.error('Error recalculating lead score:', err);
+      });
+    }
+
+    return insertedEvent[0] || null;
+  } catch (err) {
+    console.error('Error inserting analytics event:', err);
+    return null;
   }
-
-  return insertedEvent[0];
 }
