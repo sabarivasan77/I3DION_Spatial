@@ -1,4 +1,5 @@
 import { pool } from '../../db/pool.js';
+import { config } from '../../config.js';
 
 export class EntitlementService {
   /**
@@ -14,9 +15,11 @@ export class EntitlementService {
               COALESCE(s.custom_max_team_members, p.max_team_members) as max_team_members, 
               COALESCE(s.custom_features, p.features) as features,
               s.custom_price_inr,
-              s.status as subscription_status
+              s.status as subscription_status,
+              o.created_at as org_created_at
        FROM subscriptions s
        JOIN plans p ON s.plan_id = p.id
+       JOIN organizations o ON s.organization_id = o.id
        WHERE s.organization_id = $1`,
       [organizationId]
     );
@@ -39,9 +42,11 @@ export class EntitlementService {
                 COALESCE(s.custom_max_team_members, p.max_team_members) as max_team_members, 
                 COALESCE(s.custom_features, p.features) as features,
                 s.custom_price_inr,
-                s.status as subscription_status
+                s.status as subscription_status,
+                o.created_at as org_created_at
          FROM subscriptions s
          JOIN plans p ON s.plan_id = p.id
+         JOIN organizations o ON s.organization_id = o.id
          WHERE s.organization_id = $1`,
         [organizationId]
       );
@@ -57,8 +62,47 @@ export class EntitlementService {
       max_storage_bytes: 52428800,
       max_team_members: 1,
       features: { ar_views: true, qr_codes: true },
-      subscription_status: 'active'
+      subscription_status: 'active',
+      org_created_at: new Date()
     };
+
+    // Apply Global 100-Day Launch Access or Standard 3-Day Trial
+    const now = new Date();
+    const { productLaunchDate, launchWindowEndDate, standardTrialDays } = config.billing || {};
+    let isLaunchAccess = false;
+    let isTrialAccess = false;
+    
+    if (productLaunchDate && launchWindowEndDate && now >= productLaunchDate && now <= launchWindowEndDate) {
+      isLaunchAccess = true;
+    } else {
+      const trialEndDate = new Date(sub.org_created_at);
+      trialEndDate.setDate(trialEndDate.getDate() + (standardTrialDays || 3));
+      if (now < trialEndDate) {
+        isTrialAccess = true;
+      }
+    }
+
+    if (sub.plan_id === 'FREE') {
+      if (isLaunchAccess) {
+        sub.plan_name = 'Launch Access';
+        sub.max_products = 999999;
+        sub.max_catalogs = 999999;
+        sub.max_3d_models = 999999;
+        sub.max_storage_bytes = 107374182400; // 100GB
+        sub.max_team_members = 50;
+        sub.features = { ar_views: true, qr_codes: true, advanced_analytics: true, custom_branding: true, custom_domain: true, priority_support: true };
+        sub.subscription_status = 'active';
+      } else if (isTrialAccess) {
+        sub.plan_name = 'Free Trial';
+        sub.max_products = 25;
+        sub.max_catalogs = 10;
+        sub.max_3d_models = 25;
+        sub.max_storage_bytes = 1073741824; // 1GB
+        sub.max_team_members = 3;
+        sub.features = { ar_views: true, qr_codes: true, advanced_analytics: true, custom_branding: false, custom_domain: false };
+        sub.subscription_status = 'trialing';
+      }
+    }
 
     const usageRes = await pool.query(
       `SELECT products_count, catalogs_count, models_count, storage_bytes_used, team_members_count

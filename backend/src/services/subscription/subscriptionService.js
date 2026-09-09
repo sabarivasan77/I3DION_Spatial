@@ -1,5 +1,6 @@
 import { pool } from '../../db/pool.js';
 import { billingProvider } from '../billing/billingProvider.js';
+import { config } from '../../config.js';
 
 export class SubscriptionService {
   /**
@@ -15,9 +16,11 @@ export class SubscriptionService {
               COALESCE(s.custom_max_3d_models, p.max_3d_models) as max_3d_models, 
               COALESCE(s.custom_max_storage_bytes, p.max_storage_bytes) as max_storage_bytes, 
               COALESCE(s.custom_max_team_members, p.max_team_members) as max_team_members, 
-              COALESCE(s.custom_features, p.features) as features
+              COALESCE(s.custom_features, p.features) as features,
+              o.created_at as org_created_at
        FROM subscriptions s
        JOIN plans p ON s.plan_id = p.id
+       JOIN organizations o ON s.organization_id = o.id
        WHERE s.organization_id = $1`,
       [organizationId]
     );
@@ -40,16 +43,64 @@ export class SubscriptionService {
                 COALESCE(s.custom_max_3d_models, p.max_3d_models) as max_3d_models, 
                 COALESCE(s.custom_max_storage_bytes, p.max_storage_bytes) as max_storage_bytes, 
                 COALESCE(s.custom_max_team_members, p.max_team_members) as max_team_members, 
-                COALESCE(s.custom_features, p.features) as features
+                COALESCE(s.custom_features, p.features) as features,
+                o.created_at as org_created_at
          FROM subscriptions s
          JOIN plans p ON s.plan_id = p.id
+         JOIN organizations o ON s.organization_id = o.id
          WHERE s.organization_id = $1`,
         [organizationId]
       );
       return retry.rows[0];
     }
 
-    return res.rows[0];
+    let sub = res.rows[0];
+    if (!sub) {
+      sub = {
+        plan_id: 'FREE', plan_name: 'Free',
+        max_products: 3, max_catalogs: 3, max_3d_models: 3, max_storage_bytes: 52428800, max_team_members: 1,
+        features: { ar_views: true, qr_codes: true }, status: 'active', org_created_at: new Date()
+      };
+    }
+
+    const now = new Date();
+    const { productLaunchDate, launchWindowEndDate, standardTrialDays } = config.billing || {};
+    let isLaunchAccess = false;
+    let isTrialAccess = false;
+    
+    if (productLaunchDate && launchWindowEndDate && now >= productLaunchDate && now <= launchWindowEndDate) {
+      isLaunchAccess = true;
+    } else {
+      const trialEndDate = new Date(sub.org_created_at);
+      trialEndDate.setDate(trialEndDate.getDate() + (standardTrialDays || 3));
+      if (now < trialEndDate) {
+        isTrialAccess = true;
+      }
+    }
+
+    if (sub.plan_id === 'FREE') {
+      if (isLaunchAccess) {
+        sub.plan_name = 'Launch Access';
+        sub.max_products = 999999;
+        sub.max_catalogs = 999999;
+        sub.max_3d_models = 999999;
+        sub.max_storage_bytes = 107374182400;
+        sub.max_team_members = 50;
+        sub.features = { ...sub.features, advanced_analytics: true, custom_branding: true, custom_domain: true, priority_support: true };
+        sub.status = 'active';
+      } else if (isTrialAccess) {
+        sub.plan_name = 'Free Trial';
+        sub.max_products = 25;
+        sub.max_catalogs = 10;
+        sub.max_3d_models = 25;
+        sub.max_storage_bytes = 1073741824;
+        sub.max_team_members = 3;
+        sub.features = { ...sub.features, advanced_analytics: true };
+        sub.status = 'trialing';
+      }
+    }
+
+    return sub;
   }
 
   /**

@@ -33,4 +33,9 @@ export const config = {
   supabaseUrl: process.env.SUPABASE_URL,
   supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_KEY,
   supabaseBucket: process.env.SUPABASE_BUCKET ?? 'uploads',
+  billing: {
+    productLaunchDate: new Date('2026-09-10T00:00:00Z'),
+    launchWindowEndDate: new Date('2026-12-18T23:59:59Z'), 
+    standardTrialDays: 3,
+  },
 };

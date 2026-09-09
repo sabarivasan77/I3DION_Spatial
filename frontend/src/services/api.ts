@@ -210,7 +210,25 @@ async function offlineFallback<T>(path: string, options: RequestInit & { token?:
     localStorage.setItem('i3dion.user', JSON.stringify(user));
     return { user } as T;
   }
-  if (path === '/products') return offlineClone(products) as T;
+  if (path === '/products' && method === 'GET') {
+    return offlineClone(products) as T;
+  }
+  if (path === '/products' && method === 'POST') {
+    const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+    const newProduct = {
+      id: `offline-product-${Date.now()}`,
+      name: body.name || 'New Mock Product',
+      category: body.category || 'Mock Category',
+      status: body.status || 'Draft',
+      is_public: body.isPublic || false,
+      description: body.description || '',
+      specs: body.specs || {},
+      created_at: new Date().toISOString(),
+      qr: null,
+    };
+    products.unshift(newProduct as any);
+    return offlineClone(newProduct) as T;
+  }
   if (path.startsWith('/products/') && path.endsWith('/metrics')) {
     return { total_scans: 0, product_views: 0, ar_launch_count: 0, qr_downloads: 0, session_duration_events: 0 } as T;
   }
@@ -506,6 +524,7 @@ export const api = {
 
 export async function uploadFileWithProgress({
   file,
+  productId,
   assetType,
   onProgress,
 }: {
@@ -522,6 +541,8 @@ export async function uploadFileWithProgress({
       onProgress(progress);
       if (progress >= 100) {
         clearInterval(interval);
+        
+        const isModel = assetType === 'model';
         resolve({
           id: `offline-upload-${Date.now()}`,
           file_category: (assetType as any) || 'document',
@@ -529,6 +550,14 @@ export async function uploadFileWithProgress({
           url: URL.createObjectURL(file),
           mime_type: file.type || 'application/octet-stream',
           size_bytes: file.size,
+          product: isModel && productId ? ({
+            id: productId,
+            qr: {
+              id: `offline-qr-${Date.now()}`,
+              png_url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+              svg_url: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjwvc3ZnPg==',
+            }
+          } as any) : undefined
         });
       }
     }, 200);
