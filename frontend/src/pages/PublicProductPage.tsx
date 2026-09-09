@@ -11,7 +11,6 @@ import {
   Share2,
   Sparkles,
   X,
-  Building2,
   CheckCircle2,
   Layers
 } from 'lucide-react';
@@ -21,6 +20,7 @@ import { SmartLeadCapture } from '../components/SmartLeadCapture';
 import { ExitIntentSurvey } from '../components/ExitIntentSurvey';
 import { useVisitorSession } from '../hooks/useVisitorSession';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BrandLogo } from '../components/BrandLogo';
 
 export function PublicProductPage() {
   const { slug = '' } = useParams();
@@ -94,10 +94,10 @@ export function PublicProductPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#050a15] text-white">
+      <div className="flex h-screen w-screen items-center justify-center bg-slate-50 text-slate-900">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent shadow-lg shadow-blue-500/30" />
-          <p className="text-sm font-medium tracking-widest text-slate-400 uppercase animate-pulse">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent shadow-lg shadow-blue-500/20" />
+          <p className="text-sm font-medium tracking-widest text-slate-500 uppercase animate-pulse">
             Loading Spatial Experience...
           </p>
         </div>
@@ -108,31 +108,31 @@ export function PublicProductPage() {
   if (errorMsg || !product || product.restrictedReason) {
     const isRestricted = product?.restrictedReason === 'ORGANIZATION_ONLY' || product?.restrictedReason === 'RESTRICTED_ACCESS';
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#030712] p-4 text-white">
-        <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900/90 p-8 text-center shadow-2xl backdrop-blur-xl">
+      <div className="flex h-screen w-screen items-center justify-center bg-slate-50 p-4 text-slate-900">
+        <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-2xl">
           <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border ${
-            isRestricted ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+            isRestricted ? 'bg-amber-50 text-amber-500 border-amber-200' : 'bg-rose-50 text-rose-500 border-rose-200'
           }`}>
             <Box size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-slate-900">
             {isRestricted ? 'Organization Restricted Access' : 'Product Unavailable'}
           </h1>
-          <p className="mt-2 text-sm text-slate-400 leading-relaxed">
+          <p className="mt-2 text-sm text-slate-500 leading-relaxed">
             {product?.message || errorMsg || 'This 3D product experience is not available or has been unpublished.'}
           </p>
           <div className="mt-6 flex justify-center gap-3">
             {isRestricted ? (
               <a
                 href="/login"
-                className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white transition hover:bg-blue-500 shadow-lg shadow-blue-600/30"
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white transition hover:bg-blue-500 shadow-lg shadow-blue-600/20"
               >
                 Sign In to Organization
               </a>
             ) : (
               <a
                 href="/"
-                className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white transition hover:bg-blue-500 shadow-lg shadow-blue-600/30"
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white transition hover:bg-blue-500 shadow-lg shadow-blue-600/20"
               >
                 Return Home
               </a>
@@ -150,7 +150,7 @@ export function PublicProductPage() {
   return (
     <main
       ref={containerRef}
-      className="relative h-[100dvh] w-screen overflow-hidden bg-[#030712] font-sans text-slate-100 select-none"
+      className="relative h-[100dvh] w-screen overflow-hidden bg-slate-50 font-sans text-slate-900 select-none"
     >
       {/* Background 3D Viewer */}
       <div className="absolute inset-0 z-0">
@@ -162,18 +162,18 @@ export function PublicProductPage() {
       </div>
 
       {/* Subtle Ambient Vignette & Gradient */}
-      <div className="pointer-events-none absolute inset-0 z-5 bg-gradient-to-t from-[#030712] via-transparent to-[#030712]/60" />
+      <div className="pointer-events-none absolute inset-0 z-5 bg-gradient-to-t from-slate-100/90 via-transparent to-white/40" />
 
       {/* Returning Visitor Greeting Bar */}
       {returningVisitor && visitorInfo?.name && (
         <motion.div
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 rounded-full border border-blue-500/30 bg-slate-900/80 px-4 py-1.5 backdrop-blur-xl shadow-lg"
+          className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 rounded-full border border-blue-200 bg-white/90 px-4 py-1.5 backdrop-blur-xl shadow-lg"
         >
-          <Sparkles size={14} className="text-blue-400 animate-pulse" />
-          <span className="text-xs font-medium text-slate-200">
-            Welcome back, <strong className="text-blue-300 font-semibold">{visitorInfo.name}</strong>
+          <Sparkles size={14} className="text-blue-500 animate-pulse" />
+          <span className="text-xs font-medium text-slate-600">
+            Welcome back, <strong className="text-blue-600 font-semibold">{visitorInfo.name}</strong>
           </span>
         </motion.div>
       )}
@@ -182,26 +182,22 @@ export function PublicProductPage() {
       <header className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-auto">
         <div className="flex items-center gap-3">
           {/* Org Logo / Name */}
-          {product.organization?.logo_url ? (
-            <img
-              src={product.organization.logo_url}
-              alt={product.organization.name}
-              className="h-11 w-11 rounded-2xl border border-white/10 bg-slate-900/80 p-1 object-contain backdrop-blur-xl shadow-xl"
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white/90 p-1 backdrop-blur-xl shadow-sm">
+            <BrandLogo 
+              variant="icon" 
+              orgLogoUrl={product.organization?.logo_url} 
+              className="h-full w-full object-contain rounded-xl"
             />
-          ) : (
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-900/80 text-blue-400 backdrop-blur-xl shadow-xl">
-              <Building2 size={20} />
-            </div>
-          )}
+          </div>
           <div>
-            <h1 className="text-lg md:text-xl font-bold tracking-tight text-white drop-shadow-md">
+            <h1 className="text-lg md:text-xl font-bold tracking-tight text-slate-900 drop-shadow-sm">
               {product.name}
             </h1>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="rounded-md bg-blue-500/20 px-2 py-0.5 text-[10px] uppercase font-bold tracking-widest text-blue-300 border border-blue-500/30 backdrop-blur-md">
+              <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] uppercase font-bold tracking-widest text-blue-600 border border-blue-100">
                 {product.category || 'Spatial Asset'}
               </span>
-              <span className="text-xs text-slate-400 font-medium">
+              <span className="text-xs text-slate-500 font-medium">
                 {product.organization?.name || 'I3DION'}
               </span>
             </div>
@@ -213,10 +209,10 @@ export function PublicProductPage() {
           <button
             onClick={() => setAutoRotate(!autoRotate)}
             title="Toggle Auto Rotate"
-            className={`flex h-10 w-10 items-center justify-center rounded-xl border backdrop-blur-xl transition active:scale-95 ${
+            className={`flex h-10 w-10 items-center justify-center rounded-xl border backdrop-blur-xl transition shadow-sm active:scale-95 ${
               autoRotate
-                ? 'border-blue-500/40 bg-blue-600/20 text-blue-300'
-                : 'border-white/10 bg-slate-900/60 text-slate-400 hover:text-white'
+                ? 'border-blue-200 bg-blue-50 text-blue-600'
+                : 'border-slate-200 bg-white/90 text-slate-500 hover:text-slate-900'
             }`}
           >
             <RefreshCw size={18} className={autoRotate ? 'animate-spin' : ''} style={{ animationDuration: '8s' }} />
@@ -225,15 +221,15 @@ export function PublicProductPage() {
           <button
             onClick={handleShare}
             title="Share Experience"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-slate-900/60 text-slate-300 backdrop-blur-xl transition hover:bg-slate-800 active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/90 text-slate-500 backdrop-blur-xl shadow-sm transition hover:bg-slate-50 hover:text-slate-900 active:scale-95"
           >
-            {copied ? <CheckCircle2 size={18} className="text-emerald-400" /> : <Share2 size={18} />}
+            {copied ? <CheckCircle2 size={18} className="text-emerald-500" /> : <Share2 size={18} />}
           </button>
 
           <button
             onClick={toggleFullscreen}
             title="Toggle Fullscreen"
-            className="hidden md:flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-slate-900/60 text-slate-300 backdrop-blur-xl transition hover:bg-slate-800 active:scale-95"
+            className="hidden md:flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/90 text-slate-500 backdrop-blur-xl shadow-sm transition hover:bg-slate-50 hover:text-slate-900 active:scale-95"
           >
             {fullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
           </button>
@@ -241,10 +237,10 @@ export function PublicProductPage() {
           <button
             onClick={() => setInfoOpen(!infoOpen)}
             title="Product Info"
-            className={`flex h-10 w-10 items-center justify-center rounded-xl border backdrop-blur-xl transition active:scale-95 ${
+            className={`flex h-10 w-10 items-center justify-center rounded-xl border backdrop-blur-xl transition shadow-sm active:scale-95 ${
               infoOpen
-                ? 'border-blue-500/40 bg-blue-600/20 text-blue-300'
-                : 'border-white/10 bg-slate-900/60 text-slate-400 hover:text-white'
+                ? 'border-blue-200 bg-blue-50 text-blue-600'
+                : 'border-slate-200 bg-white/90 text-slate-500 hover:text-slate-900'
             }`}
           >
             <Info size={18} />
@@ -260,14 +256,14 @@ export function PublicProductPage() {
             modelUrl={product.model_url}
             usdzUrl={product.usdz_url}
             title={product.name}
-            className="h-12 px-6 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-xl shadow-blue-600/30 transition-all border border-blue-400/30"
+            className="h-12 px-6 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-xl shadow-blue-600/20 transition-all border border-blue-500"
           />
 
           <button
             onClick={() => handleLeadTrigger('quote')}
-            className="h-12 px-5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-white font-semibold text-sm backdrop-blur-xl shadow-lg transition active:scale-95 flex items-center gap-2"
+            className="h-12 px-5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-semibold text-sm shadow-lg transition active:scale-95 flex items-center gap-2"
           >
-            <Mail size={16} className="text-blue-400" />
+            <Mail size={16} className="text-blue-600" />
             Request Quote
           </button>
         </div>
@@ -277,7 +273,7 @@ export function PublicProductPage() {
             href={product.document_url}
             target="_blank"
             rel="noreferrer"
-            className="hidden sm:flex h-12 px-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white font-medium text-xs backdrop-blur-xl shadow-lg transition items-center gap-2"
+            className="hidden sm:flex h-12 px-4 rounded-2xl bg-white/90 hover:bg-white border border-slate-200 text-slate-600 hover:text-slate-900 font-medium text-xs backdrop-blur-xl shadow-md transition items-center gap-2"
           >
             <FileText size={16} className="text-slate-400" />
             Download Spec Sheet
@@ -293,29 +289,29 @@ export function PublicProductPage() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-            className="pointer-events-auto absolute top-20 right-4 bottom-24 z-20 w-[calc(100%-2rem)] max-w-sm rounded-3xl border border-slate-800 bg-slate-950/85 backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden"
+            className="pointer-events-auto absolute top-20 right-4 bottom-24 z-20 w-[calc(100%-2rem)] max-w-sm rounded-3xl border border-slate-200 bg-white/95 backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden"
           >
-            <div className="flex items-center justify-between border-b border-slate-800 p-4">
-              <h2 className="text-sm font-bold tracking-wider text-slate-300 uppercase flex items-center gap-2">
-                <Layers size={16} className="text-blue-400" />
+            <div className="flex items-center justify-between border-b border-slate-100 p-4">
+              <h2 className="text-sm font-bold tracking-wider text-slate-700 uppercase flex items-center gap-2">
+                <Layers size={16} className="text-blue-500" />
                 Product Details
               </h2>
               <button
                 onClick={() => setInfoOpen(false)}
-                className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+                className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-5 space-y-6 scrollbar-thin scrollbar-thumb-slate-800">
+            <div className="flex-1 overflow-y-auto p-5 space-y-6 scrollbar-thin scrollbar-thumb-slate-200">
               {/* Description */}
               {product.description && (
                 <div>
-                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
                     Overview
                   </h3>
-                  <p className="text-xs leading-relaxed text-slate-300">
+                  <p className="text-xs leading-relaxed text-slate-600">
                     {product.description}
                   </p>
                 </div>
@@ -324,17 +320,17 @@ export function PublicProductPage() {
               {/* Specifications */}
               {product.specs && Object.keys(product.specs).length > 0 && (
                 <div>
-                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-3">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3">
                     Technical Specifications
                   </h3>
                   <div className="space-y-2.5">
                     {Object.entries(product.specs).map(([key, val]) => (
                       <div
                         key={key}
-                        className="flex justify-between items-center rounded-xl bg-slate-900/60 border border-slate-800/80 p-2.5 text-xs"
+                        className="flex justify-between items-center rounded-xl bg-slate-50 border border-slate-100 p-2.5 text-xs"
                       >
-                        <span className="text-slate-400 font-medium">{key}</span>
-                        <span className="font-semibold text-white text-right max-w-[60%] truncate">
+                        <span className="text-slate-500 font-medium">{key}</span>
+                        <span className="font-semibold text-slate-900 text-right max-w-[60%] truncate">
                           {String(val)}
                         </span>
                       </div>
@@ -346,14 +342,14 @@ export function PublicProductPage() {
               {/* Gallery Images */}
               {galleryImages.length > 0 && (
                 <div>
-                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-3">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3">
                     Gallery
                   </h3>
                   <div className="grid grid-cols-2 gap-2">
                     {galleryImages.map((img: any) => (
                       <div
                         key={img.id}
-                        className="group relative h-24 overflow-hidden rounded-xl border border-slate-800 bg-slate-900"
+                        className="group relative h-24 overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
                       >
                         <img
                           src={img.public_url}
@@ -369,7 +365,7 @@ export function PublicProductPage() {
             </div>
 
             {/* Quick Actions Footer inside Drawer */}
-            <div className="border-t border-slate-800 p-4 bg-slate-900/60 space-y-2">
+            <div className="border-t border-slate-100 p-4 bg-slate-50 space-y-2">
               <button
                 onClick={() => handleLeadTrigger('quote')}
                 className="w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition flex items-center justify-center gap-2 shadow-md shadow-blue-600/20"

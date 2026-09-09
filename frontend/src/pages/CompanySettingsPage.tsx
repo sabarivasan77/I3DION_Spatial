@@ -45,6 +45,7 @@ export function CompanySettingsPage() {
   const [company, setCompany] = useState({ name: '', website: '', logoUrl: '', primaryColor: '#2563EB', profile: '' });
   const [companyErrors, setCompanyErrors] = useState<Record<string, string>>({});
   const [companySaving, setCompanySaving] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
 
   // Security
   const [security, setSecurity] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -99,6 +100,19 @@ export function CompanySettingsPage() {
     } catch (err) {
       showError('Upload failed', err instanceof ApiClientError ? err.message : 'Could not upload avatar');
     } finally { setAvatarUploading(false); }
+  }
+
+  async function handleLogoUpload(file: File) {
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'].includes(file.type)) { showError('Invalid file', 'Please upload a JPG, PNG, SVG or WebP image'); return; }
+    if (file.size > 5 * 1024 * 1024) { showError('File too large', 'Logo must be under 5MB'); return; }
+    setLogoUploading(true);
+    try {
+      const uploaded = await uploadFileWithProgress({ token: token!, file, onProgress: () => {} });
+      setCompany((p) => ({ ...p, logoUrl: uploaded.url }));
+      success('Logo uploaded');
+    } catch (err) {
+      showError('Upload failed', err instanceof ApiClientError ? err.message : 'Could not upload logo');
+    } finally { setLogoUploading(false); }
   }
 
   async function saveProfile(e: FormEvent) {
@@ -250,9 +264,23 @@ export function CompanySettingsPage() {
                   <input className={cx('h-12 w-full rounded-xl border px-4 text-sm outline-none', companyErrors.website ? 'border-red-400' : 'border-slate-200 focus:border-primary')} value={company.website} onChange={(e) => setCompany({ ...company, website: e.target.value })} placeholder="https://company.com" />
                   {companyErrors.website && <p className="mt-1 text-xs text-red-500">{companyErrors.website}</p>}
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Logo URL</label>
-                  <input className="h-12 w-full rounded-xl border border-slate-200 px-4 text-sm outline-none focus:border-primary" value={company.logoUrl} onChange={(e) => setCompany({ ...company, logoUrl: e.target.value })} placeholder="https://..." />
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Company Logo <span className="text-xs font-normal text-slate-400 ml-1">(JPG, PNG, SVG up to 5MB)</span></label>
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-xl bg-slate-50 border border-slate-200 shrink-0 flex items-center justify-center p-1 overflow-hidden">
+                       {company.logoUrl ? <img src={company.logoUrl} className="max-w-full max-h-full object-contain" alt="Company Logo" /> : <Building2 className="text-slate-300" size={24} />}
+                    </div>
+                    <div className="flex-1">
+                        <div className="relative">
+                           <input type="text" className="h-12 w-full rounded-xl border border-slate-200 pl-4 pr-28 text-sm outline-none focus:border-primary" value={company.logoUrl} onChange={(e) => setCompany({ ...company, logoUrl: e.target.value })} placeholder="https://..." />
+                           <label className="absolute right-1 top-1 bottom-1 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg flex items-center justify-center text-xs font-semibold cursor-pointer transition">
+                              {logoUploading ? <RefreshCw size={14} className="animate-spin mr-1"/> : <Upload size={14} className="mr-1"/>}
+                              Upload
+                              <input type="file" className="sr-only" accept="image/jpeg,image/png,image/webp,image/svg+xml" onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleLogoUpload(f); e.target.value = ''; }} />
+                           </label>
+                        </div>
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1">Primary Brand Color</label>

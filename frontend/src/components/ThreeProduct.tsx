@@ -76,7 +76,7 @@ export function LoadingOverlay({ productName }: { productName?: string }) {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8, ease: 'easeInOut' }}
-          className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 backdrop-blur-xl"
+          className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur-xl"
         >
           <div className="flex max-w-sm w-full flex-col items-center px-6 text-center">
             <motion.div 
@@ -85,13 +85,13 @@ export function LoadingOverlay({ productName }: { productName?: string }) {
               transition={{ delay: 0.2 }}
               className="mb-8"
             >
-              <h2 className="text-2xl font-bold tracking-tight text-white">{productName || 'Industrial Product'}</h2>
-              <p className="mt-2 text-sm text-slate-400">Preparing 3D Experience...</p>
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900">{productName || 'Industrial Product'}</h2>
+              <p className="mt-2 text-sm text-slate-500">Preparing 3D Experience...</p>
             </motion.div>
             
-            <div className="w-full h-1.5 overflow-hidden rounded-full bg-white/10">
+            <div className="w-full h-1.5 overflow-hidden rounded-full bg-slate-200">
               <motion.div 
-                className="h-full bg-blue-500 rounded-full"
+                className="h-full bg-blue-600 rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ ease: "easeOut", duration: 0.2 }}
@@ -120,10 +120,10 @@ export default function ThreeProduct({
   autoRotate?: boolean;
   productName?: string;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLElement>(null);
 
   return (
-    <div ref={containerRef} className="relative w-full h-full bg-slate-900 overflow-hidden rounded-inherit">
+    <div ref={containerRef} className="relative w-full h-full bg-slate-50 overflow-hidden rounded-inherit">
       {/* Premium Loading Overlay */}
       <LoadingOverlay productName={productName} />
 
@@ -134,10 +134,10 @@ export default function ThreeProduct({
         gl={{ preserveDrawingBuffer: true, antialias: true }}
       >
         <XR store={xrStore}>
-          <color attach="background" args={['#050a15']} /> {/* Deep premium dark blue/black */}
+          <color attach="background" args={['#f8fafc']} /> {/* Light slate-50 */}
           
           {/* Soft, realistic industrial lighting */}
-          <ambientLight intensity={0.6} />
+          <ambientLight intensity={0.8} />
           <directionalLight 
             position={[10, 10, 5]} 
             intensity={1.5} 

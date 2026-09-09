@@ -359,6 +359,13 @@ export async function setPublishingAccessForProduct({
     [status, isPublic, productId]
   );
 
+  if (status === 'Published' && isPublic) {
+    // Generate public URL and QR code when fully published
+    await ensureProductQr(productId).catch((err) => {
+      console.error('Failed to generate QR on publish:', err);
+    });
+  }
+
   return rows[0];
 }
 

@@ -335,6 +335,109 @@ async function offlineFallback<T>(path: string, options: RequestInit & { token?:
     } as T;
   }
 
+  if (path === '/billing/plans') {
+    return {
+      plans: [
+        {
+          id: 'FREE',
+          name: 'Free',
+          description: 'For individuals and small projects',
+          price_monthly_inr: 0,
+          price_yearly_inr: 0,
+          max_products: 5,
+          max_catalogs: 1,
+          max_3d_models: 5,
+          max_storage_bytes: 536870912,
+          max_team_members: 1,
+          features: { custom_domain: false, analytics: false, api_access: false },
+        },
+        {
+          id: 'PRO',
+          name: 'Pro',
+          description: 'For growing businesses',
+          price_monthly_inr: 2999,
+          price_yearly_inr: 29990,
+          max_products: 100,
+          max_catalogs: 10,
+          max_3d_models: 100,
+          max_storage_bytes: 10737418240,
+          max_team_members: 5,
+          features: { custom_domain: true, analytics: true, api_access: false },
+        },
+        {
+          id: 'BUSINESS',
+          name: 'Business',
+          description: 'For large teams and enterprises',
+          price_monthly_inr: 9999,
+          price_yearly_inr: 99990,
+          max_products: 1000,
+          max_catalogs: 50,
+          max_3d_models: 1000,
+          max_storage_bytes: 107374182400,
+          max_team_members: 25,
+          features: { custom_domain: true, analytics: true, api_access: true },
+        },
+        {
+          id: 'ENTERPRISE',
+          name: 'Enterprise',
+          description: 'Custom solutions and limits',
+          price_monthly_inr: 0,
+          price_yearly_inr: 0,
+          max_products: 999999,
+          max_catalogs: 999999,
+          max_3d_models: 999999,
+          max_storage_bytes: 1099511627776,
+          max_team_members: 999999,
+          features: { custom_domain: true, analytics: true, api_access: true, dedicated_support: true },
+        }
+      ]
+    } as T;
+  }
+  if (path === '/billing/usage') {
+    return {
+      plan: {
+        id: 'FREE',
+        name: 'Free',
+        status: 'active',
+        limits: { maxProducts: 5, maxCatalogs: 1, max3dModels: 5, maxStorageBytes: 536870912, maxTeamMembers: 1 },
+        features: { custom_domain: false, analytics: false, api_access: false },
+      },
+      usage: { productsCount: 2, catalogsCount: 0, modelsCount: 2, storageBytesUsed: 12582912, teamMembersCount: 1 }
+    } as T;
+  }
+  if (path === '/billing/info') {
+    return {
+      billingInfo: {
+        billing_name: 'I3DION Mock Corp',
+        billing_email: 'finance@i3dion.local',
+        phone: '+919876543210',
+        tax_id: '29AAAAA0000A1Z5',
+        address_line1: '123 Tech Park',
+        city: 'Bangalore',
+        state: 'Karnataka',
+        postal_code: '560001',
+        country: 'India'
+      }
+    } as T;
+  }
+  if (path === '/billing/invoices') {
+    return {
+      invoices: [
+        {
+          id: 'mock-inv-1',
+          invoice_number: 'INV-2026-001',
+          plan_id: 'FREE',
+          amount_inr: 0,
+          tax_inr: 0,
+          status: 'paid',
+          period_start: '2026-08-01T00:00:00Z',
+          period_end: '2026-08-31T23:59:59Z',
+          created_at: '2026-08-01T10:00:00Z',
+        }
+      ]
+    } as T;
+  }
+
   if (isOfflineToken(token)) {
     return undefined as T;
   }

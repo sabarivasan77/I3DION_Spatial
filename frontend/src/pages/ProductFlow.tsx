@@ -274,6 +274,8 @@ function EditProductModal({ product, token, onSave, onClose }: {
   );
 }
 
+import { QRCodeGenerator } from '../components/QRCodeGenerator';
+
 // ─── QR Panel ─────────────────────────────────────────────────────────────────
 
 function ProductQrPanel({ product }: { product: ProductRecord }) {
@@ -311,21 +313,13 @@ function ProductQrPanel({ product }: { product: ProductRecord }) {
     <Card className="p-6">
       <SectionTitle title="Product QR" meta={`Generated ${qr.generated_at ? new Date(qr.generated_at).toLocaleString() : 'recently'}`} />
       <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-        <div className="rounded-3xl border border-slate-200 bg-white p-4">
-          <img src={qr.png_url} alt={`${product.name} QR code`} className="aspect-square w-full rounded-2xl bg-slate-50 object-contain p-3" />
-        </div>
+        <QRCodeGenerator url={product.public_url ?? ''} className="w-full" size={200} />
         <div className="space-y-4">
           <div className="rounded-2xl bg-slate-50 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Public URL</p>
             <p className="mt-2 break-all font-medium text-slate-900">{product.public_url}</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <a href={qr.png_url} download={`${product.slug ?? product.id}.png`}>
-              <Button variant="secondary"><Download size={16} />PNG</Button>
-            </a>
-            <a href={qr.svg_url} download={`${product.slug ?? product.id}.svg`}>
-              <Button variant="secondary"><Download size={16} />SVG</Button>
-            </a>
             <Button variant="secondary" onClick={copyUrl}><Copy size={16} />Copy Link</Button>
           </div>
           <p className="text-sm text-slate-500">
