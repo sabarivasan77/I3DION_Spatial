@@ -68,9 +68,13 @@ apiRouter.get('/health', async (_req, res) => {
   let storageAvailable = false;
   
   try {
+    const { ensureMigrated } = await import('./db/pool.js');
+    await ensureMigrated();
     await pool.query('SELECT 1');
     dbConnected = true;
-  } catch (err) {}
+  } catch (err) {
+    console.error('Health check DB error:', err.message);
+  }
   
   try {
     if (!process.env.VERCEL) {
