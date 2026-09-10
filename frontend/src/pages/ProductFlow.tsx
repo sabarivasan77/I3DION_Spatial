@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Archive,
   ArrowRight,
@@ -14,7 +14,6 @@ import {
   Globe2,
   Image,
   QrCode,
-  Mail,
   RefreshCw,
   ScanLine,
   Send,
@@ -23,20 +22,14 @@ import {
   Trash2,
   Upload,
   View,
-  X,
-  Info,
-  Expand
+  X
 } from 'lucide-react';
-import ThreeProduct, { xrStore } from '../components/ThreeProduct';
+import ThreeProduct from '../components/ThreeProduct';
 import { Badge, Button, Card, PageHeader, SectionTitle } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { api, ApiClientError, checkBackendHealth, uploadFileWithProgress, type ProductRecord, type ProductPayload } from '../services/api';
-import { Tracker } from '../services/Tracker';
 import { useAuthStore } from '../store/authStore';
 import { cx } from '../utils/format';
-import { motion, AnimatePresence } from 'framer-motion';
-import { SmartLeadCapture } from '../components/SmartLeadCapture';
-import { ExitIntentSurvey } from '../components/ExitIntentSurvey';
 
 type WizardStep = 1 | 2 | 3;
 
@@ -68,44 +61,6 @@ function specsToText(specs: Record<string, string>) {
 
 function formatMetric(value?: number) {
   return Number(value ?? 0).toLocaleString();
-}
-
-function readSessionId(scope: string) {
-  const key = `i3dion:${scope}:session`;
-  const existing = sessionStorage.getItem(key);
-  if (existing) return existing;
-  const created = `${scope}-${crypto.randomUUID()}`;
-  sessionStorage.setItem(key, created);
-  return created;
-}
-
-function sendPublicEvent(payload: {
-  slug: string;
-  eventType: string;
-  metadata?: Record<string, unknown>;
-  durationSeconds?: number;
-  sessionId?: string;
-}) {
-  const visitorId = Tracker.getVisitorId();
-  const body = JSON.stringify({
-    ...payload,
-    visitorId,
-    metadata: {
-      ...payload.metadata,
-      visitorId
-    }
-  });
-  const endpoint = `${import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api'}/public/analytics/events`;
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon(endpoint, new Blob([body], { type: 'application/json' }));
-    return;
-  }
-  void fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body,
-    keepalive: true,
-  });
 }
 
 // ─── Confirm Dialog ────────────────────────────────────────────────────────────

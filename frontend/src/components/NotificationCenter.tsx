@@ -70,11 +70,11 @@ export const NotificationCenter: React.FC = () => {
       {/* Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/80 text-slate-300 hover:text-white transition hover:bg-slate-800 active:scale-95 shadow-md"
+        className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 transition focus:outline-none"
       >
-        <Bell size={18} />
+        <Bell size={20} />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-lg animate-pulse">
+          <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-sm animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -87,14 +87,14 @@ export const NotificationCenter: React.FC = () => {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl border border-slate-800 bg-slate-900/95 backdrop-blur-2xl shadow-2xl z-50 overflow-hidden"
+            className="absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl border border-slate-200 bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] z-50 overflow-hidden"
           >
-            <div className="flex items-center justify-between border-b border-slate-800 p-4">
+            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 p-4">
               <div className="flex items-center gap-2">
-                <Bell size={16} className="text-blue-400" />
-                <h3 className="text-sm font-bold text-white">Notifications</h3>
+                <Bell size={16} className="text-blue-600" />
+                <h3 className="text-sm font-bold text-slate-900">Notifications</h3>
                 {unreadCount > 0 && (
-                  <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-bold text-blue-300">
+                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">
                     {unreadCount} unread
                   </span>
                 )}
@@ -103,21 +103,21 @@ export const NotificationCenter: React.FC = () => {
                 {unreadCount > 0 && (
                   <button
                     onClick={markAllAsRead}
-                    className="text-[11px] font-medium text-slate-400 hover:text-blue-400 transition"
+                    className="text-[11px] font-medium text-slate-500 hover:text-blue-600 transition"
                   >
                     Mark all read
                   </button>
                 )}
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition"
                 >
                   <X size={16} />
                 </button>
               </div>
             </div>
 
-            <div className="max-h-80 overflow-y-auto divide-y divide-slate-800/50 scrollbar-thin scrollbar-thumb-slate-800">
+            <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 scrollbar-thin scrollbar-thumb-slate-200">
               {notifications.length === 0 ? (
                 <div className="p-8 text-center text-xs text-slate-500">
                   No notifications yet.
@@ -126,28 +126,28 @@ export const NotificationCenter: React.FC = () => {
                 notifications.map((n) => (
                   <div
                     key={n.id}
-                    className={`p-4 transition hover:bg-slate-800/40 flex items-start gap-3 ${
-                      !n.read_at ? 'bg-blue-500/5' : ''
+                    className={`p-4 transition hover:bg-slate-50 flex items-start gap-3 ${
+                      !n.read_at ? 'bg-blue-50/50' : 'bg-white'
                     }`}
                   >
-                    <div className="mt-0.5 rounded-lg bg-slate-800 p-2 border border-slate-700/50">
+                    <div className="mt-0.5 rounded-lg bg-slate-100 p-2 border border-slate-200/50">
                       {getIcon(n.notification_type)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-semibold text-white truncate">{n.title}</h4>
+                        <h4 className="text-xs font-semibold text-slate-900 truncate">{n.title}</h4>
                         {!n.read_at && (
                           <button
                             onClick={() => markAsRead(n.id)}
                             title="Mark as read"
-                            className="text-slate-500 hover:text-blue-400 transition"
+                            className="text-slate-400 hover:text-blue-600 transition"
                           >
                             <Check size={14} />
                           </button>
                         )}
                       </div>
-                      <p className="mt-1 text-[11px] text-slate-400 leading-relaxed line-clamp-2">{n.body}</p>
-                      <div className="mt-1.5 text-[10px] text-slate-500">
+                      <p className="mt-1 text-[11px] text-slate-500 leading-relaxed line-clamp-2">{n.body}</p>
+                      <div className="mt-1.5 text-[10px] text-slate-400">
                         {new Date(n.created_at).toLocaleDateString()} at {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>

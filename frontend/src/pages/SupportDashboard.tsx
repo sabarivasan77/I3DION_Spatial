@@ -3,6 +3,8 @@ import { PageHeader, Card } from '../components/ui';
 import { Bot, User, CheckCircle, MessageSquare, Ticket } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
+import { API_BASE_URL } from '../services/api';
+
 export function SupportDashboardPage() {
   const token = useAuthStore(s => s.token);
   const [stats, setStats] = useState<any>(null);
@@ -10,7 +12,7 @@ export function SupportDashboardPage() {
   useEffect(() => {
     async function loadStats() {
       try {
-        const res = await fetch('/api/support/analytics', {
+        const res = await fetch(`${API_BASE_URL}/support/analytics`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setStats(await res.json());

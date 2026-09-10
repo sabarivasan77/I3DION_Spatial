@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
 const API_TIMEOUT_MS = 60000; // Increased to 60s for 3D model uploads
 
 export class ApiClientError extends Error {
