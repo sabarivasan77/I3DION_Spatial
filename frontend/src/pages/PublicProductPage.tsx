@@ -185,7 +185,6 @@ export function PublicProductPage() {
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white/90 p-1 backdrop-blur-xl shadow-sm">
             <BrandLogo 
               variant="icon" 
-              orgLogoUrl={product.organization?.logo_url} 
               className="h-full w-full object-contain rounded-xl"
             />
           </div>

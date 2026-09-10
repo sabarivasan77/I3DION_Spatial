@@ -626,6 +626,7 @@ export const api = {
 };
 
 export async function uploadFileWithProgress({
+  token,
   file,
   productId,
   assetType,
@@ -637,33 +638,81 @@ export async function uploadFileWithProgress({
   assetType?: string;
   onProgress: (progress: number) => void;
 }): Promise<UploadedFile> {
-  return new Promise<UploadedFile>((resolve) => {
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 25;
-      onProgress(progress);
-      if (progress >= 100) {
-        clearInterval(interval);
-        
-        const isModel = assetType === 'model';
-        resolve({
-          id: `offline-upload-${Date.now()}`,
-          file_category: (assetType as any) || 'document',
-          original_name: file.name,
-          url: URL.createObjectURL(file),
-          mime_type: file.type || 'application/octet-stream',
-          size_bytes: file.size,
-          product: isModel && productId ? ({
-            id: productId,
-            qr: {
-              id: `offline-qr-${Date.now()}`,
-              png_url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-              svg_url: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjwvc3ZnPg==',
-            }
-          } as any) : undefined
-        });
+  if (import.meta.env.VITE_OFFLINE_MODE === 'true' || isOfflineToken(token)) {
+    return new Promise<UploadedFile>((resolve) => {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 25;
+        onProgress(progress);
+        if (progress >= 100) {
+          clearInterval(interval);
+          const isModel = assetType === 'model';
+          resolve({
+            id: `offline-upload-${Date.now()}`,
+            file_category: (assetType as any) || 'document',
+            original_name: file.name,
+            url: URL.createObjectURL(file),
+            mime_type: file.type || 'application/octet-stream',
+            size_bytes: file.size,
+            product: isModel && productId ? ({
+              id: productId,
+              qr: {
+                id: `offline-qr-${Date.now()}`,
+                png_url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+                svg_url: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjwvc3ZnPg==',
+              }
+            } as any) : undefined
+          });
+        }
+      }, 200);
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData();
+    formData.append('file', file);
+    if (productId) formData.append('productId', productId);
+    if (assetType) formData.append('assetType', assetType);
+
+    xhr.upload.addEventListener('progress', (event) => {
+      if (event.lengthComputable) {
+        const progress = Math.round((event.loaded * 100) / event.total);
+        onProgress(progress);
       }
-    }, 200);
+    });
+
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          resolve(response);
+        } catch (e) {
+          reject(new ApiClientError(xhr.status, 'Invalid JSON response from server'));
+        }
+      } else {
+        let message = 'Upload failed';
+        try {
+          const errResponse = JSON.parse(xhr.responseText);
+          message = errResponse.message || message;
+        } catch (e) {}
+        reject(new ApiClientError(xhr.status, message));
+      }
+    });
+
+    xhr.addEventListener('error', () => {
+      reject(new ApiClientError(0, 'Network error occurred during upload'));
+    });
+
+    xhr.addEventListener('abort', () => {
+      reject(new ApiClientError(0, 'Upload was aborted'));
+    });
+
+    xhr.open('POST', `${API_BASE_URL}/uploads`, true);
+    if (token) {
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    }
+    xhr.send(formData);
   });
 }
 

@@ -313,7 +313,7 @@ function ProductQrPanel({ product }: { product: ProductRecord }) {
     <Card className="p-6">
       <SectionTitle title="Product QR" meta={`Generated ${qr.generated_at ? new Date(qr.generated_at).toLocaleString() : 'recently'}`} />
       <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-        <QRCodeGenerator url={product.public_url ?? ''} className="w-full" size={200} />
+        <QRCodeGenerator url={product.public_url ?? ''} logoUrl={product.organization?.logo_url || undefined} className="w-full" size={200} />
         <div className="space-y-4">
           <div className="rounded-2xl bg-slate-50 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Public URL</p>

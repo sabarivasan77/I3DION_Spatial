@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowRight, Sparkles, Box } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/ui';
-import ThreeProduct from '../components/ThreeProduct';
+import LogoCube from '../components/LogoCube';
 import { Logo } from '../components/Logo';
 
 export function LandingPage() {
@@ -85,7 +85,7 @@ export function LandingPage() {
               </div>
             </div>
             <div className="h-[400px] flex items-center justify-center">
-              <ThreeProduct />
+              <LogoCube />
             </div>
           </div>
         </div>

@@ -103,6 +103,7 @@ export function serializeProduct(row, extra = {}) {
     created_by: row.created_by,
     created_at: row.created_at,
     updated_at: row.updated_at,
+    organization: row.organization_logo_url !== undefined ? { logo_url: row.organization_logo_url } : undefined,
     ...extra,
   };
 }
@@ -227,7 +228,13 @@ export async function patchProductStatus(organizationId, id, status) {
 
 export async function listProductsWithMetrics(organizationId) {
   const [{ rows: products }, { rows: qrRows }, { rows: analyticsRows }] = await Promise.all([
-    query('SELECT * FROM products WHERE organization_id = $1 ORDER BY created_at DESC', [organizationId]),
+    query(`
+      SELECT p.*, o.logo_url as organization_logo_url 
+      FROM products p 
+      LEFT JOIN organizations o ON p.organization_id = o.id 
+      WHERE p.organization_id = $1 
+      ORDER BY p.created_at DESC
+    `, [organizationId]),
     query('SELECT * FROM qr_codes WHERE organization_id = $1', [organizationId]),
     query(
       `SELECT product_id,
@@ -265,11 +272,14 @@ export async function listProductsWithMetrics(organizationId) {
 }
 
 export async function getProductById(organizationId, productId) {
-  const productResult = await query('SELECT * FROM products WHERE organization_id = $1 AND id = $2 LIMIT 1', [
-    organizationId,
-    productId,
-  ]);
-  const product = productResult.rows[0];
+  const { rows } = await query(
+    `SELECT p.*, o.logo_url as organization_logo_url 
+     FROM products p 
+     LEFT JOIN organizations o ON p.organization_id = o.id 
+     WHERE p.organization_id = $1 AND p.id = $2`,
+    [organizationId, productId],
+  );
+  const product = rows[0];
   if (!product) return null;
 
   const [assetsResult, qrResult, metricsResult] = await Promise.all([
