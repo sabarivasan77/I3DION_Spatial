@@ -137,49 +137,49 @@ export function CatalogBuilderPage() {
     {
       id: 'IndustrialClassic', name: 'Tech Blueprint', emoji: '⚙️', description: 'A highly technical layout focused on exact specifications.',
       badge: 'ENGINEERING', features: ['Precise Grids', 'Data Heavy'], icon: Layers,
-      gradient: 'from-slate-900 via-slate-800 to-slate-900', accentText: 'text-emerald-400', accentBg: 'bg-emerald-500/20', accentBorder: 'border-emerald-500/50',
+      gradient: 'from-slate-900 via-slate-800 to-slate-900', hoverGradient: 'hover:from-slate-900 hover:via-slate-800 hover:to-slate-900', accentText: 'text-emerald-400', accentBg: 'bg-emerald-500/20', accentBorder: 'border-emerald-500/50',
       shadowHover: 'hover:shadow-[0_0_40px_-10px_rgba(16,185,129,0.4)]', activeRing: 'ring-2 ring-emerald-500 shadow-[0_0_30px_-5px_rgba(16,185,129,0.3)]',
     },
     {
       id: 'ModernShowcase', name: 'Creative Showcase', emoji: '✨', description: 'Visually stunning, fun presentation for full bleed AR models.',
       badge: 'FUN & MASSIVE', features: ['Vibrant Colors', 'Minimal UI'], icon: Sparkles,
-      gradient: 'from-purple-900 via-indigo-900 to-purple-900', accentText: 'text-pink-400', accentBg: 'bg-pink-500/20', accentBorder: 'border-pink-500/50',
+      gradient: 'from-purple-900 via-indigo-900 to-purple-900', hoverGradient: 'hover:from-purple-900 hover:via-indigo-900 hover:to-purple-900', accentText: 'text-pink-400', accentBg: 'bg-pink-500/20', accentBorder: 'border-pink-500/50',
       shadowHover: 'hover:shadow-[0_0_40px_-10px_rgba(236,72,153,0.4)]', activeRing: 'ring-2 ring-pink-500 shadow-[0_0_30px_-5px_rgba(236,72,153,0.3)]',
     },
     {
       id: 'SalesBrochure', name: 'Corporate Elite', emoji: '💼', description: 'Optimized for enterprise sales, clear CTAs, executive summaries.',
       badge: 'PROFESSIONAL', features: ['Executive Style', 'Conversion'], icon: Briefcase,
-      gradient: 'from-blue-950 via-slate-900 to-blue-950', accentText: 'text-blue-400', accentBg: 'bg-blue-500/20', accentBorder: 'border-blue-500/50',
+      gradient: 'from-blue-950 via-slate-900 to-blue-950', hoverGradient: 'hover:from-blue-950 hover:via-slate-900 hover:to-blue-950', accentText: 'text-blue-400', accentBg: 'bg-blue-500/20', accentBorder: 'border-blue-500/50',
       shadowHover: 'hover:shadow-[0_0_40px_-10px_rgba(59,130,246,0.4)]', activeRing: 'ring-2 ring-blue-500 shadow-[0_0_30px_-5px_rgba(59,130,246,0.3)]',
     },
     {
       id: 'LuxuryMinimalist', name: 'Luxury Minimalist', emoji: '💎', description: 'Ultra-clean, high-end presentation with elegant typography and metallic accents.',
       badge: 'PREMIUM', features: ['High Fashion', 'Whitespace'], icon: Gem,
-      gradient: 'from-stone-900 via-stone-800 to-black', accentText: 'text-amber-200', accentBg: 'bg-amber-500/10', accentBorder: 'border-amber-500/30',
+      gradient: 'from-stone-900 via-stone-800 to-black', hoverGradient: 'hover:from-stone-900 hover:via-stone-800 hover:to-black', accentText: 'text-amber-200', accentBg: 'bg-amber-500/10', accentBorder: 'border-amber-500/30',
       shadowHover: 'hover:shadow-[0_0_40px_-10px_rgba(251,191,36,0.3)]', activeRing: 'ring-2 ring-amber-400/80 shadow-[0_0_30px_-5px_rgba(251,191,36,0.2)]',
     },
     {
       id: 'CyberNeo', name: 'Cyber Neo', emoji: '🚀', description: 'Futuristic dark-mode design with glowing edges and glassmorphism.',
       badge: 'NEXT-GEN', features: ['Neon Glow', 'Web3 Vibe'], icon: Rocket,
-      gradient: 'from-slate-950 via-cyan-950 to-slate-950', accentText: 'text-cyan-400', accentBg: 'bg-cyan-500/20', accentBorder: 'border-cyan-500/50',
+      gradient: 'from-slate-950 via-cyan-950 to-slate-950', hoverGradient: 'hover:from-slate-950 hover:via-cyan-950 hover:to-slate-950', accentText: 'text-cyan-400', accentBg: 'bg-cyan-500/20', accentBorder: 'border-cyan-500/50',
       shadowHover: 'hover:shadow-[0_0_40px_-10px_rgba(34,211,238,0.5)]', activeRing: 'ring-2 ring-cyan-400 shadow-[0_0_30px_-5px_rgba(34,211,238,0.4)]',
     },
     {
       id: 'NordicElegance', name: 'Nordic Elegance', emoji: '🌿', description: 'Light-themed, organic aesthetic utilizing pastel tones and smooth curves.',
       badge: 'LIFESTYLE', features: ['Soft Tones', 'Organic Feel'], icon: Leaf,
-      gradient: 'from-teal-50 via-white to-stone-50', accentText: 'text-teal-700', accentBg: 'bg-teal-100', accentBorder: 'border-teal-200',
+      gradient: 'from-teal-50 via-white to-stone-50', hoverGradient: 'hover:from-teal-50 hover:via-white hover:to-stone-50', accentText: 'text-teal-700', accentBg: 'bg-teal-100', accentBorder: 'border-teal-200',
       shadowHover: 'hover:shadow-[0_10px_40px_-10px_rgba(20,184,166,0.3)]', activeRing: 'ring-2 ring-teal-500 shadow-[0_10px_30px_-5px_rgba(20,184,166,0.2)]',
     },
     {
       id: 'ArchitecturalSpatial', name: 'Architectural Spatial', emoji: '🏛️', description: 'Structured, grid-based monochrome design emphasizing dimensions.',
       badge: 'STRUCTURAL', features: ['Grid Layout', 'Stark Contrast'], icon: Building2,
-      gradient: 'from-zinc-900 via-neutral-800 to-zinc-900', accentText: 'text-slate-100', accentBg: 'bg-slate-700/50', accentBorder: 'border-slate-500/50',
+      gradient: 'from-zinc-900 via-neutral-800 to-zinc-900', hoverGradient: 'hover:from-zinc-900 hover:via-neutral-800 hover:to-zinc-900', accentText: 'text-slate-100', accentBg: 'bg-slate-700/50', accentBorder: 'border-slate-500/50',
       shadowHover: 'hover:shadow-[0_0_40px_-10px_rgba(241,245,249,0.3)]', activeRing: 'ring-2 ring-slate-300 shadow-[0_0_30px_-5px_rgba(241,245,249,0.2)]',
     },
     {
       id: 'QuantumHologram', name: 'Quantum Hologram', emoji: '🌌', description: 'Deep space aesthetics with ethereal gradients for advanced AR.',
       badge: 'SPATIAL', features: ['Deep Gradients', 'Ethereal'], icon: Atom,
-      gradient: 'from-fuchsia-950 via-purple-900 to-slate-950', accentText: 'text-fuchsia-400', accentBg: 'bg-fuchsia-500/20', accentBorder: 'border-fuchsia-500/50',
+      gradient: 'from-fuchsia-950 via-purple-900 to-slate-950', hoverGradient: 'hover:from-fuchsia-950 hover:via-purple-900 hover:to-slate-950', accentText: 'text-fuchsia-400', accentBg: 'bg-fuchsia-500/20', accentBorder: 'border-fuchsia-500/50',
       shadowHover: 'hover:shadow-[0_0_40px_-10px_rgba(232,121,249,0.4)]', activeRing: 'ring-2 ring-fuchsia-400 shadow-[0_0_30px_-5px_rgba(232,121,249,0.3)]',
     }
   ];
@@ -247,7 +247,7 @@ export function CatalogBuilderPage() {
                       className={`group relative cursor-pointer overflow-hidden rounded-[20px] border transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-[1.01] ${
                         isSelected
                           ? `border-transparent bg-gradient-to-r ${t.gradient} ${t.activeRing}`
-                          : `border-slate-200/80 bg-white hover:border-transparent hover:bg-gradient-to-r hover:${t.gradient} ${t.shadowHover}`
+                          : `border-slate-200/80 bg-white hover:border-transparent hover:bg-gradient-to-r ${t.hoverGradient} ${t.shadowHover}`
                       }`}
                     >
                       <div className="relative z-10 flex items-center p-5 gap-5">
