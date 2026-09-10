@@ -160,6 +160,9 @@ export interface ProductRecord {
   ar_launch_count?: number;
   qr_downloads?: number;
   session_duration_events?: number;
+  organization?: {
+    logo_url?: string | null;
+  };
 }
 
 const OFFLINE_TOKEN = 'offline-dev-token';

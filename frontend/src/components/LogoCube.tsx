@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { TextureLoader, Mesh } from 'three';
 import { motion } from 'framer-motion';
@@ -10,7 +10,7 @@ function RotatingCube() {
   const logoTexture = useLoader(TextureLoader, '/images/logos/03_icon_only.png');
 
   // Rotate slowly
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (meshRef.current) {
       meshRef.current.rotation.x += delta * 0.2;
       meshRef.current.rotation.y += delta * 0.3;
