@@ -118,13 +118,12 @@ export const BillingSettingsPage: React.FC = () => {
       const razorpayKey = checkoutRes.keyId || checkoutRes.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TaoMEJWYCgt4Xz';
       const orderId = checkoutRes.orderId || checkoutRes.order_id;
 
-      const options = {
+      const options: any = {
         key: razorpayKey,
         amount: checkoutRes.amount,
         currency: checkoutRes.currency || 'INR',
         name: 'I3DION Spatial',
         description: `Upgrade to ${plan.name} (${billingCycle})`,
-        order_id: orderId,
         handler: async (response: any) => {
           try {
             await verifyCheckoutPayment(token, {
@@ -146,6 +145,10 @@ export const BillingSettingsPage: React.FC = () => {
         },
         theme: { color: '#2563eb' }
       };
+
+      if (orderId && typeof orderId === 'string' && !orderId.startsWith('order_mock_')) {
+        options.order_id = orderId;
+      }
 
       const openModal = () => {
         const rzp = new window.Razorpay(options);

@@ -459,15 +459,49 @@ async function offlineFallback<T>(path: string, options: RequestInit & { token?:
   }
   if (path === '/billing/checkout') {
     const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+    const amountInPaise = body.planId === 'PRO'
+      ? (body.billingCycle === 'yearly' ? 2999000 : 299900)
+      : (body.billingCycle === 'yearly' ? 9999000 : 999900);
+    const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TaoMEJWYCgt4Xz';
+    const keySecret = 'fOTIh0JDvGa65UH4sitvlVP1';
+
+    try {
+      const authHeader = 'Basic ' + btoa(`${keyId}:${keySecret}`);
+      const res = await fetch('https://api.razorpay.com/v1/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authHeader
+        },
+        body: JSON.stringify({
+          amount: amountInPaise,
+          currency: 'INR',
+          receipt: `rcpt_fallback_${Date.now()}`
+        })
+      });
+      if (res.ok) {
+        const orderData = await res.json();
+        return {
+          success: true,
+          order_id: orderData.id,
+          orderId: orderData.id,
+          id: orderData.id,
+          amount: orderData.amount,
+          currency: orderData.currency,
+          key_id: keyId,
+          keyId: keyId,
+        } as T;
+      }
+    } catch (err) {
+      console.warn('Fallback Razorpay order creation warning:', err);
+    }
+
     return {
       success: true,
-      order_id: `order_mock_${Date.now()}`,
-      orderId: `order_mock_${Date.now()}`,
-      id: `order_mock_${Date.now()}`,
-      amount: body.planId === 'PRO' ? (body.billingCycle === 'yearly' ? 2999000 : 299900) : (body.billingCycle === 'yearly' ? 9999000 : 999900),
+      amount: amountInPaise,
       currency: 'INR',
-      key_id: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TaoMEJWYCgt4Xz',
-      keyId: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TaoMEJWYCgt4Xz',
+      key_id: keyId,
+      keyId: keyId,
     } as T;
   }
   if (path === '/billing/verify') {
