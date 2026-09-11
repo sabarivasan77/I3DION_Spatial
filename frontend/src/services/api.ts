@@ -275,6 +275,35 @@ async function offlineFallback<T>(path: string, options: RequestInit & { token?:
   if (path.startsWith('/leads/') && method === 'DELETE') return undefined as T;
   if (path.startsWith('/leads/') && method === 'PUT') return {} as T;
   if (path === '/analytics/summary') return { events: [], leads: [] } as T;
+  if (path === '/analytics/dashboard') return { total_leads: 14, hot_leads: 5, product_views: 128, ar_launches: 42 } as T;
+  if (path === '/analytics/insights') return [
+    { type: 'action_required', urgency: 'high', message: '3 prospect organizations requested custom Enterprise quotes this week.' },
+    { type: 'opportunity', urgency: 'medium', message: 'AR launch conversion up 24% for Industrial Machinery category.' }
+  ] as T;
+  if (path === '/analytics/top-products') return [
+    { id: '1', name: 'Industrial Valve System 3000', interactions: 48, ar_launches: 18 },
+    { id: '2', name: 'Precision AR Robotic Arm', interactions: 36, ar_launches: 14 },
+    { id: '3', name: 'Spatial Turbine Generator', interactions: 24, ar_launches: 10 }
+  ] as T;
+  if (path === '/analytics/charts/trends') return [
+    { date: '2026-09-05', visitors: 12, sessions: 18 },
+    { date: '2026-09-06', visitors: 19, sessions: 28 },
+    { date: '2026-09-07', visitors: 24, sessions: 35 },
+    { date: '2026-09-08', visitors: 30, sessions: 42 },
+    { date: '2026-09-09', visitors: 38, sessions: 54 },
+    { date: '2026-09-10', visitors: 45, sessions: 62 },
+    { date: '2026-09-11', visitors: 52, sessions: 70 }
+  ] as T;
+  if (path === '/analytics/charts/searches') return [
+    { query: '3D CAD Model', count: 42 },
+    { query: 'AR View', count: 35 },
+    { query: 'Industrial Catalog PDF', count: 28 }
+  ] as T;
+  if (path === '/analytics/charts/funnel') return { visitors: 150, product_views: 120, ar_launches: 45, leads: 14 } as T;
+  if (path === '/analytics/charts/downloads') return [
+    { name: 'Industrial Valve PDF', downloads: 34 },
+    { name: 'Robotic Arm Brochure', downloads: 22 }
+  ] as T;
   if (path.startsWith('/public/products/')) {
     const slug = path.split('/').pop() ?? 'offline-product';
     const sample = products.find((product) => product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === slug) ?? products[0];
