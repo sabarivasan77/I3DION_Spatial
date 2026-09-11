@@ -248,9 +248,12 @@ router.post('/checkout', requirePermission('billing.manage'), async (req, res, n
 
     res.json({
       success: true,
+      order_id: order.id,
       orderId: order.id,
+      id: order.id,
       amount: order.amount,
       currency: order.currency,
+      key_id: billingProvider.keyId,
       keyId: billingProvider.keyId,
       planId,
       billingCycle
@@ -275,7 +278,11 @@ router.post('/verify', requirePermission('billing.manage'), async (req, res, nex
     });
 
     if (!isValid) {
-      return res.status(400).json({ error: 'INVALID_SIGNATURE', message: 'Payment verification failed.' });
+      return res.status(400).json({
+        status: 'failure',
+        error: 'INVALID_SIGNATURE',
+        message: 'Invalid payment signature'
+      });
     }
 
     // Record Payment
@@ -295,9 +302,17 @@ router.post('/verify', requirePermission('billing.manage'), async (req, res, nex
     );
 
     // Apply plan upgrade
-    const sub = await subscriptionService.changePlan(req.organizationId, planId, billingCycle);
+    let sub = null;
+    if (planId) {
+      sub = await subscriptionService.changePlan(req.organizationId, planId, billingCycle);
+    }
 
-    res.json({ success: true, message: 'Plan upgraded successfully!', subscription: sub });
+    res.json({
+      status: 'success',
+      success: true,
+      message: 'Payment verified successfully',
+      subscription: sub
+    });
   } catch (err) {
     next(err);
   }

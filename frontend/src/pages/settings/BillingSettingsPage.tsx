@@ -115,13 +115,16 @@ export const BillingSettingsPage: React.FC = () => {
       }
 
       // Open Razorpay Modal
+      const razorpayKey = checkoutRes.keyId || checkoutRes.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TaoMEJWYCgt4Xz';
+      const orderId = checkoutRes.orderId || checkoutRes.order_id;
+
       const options = {
-        key: checkoutRes.keyId,
+        key: razorpayKey,
         amount: checkoutRes.amount,
-        currency: checkoutRes.currency,
+        currency: checkoutRes.currency || 'INR',
         name: 'I3DION Spatial',
         description: `Upgrade to ${plan.name} (${billingCycle})`,
-        order_id: checkoutRes.orderId,
+        order_id: orderId,
         handler: async (response: any) => {
           try {
             await verifyCheckoutPayment(token, {
@@ -144,11 +147,20 @@ export const BillingSettingsPage: React.FC = () => {
         theme: { color: '#2563eb' }
       };
 
-      if (window.Razorpay) {
+      const openModal = () => {
         const rzp = new window.Razorpay(options);
         rzp.open();
+      };
+
+      if (window.Razorpay) {
+        openModal();
       } else {
-        setMessage({ type: 'error', text: 'Razorpay SDK failed to load. Please refresh and try again.' });
+        // Dynamically load script if missing
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.onload = () => openModal();
+        script.onerror = () => setMessage({ type: 'error', text: 'Razorpay SDK failed to load.' });
+        document.body.appendChild(script);
       }
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Checkout initiation failed' });

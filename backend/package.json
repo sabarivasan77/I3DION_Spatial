@@ -24,6 +24,7 @@
     "otplib": "^13.4.1",
     "pg": "^8.13.1",
     "qrcode": "^1.5.4",
+    "razorpay": "^2.9.8",
     "zod": "^3.24.2"
   },
   "devDependencies": {

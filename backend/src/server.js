@@ -106,6 +106,69 @@ import platformAdminRouter from './routes/platformAdmin.js';
 import publishingRouter from './routes/publishing.js';
 import notificationsRouter from './routes/notifications.js';
 
+import { billingProvider } from './services/billing/billingProvider.js';
+
+apiRouter.post('/create-order', async (req, res) => {
+  try {
+    const { amount, amountInr, currency = 'INR', receipt } = req.body;
+    let targetAmount = amountInr !== undefined ? Math.round(amountInr * 100) : amount;
+    if (!targetAmount || isNaN(targetAmount)) {
+      targetAmount = 50000; // Default 50000 paise (₹500)
+    } else if (targetAmount < 100 && targetAmount > 0) {
+      targetAmount = Math.round(targetAmount * 100);
+    }
+    if (targetAmount < 100) {
+      targetAmount = 100;
+    }
+
+    const order = await billingProvider.createOrder({
+      amount: targetAmount,
+      currency,
+      receipt: receipt || `rcpt_${Date.now()}`
+    });
+
+    res.json({
+      order_id: order.id,
+      id: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      key_id: billingProvider.keyId
+    });
+  } catch (err) {
+    console.error('Create Razorpay order error:', err);
+    res.status(500).json({ error: 'CREATE_ORDER_FAILED', message: err.message });
+  }
+});
+
+apiRouter.post('/verify-payment', async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const isValid = billingProvider.verifyPaymentSignature({
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature
+    });
+
+    if (!isValid) {
+      return res.status(400).json({
+        status: 'failure',
+        message: 'Invalid payment signature'
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Payment verified successfully'
+    });
+  } catch (err) {
+    console.error('Verify payment error:', err);
+    res.status(500).json({
+      status: 'failure',
+      message: err.message || 'Payment verification failed'
+    });
+  }
+});
+
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/public', publicRouter);
 apiRouter.use('/analytics', analyticsRouter);
