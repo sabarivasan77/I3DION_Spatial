@@ -15,6 +15,7 @@ export interface CatalogData {
   name: string;
   description: string;
   companyName: string;
+  logoUrl?: string;
   date: string;
   products: any[];
   template: 'IndustrialClassic' | 'ModernShowcase' | 'SalesBrochure' | 'LuxuryMinimalist' | 'CyberNeo' | 'NordicElegance' | 'ArchitecturalSpatial' | 'QuantumHologram';
@@ -44,6 +45,7 @@ const icStyles = StyleSheet.create({
 const IndustrialClassic = ({ data }: { data: CatalogData }) => (
   <Document>
     <Page size="A4" style={icStyles.coverPage}>
+      <Image src={data.logoUrl || '/images/logos/05_full_logo_dark.png'} style={{ width: 140, height: 45, marginBottom: 24, objectFit: 'contain' }} />
       <Text style={icStyles.coverTitle}>{data.name}</Text>
       <Text style={icStyles.coverCompany}>{data.companyName}</Text>
       {data.description && <Text style={{ fontSize: 14, color: '#CBD5E1', textAlign: 'center' }}>{data.description}</Text>}

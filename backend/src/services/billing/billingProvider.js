@@ -4,8 +4,8 @@ import { config } from '../../config.js';
 
 export class RazorpayBillingProvider {
   constructor() {
-    this.keyId = process.env.RAZORPAY_KEY_ID || 'rzp_test_TaoMEJWYCgt4Xz';
-    this.keySecret = process.env.RAZORPAY_KEY_SECRET || 'fOTIh0JDvGa65UH4sitvlVP1';
+    this.keyId = process.env.RAZORPAY_KEY_ID || 'rzp_live_TaoxOjjvfv3Z3U';
+    this.keySecret = process.env.RAZORPAY_KEY_SECRET || '1jGpSYXhZ6o2ArH1B3G9mSVH';
     this.webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || 'dummy_webhook_secret';
 
     this.razorpay = new Razorpay({

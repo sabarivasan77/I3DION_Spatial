@@ -462,8 +462,8 @@ async function offlineFallback<T>(path: string, options: RequestInit & { token?:
     const amountInPaise = body.planId === 'PRO'
       ? (body.billingCycle === 'yearly' ? 2999000 : 299900)
       : (body.billingCycle === 'yearly' ? 9999000 : 999900);
-    const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TaoMEJWYCgt4Xz';
-    const keySecret = 'fOTIh0JDvGa65UH4sitvlVP1';
+    const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_TaoxOjjvfv3Z3U';
+    const keySecret = '1jGpSYXhZ6o2ArH1B3G9mSVH';
 
     try {
       const authHeader = 'Basic ' + btoa(`${keyId}:${keySecret}`);
