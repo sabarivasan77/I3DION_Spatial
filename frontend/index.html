@@ -60,22 +60,5 @@ npm run dev</code></pre>
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      window.addEventListener('error', function(event) {
-        document.body.innerHTML += '<div style="position:fixed;top:0;left:0;right:0;background:red;color:white;padding:20px;z-index:9999;white-space:pre-wrap;overflow:auto;">' + 
-          '<h1>Frontend Runtime Error</h1>' +
-          '<p>' + event.message + '</p>' + 
-          '<p>In ' + event.filename + ':' + event.lineno + '</p>' + 
-          '<pre>' + (event.error && event.error.stack ? event.error.stack : '') + '</pre>' +
-          '</div>';
-      });
-      window.addEventListener('unhandledrejection', function(event) {
-        document.body.innerHTML += '<div style="position:fixed;top:0;left:0;right:0;background:darkred;color:white;padding:20px;z-index:9999;white-space:pre-wrap;overflow:auto;">' + 
-          '<h1>Unhandled Promise Rejection</h1>' +
-          '<p>' + event.reason + '</p>' + 
-          '<pre>' + (event.reason && event.reason.stack ? event.reason.stack : '') + '</pre>' +
-          '</div>';
-      });
-    </script>
   </body>
 </html>
