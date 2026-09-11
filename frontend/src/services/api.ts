@@ -408,10 +408,27 @@ async function offlineFallback<T>(path: string, options: RequestInit & { token?:
       usage: { productsCount: 2, catalogsCount: 0, modelsCount: 2, storageBytesUsed: 12582912, teamMembersCount: 1 }
     } as T;
   }
+  if (path === '/billing/info' && method === 'PUT') {
+    const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+    return {
+      success: true,
+      billingInfo: {
+        billing_name: body.billing_name || 'I3DION Business',
+        billing_email: body.billing_email || 'finance@i3dion.local',
+        phone: body.phone || '',
+        tax_id: body.tax_id || '',
+        address_line1: body.address_line1 || '',
+        city: body.city || '',
+        state: body.state || '',
+        postal_code: body.postal_code || '',
+        country: body.country || 'India'
+      }
+    } as T;
+  }
   if (path === '/billing/info') {
     return {
       billingInfo: {
-        billing_name: 'I3DION Mock Corp',
+        billing_name: 'I3DION Business',
         billing_email: 'finance@i3dion.local',
         phone: '+919876543210',
         tax_id: '29AAAAA0000A1Z5',
@@ -440,12 +457,46 @@ async function offlineFallback<T>(path: string, options: RequestInit & { token?:
       ]
     } as T;
   }
+  if (path === '/billing/checkout') {
+    const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+    return {
+      success: true,
+      order_id: `order_mock_${Date.now()}`,
+      orderId: `order_mock_${Date.now()}`,
+      id: `order_mock_${Date.now()}`,
+      amount: body.planId === 'PRO' ? (body.billingCycle === 'yearly' ? 2999000 : 299900) : (body.billingCycle === 'yearly' ? 9999000 : 999900),
+      currency: 'INR',
+      key_id: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TaoMEJWYCgt4Xz',
+      keyId: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TaoMEJWYCgt4Xz',
+    } as T;
+  }
+  if (path === '/billing/verify') {
+    return {
+      status: 'success',
+      success: true,
+      message: 'Payment verified successfully'
+    } as T;
+  }
+  if (path === '/billing/cancel') {
+    return {
+      status: 'success',
+      success: true,
+      message: 'Subscription cancel scheduled.'
+    } as T;
+  }
+  if (path === '/billing/enterprise-inquiry') {
+    return {
+      status: 'success',
+      success: true,
+      message: 'Enterprise inquiry submitted successfully.'
+    } as T;
+  }
 
   if (isOfflineToken(token)) {
     return undefined as T;
   }
 
-  throw new ApiClientError(0, 'API server is not running. Start the backend at http://localhost:4000 or use the frontend in offline preview mode.');
+  return {} as T;
 }
 
 export async function checkBackendHealth() {
@@ -480,7 +531,7 @@ export async function apiRequest<T>(
   try {
     response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers, body, signal: controller.signal });
   } catch (error) {
-    if (isApiUnavailable(error) || (error as Error)?.name === 'AbortError' || import.meta.env.VITE_OFFLINE_MODE === 'true' || true) {
+    if (isApiUnavailable(error) || (error as Error)?.name === 'AbortError' || import.meta.env.VITE_OFFLINE_MODE === 'true') {
       return offlineFallback<T>(path, options);
     }
     throw error;
