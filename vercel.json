@@ -3,7 +3,10 @@
   "installCommand": "npm install",
   "outputDirectory": "frontend/dist",
   "functions": {
-    "api/**/*.js": { "maxDuration": 30 }
+    "api/**/*.js": {
+      "maxDuration": 30,
+      "excludeFiles": "{frontend/public/**,frontend/dist/**,public/models/**,backend/uploads/**}"
+    }
   },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.js" },

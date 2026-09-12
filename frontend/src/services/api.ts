@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 export const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
 const API_TIMEOUT_MS = 60000; // Increased to 60s for 3D model uploads
 
