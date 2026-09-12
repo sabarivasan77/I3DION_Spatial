@@ -1,4 +1,3 @@
-import React from 'react';
 import { cx } from '../utils/format';
 
 interface LogoProps {
@@ -8,32 +7,35 @@ interface LogoProps {
   height?: number | string;
 }
 
-export function Logo({ variant = 'full', theme = 'light', className, height }: LogoProps) {
-  const isDark = theme === 'dark';
-
-  let logoSrc = '/images/logos/01_full_logo_primary.png';
+export function Logo({ variant = 'full', theme = 'light', className }: LogoProps) {
+  const isDark = theme === 'dark' || variant === 'dark' || variant === 'white';
 
   if (variant === 'icon') {
-    logoSrc = isDark ? '/images/logos/07_icon_only_dark.png' : '/images/logos/03_icon_only.png';
-  } else if (variant === 'text') {
-    logoSrc = isDark ? '/images/logos/06_text_only_dark.png' : '/images/logos/02_text_only_wordmark.png';
-  } else if (variant === 'white' || isDark) {
-    logoSrc = '/images/logos/05_full_logo_dark.png';
+    return (
+      <div className={cx("flex items-center justify-center select-none", className)}>
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 font-extrabold text-white text-xs shadow-md shadow-blue-600/30 font-sans tracking-tight">
+          i3D
+        </div>
+      </div>
+    );
   }
 
-  const defaultHeightClass = variant === 'icon' ? 'h-8 md:h-9' : 'h-9 md:h-10';
-
   return (
-    <img
-      src={logoSrc}
-      alt="I3DION Spatial"
-      className={cx(
-        height ? '' : defaultHeightClass,
-        "w-auto object-contain shrink-0 transition-all duration-200 hover:scale-[1.02]",
-        className
-      )}
-      style={height ? { height } : undefined}
-      loading="eager"
-    />
+    <div className={cx("flex items-center gap-2.5 select-none font-sans tracking-tight", className)}>
+      {/* Sleek Vector 3D Badge */}
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 font-extrabold text-white text-xs shadow-md shadow-blue-600/30">
+        i3D
+      </div>
+      
+      {/* Bold Modern Typography Wordmark */}
+      <div className="flex flex-col text-left leading-none">
+        <span className={cx("text-base md:text-lg font-black tracking-tight uppercase", isDark ? "text-white" : "text-slate-900")}>
+          I3DION
+        </span>
+        <span className="text-[9.5px] font-bold tracking-[0.22em] text-blue-600 uppercase mt-0.5">
+          SPATIAL
+        </span>
+      </div>
+    </div>
   );
 }

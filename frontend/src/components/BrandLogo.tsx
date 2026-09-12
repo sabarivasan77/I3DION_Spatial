@@ -1,4 +1,5 @@
 import React from 'react';
+import { Logo } from './Logo';
 
 type LogoVariant = 
   | 'primary'    // Used on light backgrounds (color)
@@ -17,21 +18,15 @@ interface BrandLogoProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallbackToDefault?: boolean;
 }
 
-/**
- * BrandLogo - Centralized component for rendering organization and default branding logos.
- * Handles graceful fallbacks and proper variant selection.
- */
 export function BrandLogo({ 
   variant = 'primary', 
   orgLogoUrl, 
   className = '', 
   fallbackToDefault = true,
-  alt = 'Logo',
+  alt = 'I3DION Spatial',
   ...props 
 }: BrandLogoProps) {
   
-  // If organization logo is provided, we prefer that for customer-facing experiences.
-  // Note: custom org logos might not have all variants (they usually just upload one).
   if (orgLogoUrl) {
     return (
       <img 
@@ -48,27 +43,14 @@ export function BrandLogo({
     return null;
   }
 
-  // Map variants to actual filenames inside public/images/logos/
-  const variantMap: Record<LogoVariant, string> = {
-    'primary': '/images/logos/01_full_logo_primary.png',
-    'text': '/images/logos/02_text_only_wordmark.png',
-    'icon': '/images/logos/03_icon_only.png',
-    'black': '/images/logos/04_black_and_white.png',
-    'dark': '/images/logos/05_full_logo_dark.png',
-    'text-dark': '/images/logos/06_text_only_dark.png',
-    'icon-dark': '/images/logos/07_icon_only_dark.png',
-    'white': '/images/logos/08_white_only.png',
-  };
-
-  const src = variantMap[variant] || variantMap['primary'];
+  const isDark = variant === 'dark' || variant === 'white' || variant === 'text-dark' || variant === 'icon-dark';
+  const isIconOnly = variant === 'icon' || variant === 'icon-dark';
 
   return (
-    <img 
-      src={src} 
-      alt={alt || 'I3DION Spatial'}
-      className={`object-contain ${className}`}
-      loading="lazy"
-      {...props}
+    <Logo 
+      variant={isIconOnly ? 'icon' : 'full'} 
+      theme={isDark ? 'dark' : 'light'} 
+      className={className} 
     />
   );
 }
