@@ -1,4 +1,4 @@
-import { Component, ReactNode, Suspense, useRef, useEffect } from 'react';
+import { Component, ReactNode, Suspense, useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { 
   useGLTF, 
@@ -10,7 +10,7 @@ import {
   Grid
 } from '@react-three/drei';
 import { createXRStore, XR } from '@react-three/xr';
-import type { Group, Mesh, MeshStandardMaterial } from 'three';
+import type { Group } from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export type RenderMode = 'solid' | 'wireframe' | 'xray';
@@ -121,7 +121,7 @@ function RealModel({
 function DetailedProceduralModel({ 
   productName, 
   renderMode = 'solid',
-  themeMode = 'light'
+  themeMode: _themeMode = 'light'
 }: { 
   productName?: string; 
   renderMode?: RenderMode; 
@@ -368,7 +368,7 @@ export default function ThreeProduct({
       <LoadingOverlay productName={productName} />
 
       <Canvas 
-        eventSource={containerRef}
+        eventSource={containerRef as unknown as HTMLElement}
         shadows 
         camera={{ position: [4, 2.5, 5], fov: 42 }}
         gl={{ preserveDrawingBuffer: true, antialias: true }}
