@@ -347,13 +347,15 @@ export default function ThreeProduct({
   autoRotate = false,
   productName,
   renderMode = 'solid',
-  themeMode = 'light'
+  themeMode = 'light',
+  className = ''
 }: { 
   modelUrl?: string;
   autoRotate?: boolean;
   productName?: string;
   renderMode?: RenderMode;
   themeMode?: ThemeMode;
+  className?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -363,7 +365,7 @@ export default function ThreeProduct({
   const gridSectionColor = isDark ? '#334155' : '#CBD5E1';
 
   return (
-    <div ref={containerRef} className={`relative w-full h-full ${isDark ? 'bg-[#0F172A]' : 'bg-[#F8FAFC]'} overflow-hidden rounded-inherit`}>
+    <div ref={containerRef} className={`relative w-full h-full ${isDark ? 'bg-[#0F172A]' : 'bg-[#F8FAFC]'} overflow-hidden rounded-inherit ${className}`}>
       {/* Loading Overlay */}
       <LoadingOverlay productName={productName} />
 

@@ -1,7 +1,9 @@
 import { useEffect, useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { PDFViewer, pdf } from '@react-pdf/renderer';
-import { BookOpen, Download, Plus, CheckCircle2, Box, Layers, Briefcase, Sparkles, Search, ArrowUp, ArrowDown, Loader2, LayoutTemplate, ExternalLink, Gem, Rocket, Leaf, Building2, Atom } from 'lucide-react';
+import { BookOpen, Download, Plus, CheckCircle2, Box, Layers, Briefcase, Sparkles, Search, ArrowUp, ArrowDown, Loader2, LayoutTemplate, ExternalLink, Gem, Rocket, Leaf, Building2, Atom, X, Trash2 } from 'lucide-react';
 import QRCode from 'qrcode';
+import ThreeProduct from '../components/ThreeProduct';
 import { Button, Card, PageHeader, SectionTitle } from '../components/ui';
 import { api, CatalogRecord } from '../services/api';
 import { useAuthStore } from '../store/authStore';
@@ -27,6 +29,24 @@ export function CatalogBuilderPage() {
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState<'build' | 'manage'>('build');
+  const [runningCatalog, setRunningCatalog] = useState<{ catalog: CatalogRecord; products: any[] } | null>(null);
+
+  const handleDeleteCatalog = async (id: string) => {
+    if (!token) return;
+    try {
+      await api.deleteCatalog(token, id);
+      setCatalogs(prev => prev.filter(c => c.id !== id));
+      success('Catalog deleted', 'Catalog has been removed.');
+    } catch (err: any) {
+      showError('Delete failed', err.message || 'Could not delete catalog');
+    }
+  };
+
+  const handleRunCatalog = (catalog: CatalogRecord) => {
+    const matchedProducts = products.filter(p => (catalog.productIds || []).includes(p.id));
+    const effectiveProducts = matchedProducts.length > 0 ? matchedProducts : products.slice(0, 3);
+    setRunningCatalog({ catalog, products: effectiveProducts });
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -406,6 +426,370 @@ export function CatalogBuilderPage() {
           </div>
         </div>
       )}
+      {/* ─── RUN CATALOG LIVE MODAL / EXPERIENTIAL VIEW ─── */}
+      {runningCatalog && (
+        <div className="fixed inset-0 z-[100] flex flex-col bg-slate-950/95 p-4 md:p-8 backdrop-blur-md overflow-y-auto">
+          <div className="mx-auto w-full max-w-6xl rounded-3xl bg-slate-900 border border-slate-800 p-6 md:p-10 shadow-2xl space-y-8 my-auto">
+            {/* Header */}
+            <div className="flex items-start justify-between border-b border-slate-800 pb-6">
+              <div>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-400 border border-blue-500/30 mb-3">
+                  <Rocket size={14} /> LIVE WEB CATALOG • {runningCatalog.catalog.template || 'IndustrialClassic'}
+                </span>
+                <h2 className="text-3xl font-extrabold text-white">{runningCatalog.catalog.name}</h2>
+                <p className="mt-2 text-sm text-slate-400 max-w-2xl">{runningCatalog.catalog.description || 'Interactive spatial product catalog.'}</p>
+              </div>
+              <button 
+                onClick={() => setRunningCatalog(null)}
+                className="rounded-2xl bg-slate-800 p-3 text-slate-400 hover:bg-slate-700 hover:text-white transition"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Template-Based Product Representation */}
+            {/* TEMPLATE 1: PRODUCT SHOWCASE */}
+            {(runningCatalog.catalog.template === 'IndustrialClassic' || runningCatalog.catalog.template === 'SalesBrochure' || !runningCatalog.catalog.template) && (
+              <div className="space-y-12">
+                {runningCatalog.products.map((p, idx) => (
+                  <div key={p.id || idx} className="grid lg:grid-cols-2 gap-8 items-center rounded-3xl bg-slate-800/60 border border-slate-700/60 p-6 md:p-8 hover:border-blue-500/50 transition">
+                    <div className="h-80 rounded-2xl overflow-hidden bg-slate-950 relative border border-slate-700/40">
+                      {p.model_url || p.modelUrl ? (
+                        <ThreeProduct modelUrl={p.model_url || p.modelUrl} autoRotate className="w-full h-full" />
+                      ) : p.image_url ? (
+                        <img src={p.image_url} alt="" className="w-full h-full object-contain p-4" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-slate-600"><Box size={48} /></div>
+                      )}
+                      <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-blue-400 border border-slate-700">
+                        {p.category || 'Industrial'}
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <h3 className="text-2xl font-bold text-white">{p.name}</h3>
+                      <p className="text-sm text-slate-300 leading-relaxed">{p.description || 'High-precision industrial product built for modern spatial workflows.'}</p>
+                      
+                      {p.specs && Object.keys(p.specs).length > 0 && (
+                        <div className="grid grid-cols-2 gap-2 bg-slate-900/60 p-4 rounded-xl border border-slate-800 text-xs">
+                          {Object.entries(p.specs).slice(0, 4).map(([k, v]) => (
+                            <div key={k}>
+                              <span className="text-slate-400 font-medium">{k}: </span>
+                              <span className="text-slate-200 font-bold">{String(v)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="pt-2 flex flex-wrap gap-3">
+                        <Link 
+                          to={`/product/${p.slug || p.id}`}
+                          onClick={() => setRunningCatalog(null)}
+                          className="inline-flex h-11 items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-6 transition shadow-lg shadow-blue-600/20"
+                        >
+                          <ExternalLink size={16} /> Open Product 3D / AR Viewer
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* TEMPLATE 2: TECHNICAL / INDUSTRIAL */}
+            {(runningCatalog.catalog.template === 'ArchitecturalSpatial' || runningCatalog.catalog.template === 'LuxuryMinimalist') && (
+              <div className="space-y-8">
+                <div className="rounded-2xl bg-slate-950 p-6 border border-slate-800 text-xs font-mono text-emerald-400">
+                  // TECHNICAL DATASHEET SPECIFICATION GRID • {runningCatalog.products.length} REGISTERED ASSETS
+                </div>
+                <div className="grid gap-6 md:grid-cols-2">
+                  {runningCatalog.products.map((p, idx) => (
+                    <div key={p.id || idx} className="rounded-2xl bg-slate-800/80 border border-slate-700 p-6 space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <span className="text-[10px] font-mono text-blue-400 uppercase tracking-widest">{p.category || 'TECHNICAL SPEC'}</span>
+                          <h4 className="text-xl font-bold text-white mt-1">{p.name}</h4>
+                        </div>
+                        <span className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
+                      </div>
+                      <p className="text-xs text-slate-400 line-clamp-2">{p.description}</p>
+                      
+                      <div className="border-t border-slate-700/60 pt-3 space-y-1 text-xs font-mono">
+                        {p.specs ? Object.entries(p.specs).map(([k, v]) => (
+                          <div key={k} className="flex justify-between text-slate-300">
+                            <span className="text-slate-500">{k}</span>
+                            <span>{String(v)}</span>
+                          </div>
+                        )) : null}
+                      </div>
+
+                      <Link 
+                        to={`/product/${p.slug || p.id}`}
+                        onClick={() => setRunningCatalog(null)}
+                        className="inline-flex w-full h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-950 text-blue-400 border border-blue-500/30 text-xs font-semibold transition"
+                      >
+                        <ExternalLink size={14} /> View Technical 3D & Specs
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* TEMPLATE 3: MODERN PRODUCT COLLECTION */}
+            {(runningCatalog.catalog.template === 'ModernShowcase' || runningCatalog.catalog.template === 'CyberNeo' || runningCatalog.catalog.template === 'NordicElegance' || runningCatalog.catalog.template === 'QuantumHologram') && (
+              <div className="grid gap-6 md:grid-cols-3">
+                {runningCatalog.products.map((p, idx) => (
+                  <div key={p.id || idx} className="group rounded-3xl bg-slate-800/60 border border-slate-700 overflow-hidden hover:border-cyan-400/50 transition flex flex-col">
+                    <div className="h-48 bg-slate-950 relative overflow-hidden">
+                      {p.image_url ? (
+                        <img src={p.image_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-slate-600"><Box size={40} /></div>
+                      )}
+                      <div className="absolute top-3 right-3 bg-cyan-500/20 backdrop-blur-md text-cyan-300 text-[10px] font-bold px-2.5 py-1 rounded-full border border-cyan-400/30">
+                        3D / AR READY
+                      </div>
+                    </div>
+                    <div className="p-5 flex flex-col flex-1">
+                      <h4 className="font-bold text-lg text-white mb-1">{p.name}</h4>
+                      <p className="text-xs text-slate-400 line-clamp-2 mb-4">{p.description}</p>
+                      <Link 
+                        to={`/product/${p.slug || p.id}`}
+                        onClick={() => setRunningCatalog(null)}
+                        className="mt-auto inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 text-xs font-semibold transition"
+                      >
+                        <ExternalLink size={14} /> Open Product
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── MAIN BUILDER / MANAGE NAVIGATION ─── */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <PageHeader 
+          title="Catalog Builder" 
+          eyebrow="Generate professional, interactive PDF catalogs with embedded AR and QR flows."
+        />
+        <div className="flex bg-slate-100 p-1 rounded-xl">
+          <button onClick={() => setActiveTab('build')} className={`px-5 py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === 'build' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>Create New</button>
+          <button onClick={() => setActiveTab('manage')} className={`px-5 py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === 'manage' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>Manage Catalogs</button>
+        </div>
+      </div>
+
+      {activeTab === 'build' && (
+        <div className="grid gap-8 xl:grid-cols-[450px_1fr]">
+          {/* Left Column: Form & Selections */}
+          <div className="space-y-6">
+            
+            {/* Catalog Details */}
+            <Card className="p-6 border-slate-200/60 shadow-sm">
+              <div className="flex items-center gap-2 mb-5 text-slate-800">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">1</div>
+                <h3 className="font-bold">Catalog Details</h3>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <input 
+                    type="text" 
+                    value={name} 
+                    onChange={e => setName(e.target.value)} 
+                    placeholder="Enter catalog title..."
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-[15px] font-medium outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10" 
+                  />
+                </div>
+                <div>
+                  <textarea 
+                    value={description} 
+                    onChange={e => setDescription(e.target.value)} 
+                    placeholder="Write a brief overview for the cover page..."
+                    className="min-h-[90px] w-full rounded-xl border border-slate-200 bg-slate-50 p-4 text-[14px] outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 resize-none" 
+                  />
+                </div>
+              </div>
+            </Card>
+
+            {/* Template Selection */}
+            <Card className="p-6 border-slate-200/60 shadow-sm">
+              <div className="flex items-center gap-2 mb-5 text-slate-800">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">2</div>
+                <h3 className="font-bold">Choose Template</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4">
+                {templates.map(t => {
+                  const Icon = t.icon;
+                  const isSelected = template === t.id;
+                  return (
+                    <div
+                      key={t.id}
+                      onClick={() => setTemplate(t.id as any)}
+                      className={`group relative cursor-pointer overflow-hidden rounded-[20px] border transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-[1.01] ${
+                        isSelected
+                          ? `border-transparent bg-gradient-to-r ${t.gradient} ${t.activeRing}`
+                          : `border-slate-200/80 bg-white hover:border-transparent hover:bg-gradient-to-r ${t.hoverGradient} ${t.shadowHover}`
+                      }`}
+                    >
+                      <div className="relative z-10 flex items-center p-5 gap-5">
+                        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-all duration-500 ${
+                          isSelected ? `${t.accentBg} ${t.accentText}` : `bg-slate-100 text-slate-400 group-hover:${t.accentBg} group-hover:${t.accentText}`
+                        }`}>
+                          <Icon size={24} strokeWidth={1.5} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-center mb-1">
+                            <h4 className={`text-lg font-bold truncate transition-colors duration-500 ${isSelected ? 'text-white' : 'text-slate-900 group-hover:text-white'}`}>{t.name}</h4>
+                            <span className="text-2xl filter drop-shadow-sm">{t.emoji}</span>
+                          </div>
+                          <p className={`text-[13px] leading-snug line-clamp-2 transition-colors duration-500 ${isSelected ? 'text-slate-300' : 'text-slate-500 group-hover:text-slate-300'}`}>{t.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+
+            {/* Product Selection */}
+            <Card className="p-6 border-slate-200/60 shadow-sm flex flex-col h-[500px]">
+              <div className="flex items-center gap-2 mb-5 text-slate-800">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">3</div>
+                <h3 className="font-bold">Select Products</h3>
+                <span className="ml-auto text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">{selectedProducts.length} Selected</span>
+              </div>
+              
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input 
+                  type="text" 
+                  value={productSearch}
+                  onChange={e => setProductSearch(e.target.value)}
+                  placeholder="Search products to add..."
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none transition-all focus:border-blue-500 focus:bg-white"
+                />
+              </div>
+
+              <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                {loading ? (
+                  <div className="flex justify-center py-10"><Loader2 className="animate-spin text-slate-300" size={32} /></div>
+                ) : filteredProducts.length === 0 ? (
+                  <div className="text-center py-8 text-slate-400 text-sm">No products found</div>
+                ) : (
+                  filteredProducts.map(p => {
+                    const isSelected = selectedProducts.some(sp => sp.id === p.id);
+                    const selectedIndex = selectedProducts.findIndex(sp => sp.id === p.id);
+                    
+                    return (
+                      <div 
+                        key={p.id}
+                        onClick={() => toggleProduct(p)}
+                        className={`group flex cursor-pointer items-center justify-between rounded-xl border p-2.5 transition-all ${
+                          isSelected ? 'border-blue-500 bg-blue-50/50 shadow-sm' : 'border-slate-100 hover:border-slate-300 hover:bg-slate-50 hover:shadow-sm'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-10 w-10 shrink-0 overflow-hidden rounded bg-slate-100 border border-slate-200/50">
+                            {p.image_url ? <img src={p.image_url} alt="" className="h-full w-full object-cover" /> : <Box className="m-auto mt-2 text-slate-300" size={20} />}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-slate-800 truncate">{p.name}</p>
+                            <p className="text-[11px] text-slate-500 truncate">{p.category}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-1 shrink-0">
+                          {isSelected && (
+                            <div className="flex gap-1 mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={(e) => moveProduct(e, selectedIndex, 'up')} className="p-1 text-slate-400 hover:bg-white hover:text-blue-600 rounded">
+                                <ArrowUp size={16} />
+                              </button>
+                              <button onClick={(e) => moveProduct(e, selectedIndex, 'down')} className="p-1 text-slate-400 hover:bg-white hover:text-blue-600 rounded">
+                                <ArrowDown size={16} />
+                              </button>
+                            </div>
+                          )}
+                          <div className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${
+                            isSelected ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600'
+                          }`}>
+                            {isSelected ? <CheckCircle2 size={14} strokeWidth={3} /> : <Plus size={14} strokeWidth={2.5} />}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </Card>
+          </div>
+
+          {/* Right Column: Massive Preview */}
+          <div className="sticky top-6 hidden xl:flex flex-col h-[calc(100vh-100px)]">
+            <div className="bg-slate-900 rounded-t-2xl px-4 py-3 flex items-center justify-between shadow-lg">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-slate-700"></div>
+                  <div className="w-3 h-3 rounded-full bg-slate-700"></div>
+                  <div className="w-3 h-3 rounded-full bg-slate-700"></div>
+                </div>
+                <div className="ml-4 px-3 py-1 bg-slate-800 rounded-md flex items-center gap-2 text-xs font-mono text-slate-400">
+                  <BookOpen size={12} /> Live PDF & Web Render
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleGenerate} 
+                  disabled={isGenerating || selectedProducts.length === 0 || !name.trim()} 
+                  className={`h-9 px-6 transition-all duration-300 ${isGenerating ? 'bg-blue-600 text-white opacity-80' : 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5'}`}
+                >
+                  {isGenerating ? <><Loader2 size={16} className="animate-spin mr-2" /> Generating...</> : <><Sparkles size={16} className="mr-2" /> Publish Catalog</>}
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex-1 bg-slate-100/50 border-x border-b border-slate-200 rounded-b-2xl overflow-hidden relative shadow-2xl">
+              {selectedProducts.length === 0 ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 p-8 text-center">
+                  <div className="w-24 h-24 mb-6 rounded-3xl bg-slate-200/50 flex items-center justify-center">
+                    <LayoutTemplate size={48} className="text-slate-300" strokeWidth={1} />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-600 mb-2">Preview Canvas Empty</h3>
+                  <p className="max-w-md text-sm">Select products from the sidebar to visualize how your printed or digital catalog will look in real-time.</p>
+                </div>
+              ) : (
+                <PDFViewer width="100%" height="100%" className="border-none bg-transparent">
+                  <CatalogPDF data={catalogData} />
+                </PDFViewer>
+              )}
+              
+              {/* Overlay Loader */}
+              {isGenerating && (
+                <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+                  <div className="bg-white p-8 rounded-3xl shadow-2xl flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                    <div className="w-16 h-16 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+                    <h3 className="text-lg font-bold text-slate-900 mb-1">Rendering PDF</h3>
+                    <p className="text-sm text-slate-500">Injecting spatial assets & high-res images...</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Mobile floating generate button */}
+          <div className="fixed bottom-6 left-6 right-6 xl:hidden z-40">
+            <Button 
+              onClick={handleGenerate} 
+              disabled={isGenerating || selectedProducts.length === 0 || !name.trim()} 
+              className="w-full h-14 text-lg shadow-2xl shadow-blue-500/20"
+            >
+              {isGenerating ? <><Loader2 size={20} className="animate-spin mr-2" /> Compiling Document...</> : 'Generate Catalog'}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {activeTab === 'manage' && (
         <div className="space-y-6">
@@ -422,41 +806,45 @@ export function CatalogBuilderPage() {
               {catalogs.map(c => {
                 return (
                   <div key={c.id} className="group relative bg-white rounded-3xl border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col h-[340px]">
-                    <div className="h-40 bg-gradient-to-br from-slate-100 to-slate-200 relative overflow-hidden">
-                      <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
-                      <div className="absolute bottom-4 left-5 right-5 flex justify-between items-end">
+                    <div className="h-40 bg-gradient-to-br from-slate-900 to-blue-950 relative overflow-hidden p-5 flex flex-col justify-between">
+                      <div className="flex justify-between items-center z-10">
                         <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-semibold flex items-center gap-1.5 border border-white/20">
                           <BookOpen size={12} /> {c.productIds?.length || 0} Products
                         </div>
-                        <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/20">
-                          <Sparkles size={14} />
-                        </div>
+                        <button 
+                          onClick={() => handleDeleteCatalog(c.id)} 
+                          className="w-8 h-8 rounded-full bg-red-500/20 hover:bg-red-500 text-red-200 hover:text-white backdrop-blur-md flex items-center justify-center transition border border-red-500/30"
+                          title="Delete Catalog"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                      <div className="z-10">
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-blue-300">{c.template || 'IndustrialClassic'}</span>
+                        <h4 className="text-lg font-bold text-white truncate">{c.name}</h4>
                       </div>
                     </div>
                     
                     <div className="p-6 flex flex-col flex-1">
                       <div className="flex items-start justify-between gap-4 mb-2">
-                        <h3 className="font-bold text-xl text-slate-900 line-clamp-1">{c.name}</h3>
+                        <p className="text-sm text-slate-500 line-clamp-2">{c.description || 'Interactive product collection.'}</p>
                         <span className="shrink-0 inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
-                          {c.status}
+                          {c.status || 'Published'}
                         </span>
                       </div>
-                      <p className="text-sm text-slate-500 line-clamp-2 mb-auto">{c.description || 'No description provided.'}</p>
                       
-                      <div className="mt-6 pt-5 border-t border-slate-100 flex items-center gap-2">
-                        {c.pdf_url ? (
-                          <a href={c.pdf_url} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 h-10 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-colors">
-                            <Download size={16} /> Download PDF
-                          </a>
-                        ) : (
-                          <div className="flex-1 flex items-center justify-center gap-2 h-10 bg-slate-100 text-slate-400 text-sm font-semibold rounded-xl cursor-not-allowed">
-                            Processing...
-                          </div>
-                        )}
-                        <button className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
-                          <ExternalLink size={18} />
+                      <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-2">
+                        <button
+                          onClick={() => handleRunCatalog(c)}
+                          className="flex-1 flex items-center justify-center gap-2 h-10 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-md shadow-blue-600/20"
+                        >
+                          <Rocket size={14} /> Run Catalog
                         </button>
+                        {c.pdf_url ? (
+                          <a href={c.pdf_url} target="_blank" rel="noreferrer" className="flex items-center justify-center h-10 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition" title="Download PDF">
+                            <Download size={16} />
+                          </a>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -469,3 +857,4 @@ export function CatalogBuilderPage() {
     </div>
   );
 }
+

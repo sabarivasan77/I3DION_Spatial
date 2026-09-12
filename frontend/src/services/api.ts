@@ -85,6 +85,7 @@ export type CatalogRecord = {
   description?: string;
   status: 'Draft' | 'Published' | 'Archived';
   pdf_url?: string;
+  template?: string;
   productIds: string[];
 };
 
@@ -216,27 +217,44 @@ async function offlineFallback<T>(rawPath: string, options: RequestInit & { toke
     return { user } as T;
   }
   if (path === '/products' && method === 'GET') {
+    const stored = localStorage.getItem('i3dion.products');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Merge stored products with mock products (stored products first, avoiding duplicates)
+          const storedIds = new Set(parsed.map(p => p.id));
+          const mockFiltered = products.filter(p => !storedIds.has(p.id));
+          return offlineClone([...parsed, ...mockFiltered]) as T;
+        }
+      } catch (err) {}
+    }
     return offlineClone(products) as T;
   }
   if (path === '/products' && method === 'POST') {
     const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
-    const id = `offline-product-${Date.now()}`;
+    const id = `prod-${Date.now()}`;
     const slug = body.name ? body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : id;
     const public_url = typeof window !== 'undefined' ? `${window.location.origin}/product/${slug}` : `https://i3-dion-spatial.vercel.app/product/${slug}`;
     const newProduct = {
       id,
       slug,
       public_url,
-      name: body.name || 'New Mock Product',
-      category: body.category || 'Mock Category',
+      name: body.name || 'New Industrial Product',
+      category: body.category || 'Industrial Equipment',
       status: body.status || 'Draft',
-      is_public: body.isPublic || false,
+      is_public: body.isPublic ?? false,
+      isPublic: body.isPublic ?? false,
       description: body.description || '',
       specs: body.specs || {},
       created_at: new Date().toISOString(),
       qr: null,
+      assets: [],
     };
     products.unshift(newProduct as any);
+    const existingStored = JSON.parse(localStorage.getItem('i3dion.products') ?? 'null') || products;
+    const updatedStored = [newProduct, ...existingStored.filter((p: any) => p.id !== id)];
+    localStorage.setItem('i3dion.products', JSON.stringify(updatedStored));
     return offlineClone(newProduct) as T;
   }
   if (path.startsWith('/products/') && path.endsWith('/metrics')) {
@@ -262,11 +280,43 @@ async function offlineFallback<T>(rawPath: string, options: RequestInit & { toke
   }
   if (path.startsWith('/products/') && method === 'GET') {
     const id = path.split('/').pop();
-    return offlineClone(products.find((product) => product.id === id) ?? null) as T;
+    const stored = JSON.parse(localStorage.getItem('i3dion.products') ?? '[]') as any[];
+    const all = [...stored, ...products];
+    const match = all.find((product) => product.id === id || product.slug === id);
+    return offlineClone(match ?? null) as T;
   }
-  if (path === '/catalogs') {
+  if (path === '/catalogs' && method === 'GET') {
     const catalogs = JSON.parse(localStorage.getItem('i3dion.catalogs') ?? '[]') as CatalogRecord[];
     return offlineClone(catalogs) as T;
+  }
+  if (path === '/catalogs' && method === 'POST') {
+    const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+    const catalogs = JSON.parse(localStorage.getItem('i3dion.catalogs') ?? '[]') as any[];
+    const id = `catalog-${Date.now()}`;
+    const newCatalog = {
+      id,
+      name: body.name || 'New Catalog',
+      description: body.description || '',
+      template: body.template || 'IndustrialClassic',
+      productIds: body.productIds || body.products?.map((p: any) => p.id) || [],
+      products: body.products || [],
+      status: body.status || 'Draft',
+      created_at: new Date().toISOString(),
+    };
+    catalogs.unshift(newCatalog);
+    localStorage.setItem('i3dion.catalogs', JSON.stringify(catalogs));
+    return offlineClone(newCatalog) as T;
+  }
+  if (path.startsWith('/catalogs/') && method === 'PUT') {
+    const id = path.split('/').pop() as string;
+    const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+    const catalogs = JSON.parse(localStorage.getItem('i3dion.catalogs') ?? '[]') as any[];
+    const index = catalogs.findIndex(c => c.id === id);
+    if (index !== -1) {
+      catalogs[index] = { ...catalogs[index], ...body, updated_at: new Date().toISOString() };
+      localStorage.setItem('i3dion.catalogs', JSON.stringify(catalogs));
+      return offlineClone(catalogs[index]) as T;
+    }
   }
   if (path.startsWith('/catalogs/') && method === 'GET') {
     const id = path.split('/').pop() as string;

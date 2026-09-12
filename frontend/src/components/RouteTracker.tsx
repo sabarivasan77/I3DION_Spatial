@@ -12,6 +12,14 @@ export default function RouteTracker() {
       left: 0,
       behavior: 'instant' as ScrollBehavior
     });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    
+    // Also scroll all overflow containers to top
+    const scrollContainers = document.querySelectorAll('.overflow-y-auto, main');
+    scrollContainers.forEach((el) => {
+      el.scrollTop = 0;
+    });
 
     // 2. Analytics Tracking
     const isProductPage = location.pathname.startsWith('/product/') || location.pathname.startsWith('/hub/product/');
