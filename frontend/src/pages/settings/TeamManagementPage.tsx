@@ -22,9 +22,11 @@ export const TeamManagementPage: React.FC = () => {
     if (!token) return;
     try {
       const data = await fetchOrganizationProfile(token);
-      setMembers(data.members || []);
+      const safeMembers = Array.isArray(data?.members) ? data.members : Array.isArray(data) ? data : [];
+      setMembers(safeMembers);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to load team members' });
+      setMembers([]);
     } finally {
       setLoading(false);
     }

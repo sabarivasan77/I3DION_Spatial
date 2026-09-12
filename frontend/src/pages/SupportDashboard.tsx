@@ -35,12 +35,12 @@ export function SupportDashboardPage() {
     setLoading(true);
     try {
       const ticketsRes = await api.getSupportTickets(token || '').catch(() => null);
-      if (Array.isArray(ticketsRes)) {
-        setTickets(ticketsRes);
-        setStats((prev: any) => ({ ...prev, total_tickets: ticketsRes.length }));
-      }
+      const safeTickets = Array.isArray(ticketsRes) ? ticketsRes : (ticketsRes as any)?.tickets || (ticketsRes as any)?.data || [];
+      setTickets(safeTickets);
+      setStats((prev: any) => ({ ...prev, total_tickets: safeTickets.length }));
     } catch (err) {
       console.error('Failed to load support data:', err);
+      setTickets([]);
     } finally {
       setLoading(false);
     }
