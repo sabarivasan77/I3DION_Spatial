@@ -24,35 +24,68 @@ import ThreeProduct from '../components/ThreeProduct';
 import { ViewInARButton } from '../components/ViewInARButton';
 import { Logo } from '../components/Logo';
 
-// Sample demo models for interactive showcase
+// Verified local industrial GLB models with documented open-source CC-BY 4.0 licenses
 const DEMO_MODELS = [
   {
-    id: 'compressor',
-    name: 'Rotary Air Compressor 500',
-    category: 'Industrial Machinery',
+    id: 'gearbox',
+    name: 'Industrial Gearbox Reference Model',
+    title: 'Precision Multi-Gear Transmission Assembly',
+    category: 'Mechanical Transmission',
     icon: Factory,
-    modelUrl: '',
-    desc: 'High-pressure multi-stage industrial air compressor for heavy manufacturing environments.',
-    specs: { Power: '250 kW', Voltage: '440V', Weight: '1,450 kg', FlowRate: '42 m³/min' },
+    modelUrl: '/models/gearbox_assembly.glb',
+    desc: 'Multi-part mechanical transmission reference assembly featuring helical spur gears, pinion shafts, and cast outer housing designed for rotational power transfer analysis.',
+    dataCards: [
+      { label: 'Component Structure', value: 'Multi-Part Gear Assembly' },
+      { label: 'Visualization Modes', value: 'Solid / Wireframe / X-Ray' },
+      { label: 'Internal Geometry', value: 'Helical Gears & Shafts' },
+      { label: 'Asset Reference', value: 'glTF 2.0 CAD Standard' }
+    ],
+    highlights: [
+      'Cast Outer Transmission Housing',
+      'Helical Spur Gears & Pinion Shafts',
+      'Countershaft Bearings & Retaining Rings'
+    ]
   },
   {
-    id: 'motor',
-    name: 'Electric Drivetrain Assembly',
-    category: 'Automotive Engineering',
-    icon: Car,
-    modelUrl: '',
-    desc: 'High-torque dual-motor electric drivetrain with integrated thermal management system.',
-    specs: { Torque: '780 Nm', Output: '350 kW', Efficiency: '97.4%', Cooling: 'Liquid' },
-  },
-  {
-    id: 'turbine',
-    name: 'Precision Centrifugal Turbine',
-    category: 'Energy & Aerodynamics',
+    id: 'pump',
+    name: 'Industrial Twin-Cylinder Assembly',
+    title: 'Reciprocating Piston & Manifold Assembly',
+    category: 'Fluid Handling Equipment',
     icon: Activity,
-    modelUrl: '',
-    desc: 'Aerospace-grade centrifugal gas turbine for power generation and pressure regulation.',
-    specs: { RPM: '36,000', Pressure: '12.5 Bar', Material: 'Titanium Alloy', Rating: 'IP68' },
+    modelUrl: '/models/industrial_pump.glb',
+    desc: 'Twin-cylinder reciprocating mechanical reference assembly highlighting internal piston bores, connecting rods, flywheel, and fluid pressure housing.',
+    dataCards: [
+      { label: 'Component Structure', value: 'Piston & Cylinder Assembly' },
+      { label: 'Visualization Modes', value: 'Solid / Wireframe / X-Ray' },
+      { label: 'Internal Geometry', value: 'Connecting Rods & Flywheel' },
+      { label: 'Asset Reference', value: 'glTF 2.0 CAD Standard' }
+    ],
+    highlights: [
+      'Dual Cylinder Bores & Pressure Manifold',
+      'Reciprocating Pistons & Gudgeon Pins',
+      'Balanced Flywheel Shaft'
+    ]
   },
+  {
+    id: 'actuator',
+    name: 'Reciprocating Power Actuator',
+    title: 'Motorized Reciprocating Drive Assembly',
+    category: 'Rotating Power Equipment',
+    icon: Cpu,
+    modelUrl: '/models/electric_motor.glb',
+    desc: 'Electric motor-driven reciprocating mechanical assembly demonstrating internal bevel reduction gearing, armature shaft, and outer protective housing.',
+    dataCards: [
+      { label: 'Component Structure', value: 'Drive Motor & Reduction Gear' },
+      { label: 'Visualization Modes', value: 'Solid / Wireframe / X-Ray' },
+      { label: 'Internal Geometry', value: 'Stator & Reciprocating Guide' },
+      { label: 'Asset Reference', value: 'glTF 2.0 CAD Standard' }
+    ],
+    highlights: [
+      'Electric Motor Stator & Armature',
+      'Bevel Gear Reduction Assembly',
+      'Reciprocating Guide Shaft'
+    ]
+  }
 ];
 
 export function LandingPage() {
@@ -105,7 +138,7 @@ export function LandingPage() {
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.15]">
             Transform Physical Products into{' '}
             <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 bg-clip-text text-transparent">
-              Interactive Monochromatic 3D & WebAR
+              Interactive 3D & WebAR
             </span>{' '}
             Experiences
           </h1>
@@ -135,52 +168,52 @@ export function LandingPage() {
           </div>
         </div>
 
-        {/* ─── 2. HIGH-IMPACT MONOCHROMATIC 3D STUDIO SHOWCASE ───────────────────── */}
+        {/* ─── 2. HIGH-IMPACT 3D SHOWCASE SECTION (60/40 SPLIT) ────────────────── */}
         <div className="relative mt-12 w-full max-w-6xl z-10 mx-auto">
-          <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-[#0B0F17] shadow-2xl flex flex-col">
-            {/* Header / Model Picker Navigation Tabs & Render Mode Controls */}
-            <div className="flex flex-wrap items-center justify-between border-b border-slate-800 p-4 bg-[#0F172A] gap-3">
-              <div className="flex items-center gap-3">
+          <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl flex flex-col">
+            {/* Header / Model Navigation & Mode Switcher */}
+            <div className="flex flex-wrap items-center justify-between border-b border-slate-200 p-4 bg-slate-50/90 gap-3">
+              <div className="flex items-center gap-2.5">
                 <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-600"></span>
                 </span>
-                <span className="text-xs font-mono font-bold text-slate-200 uppercase tracking-widest flex items-center gap-2">
-                  <Box size={14} className="text-cyan-400" />
-                  I3DION MONOCHROMATIC 3D ENGINE v2.4
+                <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <Box size={15} className="text-blue-600" />
+                  i3D Product Showcase
                 </span>
               </div>
 
-              {/* Render Shader Mode Switcher (Solid, Wireframe, X-Ray) */}
-              <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300">
+              {/* Mode Selector: SOLID / WIREFRAME / X-RAY */}
+              <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 shadow-2xs">
                 <button
                   onClick={() => setRenderMode('solid')}
-                  className={`px-3 py-1.5 rounded-lg transition text-xs ${
-                    renderMode === 'solid' ? 'bg-blue-600 text-white font-bold shadow-xs' : 'hover:text-white'
+                  className={`px-3.5 py-1.5 rounded-lg transition text-xs font-bold ${
+                    renderMode === 'solid' ? 'bg-blue-600 text-white shadow-xs' : 'hover:bg-slate-100 text-slate-600'
                   }`}
                 >
-                  Solid Metal
+                  SOLID
                 </button>
                 <button
                   onClick={() => setRenderMode('wireframe')}
-                  className={`px-3 py-1.5 rounded-lg transition text-xs ${
-                    renderMode === 'wireframe' ? 'bg-cyan-600 text-white font-bold shadow-xs' : 'hover:text-white'
+                  className={`px-3.5 py-1.5 rounded-lg transition text-xs font-bold ${
+                    renderMode === 'wireframe' ? 'bg-blue-600 text-white shadow-xs' : 'hover:bg-slate-100 text-slate-600'
                   }`}
                 >
-                  CAD Wireframe
+                  WIREFRAME
                 </button>
                 <button
                   onClick={() => setRenderMode('xray')}
-                  className={`px-3 py-1.5 rounded-lg transition text-xs ${
-                    renderMode === 'xray' ? 'bg-indigo-600 text-white font-bold shadow-xs' : 'hover:text-white'
+                  className={`px-3.5 py-1.5 rounded-lg transition text-xs font-bold ${
+                    renderMode === 'xray' ? 'bg-blue-600 text-white shadow-xs' : 'hover:bg-slate-100 text-slate-600'
                   }`}
                 >
-                  X-Ray Structural
+                  X-RAY
                 </button>
               </div>
 
-              {/* Model Switcher Buttons */}
-              <div className="flex flex-wrap items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-bold text-slate-400">
+              {/* Model Switcher Tabs */}
+              <div className="flex flex-wrap items-center gap-1.5 bg-white p-1 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 shadow-2xs">
                 {DEMO_MODELS.map((model, idx) => {
                   const Icon = model.icon;
                   const isActive = idx === activeModelIndex;
@@ -190,102 +223,107 @@ export function LandingPage() {
                       onClick={() => setActiveModelIndex(idx)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
                         isActive
-                          ? 'bg-slate-800 text-white border border-slate-700 shadow-xs font-bold'
-                          : 'hover:bg-slate-800/50 hover:text-slate-200'
+                          ? 'bg-slate-900 text-white shadow-xs font-bold'
+                          : 'hover:bg-slate-100 text-slate-600'
                       }`}
                     >
                       <Icon size={14} className={isActive ? 'text-blue-400' : ''} />
-                      <span>{model.name}</span>
+                      <span>{model.name.split(' ')[1] || model.name}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* 3D Showcase Grid (Viewer + Dynamic Telemetry Panel) */}
+            {/* 3D Showcase Grid (Viewer + Verified Info Panel) */}
             <div className="grid lg:grid-cols-[1.5fr_1fr] items-stretch">
-              {/* 3D Interactive Canvas */}
-              <div className="relative h-[400px] sm:h-[480px] lg:h-[520px] w-full bg-[#0A0D14] border-b lg:border-b-0 lg:border-r border-slate-800 overflow-hidden">
+              {/* 3D Interactive Canvas Container (Left 60%) */}
+              <div className="relative h-[400px] sm:h-[480px] lg:h-[540px] w-full bg-[#F8FAFC] border-b lg:border-b-0 lg:border-r border-slate-200 overflow-hidden">
                 <ThreeProduct
                   key={`${currentModel.id}-${renderMode}`}
                   modelUrl={currentModel.modelUrl}
                   productName={currentModel.name}
                   autoRotate={autoRotate}
                   renderMode={renderMode}
+                  themeMode="light"
                 />
 
-                {/* Canvas Control & Telemetry Overlay */}
-                <div className="absolute top-4 left-4 z-20 pointer-events-none hidden sm:block">
-                  <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-2.5 backdrop-blur-md text-[11px] font-mono text-slate-300 space-y-1">
-                    <div className="flex items-center gap-2 text-cyan-400 font-bold">
-                      <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
-                      STATUS: ONLINE (60 FPS)
-                    </div>
-                    <div>SHADER: {renderMode.toUpperCase()}</div>
-                    <div>POLYGONS: 142,800 CAD TRIS</div>
-                  </div>
-                </div>
-
+                {/* Canvas Control Overlay */}
                 <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-auto">
                   <button
                     onClick={() => setAutoRotate(!autoRotate)}
-                    className="flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-900/90 px-3.5 py-2 text-xs font-semibold text-slate-200 shadow-xl backdrop-blur-md hover:bg-slate-800 transition"
+                    className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-md backdrop-blur-md hover:bg-white transition"
                   >
-                    <RotateCw size={14} className={autoRotate ? 'animate-spin text-cyan-400' : ''} />
+                    <RotateCw size={14} className={autoRotate ? 'animate-spin text-blue-600' : ''} />
                     <span>{autoRotate ? 'Auto Rotating' : 'Rotate Paused'}</span>
                   </button>
 
-                  <div className="flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-900/90 px-3.5 py-2 text-xs font-bold text-slate-200 shadow-xl backdrop-blur-md font-mono">
-                    <Box size={14} className="text-cyan-400" />
-                    <span>MONOCHROMATIC STUDIO</span>
+                  <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-3.5 py-2 text-xs font-bold text-slate-700 shadow-md backdrop-blur-md">
+                    <ShieldCheck size={14} className="text-emerald-600" />
+                    <span>Verified CAD Geometry</span>
                   </div>
                 </div>
               </div>
 
-              {/* Dynamic Product Info & CAD Specifications Panel */}
-              <div className="p-6 md:p-8 bg-[#0F172A] text-white space-y-6 flex flex-col justify-between border-t lg:border-t-0">
+              {/* Dynamic Model Info & Data Cards Panel (Right 40%) */}
+              <div className="p-6 md:p-8 bg-white text-slate-900 space-y-6 flex flex-col justify-between text-left">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="rounded-md bg-blue-950 px-2.5 py-1 text-[11px] font-bold uppercase text-blue-400 border border-blue-800/60">
+                    <span className="rounded-md bg-blue-50 px-2.5 py-1 text-[11px] font-bold uppercase text-blue-700 border border-blue-100">
                       {currentModel.category}
                     </span>
-                    <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 font-mono">
-                      <ShieldCheck size={14} /> ISO-VERIFIED CAD
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                      MODE: {renderMode.toUpperCase()}
                     </span>
                   </div>
 
-                  <h3 className="text-xl md:text-2xl font-extrabold text-white tracking-tight">
-                    {currentModel.name}
+                  <h3 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">
+                    {currentModel.title}
                   </h3>
 
-                  <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
+                  <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
                     {currentModel.desc}
                   </p>
 
-                  <div className="space-y-2 pt-2 border-t border-slate-800">
-                    <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-400">Engineering Telemetry</p>
+                  {/* Factually Verified Data Cards */}
+                  <div className="space-y-2 pt-2 border-t border-slate-100">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Model Metadata</p>
                     <div className="grid grid-cols-2 gap-2">
-                      {Object.entries(currentModel.specs).map(([key, val]) => (
-                        <div key={key} className="rounded-xl bg-slate-900/90 border border-slate-800 p-2.5 text-xs">
-                          <span className="block text-[10px] font-mono text-slate-400 uppercase">{key}</span>
-                          <span className="font-bold text-white font-mono block mt-0.5">{val}</span>
+                      {currentModel.dataCards.map((card) => (
+                        <div key={card.label} className="rounded-xl bg-slate-50 border border-slate-200/80 p-2.5 text-xs">
+                          <span className="block text-[10px] font-semibold text-slate-500">{card.label}</span>
+                          <span className="font-bold text-slate-900 block mt-0.5">{card.value}</span>
                         </div>
                       ))}
                     </div>
                   </div>
+
+                  {/* Geometric Structure Highlights */}
+                  <div className="space-y-1.5 pt-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Structural Components</p>
+                    <ul className="space-y-1 text-xs text-slate-700">
+                      {currentModel.highlights.map((item) => (
+                        <li key={item} className="flex items-center gap-2">
+                          <CheckCircle2 size={14} className="text-blue-600 shrink-0" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
 
-                <div className="space-y-2.5 pt-4 border-t border-slate-800">
+                <div className="space-y-2.5 pt-4 border-t border-slate-100">
                   <ViewInARButton
                     title={currentModel.name}
-                    className="w-full h-12 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-lg shadow-blue-600/30 hover:bg-blue-500 transition"
+                    className="w-full h-12 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-md shadow-blue-600/20 hover:bg-blue-700 transition"
                   />
-                  <Link
-                    to="/signup"
-                    className="flex w-full h-11 items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 text-xs font-bold text-slate-200 hover:bg-slate-800 transition"
+                  <button
+                    onClick={() => setRenderMode(renderMode === 'xray' ? 'solid' : 'xray')}
+                    className="flex w-full h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
                   >
-                    Configure Industrial Catalog <ArrowRight size={14} />
-                  </Link>
+                    <Layers size={15} className="text-blue-600" />
+                    <span>{renderMode === 'xray' ? 'Return to Solid View' : 'Inspect Internal Structure (X-Ray)'}</span>
+                  </button>
                 </div>
               </div>
             </div>
