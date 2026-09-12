@@ -318,26 +318,40 @@ async function offlineFallback<T>(path: string, options: RequestInit & { token?:
   ] as T;
   if (path.startsWith('/public/products/')) {
     const slug = path.split('/').pop() ?? 'offline-product';
-    const sample = products.find((product) => product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === slug) ?? products[0];
+    const storedProducts = JSON.parse(localStorage.getItem('i3dion.products') ?? '[]') as any[];
+    const allProducts = [...storedProducts, ...products];
+    const match = allProducts.find((p) =>
+      p.id === slug ||
+      p.slug === slug ||
+      (p.name && p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === slug) ||
+      slug.includes(p.id) ||
+      p.id.includes(slug)
+    ) ?? allProducts[0];
+
+    const targetUrl = typeof window !== 'undefined' ? `${window.location.origin}/product/${slug}` : `https://i3-dion-spatial.vercel.app/product/${slug}`;
+    const qrPng = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`;
+    const qrSvg = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&format=svg&data=${encodeURIComponent(targetUrl)}`;
+
     return {
-      ...offlineClone(sample),
+      ...offlineClone(match),
       slug,
-      public_url: `${window.location.origin}/product/${slug}`,
-      qr: {
+      public_url: targetUrl,
+      organization: match.organization || { name: 'I3DION Spatial Enterprise', logo_url: '/images/logos/03_icon_only.png' },
+      qr: match.qr || {
         id: `offline-qr-${slug}`,
-        product_id: sample.id,
+        product_id: match.id,
         product_slug: slug,
-        target_url: `${window.location.origin}/product/${slug}`,
-        png_url: 'data:image/png;base64,',
-        svg_url: 'data:image/svg+xml;base64,',
+        target_url: targetUrl,
+        png_url: qrPng,
+        svg_url: qrSvg,
       },
-      assets: [],
-      qr_png_url: 'data:image/png;base64,',
-      qr_svg_url: 'data:image/svg+xml;base64,',
-      total_scans: 0,
-      product_views: 0,
-      ar_launch_count: 0,
-      qr_downloads: 0,
+      assets: match.assets || [],
+      qr_png_url: qrPng,
+      qr_svg_url: qrSvg,
+      total_scans: match.total_scans || 0,
+      product_views: match.product_views || 0,
+      ar_launch_count: match.ar_launch_count || 0,
+      qr_downloads: match.qr_downloads || 0,
     } as T;
   }
   if (path === '/public/analytics/events') return { id: `offline-event-${Date.now()}` } as T;

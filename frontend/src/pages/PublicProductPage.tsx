@@ -20,7 +20,7 @@ import { SmartLeadCapture } from '../components/SmartLeadCapture';
 import { ExitIntentSurvey } from '../components/ExitIntentSurvey';
 import { useVisitorSession } from '../hooks/useVisitorSession';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BrandLogo } from '../components/BrandLogo';
+import { api } from '../services/api';
 
 export function PublicProductPage() {
   const { slug = '' } = useParams();
@@ -43,15 +43,11 @@ export function PublicProductPage() {
     setLoading(true);
     setErrorMsg(null);
 
-    fetch(`/api/public/products/${slug}`)
-      .then(async (res) => {
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.message || 'Product unavailable or draft mode.');
-        }
-        return res.json();
-      })
+    api.getPublicProduct(slug)
       .then((data) => {
+        if (!data) {
+          throw new Error('Product unavailable or draft mode.');
+        }
         setProduct(data);
         if (data.name) {
           document.title = `${data.name} — ${data.organization?.name || 'I3DION Spatial'}`;
