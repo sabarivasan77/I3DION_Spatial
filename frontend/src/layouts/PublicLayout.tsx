@@ -22,17 +22,7 @@ export default function PublicLayout() {
         <NavLink to="/" className="flex items-center gap-3">
           <Logo />
         </NavLink>
-        <div className="hidden items-center gap-6 md:flex">
-          <a className="border-b-2 border-primary px-2 py-1 text-sm font-semibold text-slate-700" href="/#features">
-            Products
-          </a>
-          <a className="px-2 py-1 text-sm font-medium text-slate-600" href="/#how-it-works">
-            How It Works
-          </a>
-          <a className="px-2 py-1 text-sm font-medium text-slate-600" href="/#industries">
-            Solutions
-          </a>
-        </div>
+
         <div className="flex items-center gap-3">
           <div className="hidden items-center rounded-full border border-slate-200 bg-surface-container-low px-3 py-1 sm:flex">
             <Search size={17} className="mr-2 text-outline" />
