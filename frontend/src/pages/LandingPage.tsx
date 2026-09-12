@@ -24,13 +24,14 @@ import ThreeProduct from '../components/ThreeProduct';
 import { ViewInARButton } from '../components/ViewInARButton';
 import { Logo } from '../components/Logo';
 
-// Sample demo models for interactive showcase
+// Sample demo models for interactive showcase with real GLTF asset URLs
 const DEMO_MODELS = [
   {
     id: 'compressor',
     name: 'Rotary Air Compressor 500',
     category: 'Industrial Machinery',
     icon: Factory,
+    modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/GearboxAssy/glTF-Binary/GearboxAssy.glb',
     desc: 'High-pressure multi-stage industrial air compressor for heavy manufacturing environments.',
     specs: { Power: '250 kW', Voltage: '440V', Weight: '1,450 kg', FlowRate: '42 m³/min' },
   },
@@ -39,6 +40,7 @@ const DEMO_MODELS = [
     name: 'Electric Drivetrain Assembly',
     category: 'Automotive Engineering',
     icon: Car,
+    modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/DamagedHelmet/glTF-Binary/DamagedHelmet.glb',
     desc: 'High-torque dual-motor electric drivetrain with integrated thermal management system.',
     specs: { Torque: '780 Nm', Output: '350 kW', Efficiency: '97.4%', Cooling: 'Liquid' },
   },
@@ -47,6 +49,7 @@ const DEMO_MODELS = [
     name: 'Precision Centrifugal Turbine',
     category: 'Energy & Aerodynamics',
     icon: Activity,
+    modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/SciFiHelmet/glTF-Binary/SciFiHelmet.glb',
     desc: 'Aerospace-grade centrifugal gas turbine for power generation and pressure regulation.',
     specs: { RPM: '36,000', Pressure: '12.5 Bar', Material: 'Titanium Alloy', Rating: 'IP68' },
   },
@@ -55,13 +58,14 @@ const DEMO_MODELS = [
 export function LandingPage() {
   const [activeModelIndex, setActiveModelIndex] = useState(0);
   const [autoRotate, setAutoRotate] = useState(true);
+  const [renderMode, setRenderMode] = useState<'solid' | 'wireframe' | 'xray'>('solid');
 
   const currentModel = DEMO_MODELS[activeModelIndex];
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 pt-16">
-      {/* ─── 1. HERO SECTION WITH MOTION GRAPHICS ─────────────────────────────────── */}
-      <section className="relative overflow-hidden px-4 py-16 md:px-8 md:py-24 text-center flex flex-col items-center">
+      {/* ─── 1. HERO SECTION WITH MONOCHROMATIC 3D STUDIO EXPERIENCE ───────────────── */}
+      <section className="relative overflow-hidden px-4 py-14 md:px-8 md:py-20 text-center flex flex-col items-center">
         {/* Subtle Motion Graphic Radial Gradient */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-10%,rgba(37,99,235,0.12),rgba(255,255,255,0))]" />
         
@@ -69,9 +73,9 @@ export function LandingPage() {
         <motion.div
           animate={{ y: [0, -12, 0], opacity: [0.4, 0.8, 0.4] }}
           transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-20 left-[10%] hidden lg:block"
+          className="absolute top-20 left-[8%] hidden lg:block"
         >
-          <div className="flex items-center gap-2 rounded-2xl border border-blue-200 bg-white/80 p-3 backdrop-blur-md shadow-lg">
+          <div className="flex items-center gap-2 rounded-2xl border border-blue-200/80 bg-white/80 p-3 backdrop-blur-md shadow-lg">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
               <Zap size={18} />
             </div>
@@ -85,9 +89,9 @@ export function LandingPage() {
         <motion.div
           animate={{ y: [0, 14, 0], opacity: [0.4, 0.8, 0.4] }}
           transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-          className="absolute top-28 right-[10%] hidden lg:block"
+          className="absolute top-28 right-[8%] hidden lg:block"
         >
-          <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-white/80 p-3 backdrop-blur-md shadow-lg">
+          <div className="flex items-center gap-2 rounded-2xl border border-emerald-200/80 bg-white/80 p-3 backdrop-blur-md shadow-lg">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
               <Smartphone size={18} />
             </div>
@@ -104,10 +108,10 @@ export function LandingPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-xs font-semibold text-blue-700 shadow-xs"
+            className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/90 px-4 py-1.5 text-xs font-semibold text-blue-700 shadow-xs"
           >
             <Sparkles size={14} className="animate-pulse text-blue-600" />
-            <span>Next-Gen Enterprise Industrial Product Showcase & AR Platform</span>
+            <span>Next-Gen Enterprise Industrial Product Showcase & WebAR Platform</span>
           </motion.div>
 
           {/* Hero Headline */}
@@ -118,8 +122,8 @@ export function LandingPage() {
             className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.15]"
           >
             Transform Physical Products into{' '}
-            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 bg-clip-text text-transparent">
-              Interactive 3D & WebAR
+            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 bg-clip-text text-transparent">
+              Interactive Monochromatic 3D & WebAR
             </span>{' '}
             Experiences
           </motion.h1>
@@ -131,7 +135,7 @@ export function LandingPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-base sm:text-lg leading-relaxed text-slate-600 mx-auto max-w-2xl font-normal"
           >
-            Empower technical buyers and enterprise customers to inspect, analyze specifications, and place industrial products directly into their real-world environment via QR code.
+            Empower technical buyers and enterprise customers to inspect CAD models in real-time, toggle X-Ray structures, and launch instant 1:1 scale AR directly via mobile QR.
           </motion.p>
 
           {/* Hero Action CTAs */}
@@ -139,7 +143,7 @@ export function LandingPage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-wrap items-center justify-center gap-3 pt-4"
+            className="flex flex-wrap items-center justify-center gap-3 pt-2"
           >
             <Link
               to="/signup"
@@ -156,23 +160,52 @@ export function LandingPage() {
           </motion.div>
         </div>
 
-        {/* ─── 2. INTERACTIVE 3D MOTION GRAPHIC SHOWCASE ───────────────────────────── */}
-        <div className="relative mt-14 w-full max-w-6xl z-10 mx-auto">
-          <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl flex flex-col">
-            {/* Header / Model Picker Navigation Tabs */}
-            <div className="flex flex-wrap items-center justify-between border-b border-slate-200 p-4 bg-slate-50/80 gap-3">
-              <div className="flex items-center gap-2">
+        {/* ─── 2. HIGH-IMPACT MONOCHROMATIC 3D STUDIO SHOWCASE ───────────────────── */}
+        <div className="relative mt-12 w-full max-w-6xl z-10 mx-auto">
+          <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-[#0B0F17] shadow-2xl flex flex-col">
+            {/* Header / Model Picker Navigation Tabs & Render Mode Controls */}
+            <div className="flex flex-wrap items-center justify-between border-b border-slate-800 p-4 bg-[#0F172A] gap-3">
+              <div className="flex items-center gap-3">
                 <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
                 </span>
-                <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                  Live Interactive 3D Studio Engine
+                <span className="text-xs font-mono font-bold text-slate-200 uppercase tracking-widest flex items-center gap-2">
+                  <Box size={14} className="text-cyan-400" />
+                  I3DION MONOCHROMATIC 3D ENGINE v2.4
                 </span>
               </div>
 
+              {/* Render Shader Mode Switcher (Solid, Wireframe, X-Ray) */}
+              <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300">
+                <button
+                  onClick={() => setRenderMode('solid')}
+                  className={`px-3 py-1.5 rounded-lg transition text-xs ${
+                    renderMode === 'solid' ? 'bg-blue-600 text-white font-bold shadow-xs' : 'hover:text-white'
+                  }`}
+                >
+                  Solid Metal
+                </button>
+                <button
+                  onClick={() => setRenderMode('wireframe')}
+                  className={`px-3 py-1.5 rounded-lg transition text-xs ${
+                    renderMode === 'wireframe' ? 'bg-cyan-600 text-white font-bold shadow-xs' : 'hover:text-white'
+                  }`}
+                >
+                  CAD Wireframe
+                </button>
+                <button
+                  onClick={() => setRenderMode('xray')}
+                  className={`px-3 py-1.5 rounded-lg transition text-xs ${
+                    renderMode === 'xray' ? 'bg-indigo-600 text-white font-bold shadow-xs' : 'hover:text-white'
+                  }`}
+                >
+                  X-Ray Structural
+                </button>
+              </div>
+
               {/* Model Switcher Buttons */}
-              <div className="flex flex-wrap items-center gap-1.5 bg-white p-1 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">
+              <div className="flex flex-wrap items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-bold text-slate-400">
                 {DEMO_MODELS.map((model, idx) => {
                   const Icon = model.icon;
                   const isActive = idx === activeModelIndex;
@@ -182,11 +215,11 @@ export function LandingPage() {
                       onClick={() => setActiveModelIndex(idx)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
                         isActive
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'hover:bg-slate-100 text-slate-600'
+                          ? 'bg-slate-800 text-white border border-slate-700 shadow-xs font-bold'
+                          : 'hover:bg-slate-800/50 hover:text-slate-200'
                       }`}
                     >
-                      <Icon size={14} />
+                      <Icon size={14} className={isActive ? 'text-blue-400' : ''} />
                       <span>{model.name}</span>
                     </button>
                   );
@@ -194,75 +227,87 @@ export function LandingPage() {
               </div>
             </div>
 
-            {/* 3D Showcase Grid (Viewer + Specs Panel) */}
+            {/* 3D Showcase Grid (Viewer + Dynamic Telemetry Panel) */}
             <div className="grid lg:grid-cols-[1.5fr_1fr] items-stretch">
               {/* 3D Interactive Canvas */}
-              <div className="relative h-[380px] sm:h-[460px] lg:h-[500px] w-full bg-white border-b lg:border-b-0 lg:border-r border-slate-100 overflow-hidden">
+              <div className="relative h-[400px] sm:h-[480px] lg:h-[520px] w-full bg-[#0A0D14] border-b lg:border-b-0 lg:border-r border-slate-800 overflow-hidden">
                 <ThreeProduct
-                  key={currentModel.id}
-                  modelUrl=""
+                  key={`${currentModel.id}-${renderMode}`}
+                  modelUrl={currentModel.modelUrl}
                   productName={currentModel.name}
                   autoRotate={autoRotate}
+                  renderMode={renderMode}
                 />
 
-                {/* Canvas Control Overlay */}
+                {/* Canvas Control & Telemetry Overlay */}
+                <div className="absolute top-4 left-4 z-20 pointer-events-none hidden sm:block">
+                  <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-2.5 backdrop-blur-md text-[11px] font-mono text-slate-300 space-y-1">
+                    <div className="flex items-center gap-2 text-cyan-400 font-bold">
+                      <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
+                      STATUS: ONLINE (60 FPS)
+                    </div>
+                    <div>SHADER: {renderMode.toUpperCase()}</div>
+                    <div>POLYGONS: 142,800 CAD TRIS</div>
+                  </div>
+                </div>
+
                 <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-auto">
                   <button
                     onClick={() => setAutoRotate(!autoRotate)}
-                    className="flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white/90 px-3 py-2 text-xs font-semibold text-slate-700 shadow-md backdrop-blur-md hover:bg-white transition"
+                    className="flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-900/90 px-3.5 py-2 text-xs font-semibold text-slate-200 shadow-xl backdrop-blur-md hover:bg-slate-800 transition"
                   >
-                    <RotateCw size={14} className={autoRotate ? 'animate-spin text-blue-600' : ''} />
-                    <span>{autoRotate ? 'Auto Rotating' : 'Rotate Off'}</span>
+                    <RotateCw size={14} className={autoRotate ? 'animate-spin text-cyan-400' : ''} />
+                    <span>{autoRotate ? 'Auto Rotating' : 'Rotate Paused'}</span>
                   </button>
 
-                  <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-3 py-2 text-xs font-bold text-slate-700 shadow-md backdrop-blur-md">
-                    <Box size={14} className="text-blue-600" />
-                    <span>Real-Time 3D Studio</span>
+                  <div className="flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-900/90 px-3.5 py-2 text-xs font-bold text-slate-200 shadow-xl backdrop-blur-md font-mono">
+                    <Box size={14} className="text-cyan-400" />
+                    <span>MONOCHROMATIC STUDIO</span>
                   </div>
                 </div>
               </div>
 
-              {/* Dynamic Product Info Panel */}
-              <div className="p-6 md:p-8 bg-slate-50/50 space-y-6 flex flex-col justify-between">
+              {/* Dynamic Product Info & CAD Specifications Panel */}
+              <div className="p-6 md:p-8 bg-[#0F172A] text-white space-y-6 flex flex-col justify-between border-t lg:border-t-0">
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <span className="rounded-md bg-blue-50 px-2.5 py-1 text-[11px] font-bold uppercase text-blue-700 border border-blue-100">
+                  <div className="flex items-center justify-between">
+                    <span className="rounded-md bg-blue-950 px-2.5 py-1 text-[11px] font-bold uppercase text-blue-400 border border-blue-800/60">
                       {currentModel.category}
                     </span>
-                    <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
-                      <ShieldCheck size={14} /> Verified CAD Asset
+                    <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 font-mono">
+                      <ShieldCheck size={14} /> ISO-VERIFIED CAD
                     </span>
                   </div>
 
-                  <h3 className="text-xl md:text-2xl font-extrabold text-slate-900">
+                  <h3 className="text-xl md:text-2xl font-extrabold text-white tracking-tight">
                     {currentModel.name}
                   </h3>
 
-                  <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+                  <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
                     {currentModel.desc}
                   </p>
 
-                  <div className="space-y-2 pt-2 border-t border-slate-200/60">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Technical Highlights</p>
+                  <div className="space-y-2 pt-2 border-t border-slate-800">
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-400">Engineering Telemetry</p>
                     <div className="grid grid-cols-2 gap-2">
                       {Object.entries(currentModel.specs).map(([key, val]) => (
-                        <div key={key} className="rounded-xl bg-white border border-slate-200/80 p-2.5 text-xs">
-                          <span className="block text-[10px] font-bold text-slate-400 uppercase">{key}</span>
-                          <span className="font-bold text-slate-900 block mt-0.5">{val}</span>
+                        <div key={key} className="rounded-xl bg-slate-900/90 border border-slate-800 p-2.5 text-xs">
+                          <span className="block text-[10px] font-mono text-slate-400 uppercase">{key}</span>
+                          <span className="font-bold text-white font-mono block mt-0.5">{val}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-2.5 pt-4 border-t border-slate-200/60">
+                <div className="space-y-2.5 pt-4 border-t border-slate-800">
                   <ViewInARButton
                     title={currentModel.name}
-                    className="w-full h-12 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-md shadow-blue-600/20"
+                    className="w-full h-12 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-lg shadow-blue-600/30 hover:bg-blue-500 transition"
                   />
                   <Link
                     to="/signup"
-                    className="flex w-full h-11 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
+                    className="flex w-full h-11 items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 text-xs font-bold text-slate-200 hover:bg-slate-800 transition"
                   >
                     Configure Industrial Catalog <ArrowRight size={14} />
                   </Link>
