@@ -20,6 +20,7 @@ import { SmartLeadCapture } from '../components/SmartLeadCapture';
 import { ExitIntentSurvey } from '../components/ExitIntentSurvey';
 import { useVisitorSession } from '../hooks/useVisitorSession';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BrandLogo } from '../components/BrandLogo';
 import { api } from '../services/api';
 
 export function PublicProductPage() {

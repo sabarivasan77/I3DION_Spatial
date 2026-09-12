@@ -235,12 +235,25 @@ import { QRCodeGenerator } from '../components/QRCodeGenerator';
 
 function ProductQrPanel({ product }: { product: ProductRecord }) {
   const { success, error: showError } = useToast();
+  const [copied, setCopied] = useState(false);
   const qr = product.qr;
+  const effectivePublicUrl = product.public_url || (typeof window !== 'undefined' ? `${window.location.origin}/product/${product.slug || product.id}` : `https://i3-dion-spatial.vercel.app/product/${product.slug || product.id}`);
 
   async function copyUrl() {
     try {
-      await navigator.clipboard.writeText(product.public_url ?? '');
-      success('Copied product URL', product.public_url ?? '');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(effectivePublicUrl);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = effectivePublicUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopied(true);
+      success('Copied product URL', effectivePublicUrl);
+      setTimeout(() => setCopied(false), 2000);
     } catch {
       showError('Copy failed', 'Your browser blocked clipboard access.');
     }
@@ -264,8 +277,6 @@ function ProductQrPanel({ product }: { product: ProductRecord }) {
     );
   }
 
-  const effectivePublicUrl = product.public_url || (typeof window !== 'undefined' ? `${window.location.origin}/product/${product.slug || product.id}` : `https://i3-dion-spatial.vercel.app/product/${product.slug || product.id}`);
-
   return (
     <Card className="p-6">
       <SectionTitle title="Product QR" meta={`Generated ${qr.generated_at ? new Date(qr.generated_at).toLocaleString() : 'recently'}`} />
@@ -277,7 +288,10 @@ function ProductQrPanel({ product }: { product: ProductRecord }) {
             <p className="mt-2 break-all font-medium text-slate-900">{effectivePublicUrl}</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Button variant="secondary" onClick={() => copy(effectivePublicUrl, 'Public URL copied')}><Copy size={16} />Copy Link</Button>
+            <Button variant="secondary" onClick={copyUrl}>
+              {copied ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} />}
+              {copied ? 'Copied!' : 'Copy Link'}
+            </Button>
           </div>
           <p className="text-sm text-slate-500">
             Scan this QR with any camera app to open the mobile AR product experience.
