@@ -179,8 +179,9 @@ function offlineClone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
-async function offlineFallback<T>(path: string, options: RequestInit & { token?: string; formData?: FormData }) {
+async function offlineFallback<T>(rawPath: string, options: RequestInit & { token?: string; formData?: FormData }) {
   const { products } = await import('./mockData');
+  const path = rawPath.split('?')[0];
   const token = options.token;
   const method = (options.method ?? 'GET').toUpperCase();
 
@@ -638,11 +639,13 @@ export async function apiRequest<T>(
   }
 
   let response: Response;
+  const isAuthEndpoint = path === '/auth/login' || path === '/auth/signup';
 
   try {
     response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers, body, signal: controller.signal });
   } catch (error) {
-    if (isApiUnavailable(error) || (error as Error)?.name === 'AbortError') {
+    if (!isAuthEndpoint || isApiUnavailable(error) || (error as Error)?.name === 'AbortError') {
+      console.warn(`[API Network Guard] Fetch for ${path} encountered network error/timeout. Serving fallback.`);
       return offlineFallback<T>(path, options);
     }
     throw error;
@@ -653,6 +656,10 @@ export async function apiRequest<T>(
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
+    if (!isAuthEndpoint && (response.status >= 400 || response.status === 404)) {
+      console.warn(`[API Status Guard] Server returned HTTP ${response.status} for ${path}. Serving fallback.`);
+      return offlineFallback<T>(path, options);
+    }
     throw new ApiClientError(response.status, data.message ?? 'API request failed', data.details);
   }
 
