@@ -2,7 +2,8 @@
 node_modules/
 .env*
 .git/
-backend/
+backend/uploads/
+backend/node_modules/
 mobile/
 scratch/
 .design-reference/
