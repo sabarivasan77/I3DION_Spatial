@@ -19,7 +19,7 @@ export function SupportDashboardPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
       
       const statsRes = await fetch(`${API_BASE_URL}/support/analytics`, { headers }).catch(() => null);
       if (statsRes && statsRes.ok) {
