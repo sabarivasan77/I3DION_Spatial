@@ -3,21 +3,13 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import {
   Box,
   FileText,
-  Info,
   Mail,
   Maximize2,
   Minimize2,
-  RefreshCw,
   Share2,
   Sparkles,
-  X,
-  CheckCircle2,
-  Layers,
   Download,
   RotateCw,
-  ZoomIn,
-  ZoomOut,
-  ExternalLink,
   ChevronDown,
   Check,
   ShieldCheck,
@@ -40,7 +32,7 @@ import { launchQuickLook } from '../services/quickLook';
 export function PublicProductPage() {
   const { slug = '' } = useParams();
   const [searchParams] = useSearchParams();
-  const { success, error: showError } = useToast();
+  const { success } = useToast();
 
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -75,7 +67,7 @@ export function PublicProductPage() {
     setErrorMsg(null);
 
     api.getPublicProduct(slug)
-      .then((data) => {
+      .then((data: any) => {
         if (!data) {
           throw new Error('Product unavailable or draft mode.');
         }
@@ -92,7 +84,7 @@ export function PublicProductPage() {
             launchSceneViewer(data.model_url, data.name);
           } else if (platform === 'IOS' && (data.usdz_url || data.model_url)) {
             if (data.usdz_url) launchQuickLook(data.usdz_url);
-            else launchSceneViewer(data.model_url, data.name);
+            else if (data.model_url) launchSceneViewer(data.model_url, data.name);
           } else {
             setArIntentModal(true);
           }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Smartphone, X, Box, Copy, Check, ExternalLink, Sparkles } from 'lucide-react';
+import { Smartphone, X, Copy, Check, Sparkles } from 'lucide-react';
 import { Button } from './ui';
 import { useToast } from './Toast';
 import { detectPlatform, Platform } from '../utils/deviceDetection';
@@ -15,7 +15,7 @@ interface ViewInARButtonProps {
   title?: string;
   logoUrl?: string;
   className?: string;
-  variant?: 'primary' | 'secondary' | 'outline';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
 }
 
 export function ViewInARButton({ 
@@ -149,7 +149,7 @@ export function ViewInARButton({
                   </Button>
 
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     className="w-full h-11 text-xs font-semibold text-slate-600 border-slate-200"
                     onClick={() => setShowQrModal(false)}
                   >
