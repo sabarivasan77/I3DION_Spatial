@@ -264,18 +264,20 @@ function ProductQrPanel({ product }: { product: ProductRecord }) {
     );
   }
 
+  const effectivePublicUrl = product.public_url || (typeof window !== 'undefined' ? `${window.location.origin}/product/${product.slug || product.id}` : `https://i3-dion-spatial.vercel.app/product/${product.slug || product.id}`);
+
   return (
     <Card className="p-6">
       <SectionTitle title="Product QR" meta={`Generated ${qr.generated_at ? new Date(qr.generated_at).toLocaleString() : 'recently'}`} />
       <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-        <QRCodeGenerator url={product.public_url ?? ''} logoUrl={product.organization?.logo_url || undefined} className="w-full" size={200} />
+        <QRCodeGenerator url={effectivePublicUrl} logoUrl={product.organization?.logo_url || undefined} className="w-full" size={200} />
         <div className="space-y-4">
           <div className="rounded-2xl bg-slate-50 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Public URL</p>
-            <p className="mt-2 break-all font-medium text-slate-900">{product.public_url}</p>
+            <p className="mt-2 break-all font-medium text-slate-900">{effectivePublicUrl}</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Button variant="secondary" onClick={copyUrl}><Copy size={16} />Copy Link</Button>
+            <Button variant="secondary" onClick={() => copy(effectivePublicUrl, 'Public URL copied')}><Copy size={16} />Copy Link</Button>
           </div>
           <p className="text-sm text-slate-500">
             Scan this QR with any camera app to open the mobile AR product experience.
@@ -993,16 +995,23 @@ export function ProductUploadWizardPage() {
             <Card className="p-6">
               <SectionTitle title="✅ QR Generated" meta="Ready for scanning" />
               <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-                <img src={product.qr.png_url} alt="QR" className="w-full rounded-3xl border border-slate-200 bg-white p-3" />
+                <QRCodeGenerator
+                  url={product.public_url || (typeof window !== 'undefined' ? `${window.location.origin}/product/${product.slug || product.id}` : `https://i3-dion-spatial.vercel.app/product/${product.slug || product.id}`)}
+                  logoUrl={product.organization?.logo_url || undefined}
+                  className="w-full"
+                  size={200}
+                />
                 <div className="space-y-4">
                   <div className="rounded-2xl bg-slate-50 p-4">
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Public URL</p>
-                    <p className="mt-1 break-all text-sm font-medium">{product.public_url}</p>
+                    <p className="mt-1 break-all text-sm font-medium">
+                      {product.public_url || (typeof window !== 'undefined' ? `${window.location.origin}/product/${product.slug || product.id}` : `https://i3-dion-spatial.vercel.app/product/${product.slug || product.id}`)}
+                    </p>
                   </div>
                   <div className="flex flex-wrap gap-3">
-                    <a href={product.qr.png_url} download={`${product.slug ?? product.id}.png`}><Button variant="secondary"><Download size={16} />PNG</Button></a>
-                    <a href={product.qr.svg_url} download={`${product.slug ?? product.id}.svg`}><Button variant="secondary"><Download size={16} />SVG</Button></a>
-                    <Link to={`/product/${product.slug}`}><Button><Globe2 size={16} />Open Product Page</Button></Link>
+                    <Link to={`/product/${product.slug || product.id}`} target="_blank">
+                      <Button><Globe2 size={16} />Open Product Page</Button>
+                    </Link>
                   </div>
                 </div>
               </div>

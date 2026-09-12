@@ -218,8 +218,13 @@ async function offlineFallback<T>(path: string, options: RequestInit & { token?:
   }
   if (path === '/products' && method === 'POST') {
     const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+    const id = `offline-product-${Date.now()}`;
+    const slug = body.name ? body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : id;
+    const public_url = typeof window !== 'undefined' ? `${window.location.origin}/product/${slug}` : `https://i3-dion-spatial.vercel.app/product/${slug}`;
     const newProduct = {
-      id: `offline-product-${Date.now()}`,
+      id,
+      slug,
+      public_url,
       name: body.name || 'New Mock Product',
       category: body.category || 'Mock Category',
       status: body.status || 'Draft',
@@ -233,17 +238,24 @@ async function offlineFallback<T>(path: string, options: RequestInit & { token?:
     return offlineClone(newProduct) as T;
   }
   if (path.startsWith('/products/') && path.endsWith('/metrics')) {
-    return { total_scans: 0, product_views: 0, ar_launch_count: 0, qr_downloads: 0, session_duration_events: 0 } as T;
+    return {
+      total_scans: 0,
+      product_views: 0,
+      ar_launch_count: 0,
+      qr_downloads: 0,
+      session_duration_events: 0,
+    } as T;
   }
   if (path.startsWith('/products/') && path.endsWith('/qr')) {
     const id = path.split('/').slice(-2, -1)[0];
+    const targetUrl = typeof window !== 'undefined' ? `${window.location.origin}/product/${id}` : `https://i3-dion-spatial.vercel.app/product/${id}`;
     return {
       id: `offline-qr-${id}`,
       product_id: id,
       product_slug: id,
-      target_url: `${window.location.origin}/product/${id}`,
-      png_url: 'data:image/png;base64,',
-      svg_url: 'data:image/svg+xml;base64,',
+      target_url: targetUrl,
+      png_url: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`,
+      svg_url: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&format=svg&data=${encodeURIComponent(targetUrl)}`,
     } as T;
   }
   if (path.startsWith('/products/') && method === 'GET') {
@@ -807,7 +819,7 @@ export async function uploadFileWithProgress({
       let updatedProduct: any = undefined;
       if (productId) {
         const storedProducts = JSON.parse(localStorage.getItem('i3dion.products') ?? '[]') as any[];
-        const targetIndex = storedProducts.findIndex((p) => p.id === productId);
+        const targetIndex = storedProducts.findIndex((p: any) => p.id === productId);
         let target = targetIndex !== -1 ? storedProducts[targetIndex] : {
           id: productId,
           name: 'Uploaded Product',
@@ -817,6 +829,8 @@ export async function uploadFileWithProgress({
           specs: {},
           assets: []
         };
+        const targetUrl = target.public_url || (typeof window !== 'undefined' ? `${window.location.origin}/product/${target.slug || target.id}` : `https://i3-dion-spatial.vercel.app/product/${target.slug || target.id}`);
+        target.public_url = targetUrl;
 
         if (assetType === 'thumbnail') {
           target.thumbnail_url = fileUrl;
@@ -824,10 +838,15 @@ export async function uploadFileWithProgress({
         } else if (assetType === 'model') {
           target.model_url = fileUrl;
           target.modelUrl = fileUrl;
+          const qrPng = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`;
+          const qrSvg = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&format=svg&data=${encodeURIComponent(targetUrl)}`;
           target.qr = target.qr || {
             id: `qr-${Date.now()}`,
-            png_url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-            svg_url: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjwvc3ZnPg==',
+            product_id: target.id,
+            product_slug: target.slug || target.id,
+            target_url: targetUrl,
+            png_url: qrPng,
+            svg_url: qrSvg,
           };
           target.qr_png_url = target.qr.png_url;
           target.qr_svg_url = target.qr.svg_url;
