@@ -9,7 +9,6 @@ import {
   BarChart3,
   Cpu,
   Layers,
-  FileText,
   Bot,
   QrCode,
   RotateCw,
@@ -17,11 +16,10 @@ import {
   Globe2,
   Factory,
   Car,
-  Activity,
-  Award
+  Activity
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import ThreeProduct from '../components/ThreeProduct';
 import { ViewInARButton } from '../components/ViewInARButton';
 import { Logo } from '../components/Logo';
