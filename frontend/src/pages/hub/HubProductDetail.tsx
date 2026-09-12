@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -10,11 +10,14 @@ import {
   RotateCcw, 
   PlusCircle, 
   Info,
-  ShieldCheck
+  ShieldCheck,
+  FileText,
+  Download
 } from 'lucide-react';
-import { getSpatialHubModelBySlugOrId } from '../../data/spatialHubModels';
+import { getSpatialHubModelBySlugOrId, SpatialHubModel } from '../../data/spatialHubModels';
 import ThreeProduct, { RenderMode } from '../../components/ThreeProduct';
 import { useToast } from '../../components/Toast';
+import { hubApi } from '../../services/hubApi';
 
 export function HubProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -24,13 +27,75 @@ export function HubProductDetail() {
   const [renderMode, setRenderMode] = useState<RenderMode>('solid');
   const [autoRotate, setAutoRotate] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [apiModel, setApiModel] = useState<SpatialHubModel | null>(null);
   const viewerContainerRef = useRef<HTMLDivElement>(null);
 
-  // Retrieve model from master dataset
+  // Fetch product from backend DB API if available
+  useEffect(() => {
+    if (!id) return;
+    hubApi.getProduct(id).then((p) => {
+      if (p && p.id) {
+        setApiModel({
+          id: p.id,
+          name: p.name,
+          slug: p.slug || p.id,
+          category: p.category || 'Industrial Equipment',
+          shortDescription: p.description || 'Uploaded industrial 3D model asset.',
+          longDescription: p.description || 'Uploaded industrial 3D model asset.',
+          thumbnail: p.imageUrl || '/models/thumbnails/gearbox.webp',
+          modelUrl: p.modelUrl || '/models/gearbox_assembly.glb',
+          arEnabled: true,
+          wireframeEnabled: true,
+          xrayEnabled: true,
+          solidEnabled: true,
+          status: 'Published',
+          viewsCount: p.views_count || 150,
+          likesCount: p.likes_count || 42,
+          downloadsCount: p.downloads_count || 18,
+          metadata: {
+            objectType: 'Industrial 3D Asset Record',
+            industrialCategory: p.category || 'Machinery',
+            visualizationType: 'Solid / Wireframe / X-Ray / AR',
+            componentStructure: 'Multi-part CAD Surface Geometry',
+            modelCharacteristics: 'Database-backed Model Record'
+          },
+          features: [
+            'Direct database product record',
+            'Full Solid, Wireframe, X-Ray mode support',
+            'AR Ready spatial anchor placement'
+          ],
+          tags: p.tags || ['industrial', '3d-model'],
+          source: {
+            repository: 'I3DION Spatial Database',
+            author: p.creator_name || p.company_name || 'Organization Creator',
+            license: 'Commercial License',
+            attributionRequired: false,
+            originalFormat: 'glTF 2.0 Binary',
+            optimizedFormat: 'Binary glTF (GLB)'
+          }
+        });
+      }
+    }).catch(() => null);
+  }, [id]);
+
+  // Lock background scroll when QR Modal is active
+  useEffect(() => {
+    if (showQrModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showQrModal]);
+
+  // Retrieve model from API or fallback master dataset
   const model = useMemo(() => {
+    if (apiModel) return apiModel;
     if (!id) return undefined;
     return getSpatialHubModelBySlugOrId(id);
-  }, [id]);
+  }, [id, apiModel]);
 
   if (!model) {
     return (

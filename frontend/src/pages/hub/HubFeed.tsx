@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Box, Sparkles, Filter, CheckCircle2, QrCode, Share2, Layers } from 'lucide-react';
 import { SPATIAL_HUB_MODELS, SpatialHubModel, searchSpatialHubModels } from '../../data/spatialHubModels';
 import ThreeProduct, { RenderMode } from '../../components/ThreeProduct';
 import { useToast } from '../../components/Toast';
+import { hubApi } from '../../services/hubApi';
 
 export function HubFeed() {
   const { success, info } = useToast();
@@ -11,20 +12,105 @@ export function HubFeed() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedMode, setSelectedMode] = useState('All');
   const [sortBy, setSortBy] = useState<'popular' | 'newest' | 'alphabetical'>('popular');
+  const [dbModels, setDbModels] = useState<SpatialHubModel[]>([]);
   
   // Quick Preview State in Grid
   const [previewModes, setPreviewModes] = useState<Record<string, RenderMode>>({});
   const [activeQrModel, setActiveQrModel] = useState<SpatialHubModel | null>(null);
 
+  // Fetch Database Models from Backend API if available
+  useEffect(() => {
+    hubApi.getFeed().then((items) => {
+      if (Array.isArray(items) && items.length > 0) {
+        const mapped: SpatialHubModel[] = items.map((p) => ({
+          id: p.id,
+          name: p.name,
+          slug: p.slug || p.id,
+          category: p.category || 'Industrial Equipment',
+          shortDescription: p.description || 'Uploaded industrial 3D model asset.',
+          longDescription: p.description || 'Uploaded industrial 3D model asset.',
+          thumbnail: p.imageUrl || '/models/thumbnails/gearbox.webp',
+          modelUrl: p.modelUrl || '/models/gearbox_assembly.glb',
+          arEnabled: true,
+          wireframeEnabled: true,
+          xrayEnabled: true,
+          solidEnabled: true,
+          status: 'Published',
+          viewsCount: p.views_count || 120,
+          likesCount: p.likes_count || 34,
+          downloadsCount: p.downloads_count || 12,
+          metadata: {
+            objectType: 'Industrial 3D Asset',
+            industrialCategory: p.category || 'Machinery',
+            visualizationType: 'Solid / Wireframe / X-Ray / AR',
+            componentStructure: 'Multi-part CAD Surface Geometry',
+            modelCharacteristics: 'Database-backed Model Record'
+          },
+          features: [
+            'Direct database product record',
+            'Full Solid, Wireframe, X-Ray mode support',
+            'AR Ready spatial anchor placement'
+          ],
+          tags: p.tags || ['industrial', '3d-model'],
+          source: {
+            repository: 'I3DION Spatial Database',
+            author: p.creator_name || p.company_name || 'Organization Creator',
+            license: 'Commercial License',
+            attributionRequired: false,
+            originalFormat: 'glTF 2.0 Binary',
+            optimizedFormat: 'Binary glTF (GLB)'
+          }
+        }));
+        setDbModels(mapped);
+      }
+    }).catch(() => null);
+  }, []);
+
+  // Lock background scroll when QR Modal is open
+  useEffect(() => {
+    if (activeQrModel) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [activeQrModel]);
+
+  // Combine static master 30 models with dynamically fetched database models (avoiding duplicates)
+  const allModels = useMemo(() => {
+    const existingSlugs = new Set(SPATIAL_HUB_MODELS.map(m => m.slug));
+    const uniqueDbModels = dbModels.filter(m => !existingSlugs.has(m.slug));
+    return [...uniqueDbModels, ...SPATIAL_HUB_MODELS];
+  }, [dbModels]);
+
   // Extract unique categories
   const categories = useMemo(() => {
-    const set = new Set(SPATIAL_HUB_MODELS.map(m => m.category));
+    const set = new Set(allModels.map(m => m.category));
     return ['All', ...Array.from(set)];
-  }, []);
+  }, [allModels]);
 
   // Filtered & Sorted Models
   const filteredModels = useMemo(() => {
-    let result = searchSpatialHubModels(searchQuery, selectedCategory, selectedMode);
+    const q = searchQuery.trim().toLowerCase();
+    let result = allModels.filter(model => {
+      const matchesQuery = !q || (
+        model.name.toLowerCase().includes(q) ||
+        model.category.toLowerCase().includes(q) ||
+        model.shortDescription.toLowerCase().includes(q) ||
+        model.tags.some(t => t.toLowerCase().includes(q))
+      );
+      const matchesCategory = !selectedCategory || selectedCategory === 'All' || model.category === selectedCategory;
+      let matchesMode = true;
+      if (selectedMode && selectedMode !== 'All') {
+        if (selectedMode === 'AR') matchesMode = model.arEnabled;
+        else if (selectedMode === 'Wireframe') matchesMode = model.wireframeEnabled;
+        else if (selectedMode === 'X-Ray') matchesMode = model.xrayEnabled;
+        else if (selectedMode === 'Solid') matchesMode = model.solidEnabled;
+      }
+      return matchesQuery && matchesCategory && matchesMode;
+    });
     
     if (sortBy === 'popular') {
       result = [...result].sort((a, b) => b.likesCount - a.likesCount);
@@ -34,7 +120,7 @@ export function HubFeed() {
       result = [...result].sort((a, b) => b.id.localeCompare(a.id));
     }
     return result;
-  }, [searchQuery, selectedCategory, selectedMode, sortBy]);
+  }, [searchQuery, selectedCategory, selectedMode, sortBy, allModels]);
 
   const handleShare = (model: SpatialHubModel, e: React.MouseEvent) => {
     e.stopPropagation();

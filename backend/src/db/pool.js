@@ -165,11 +165,18 @@ export async function ensureMigrated() {
       ON CONFLICT DO NOTHING;
     `);
     
-    // Non-blocking schema enhancements
+    // Non-blocking schema enhancements & Spatial Hub Seeding
     await pool.query(`
       ALTER TABLE products ADD COLUMN IF NOT EXISTS visibility text DEFAULT 'PUBLIC';
       ALTER TABLE products ADD COLUMN IF NOT EXISTS approval_status text DEFAULT 'PUBLISHED';
     `).catch(() => {});
+
+    try {
+      const { seedSpatialHubDatabase } = await import('./seed-spatial-hub.js');
+      await seedSpatialHubDatabase();
+    } catch (seedErr) {
+      console.warn('Non-blocking Spatial Hub seeding note:', seedErr.message);
+    }
 
     migrationRun = true;
   } catch (err) {
