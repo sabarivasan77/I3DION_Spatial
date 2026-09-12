@@ -32,19 +32,8 @@ export function LandingPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-white text-slate-900">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 px-6 backdrop-blur-md">
-        <Logo />
-        <div className="flex items-center gap-4">
-          <Link to="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition">
-            Sign In
-          </Link>
-          <Link to="/login" className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:bg-blue-600 transition">
-            Get Started <ArrowRight size={16} />
-          </Link>
-        </div>
-      </header>
+    <main className="min-h-screen bg-white text-slate-900 pt-16">
+      {/* Hero Section */}
 
       {/* Hero Section */}
       <section className="relative overflow-hidden px-4 py-20 md:px-6 md:py-28 text-center flex flex-col items-center">
