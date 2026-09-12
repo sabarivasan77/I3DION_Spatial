@@ -2,484 +2,666 @@ import { pool } from './pool.js';
 
 export const SEED_MODELS = [
   {
-    name: 'Heavy Duty Planetary Speed Reducer',
-    slug: 'industrial-gearbox',
-    category: 'Industrial Gearbox',
-    description: 'Mechanical transmission assembly showcasing planetary gear set, sun gear, carrier, and enclosed housing.',
-    model_url: '/models/model_1.gltf',
-    image_url: '/models/thumbnails/thumb_1.svg',
-    specs: {
-      objectType: 'Mechanical Transmission Assembly',
-      industrialCategory: 'Power Transmission & Drive Technology',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Housing, Sun Gear, Planetary Carrier, Output Shaft, Bearings',
-      modelCharacteristics: 'Manifold CAD Geometry, Clean Mesh Topology, Sub-assembly Nodes'
+    "name": "Heavy Duty Planetary Speed Reducer",
+    "slug": "industrial-gearbox",
+    "category": "Industrial Gearbox",
+    "description": "High-torque planetary speed reducer with sun gear, planetary carrier, and enclosed housing.",
+    "model_url": "/models/model_1.gltf",
+    "image_url": "/models/thumbnails/thumb_1.svg",
+    "specs": {
+      "objectType": "Mechanical Transmission Assembly",
+      "industrialCategory": "Power Transmission & Drive Technology",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Housing, Sun Gear, Planetary Carrier, Output Shaft, Bearings",
+      "modelCharacteristics": "High-Density CAD Geometry, Clean Mesh Topology, Sub-assembly Nodes"
     },
-    tags: ['gearbox', 'transmission', 'mechanical', 'planetary-gears', 'powertrain']
+    "tags": [
+      "gearbox",
+      "transmission",
+      "mechanical",
+      "planetary-gears",
+      "powertrain"
+    ]
   },
   {
-    name: '3-Phase AC Induction Electric Motor',
-    slug: 'electric-motor',
-    category: 'Electric Motor',
-    description: 'Industrial asynchronous electric motor displaying stator windings, rotor shaft, cooling fins, and terminal box.',
-    model_url: '/models/model_2.gltf',
-    image_url: '/models/thumbnails/thumb_2.svg',
-    specs: {
-      objectType: 'Rotating Electrical Machine',
-      industrialCategory: 'Motors & Actuators',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Stator Frame, Rotor Shaft, Winding Assemblies, Cooling Fan, Terminal Enclosure',
-      modelCharacteristics: 'Subdivision Surface Mesh, Balanced Rotational Inertia Geometry'
+    "name": "Reciprocating Saw Industrial Power Actuator",
+    "slug": "reciprocating-saw",
+    "category": "Power Tools & Actuators",
+    "description": "Industrial motor-driven reciprocating saw assembly displaying internal drive linkage and blade clamp.",
+    "model_url": "/models/model_2.gltf",
+    "image_url": "/models/thumbnails/thumb_2.svg",
+    "specs": {
+      "objectType": "Motorized Reciprocating Machine",
+      "industrialCategory": "Power Tools & Actuators",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Electric Motor, Drive Gear, Crank Linkage, Slider Shaft, Ergonomic Casing",
+      "modelCharacteristics": "High-Detail Kinematic Linkage CAD"
     },
-    tags: ['motor', 'electric', 'induction', 'stator', 'rotor', 'machinery']
+    "tags": [
+      "actuator",
+      "saw",
+      "reciprocating",
+      "power-tool",
+      "linkage",
+      "machinery"
+    ]
   },
   {
-    name: 'Single-Stage End Suction Centrifugal Pump',
-    slug: 'centrifugal-pump',
-    category: 'Centrifugal Pump',
-    description: 'Fluid handling pump assembly showing volute casing, closed impeller, wear rings, and mechanical shaft seal.',
-    model_url: '/models/model_3.gltf',
-    image_url: '/models/thumbnails/thumb_3.svg',
-    specs: {
-      objectType: 'Hydrodynamic Fluid Machinery',
-      industrialCategory: 'Pumps & Fluid Handling',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Volute Casing, Closed Impeller, Shaft Sleeve, Mechanical Seal, Flanges',
-      modelCharacteristics: 'Clean CAD Surface Reconstruction, Low Quad-Poly Count'
+    "name": "Off-Road Industrial Transport Buggy Chassis",
+    "slug": "industrial-buggy",
+    "category": "Forklift / Industrial Vehicle",
+    "description": "Heavy-duty tubular chassis vehicle featuring independent suspension, wheel hubs, and roll-cage frame.",
+    "model_url": "/models/model_3.gltf",
+    "image_url": "/models/thumbnails/thumb_3.svg",
+    "specs": {
+      "objectType": "Mobile Transport Vehicle",
+      "industrialCategory": "Intralogistics & Mobile Equipment",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Spaceframe Chassis, Suspension Arms, Coil Springs, Steering Gear, Wheels",
+      "modelCharacteristics": "Complex Multi-Body Vehicle Assembly"
     },
-    tags: ['pump', 'centrifugal', 'fluid-dynamics', 'impeller', 'hydraulics']
+    "tags": [
+      "buggy",
+      "vehicle",
+      "chassis",
+      "suspension",
+      "logistics",
+      "transport"
+    ]
   },
   {
-    name: 'Rotary Screw Industrial Air Compressor',
-    slug: 'air-compressor',
-    category: 'Air Compressor',
-    description: 'Twin-screw positive displacement air compressor unit demonstrating helical male and female rotors.',
-    model_url: '/models/model_4.gltf',
-    image_url: '/models/thumbnails/thumb_4.svg',
-    specs: {
-      objectType: 'Positive Displacement Gas Compressor',
-      industrialCategory: 'Pneumatics & Compressed Air Systems',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Helical Rotor Pair, Compressor Air-End Casing, Bearings, Intake Manifold',
-      modelCharacteristics: 'High Precision Helical Mesh Profile, Enclosed Chassis Geometry'
+    "name": "Industrial Safety Protective Helmet Unit",
+    "slug": "damaged-helmet",
+    "category": "Safety Equipment & Gear",
+    "description": "High-impact composite industrial safety helmet showing visor mounts, ventilation ports, and shell layers.",
+    "model_url": "/models/model_4.gltf",
+    "image_url": "/models/thumbnails/thumb_4.svg",
+    "specs": {
+      "objectType": "Personal Protective Equipment",
+      "industrialCategory": "Safety Equipment & Gear",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Outer Shell, Impact Foam Liner, Suspension Harness, Visor Mechanism",
+      "modelCharacteristics": "High Poly Photoreal PBR Material Surface Mesh"
     },
-    tags: ['compressor', 'pneumatics', 'air-end', 'rotary-screw', 'industrial']
+    "tags": [
+      "helmet",
+      "ppe",
+      "safety",
+      "protective-gear",
+      "industrial"
+    ]
   },
   {
-    name: 'Variable Displacement Axial Piston Hydraulic Pump',
-    slug: 'hydraulic-pump',
-    category: 'Hydraulic Pump',
-    description: 'High-pressure hydraulic axial piston pump showing swashplate angle mechanism, cylinder barrel, and pistons.',
-    model_url: '/models/model_5.gltf',
-    image_url: '/models/thumbnails/thumb_5.svg',
-    specs: {
-      objectType: 'Fluid Power Displacement Generator',
-      industrialCategory: 'Hydraulics & Fluid Power',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Swashplate, Cylinder Barrel, Pistons, Slipper Pads, Shaft & Valve Plate',
-      modelCharacteristics: 'Detailed Kinematic Mechanism Geometry, Sub-millimeter Tolerance CAD'
+    "name": "Substation Transport Tanker Truck Unit",
+    "slug": "milk-truck",
+    "category": "Industrial Logistics Vehicle",
+    "description": "Heavy distribution tanker truck with dual-axle chassis, insulated tank vessel, and cab assembly.",
+    "model_url": "/models/model_5.gltf",
+    "image_url": "/models/thumbnails/thumb_5.svg",
+    "specs": {
+      "objectType": "Bulk Liquid Transport Vehicle",
+      "industrialCategory": "Intralogistics & Mobile Equipment",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Truck Cab, Insulated Tank Vessel, Chassis Frame, Valve Cabinet, Axles",
+      "modelCharacteristics": "Full Scale Commercial Vehicle Geometry"
     },
-    tags: ['hydraulic-pump', 'axial-piston', 'swashplate', 'hydraulics', 'fluid-power']
+    "tags": [
+      "tanker",
+      "truck",
+      "logistics",
+      "liquid-transport",
+      "vehicle"
+    ]
   },
   {
-    name: 'High-Pressure Flanged Globe Valve Assembly',
-    slug: 'industrial-valve',
-    category: 'Industrial Valve',
-    description: 'Flanged linear-motion globe valve featuring handwheel actuator, threaded stem, valve plug, and seat ring.',
-    model_url: '/models/model_6.gltf',
-    image_url: '/models/thumbnails/thumb_6.svg',
-    specs: {
-      objectType: 'Linear Flow Regulation Valve',
-      industrialCategory: 'Piping & Flow Control',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Valve Body, Bonnet, Stem, Plug Disc, Seat Ring, Handwheel Actuator',
-      modelCharacteristics: 'Standard Flange Drilling CAD Pattern, Clean Solid Surface Body'
+    "name": "Robotic Actuated Joint Stem Segment",
+    "slug": "brain-stem-robot",
+    "category": "Robotic Arm",
+    "description": "Biomechanical robotic joint stem featuring servo housing, spinal linkage, and internal wiring channels.",
+    "model_url": "/models/model_6.gltf",
+    "image_url": "/models/thumbnails/thumb_6.svg",
+    "specs": {
+      "objectType": "Articulated Robotic Joint Stem",
+      "industrialCategory": "Robotics & Automated Manufacturing",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Servo Actuators, Harmonic Drives, Stem Segment Linkage, Bus Wiring",
+      "modelCharacteristics": "Precision Bio-Robotic CAD Assembly"
     },
-    tags: ['valve', 'globe-valve', 'piping', 'flow-control', 'flange']
+    "tags": [
+      "robotics",
+      "joint-stem",
+      "actuator",
+      "automation",
+      "servo"
+    ]
   },
   {
-    name: 'Shell and Tube Industrial Heat Exchanger',
-    slug: 'heat-exchanger',
-    category: 'Heat Exchanger',
-    description: 'Industrial thermal exchanger showing outer shell vessel, tube bundle array, baffles, and channel heads.',
-    model_url: '/models/model_7.gltf',
-    image_url: '/models/thumbnails/thumb_7.svg',
-    specs: {
-      objectType: 'Thermal Energy Transfer Apparatus',
-      industrialCategory: 'Process Equipment & Thermal Systems',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Outer Cylindrical Shell, Tube Bundle, Segmental Baffles, Tubesheet, Channel Bonnet',
-      modelCharacteristics: 'Pattern Array Tube Geometry, Structural Vessel Supports'
+    "name": "Industrial Enclosed Hazardous Lighting Unit",
+    "slug": "industrial-lantern",
+    "category": "Industrial Control Panel",
+    "description": "High-intensity industrial hanging lantern housing showing glass globe, protective guard, and top hook.",
+    "model_url": "/models/model_7.gltf",
+    "image_url": "/models/thumbnails/thumb_7.svg",
+    "specs": {
+      "objectType": "Hazardous Luminaire Enclosure",
+      "industrialCategory": "Industrial Automation & Electrical Controls",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Cast Housing, Glass Globe, Wire Guard, Heat Sink Fins, Mount Hook",
+      "modelCharacteristics": "Heavy Cast Metal Surface Pattern Geometry"
     },
-    tags: ['heat-exchanger', 'shell-and-tube', 'thermal', 'process-equipment', 'vessel']
+    "tags": [
+      "lighting",
+      "luminaire",
+      "hazardous-area",
+      "explosion-proof",
+      "electrical"
+    ]
   },
   {
-    name: 'ASME Horizontal Industrial Pressure Vessel',
-    slug: 'pressure-vessel',
-    category: 'Pressure Vessel',
-    description: 'Horizontal cylindrical storage vessel with ellipsoidal heads, manway access port, and saddle supports.',
-    model_url: '/models/model_8.gltf',
-    image_url: '/models/thumbnails/thumb_8.svg',
-    specs: {
-      objectType: 'Pressurized Storage Vessel',
-      industrialCategory: 'Storage & Containment Infrastructure',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Cylindrical Shell, Ellipsoidal Heads, Saddle Supports, Manway Access, Nozzle Connections',
-      modelCharacteristics: 'Seated Structural Frame, Thick Wall Surface CAD Mesh'
+    "name": "Acoustic Signal Processing Workstation",
+    "slug": "boom-box-station",
+    "category": "Industrial Control Panel",
+    "description": "Modular acoustic testing and signal amplifier station featuring speaker cones, control knobs, and chassis.",
+    "model_url": "/models/model_8.gltf",
+    "image_url": "/models/thumbnails/thumb_8.svg",
+    "specs": {
+      "objectType": "Acoustic Test Instrument",
+      "industrialCategory": "Instrumentation & Process Control",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Audio Drivers, Chassis Enclosure, Control Panel Knobs, Transport Handle",
+      "modelCharacteristics": "Detailed Consumer & Industrial Electronic Assembly"
     },
-    tags: ['pressure-vessel', 'asme', 'storage-tank', 'process-plant', 'containment']
+    "tags": [
+      "acoustic",
+      "analyzer",
+      "instrumentation",
+      "control-panel",
+      "audio"
+    ]
   },
   {
-    name: 'Automated Industrial Roller Conveyor Section',
-    slug: 'conveyor-assembly',
-    category: 'Conveyor Assembly',
-    description: 'Modular powered roller conveyor segment featuring steel rollers, drive chain, motor drive, and side frames.',
-    model_url: '/models/model_9.gltf',
-    image_url: '/models/thumbnails/thumb_9.svg',
-    specs: {
-      objectType: 'Material Handling Equipment',
-      industrialCategory: 'Intralogistics & Conveyance Systems',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Roller Axles, Steel Tubes, Sprocket Assembly, Frame Channels, Gearmotor Mount',
-      modelCharacteristics: 'Linear Array Component Repeater Mesh, Clean Industrial Finish'
+    "name": "High-Precision Optical Inspection System",
+    "slug": "optical-inspection-camera",
+    "category": "CNC Machine",
+    "description": "Precision optical inspection camera with bellows extension, brass lens housing, and mounting plate.",
+    "model_url": "/models/model_9.gltf",
+    "image_url": "/models/thumbnails/thumb_9.svg",
+    "specs": {
+      "objectType": "Optical Metrology Instrument",
+      "industrialCategory": "Inspection & Quality Metrology",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Lens Barrel, Focus Bellows, Bed Frame, Focusing Screws, Plate Holder",
+      "modelCharacteristics": "Ultra-High Polygon CAD Surface Detail"
     },
-    tags: ['conveyor', 'roller-conveyor', 'automation', 'material-handling', 'logistics']
+    "tags": [
+      "camera",
+      "optical",
+      "metrology",
+      "inspection",
+      "precision"
+    ]
   },
   {
-    name: '6-Axis Articulated Industrial Robot Arm',
-    slug: 'robotic-arm',
-    category: 'Robotic Arm',
-    description: 'High-payload articulated robot arm showing base joint, upper arm, wrist assembly, and internal servo motors.',
-    model_url: '/models/model_10.gltf',
-    image_url: '/models/thumbnails/thumb_10.svg',
-    specs: {
-      objectType: 'Articulated Manipulator System',
-      industrialCategory: 'Robotics & Automated Manufacturing',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Base Axis, Shoulder, Elbow, Wrist Axes J1-J6, Tool Flange, Servo Housing',
-      modelCharacteristics: 'Multi-body Kinematic Joint Rigging Ready, Industrial High-Detail CAD'
+    "name": "Pressurized Liquid Process Reservoir Container",
+    "slug": "water-reservoir",
+    "category": "Pressure Vessel",
+    "description": "Stainless steel fluid reservoir with screw cap, thermal insulation sleeve, and flow nozzle.",
+    "model_url": "/models/model_10.gltf",
+    "image_url": "/models/thumbnails/thumb_10.svg",
+    "specs": {
+      "objectType": "Process Fluid Vessel",
+      "industrialCategory": "Pumps & Fluid Handling",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Stainless Vessel Body, Threaded Cap, Insulating Sleeve, Bottom Ring",
+      "modelCharacteristics": "Smooth Surface CAD Geometry"
     },
-    tags: ['robotics', 'robot-arm', 'automation', '6-axis', 'articulated-robot']
+    "tags": [
+      "reservoir",
+      "vessel",
+      "fluid-container",
+      "stainless-steel",
+      "process"
+    ]
   },
   {
-    name: 'Heavy-Duty Centrifugal Draft Fan Assembly',
-    slug: 'industrial-fan',
-    category: 'Industrial Fan',
-    description: 'Industrial backward-curved centrifugal blower fan with scroll housing, wheel impeller, and drive shaft.',
-    model_url: '/models/model_11.gltf',
-    image_url: '/models/thumbnails/thumb_11.svg',
-    specs: {
-      objectType: 'Industrial Aerodynamic Air Handler',
-      industrialCategory: 'HVAC & Process Air Systems',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Scroll Volute Casing, Fan Wheel, Shaft Bearings, Pedestal Frame, Inlet Cone',
-      modelCharacteristics: 'Curved Aerofoil Impeller Vanes, Sheet Metal Casing Topology'
+    "name": "Surface Roughness Calibration Test Array",
+    "slug": "roughness-calibration",
+    "category": "Bearing Assembly",
+    "description": "Metrology standard sphere array displaying progressive surface roughness and specular reflectivity grades.",
+    "model_url": "/models/model_11.gltf",
+    "image_url": "/models/thumbnails/thumb_11.svg",
+    "specs": {
+      "objectType": "Metrology Calibration Standard",
+      "industrialCategory": "Inspection & Quality Metrology",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Base Block, 16 Calibration Spheres, Reference Grid",
+      "modelCharacteristics": "PBR Metallic Specular Reflectivity Grid"
     },
-    tags: ['industrial-fan', 'centrifugal-blower', 'hvac', 'air-handling', 'ventilation']
+    "tags": [
+      "calibration",
+      "roughness",
+      "metrology",
+      "spheres",
+      "inspection"
+    ]
   },
   {
-    name: 'Standby Diesel Industrial Power Generator Unit',
-    slug: 'industrial-generator',
-    category: 'Generator',
-    description: 'Enclosed stationary power generator combining a diesel engine, alternator core, and soundproof canopy.',
-    model_url: '/models/model_12.gltf',
-    image_url: '/models/thumbnails/thumb_12.svg',
-    specs: {
-      objectType: 'Engine-Driven Electrical Generator Set',
-      industrialCategory: 'Power Generation & Energy Storage',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Diesel Engine Block, Alternator Stator/Rotor, Radiator, Base Fuel Tank, Canopy',
-      modelCharacteristics: 'Heavy Modular Enclosure CAD, Internal Engine Assembly Geometry'
+    "name": "3-Axis Angular Alignment Calibration Block",
+    "slug": "orientation-calibration",
+    "category": "Machine Tools",
+    "description": "3D coordinate calibration block with X, Y, Z axis indicators and precision datum surfaces.",
+    "model_url": "/models/model_12.gltf",
+    "image_url": "/models/thumbnails/thumb_12.svg",
+    "specs": {
+      "objectType": "Spatial Orientation Datum Block",
+      "industrialCategory": "CNC Machining & Subtractive Manufacturing",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Datum Cube Body, XYZ Arrow Markers, Mounting Hole",
+      "modelCharacteristics": "Low Poly Exact Coordinate Geometry"
     },
-    tags: ['generator', 'diesel-generator', 'power-gen', 'alternator', 'backup-power']
+    "tags": [
+      "calibration",
+      "xyz-axes",
+      "datum",
+      "cnc",
+      "alignment"
+    ]
   },
   {
-    name: 'Multi-Stage Industrial Steam Turbine',
-    slug: 'steam-turbine',
-    category: 'Turbine',
-    description: 'High-pressure steam turbine featuring bladed rotor shaft, stationary nozzles, and split casing halves.',
-    model_url: '/models/model_13.gltf',
-    image_url: '/models/thumbnails/thumb_13.svg',
-    specs: {
-      objectType: 'Thermal Turbomachinery',
-      industrialCategory: 'Power Generation & Turbomachinery',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Rotor Shaft, High/Low Pressure Turbine Blades, Casing Shell, Labyrinth Seals, Bearings',
-      modelCharacteristics: 'High Density Aerofoil Blade Array Mesh, Complex Split-Casing CAD'
+    "name": "Extravehicular Mobility Operations Suit",
+    "slug": "astronaut-suit",
+    "category": "Safety Equipment & Gear",
+    "description": "Pressurized extravehicular suit with helmet visor, life support backpack, and articulated joints.",
+    "model_url": "/models/model_13.gltf",
+    "image_url": "/models/thumbnails/thumb_13.svg",
+    "specs": {
+      "objectType": "Environmental Life Support Garment",
+      "industrialCategory": "Safety Equipment & Gear",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Helmet & Visor, Torso Assembly, Life Support Pack, Gloves & Boots",
+      "modelCharacteristics": "High Resolution Mesh & Fabric PBR Textures"
     },
-    tags: ['steam-turbine', 'turbine', 'power-plant', 'rotor-blades', 'turbomachinery']
+    "tags": [
+      "suit",
+      "protective-gear",
+      "life-support",
+      "aerospace",
+      "safety"
+    ]
   },
   {
-    name: 'Double-Acting Tie-Rod Hydraulic Cylinder',
-    slug: 'hydraulic-cylinder',
-    category: 'Hydraulic Cylinder',
-    description: 'Industrial fluid power linear actuator displaying chrome piston rod, barrel cylinder, piston seals, and end caps.',
-    model_url: '/models/model_14.gltf',
-    image_url: '/models/thumbnails/thumb_14.svg',
-    specs: {
-      objectType: 'Linear Fluid Power Actuator',
-      industrialCategory: 'Hydraulics & Mechanical Actuators',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Cylinder Barrel, Piston Rod, Piston Head, Tie Rods, Clevis Mount, Rod Bushing',
-      modelCharacteristics: 'Precision Cylindrical Machined Geometry, Quad Surface Topology'
+    "name": "Multi-Axis Articulated Automation Robot",
+    "slug": "robot-expressive",
+    "category": "Robotic Arm",
+    "description": "Compact articulated service robot featuring multi-joint arm segments, LED eye display, and base pedestal.",
+    "model_url": "/models/model_14.gltf",
+    "image_url": "/models/thumbnails/thumb_14.svg",
+    "specs": {
+      "objectType": "Articulated Service Manipulator",
+      "industrialCategory": "Robotics & Automated Manufacturing",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Base Pedestal, Torso Segment, Articulated Arms, Head Display Unit",
+      "modelCharacteristics": "Rigged Kinematic Joint Assembly"
     },
-    tags: ['hydraulic-cylinder', 'actuator', 'hydraulics', 'piston', 'fluid-power']
+    "tags": [
+      "robot",
+      "automation",
+      "articulated",
+      "service-robot",
+      "kinematics"
+    ]
   },
   {
-    name: 'Double-Row Tapered Roller Bearing Assembly Block',
-    slug: 'bearing-assembly',
-    category: 'Bearing Assembly',
-    description: 'Heavy-duty industrial bearing block housing showing outer cup, inner cone, tapered rollers, and retaining cage.',
-    model_url: '/models/model_15.gltf',
-    image_url: '/models/thumbnails/thumb_15.svg',
-    specs: {
-      objectType: 'Precision Rolling Element Bearing',
-      industrialCategory: 'Mechanical Components & Bearings',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Outer Ring (Cup), Inner Ring (Cone), Tapered Rollers, Stamped Steel Cage',
-      modelCharacteristics: 'Sub-micron Surface Tolerance Geometry, Radial Array Pattern Mesh'
+    "name": "Industrial Field Operations Rigging Suit",
+    "slug": "soldier-rig",
+    "category": "Safety Equipment & Gear",
+    "description": "Heavy-duty articulated field suit with protective harness, utility pouches, and mobility joints.",
+    "model_url": "/models/model_15.gltf",
+    "image_url": "/models/thumbnails/thumb_15.svg",
+    "specs": {
+      "objectType": "Modular Field Harness System",
+      "industrialCategory": "Safety Equipment & Gear",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Chest Plate, Harness Belts, Pouches, Boots, Helmet",
+      "modelCharacteristics": "Rigged Character Skeleton Mesh"
     },
-    tags: ['bearing', 'tapered-roller', 'mechanical-component', 'tribology', 'powertrain']
+    "tags": [
+      "harness",
+      "field-rig",
+      "safety",
+      "protective-gear",
+      "ergonomics"
+    ]
   },
   {
-    name: 'Compound Helical Gear Train Assembly',
-    slug: 'gear-train',
-    category: 'Gear Train',
-    description: 'Multi-shaft gear reduction assembly featuring precision helical spur gears, keyways, and support shafts.',
-    model_url: '/models/model_16.gltf',
-    image_url: '/models/thumbnails/thumb_16.svg',
-    specs: {
-      objectType: 'Mechanical Gear Transmission Train',
-      industrialCategory: 'Power Transmission & Drive Technology',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Helical Pinion, Driven Gear, Intermediate Shafts, Keyway Slots, Shaft Collars',
-      modelCharacteristics: 'Involute Tooth Profile Curve Mesh, Precision Mesh Alignment'
+    "name": "Mechanical Kinematic Humanoid Chassis",
+    "slug": "xbot-robot",
+    "category": "Robotic Arm",
+    "description": "Clean kinematic humanoid robot chassis displaying multi-axis joints for biomechanical motion analysis.",
+    "model_url": "/models/model_16.gltf",
+    "image_url": "/models/thumbnails/thumb_16.svg",
+    "specs": {
+      "objectType": "Humanoid Motion Test Bed",
+      "industrialCategory": "Robotics & Automated Manufacturing",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Torso Chassis, 2x Arm Links, 2x Leg Links, Neck Pivot",
+      "modelCharacteristics": "Subdivision Surface CAD Shell"
     },
-    tags: ['gear-train', 'helical-gears', 'gears', 'powertrain', 'mechanical']
+    "tags": [
+      "humanoid",
+      "robot",
+      "kinematics",
+      "chassis",
+      "motion-capture"
+    ]
   },
   {
-    name: 'Flexible Metallic Disc Shaft Coupling Assembly',
-    slug: 'coupling-assembly',
-    category: 'Coupling Assembly',
-    description: 'Zero-backlash flexible disc coupling connecting two rotating shafts while accommodating angular misalignment.',
-    model_url: '/models/model_17.gltf',
-    image_url: '/models/thumbnails/thumb_17.svg',
-    specs: {
-      objectType: 'Flexible Shaft Coupling',
-      industrialCategory: 'Power Transmission & Couplings',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Drive Hubs, Stainless Steel Disc Pack, Center Spacer, Precision Reamed Bolts',
-      modelCharacteristics: 'Stacked Sheet Metal Disc Geometry, Symmetric Bolting Pattern'
+    "name": "Biomechanical Operations Humanoid Figure",
+    "slug": "humanoid-figure",
+    "category": "Safety Equipment & Gear",
+    "description": "Ergonomic human operator figure for spatial clearance testing and workplace reach envelope analysis.",
+    "model_url": "/models/model_17.gltf",
+    "image_url": "/models/thumbnails/thumb_17.svg",
+    "specs": {
+      "objectType": "Ergonomic Calibration Mannequin",
+      "industrialCategory": "Safety Equipment & Gear",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Head, Torso, Arms, Legs, Joint Pivots",
+      "modelCharacteristics": "Standard Ergonomic CAD Mesh"
     },
-    tags: ['coupling', 'shaft-coupling', 'flexible-disc', 'powertrain', 'mechanical']
+    "tags": [
+      "humanoid",
+      "ergonomics",
+      "mannequin",
+      "reach-envelope",
+      "safety"
+    ]
   },
   {
-    name: 'Pneumatic Actuated Butterfly Valve Spool Segment',
-    slug: 'pipe-valve-assembly',
-    category: 'Pipe Valve Assembly',
-    description: 'Process piping spool segment incorporating a pneumatic rotary actuator and resilient-seated butterfly valve.',
-    model_url: '/models/model_18.gltf',
-    image_url: '/models/thumbnails/thumb_18.svg',
-    specs: {
-      objectType: 'Automated Pipeline Isolation Assembly',
-      industrialCategory: 'Piping & Automated Valves',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Pneumatic Rack-and-Pinion Actuator, Butterfly Valve Disc, Elastomer Seat, Pipe Spool',
-      modelCharacteristics: 'Dual-Body CAD Assembly, Standard Process Piping Flange'
+    "name": "Primary Ion Drive Plasma Propulsion Engine",
+    "slug": "ion-drive-engine",
+    "category": "Turbine",
+    "description": "Electrostatic ion thruster assembly featuring ionization chamber, magnetic coils, and accelerator grid.",
+    "model_url": "/models/model_18.gltf",
+    "image_url": "/models/thumbnails/thumb_18.svg",
+    "specs": {
+      "objectType": "Electrostatic Plasma Thruster",
+      "industrialCategory": "Power Generation & Turbomachinery",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Anode Chamber, Solenoid Coils, Extraction Grids, Neutralizer Cathode",
+      "modelCharacteristics": "Complex Propulsion Engine CAD Assembly"
     },
-    tags: ['butterfly-valve', 'pneumatic-actuator', 'piping', 'process-control', 'valve']
+    "tags": [
+      "ion-drive",
+      "plasma",
+      "thruster",
+      "engine",
+      "propulsion"
+    ]
   },
   {
-    name: 'Vertical Multistage Submersible Water Booster Pump',
-    slug: 'water-pump',
-    category: 'Water Pump',
-    description: 'Vertical inline multistage water pressure booster pump with stacked impeller bowls and shaft coupling.',
-    model_url: '/models/model_19.gltf',
-    image_url: '/models/thumbnails/thumb_19.svg',
-    specs: {
-      objectType: 'Multistage Vertical Hydrodynamic Pump',
-      industrialCategory: 'Water Treatment & Fluid Supply',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Stacked Impeller Bowls, Diffusers, Stainless Sleeve, Pump Shaft, Motor Pedestal',
-      modelCharacteristics: 'Vertical Array Stack Mesh, Precision Sheet-Metal Impeller Blades'
+    "name": "Ergonomic Control Room Operator Chair",
+    "slug": "operator-chair",
+    "category": "Industrial Control Panel",
+    "description": "Heavy-duty ergonomic operator chair with adjustable armrests, lumbar support, and 5-star mobile base.",
+    "model_url": "/models/model_19.gltf",
+    "image_url": "/models/thumbnails/thumb_19.svg",
+    "specs": {
+      "objectType": "Control Room Ergonomic Seating",
+      "industrialCategory": "Industrial Automation & Electrical Controls",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Seat Cushion, Mesh Back, Armrests, Gas Lift Cylinder, 5-Star Base",
+      "modelCharacteristics": "High-Detail Sheen Fabric PBR Textures"
     },
-    tags: ['water-pump', 'multistage-pump', 'vertical-pump', 'booster', 'water-treatment']
+    "tags": [
+      "chair",
+      "operator-chair",
+      "ergonomics",
+      "control-room",
+      "seating"
+    ]
   },
   {
-    name: 'Inverter Multi-Process Robotic Welding Power Unit',
-    slug: 'welding-machine',
-    category: 'Welding Machine',
-    description: 'Industrial arc welding power source enclosure showing internal transformer inverter stack, cooling fan, and wire feeder drive.',
-    model_url: '/models/model_20.gltf',
-    image_url: '/models/thumbnails/thumb_20.svg',
-    specs: {
-      objectType: 'Industrial Power Conversion Equipment',
-      industrialCategory: 'Welding & Fabrication Equipment',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Inverter PCB Module, HF Transformer Core, Wire Drive Assembly, Chassis Enclosure',
-      modelCharacteristics: 'Sheet Metal Enclosure with Internal Electronic CAD Components'
+    "name": "Advanced Polymer Composite Specimen Block",
+    "slug": "polymer-specimen",
+    "category": "Injection Molding Machine",
+    "description": "Molded polymer material specimen showcasing surface texture variants, flexural ribs, and mold lines.",
+    "model_url": "/models/model_20.gltf",
+    "image_url": "/models/thumbnails/thumb_20.svg",
+    "specs": {
+      "objectType": "Material Processing Sample Specimen",
+      "industrialCategory": "Plastics Processing & Molding",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Molded Specimen Body, Structural Ribs, Texture Zones",
+      "modelCharacteristics": "Multi-Material PBR Variant Specimen"
     },
-    tags: ['welding-machine', 'inverter', 'mig-welder', 'fabrication', 'power-source']
+    "tags": [
+      "polymer",
+      "injection-molding",
+      "specimen",
+      "material",
+      "plastics"
+    ]
   },
   {
-    name: '5-Axis Vertical CNC Machining Center',
-    slug: 'cnc-milling-center',
-    category: 'CNC Machine',
-    description: 'Enclosed 5-axis CNC milling machine showing tilting rotary trunnion table, high-speed spindle, and tool changer carousel.',
-    model_url: '/models/model_21.gltf',
-    image_url: '/models/thumbnails/thumb_21.svg',
-    specs: {
-      objectType: 'Multi-Axis Subtractive Machine Tool',
-      industrialCategory: 'CNC Machining & Subtractive Manufacturing',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Spindle Head, Trunnion Table (B/C Axes), Linear Guide Way, ATC Arm, Machine Frame',
-      modelCharacteristics: 'Kinematic Machine Bed Assembly, Sub-millimeter Tolerance CAD'
+    "name": "High-Temperature Ceramic Heat Shield Block",
+    "slug": "ceramic-shield",
+    "category": "Heat Exchanger",
+    "description": "Precision investment cast ceramic specimen exhibiting high thermal dissipation geometry and density.",
+    "model_url": "/models/model_21.gltf",
+    "image_url": "/models/thumbnails/thumb_21.svg",
+    "specs": {
+      "objectType": "Refractory Thermal Barrier",
+      "industrialCategory": "Process Equipment & Thermal Systems",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Ceramic Body, Cooling Channels, Mounting Bosses",
+      "modelCharacteristics": "High Poly Sculpted Ceramic Mesh"
     },
-    tags: ['cnc', '5-axis', 'machining-center', 'milling', 'machine-tool', 'manufacturing']
+    "tags": [
+      "ceramic",
+      "heat-shield",
+      "thermal",
+      "refractory",
+      "process"
+    ]
   },
   {
-    name: 'Heavy-Duty Column Industrial Drill Press Assembly',
-    slug: 'industrial-drill-press',
-    category: 'Industrial Drill',
-    description: 'Precision geared-head column drilling machine featuring cast iron column, rack-and-pinion table, and spindle quill.',
-    model_url: '/models/model_22.gltf',
-    image_url: '/models/thumbnails/thumb_22.svg',
-    specs: {
-      objectType: 'Hole Manufacturing Machine Tool',
-      industrialCategory: 'Workshop Machinery & Tooling',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Cast Base, Ground Column, Geared Headstock, Spindle Quill, T-Slot Table, Depth Stop',
-      modelCharacteristics: 'Cast Iron Solid Body Mesh, Threaded Elevation Screw'
+    "name": "Control Room Modular Seating Console",
+    "slug": "modular-console",
+    "category": "Industrial Control Panel",
+    "description": "Heavy industrial lounge console unit for plant monitoring rooms and dispatcher control centers.",
+    "model_url": "/models/model_22.gltf",
+    "image_url": "/models/thumbnails/thumb_22.svg",
+    "specs": {
+      "objectType": "Control Room Monitoring Lounge",
+      "industrialCategory": "Industrial Automation & Electrical Controls",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Modular Cushions, Base Frame, Backrest, Armrests",
+      "modelCharacteristics": "Soft Velvet PBR Shading Mesh"
     },
-    tags: ['drill-press', 'column-drill', 'machining', 'workshop', 'tooling']
+    "tags": [
+      "console",
+      "seating",
+      "control-room",
+      "lounge",
+      "automation"
+    ]
   },
   {
-    name: 'High-Precision CNC Turning Lathe Machine',
-    slug: 'cnc-lathe-machine',
-    category: 'Lathe Machine',
-    description: 'Industrial CNC turning lathe showing hydraulic 3-jaw chuck, 12-station servo turret, and slant-bed ways.',
-    model_url: '/models/model_23.gltf',
-    image_url: '/models/thumbnails/thumb_23.svg',
-    specs: {
-      objectType: 'Rotary Subtractive Machine Tool',
-      industrialCategory: 'CNC Machining & Turning',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Slant Bed Frame, Main Spindle & Chuck, 12-Station Servo Turret, Carriage, Tailstock',
-      modelCharacteristics: 'Rigid Slant-Bed Cast Frame Geometry, Multi-Component Turret Assembly'
+    "name": "Optical Translucency Material Calibration Plate",
+    "slug": "translucency-calibration",
+    "category": "Machine Tools",
+    "description": "Translucent material calibration block for verifying X-Ray shell opacity and internal mesh visibility.",
+    "model_url": "/models/model_23.gltf",
+    "image_url": "/models/thumbnails/thumb_23.svg",
+    "specs": {
+      "objectType": "Optical Rendering Test Target",
+      "industrialCategory": "Inspection & Quality Metrology",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Stacked Alpha Plates, Frame Base, Calibration Grid",
+      "modelCharacteristics": "Alpha Blend & Cutout Test Mesh"
     },
-    tags: ['cnc-lathe', 'turning-center', 'lathe', 'cnc', 'machining']
+    "tags": [
+      "translucency",
+      "alpha",
+      "calibration",
+      "optical",
+      "metrology"
+    ]
   },
   {
-    name: 'Universal Horizontal/Vertical Milling Machine',
-    slug: 'milling-machine',
-    category: 'Milling Machine',
-    description: 'Knee-and-column universal milling machine featuring swiveling vertical head, horizontal arbor, and feed gearbox.',
-    model_url: '/models/model_24.gltf',
-    image_url: '/models/thumbnails/thumb_24.svg',
-    specs: {
-      objectType: 'Knee-and-Column Milling Machine',
-      industrialCategory: 'Workshop Machinery & Tooling',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Column Casting, Knee Assembly, Saddle, Swivel Worktable, Vertical Head, Arbor Support',
-      modelCharacteristics: 'Heavy Ribbed Cast Iron Geometry, Precision Lead Screw Threads'
+    "name": "Industrial Marine Hydrodynamic Specimen",
+    "slug": "marine-specimen",
+    "category": "Centrifugal Pump",
+    "description": "Hydrodynamic aquatic specimen model displaying organic surface contours and fluid dynamic profiles.",
+    "model_url": "/models/model_24.gltf",
+    "image_url": "/models/thumbnails/thumb_24.svg",
+    "specs": {
+      "objectType": "Bio-Inspired Hydrodynamic Specimen",
+      "industrialCategory": "Pumps & Fluid Handling",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Body Shell, Fin Foil Surfaces, Tail Propulsor, Internal Skeleton",
+      "modelCharacteristics": "High Poly Organic Surface Mesh"
     },
-    tags: ['milling-machine', 'universal-mill', 'knee-mill', 'machining', 'toolroom']
+    "tags": [
+      "marine",
+      "hydrodynamic",
+      "specimen",
+      "fluid-dynamics",
+      "bio-inspired"
+    ]
   },
   {
-    name: 'Hydraulic Plastic Injection Molding System',
-    slug: 'injection-molding-machine',
-    category: 'Injection Molding Machine',
-    description: 'Industrial plastic molding press showing hydraulic toggle clamp unit, reciprocating plasticizing screw, and barrel heaters.',
-    model_url: '/models/model_25.gltf',
-    image_url: '/models/thumbnails/thumb_25.svg',
-    specs: {
-      objectType: 'Polymer Processing Machinery',
-      industrialCategory: 'Plastics Processing & Molding',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Toggle Clamp Unit, Mold Platens, Tie-Bars, Injection Barrel & Screw, Hydraulic Unit',
-      modelCharacteristics: 'High Tonnage Frame Geometry, Internal Plasticizing Screw Flighting'
+    "name": "Subdivision Geometry Mesh Test Fixture",
+    "slug": "subdivision-fixture",
+    "category": "Machine Tools",
+    "description": "Multi-part mechanical test block showing instanced fastener array, mounting bosses, and datum planes.",
+    "model_url": "/models/model_25.gltf",
+    "image_url": "/models/thumbnails/thumb_25.svg",
+    "specs": {
+      "objectType": "Instanced Fastener Test Block",
+      "industrialCategory": "CNC Machining & Subtractive Manufacturing",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Base Block, 25x Hex Bolt Instances, Datum Plane",
+      "modelCharacteristics": "GPU Instanced Mesh Geometry"
     },
-    tags: ['injection-molding', 'plastics', 'molding-machine', 'toggle-clamp', 'polymer']
+    "tags": [
+      "instancing",
+      "test-fixture",
+      "fasteners",
+      "machining",
+      "cad"
+    ]
   },
   {
-    name: 'PLC Automation Industrial Control Panel Enclosure',
-    slug: 'industrial-control-panel',
-    category: 'Industrial Control Panel',
-    description: 'NEMA 12 industrial electrical control enclosure featuring DIN-rail Programmable Logic Controller (PLC), VFD drives, and relays.',
-    model_url: '/models/model_26.gltf',
-    image_url: '/models/thumbnails/thumb_26.svg',
-    specs: {
-      objectType: 'Industrial Automation Switchgear Enclosure',
-      industrialCategory: 'Industrial Automation & Electrical Controls',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'NEMA Cabinet, Backplate, PLC Controller Rack, VFD Inverters, Relays, DIN Rails',
-      modelCharacteristics: 'Modular Electrical Component CAD Assemblies, Wire Duct Channels'
+    "name": "Thermal Gradient Color Mapping Test Block",
+    "slug": "thermal-mapping-block",
+    "category": "Transformer",
+    "description": "Finite element analysis thermal gradient block mapping vertex color temperatures from 200°C to 1200°C.",
+    "model_url": "/models/model_26.gltf",
+    "image_url": "/models/thumbnails/thumb_26.svg",
+    "specs": {
+      "objectType": "FEA Thermal Stress Test Block",
+      "industrialCategory": "High Voltage Power Distribution",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Gradient Mesh Cylinder, Internal Temperature Core",
+      "modelCharacteristics": "Per-Vertex Color Thermal Map Mesh"
     },
-    tags: ['control-panel', 'plc', 'automation', 'vfd', 'electrical-cabinet', 'nema']
+    "tags": [
+      "thermal",
+      "fea",
+      "vertex-colors",
+      "simulation",
+      "stress-analysis"
+    ]
   },
   {
-    name: 'Oil-Immersed Step-Down Distribution Transformer',
-    slug: 'industrial-transformer',
-    category: 'Transformer',
-    description: 'Medium-voltage power transformer displaying corrugated cooling radiators, high-voltage porcelain bushings, and conservator tank.',
-    model_url: '/models/model_27.gltf',
-    image_url: '/models/thumbnails/thumb_27.svg',
-    specs: {
-      objectType: 'Electromagnetic Energy Conversion Apparatus',
-      industrialCategory: 'High Voltage Power Distribution',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Transformer Tank, HV Bushings, Laminated Core & Coils, Radiator Fins, Conservator',
-      modelCharacteristics: 'Corrugated Radiator Surface CAD, Ceramic Bushing Shed Geometry'
+    "name": "Kinematic Actuated Enclosure Box Unit",
+    "slug": "enclosure-box",
+    "category": "Industrial Control Panel",
+    "description": "Hinged industrial enclosure box featuring animated door latching mechanism and mounting tabs.",
+    "model_url": "/models/model_27.gltf",
+    "image_url": "/models/thumbnails/thumb_27.svg",
+    "specs": {
+      "objectType": "Kinematic Electrical Enclosure",
+      "industrialCategory": "Industrial Automation & Electrical Controls",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Enclosure Body, Hinged Door, Toggle Latches, Backplate",
+      "modelCharacteristics": "Kinematic Animated Mesh"
     },
-    tags: ['transformer', 'power-distribution', 'high-voltage', 'substation', 'electrical']
+    "tags": [
+      "enclosure",
+      "box",
+      "kinematics",
+      "nema",
+      "control-panel"
+    ]
   },
   {
-    name: 'Heavy-Capacity Electric Counterbalance Forklift',
-    slug: 'industrial-forklift',
-    category: 'Forklift / Industrial Vehicle',
-    description: 'Industrial electric warehouse forklift displaying 2-stage clear-view mast, hydraulic lift cylinder, forks, and battery pack.',
-    model_url: '/models/model_28.gltf',
-    image_url: '/models/thumbnails/thumb_28.svg',
-    specs: {
-      objectType: 'Powered Industrial Truck',
-      industrialCategory: 'Intralogistics & Mobile Equipment',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Chassis Frame, Counterweight, 2-Stage Mast, Fork Carriage, Battery Tray, Drive Axle',
-      modelCharacteristics: 'Full Vehicle Assembly Geometry, Structural Roll-Cage Frame'
+    "name": "Matte Finish Non-Reflective Testing Block",
+    "slug": "unlit-test-block",
+    "category": "Machine Tools",
+    "description": "Diffuse non-reflective reference block for calibrating studio lighting and ambient shadow occlusion.",
+    "model_url": "/models/model_28.gltf",
+    "image_url": "/models/thumbnails/thumb_28.svg",
+    "specs": {
+      "objectType": "Diffuse Shading Reference Target",
+      "industrialCategory": "Inspection & Quality Metrology",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Unlit Target Cube, Calibration Text Overlay",
+      "modelCharacteristics": "Unlit Material Shading Mesh"
     },
-    tags: ['forklift', 'material-handling', 'industrial-vehicle', 'warehouse', 'logistics']
+    "tags": [
+      "unlit",
+      "diffuse",
+      "calibration",
+      "shading",
+      "metrology"
+    ]
   },
   {
-    name: 'Motorized Screw Jack Linear Actuator Assembly',
-    slug: 'screw-jack-assembly',
-    category: 'Mechanical Jack / Lifting Assembly',
-    description: 'Worm gear screw jack lifting mechanism showing trapezoidal acme screw, worm wheel drive, and housing.',
-    model_url: '/models/model_29.gltf',
-    image_url: '/models/thumbnails/thumb_29.svg',
-    specs: {
-      objectType: 'Worm-Gear Mechanical Linear Actuator',
-      industrialCategory: 'Lifting & Positioning Equipment',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Gearbox Housing, Worm Shaft, Bronze Worm Gear Nut, Acme Lifting Screw, Top Plate',
-      modelCharacteristics: 'Trapezoidal Acme Thread Surface Profile, Machined Casting Body'
+    "name": "Bio-Mechanical Quadruped Actuator Unit",
+    "slug": "quadruped-robot",
+    "category": "Robotic Arm",
+    "description": "4-legged bio-inspired mobile inspection robot chassis with multi-joint leg linkages and torso frame.",
+    "model_url": "/models/model_29.gltf",
+    "image_url": "/models/thumbnails/thumb_29.svg",
+    "specs": {
+      "objectType": "Autonomous Mobile Quadruped",
+      "industrialCategory": "Robotics & Automated Manufacturing",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Torso Frame, 4x Leg Linkages, 12x Joint Servos, Sensor Head",
+      "modelCharacteristics": "High Poly Bio-Robotic CAD Assembly"
     },
-    tags: ['screw-jack', 'linear-actuator', 'worm-gear', 'lifting', 'mechanical']
+    "tags": [
+      "quadruped",
+      "robot",
+      "inspection-robot",
+      "robotics",
+      "automation"
+    ]
   },
   {
-    name: 'Internal Combustion V6 Engine Block Assembly',
-    slug: 'v6-engine-assembly',
-    category: 'Engine / Engine Assembly',
-    description: '60-degree V6 internal combustion engine block featuring pistons, crankshaft, connecting rods, valves, and camshafts.',
-    model_url: '/models/model_30.gltf',
-    image_url: '/models/thumbnails/thumb_30.svg',
-    specs: {
-      objectType: 'Internal Combustion Kinematic Powertrain',
-      industrialCategory: 'Automotive & Engine Technology',
-      visualizationType: 'Solid / Wireframe Topology / Translucent X-Ray Shell',
-      componentStructure: 'Cylinder Block, Crankshaft, Pistons & Rods, DOHC Cylinder Heads, Valves, Timing Chain',
-      modelCharacteristics: 'Complex Multi-Body Kinematic Engine Assembly, Sub-millimeter Tolerance CAD'
+    "name": "Hydrodynamic Avian Aerofoil Specimen",
+    "slug": "aerofoil-specimen",
+    "category": "Industrial Fan",
+    "description": "Aerodynamic aerofoil calibration model demonstrating wing profile curvature and fluid flow streamlines.",
+    "model_url": "/models/model_30.gltf",
+    "image_url": "/models/thumbnails/thumb_30.svg",
+    "specs": {
+      "objectType": "Aerodynamic Aerofoil Reference Standard",
+      "industrialCategory": "HVAC & Process Air Systems",
+      "visualizationType": "Solid / Wireframe Topology / Translucent X-Ray Shell",
+      "componentStructure": "Aerofoil Body, Trailing Edge, Internal Rib Skeleton",
+      "modelCharacteristics": "Smooth Curved Aerofoil Mesh"
     },
-    tags: ['engine', 'v6-engine', 'powertrain', 'pistons', 'crankshaft', 'combustion']
+    "tags": [
+      "aerofoil",
+      "aerodynamics",
+      "cfd",
+      "fan-blade",
+      "hvac"
+    ]
   }
 ];
 

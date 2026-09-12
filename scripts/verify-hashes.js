@@ -35,17 +35,17 @@ for (let i = 1; i <= 30; i++) {
   modelHashes.add(modelHash);
   thumbHashes.add(thumbHash);
 
-  const json = JSON.parse(modelContent.toString('utf8'));
+  const isGlb = modelContent.toString('utf8', 0, 4) === 'glTF';
   
   results.push({
     id: i,
     modelFile,
-    modelSize: `${(modelContent.length / 1024).toFixed(2)} KB`,
+    format: isGlb ? 'Binary GLB (glTF 2.0)' : 'JSON glTF 2.0',
+    modelSize: `${(modelContent.length / 1024).toFixed(1)} KB`,
     modelHash,
     thumbFile,
     thumbSize: `${thumbContent.length} B`,
-    thumbHash,
-    meshes: json.meshes ? json.meshes.length : 0
+    thumbHash
   });
 }
 
