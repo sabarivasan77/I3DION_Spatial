@@ -10,6 +10,7 @@ interface AuthState {
   initialized: boolean;
   initialize: () => void;
   login: (email: string, password: string) => Promise<void>;
+  loginGoogle: (idToken: string) => Promise<void>;
   signup: (payload: { name: string; email: string; password: string; companyName: string }) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;

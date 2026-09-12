@@ -6,7 +6,7 @@ import { Button, Card, PageHeader, SectionTitle } from '../components/ui';
 import { api, CatalogRecord } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { useToast } from '../components/Toast';
-import { CatalogPDF } from '../components/pdf/Templates';
+import { CatalogPDF, CatalogData } from '../components/pdf/Templates';
 
 export function CatalogBuilderPage() {
   const token = useAuthStore((s) => s.token);
@@ -22,7 +22,7 @@ export function CatalogBuilderPage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
-  const [template, setTemplate] = useState<string>('IndustrialClassic');
+  const [template, setTemplate] = useState<CatalogData['template']>('IndustrialClassic');
   const [productSearch, setProductSearch] = useState('');
   
   const [isGenerating, setIsGenerating] = useState(false);

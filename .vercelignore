@@ -1,3 +1,15 @@
 .trunk/
 node_modules/
 .env*
+.git/
+backend/
+mobile/
+scratch/
+.design-reference/
+docs/
+database/
+frontend/dist/
+*.zip
+*.ps1
+*.py
+*.bat

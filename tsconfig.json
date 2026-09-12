@@ -1,8 +1,23 @@
 {
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "moduleResolution": "node",
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "allowJs": true,
+    "checkJs": false,
+    "skipLibCheck": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
-  }
+    "allowSyntheticDefaultImports": true,
+    "strict": false,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx"
+  },
+  "include": ["frontend/src/**/*"],
+  "exclude": ["node_modules", "dist", "frontend/dist", "backend", "backend/**/*", "mobile", "mobile/**/*", "scratch", "scratch/**/*", ".trunk", ".trunk/**/*"]
 }
+
+
