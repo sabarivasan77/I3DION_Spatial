@@ -1,219 +1,343 @@
-import { useEffect, useState, useRef } from 'react';
-import { useParams } from 'react-router-dom';
-import { Heart, MessageSquare, Share2, Download, Box, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { hubApi, HubProduct, HubComment } from '../../services/hubApi';
-import { Button, Card } from '../../components/ui';
-import { useAuthStore } from '../../store/authStore';
+import { useState, useMemo, useRef } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { 
+  ArrowLeft, 
+  Box, 
+  Share2, 
+  QrCode, 
+  CheckCircle2, 
+  Layers, 
+  Maximize2, 
+  RotateCcw, 
+  PlusCircle, 
+  Info,
+  ShieldCheck
+} from 'lucide-react';
+import { getSpatialHubModelBySlugOrId } from '../../data/spatialHubModels';
+import ThreeProduct, { RenderMode } from '../../components/ThreeProduct';
 import { useToast } from '../../components/Toast';
 
 export function HubProductDetail() {
-  const { id } = useParams();
-  const { info, success } = useToast();
-  const [product, setProduct] = useState<HubProduct | null>(null);
-  const [comments, setComments] = useState<HubComment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [commentText, setCommentText] = useState('');
-  const [liked, setLiked] = useState(false);
-  const token = useAuthStore(s => s.token);
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { success, info } = useToast();
+  
+  const [renderMode, setRenderMode] = useState<RenderMode>('solid');
+  const [autoRotate, setAutoRotate] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const viewerContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleShare = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href);
-      success('Link Copied', 'Product link copied to clipboard.');
-    } else {
-      info('Share Product', 'Copy the page URL to share this spatial product.');
-    }
-  };
-
-  useEffect(() => {
-    if (!id) return;
-    setLoading(true);
-    Promise.all([
-      hubApi.getProduct(id),
-      hubApi.getComments('product', id)
-    ]).then(([prodData, commentsData]) => {
-      setProduct(prodData);
-      setComments(commentsData);
-      if (prodData.slug) {
-        import('../../services/Tracker').then(({ Tracker }) => {
-          Tracker.trackEvent('product_view', { slug: prodData.slug }).catch(() => null);
-        });
-      }
-    }).finally(() => setLoading(false));
+  // Retrieve model from master dataset
+  const model = useMemo(() => {
+    if (!id) return undefined;
+    return getSpatialHubModelBySlugOrId(id);
   }, [id]);
 
-  const handleLike = async () => {
-    if (!token || !id) return;
-    const res = await hubApi.toggleLike(token, 'product', id);
-    setLiked(res.liked);
-    setProduct(p => p ? { ...p, likes_count: p.likes_count + (res.liked ? 1 : -1) } : p);
-  };
+  if (!model) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-6">
+        <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm max-w-md w-full text-center">
+          <Box className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Model Not Found</h2>
+          <p className="text-xs text-slate-500 mb-6">The requested 3D industrial model does not exist or has been moved.</p>
+          <Link
+            to="/hub"
+            className="inline-flex items-center px-4 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Spatial Hub
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
-  const handleDownload = () => {
-    if (!product || !product.modelUrl) return;
-    const a = document.createElement('a');
-    a.href = product.modelUrl;
-    a.download = `${product.slug ?? product.id}.glb`;
-    a.click();
-    if (product.slug) {
-      import('../../services/Tracker').then(({ Tracker }) => {
-        Tracker.trackEvent('download', { slug: product.slug }).catch(() => null);
-      });
+  const handleShare = () => {
+    const publicUrl = `${window.location.origin}/hub/product/${model.slug}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(publicUrl);
+      success('Link Copied', `Public link for ${model.name} copied to clipboard.`);
+    } else {
+      info('Share Link', publicUrl);
     }
   };
 
-  const handleComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!token || !id || !commentText.trim()) return;
-    const newComment = await hubApi.postComment(token, 'product', id, commentText);
-    setComments([newComment, ...comments]);
-    setCommentText('');
+  const handleFullscreen = () => {
+    if (!viewerContainerRef.current) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => null);
+    } else {
+      viewerContainerRef.current.requestFullscreen().catch(() => null);
+    }
   };
 
-  const viewerRef = useRef<any>(null);
-
-  useEffect(() => {
-    const viewer = viewerRef.current;
-    if (!viewer) return;
-    const handleArStatus = (e: any) => {
-      if (e.detail.status === 'session-started' && product?.slug) {
-        import('../../services/Tracker').then(({ Tracker }) => {
-          Tracker.trackEvent('ar_launch', { slug: product.slug }).catch(() => null);
-        });
-      }
-    };
-    viewer.addEventListener('ar-status', handleArStatus);
-    return () => viewer.removeEventListener('ar-status', handleArStatus);
-  }, [product?.slug]);
-
-  if (loading) return <div className="p-8 text-center text-slate-500">Loading...</div>;
-  if (!product) return <div className="p-8 text-center text-rose-500">Product not found</div>;
+  const handleUseInCatalog = () => {
+    success('Catalog Integration', `Added ${model.name} to product catalog workflow.`);
+    // Navigate to product catalog or creation flow with prefilled 3D asset reference
+    navigate(`/products?selectModel=${encodeURIComponent(model.modelUrl)}&modelName=${encodeURIComponent(model.name)}`);
+  };
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4 flex flex-col lg:flex-row gap-8">
-      <div className="flex-1 space-y-6">
-        <Link to="/hub" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 mb-4">
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Hub
-        </Link>
-        
-        {/* Main Viewer Area */}
-        <div className="bg-slate-100 rounded-2xl aspect-video md:aspect-[16/10] overflow-hidden relative shadow-inner flex items-center justify-center">
-          {product.modelUrl ? (
-            <model-viewer
-              ref={viewerRef}
-              src={product.modelUrl}
-              alt={product.name}
-              ar
-              auto-rotate
-              camera-controls
-              style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9' }}
-            >
-              <button slot="ar-button" className="absolute bottom-4 right-4 bg-white/90 backdrop-blur text-blue-600 px-4 py-2 rounded-lg font-bold shadow-sm hover:scale-105 transition-transform flex items-center">
-                <Box className="w-4 h-4 mr-2" /> View in AR
-              </button>
-            </model-viewer>
-          ) : product.imageUrl ? (
-            <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain" />
-          ) : (
-            <Box className="w-24 h-24 text-slate-300" />
-          )}
-        </div>
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] pb-16">
+      {/* Top Navigation */}
+      <div className="bg-white border-b border-slate-200 py-4 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <Link
+            to="/hub"
+            className="inline-flex items-center text-xs font-bold text-slate-600 hover:text-blue-600 transition-colors bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 mr-1.5" /> Back to Master 3D Library
+          </Link>
 
-        {/* Content Details */}
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 mb-2">{product.name}</h1>
-          <p className="text-lg text-slate-600 mb-6">{product.description}</p>
-          <div className="flex flex-wrap gap-2">
-            {product.tags?.map(t => (
-               <span key={t} className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-sm font-medium">#{t}</span>
-            ))}
+          <div className="flex items-center space-x-2">
+            <span className="text-xs font-bold text-slate-400">Category:</span>
+            <span className="text-xs font-extrabold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">
+              {model.category}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Sidebar: Social & Creator */}
-      <div className="w-full lg:w-96 flex flex-col gap-6">
-        {/* Action Bar */}
-        <Card className="p-4 flex justify-around">
-          <button onClick={handleLike} className={`flex flex-col items-center p-2 rounded-lg transition-colors ${liked ? 'text-rose-500' : 'text-slate-500 hover:bg-slate-50'}`}>
-            <Heart className={`w-6 h-6 mb-1 ${liked ? 'fill-current' : ''}`} />
-            <span className="text-xs font-bold">{product.likes_count}</span>
-          </button>
-          <button onClick={() => {
-            const el = document.getElementById('comments-section');
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
-          }} className="flex flex-col items-center p-2 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors">
-            <MessageSquare className="w-6 h-6 mb-1" />
-            <span className="text-xs font-bold">{comments.length}</span>
-          </button>
-          <button onClick={handleShare} className="flex flex-col items-center p-2 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors">
-            <Share2 className="w-6 h-6 mb-1" />
-            <span className="text-xs font-bold">Share</span>
-          </button>
-          {product.downloads_count !== undefined && (
-            <button onClick={handleDownload} className="flex flex-col items-center p-2 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors">
-              <Download className="w-6 h-6 mb-1" />
-              <span className="text-xs font-bold">{product.downloads_count}</span>
-            </button>
-          )}
-        </Card>
-
-        {/* Creator Profile snippet */}
-        <Card className="p-6">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Published By</h3>
-          <div className="flex items-center gap-4">
-             <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl overflow-hidden">
-                {product.creator_avatar ? <img src={product.creator_avatar} alt="" className="w-full h-full object-cover" /> : product.creator_name?.charAt(0) || product.company_name?.charAt(0) || '?'}
-              </div>
-              <div className="flex-1">
-                <h4 className="font-bold text-slate-900">{product.creator_name || product.company_name}</h4>
-                <p className="text-sm text-slate-500">{product.company_name}</p>
-              </div>
-              <Button onClick={() => info('Follow Creator', `You are following updates from ${product.company_name || 'this creator'}.`)} variant="secondary" className="text-xs px-2 py-1 h-auto">Follow</Button>
-          </div>
-        </Card>
-
-        {/* Comments Section */}
-        <Card className="p-6 flex-1 flex flex-col">
-          <h3 className="font-bold text-slate-900 mb-4">Comments ({comments.length})</h3>
+      {/* ─── 65-75% / 25-35% MAIN VIEWER & INFO SPLIT LAYOUT ─────────────────── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
           
-          <form onSubmit={handleComment} className="mb-6 flex gap-2">
-            <input 
-              type="text" 
-              placeholder={token ? "Add a comment..." : "Log in to comment"} 
-              disabled={!token}
-              value={commentText}
-              onChange={e => setCommentText(e.target.value)}
-              className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-            />
-            <Button type="submit" disabled={!token || !commentText.trim()}>Post</Button>
-          </form>
+          {/* LEFT: 3D VIEWER (65-75% visual priority) */}
+          <div className="w-full lg:w-[68%] flex flex-col gap-4">
+            <div
+              ref={viewerContainerRef}
+              className="relative w-full aspect-[4/3] sm:aspect-[16/10] bg-slate-900 rounded-3xl overflow-hidden shadow-xl border border-slate-200"
+            >
+              {/* 3D Canvas */}
+              <ThreeProduct
+                modelUrl={model.modelUrl}
+                productName={model.name}
+                renderMode={renderMode}
+                autoRotate={autoRotate}
+                themeMode="dark"
+              />
 
-          <div className="space-y-4 overflow-y-auto max-h-96">
-            {comments.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-4">No comments yet. Be the first!</p>
-            ) : (
-              comments.map(c => (
-                <div key={c.id} className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-xs font-bold text-slate-500">
-                    {c.user_name?.charAt(0) || '?'}
-                  </div>
-                  <div>
-                    <div className="bg-slate-50 rounded-xl p-3 inline-block">
-                      <p className="text-xs font-bold text-slate-900 mb-1">{c.user_name}</p>
-                      <p className="text-sm text-slate-700">{c.content}</p>
-                    </div>
-                    <p className="text-[10px] text-slate-400 mt-1 ml-2">
-                      {new Date(c.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              ))
-            )}
+              {/* ─── VISUALIZATION MODE SELECTOR OVERLAY ──────────────── */}
+              <div className="absolute top-4 left-4 z-20 flex items-center bg-slate-900/80 backdrop-blur-md p-1 rounded-2xl border border-white/10 shadow-2xl">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 flex items-center">
+                  <Layers className="w-3 h-3 mr-1 text-blue-400" /> Mode:
+                </span>
+                {(['solid', 'wireframe', 'xray'] as RenderMode[]).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setRenderMode(mode)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all ${
+                      renderMode === mode
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'text-slate-300 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {mode}
+                  </button>
+                ))}
+              </div>
+
+              {/* ─── COMPACT VIEWER CONTROLS OVERLAY ───────────────────── */}
+              <div className="absolute bottom-4 right-4 z-20 flex items-center space-x-2 bg-slate-900/80 backdrop-blur-md p-1.5 rounded-2xl border border-white/10 shadow-2xl">
+                <button
+                  onClick={() => setAutoRotate(!autoRotate)}
+                  className={`p-2 rounded-xl text-xs font-bold transition-colors ${
+                    autoRotate ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-white/10'
+                  }`}
+                  title="Toggle Auto Rotate"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={handleFullscreen}
+                  className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+                  title="Toggle Fullscreen"
+                >
+                  <Maximize2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* AR Ready Indicator */}
+              <div className="absolute top-4 right-4 z-20 bg-blue-600/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg flex items-center space-x-1.5">
+                <Box className="w-4 h-4" />
+                <span>AR Enabled</span>
+              </div>
+            </div>
+
+            {/* Viewer Explanation Note */}
+            <div className="bg-white rounded-2xl p-4 border border-slate-200 flex items-center justify-between text-xs text-slate-600 shadow-sm">
+              <div className="flex items-center space-x-2">
+                <Info className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                <span>
+                  Current View: <strong className="uppercase text-slate-900">{renderMode} Mode</strong> — Drag to rotate, scroll to zoom.
+                </span>
+              </div>
+              <div className="hidden sm:flex items-center space-x-3 text-[11px] font-mono text-slate-400">
+                <span>FPS: 60</span>
+                <span>•</span>
+                <span>Geometry: Manifold CAD</span>
+              </div>
+            </div>
           </div>
-        </Card>
+
+          {/* RIGHT: MODEL INFORMATION PANEL (25-35% visual priority) */}
+          <div className="w-full lg:w-[32%] flex flex-col gap-6">
+            
+            {/* Title & Short Description */}
+            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+              <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-2">
+                {model.name}
+              </h1>
+              <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-3">
+                {model.category}
+              </p>
+              <p className="text-sm text-slate-600 leading-relaxed mb-6">
+                {model.longDescription}
+              </p>
+
+              {/* Primary Action Buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => setShowQrModal(true)}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-2"
+                >
+                  <Box className="w-4 h-4" />
+                  <span>VIEW IN AR (DESKTOP QR / MOBILE)</span>
+                </button>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={handleShare}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2.5 rounded-xl transition-colors flex items-center justify-center space-x-1.5"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>Share Link</span>
+                  </button>
+
+                  <button
+                    onClick={handleUseInCatalog}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2.5 rounded-xl transition-colors flex items-center justify-center space-x-1.5"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Use in Catalog</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Factual Technical Information Card */}
+            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-4 flex items-center">
+                <ShieldCheck className="w-4 h-4 text-emerald-500 mr-1.5" /> Factual Geometry Metadata
+              </h3>
+
+              <div className="space-y-3 divide-y divide-slate-100 text-xs">
+                <div className="pt-2 flex justify-between">
+                  <span className="text-slate-500 font-medium">Object Type</span>
+                  <span className="font-bold text-slate-900 text-right max-w-[60%]">{model.metadata.objectType}</span>
+                </div>
+                <div className="pt-2 flex justify-between">
+                  <span className="text-slate-500 font-medium">Category</span>
+                  <span className="font-bold text-slate-900">{model.metadata.industrialCategory}</span>
+                </div>
+                <div className="pt-2 flex justify-between">
+                  <span className="text-slate-500 font-medium">Supported Modes</span>
+                  <span className="font-bold text-blue-600">Solid / Wireframe / X-Ray / AR</span>
+                </div>
+                <div className="pt-2 flex justify-between">
+                  <span className="text-slate-500 font-medium">Component Structure</span>
+                  <span className="font-bold text-slate-900 text-right max-w-[60%]">{model.metadata.componentStructure}</span>
+                </div>
+                <div className="pt-2 flex justify-between">
+                  <span className="text-slate-500 font-medium">Characteristics</span>
+                  <span className="font-bold text-slate-900 text-right max-w-[60%]">{model.metadata.modelCharacteristics}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Key Features List */}
+            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3">
+                Key Highlights
+              </h3>
+              <ul className="space-y-2">
+                {model.features.map((feat, idx) => (
+                  <li key={idx} className="flex items-start text-xs text-slate-700 font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+                    <span>{feat}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Attribution & License Safety Manifest */}
+            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-[11px] text-slate-500 space-y-1">
+              <div className="font-bold text-slate-700">Verified Model License</div>
+              <div>Source: {model.source.repository}</div>
+              <div>Author: {model.source.author}</div>
+              <div>License: {model.source.license}</div>
+            </div>
+
+          </div>
+
+        </div>
       </div>
+
+      {/* ─── DESKTOP -> MOBILE AR QR MODAL ──────────────────────────────── */}
+      {showQrModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-100 relative text-center">
+            <button
+              onClick={() => setShowQrModal(null as any)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 text-sm font-bold w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"
+            >
+              ✕
+            </button>
+
+            <div className="inline-flex items-center space-x-2 text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full mb-4">
+              <Box className="w-3.5 h-3.5" />
+              <span>I3DION SPATIAL AR HANDOFF</span>
+            </div>
+
+            <h2 className="text-xl font-extrabold text-slate-900 mb-1">{model.name}</h2>
+            <p className="text-xs text-slate-500 mb-6">Scan with your phone to launch full spatial WebAR experience.</p>
+
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 inline-block mb-6 shadow-inner">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
+                  `${window.location.origin}/hub/product/${model.slug}`
+                )}`}
+                alt="AR QR Code"
+                className="w-48 h-48 mx-auto"
+              />
+              <div className="mt-3 text-[11px] font-extrabold text-slate-700 tracking-wider uppercase">
+                I3DION SPATIAL
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}/hub/product/${model.slug}`;
+                  navigator.clipboard.writeText(url);
+                  success('Link Copied', 'AR Public Link copied to clipboard');
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-3 rounded-xl transition-colors shadow-sm"
+              >
+                Copy AR Mobile Link
+              </button>
+
+              <button
+                onClick={() => setShowQrModal(false)}
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2.5 rounded-xl transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

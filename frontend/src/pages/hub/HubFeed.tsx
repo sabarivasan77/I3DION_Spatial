@@ -1,132 +1,372 @@
-import { useEffect, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Download, Box as BoxIcon } from 'lucide-react';
-import { hubApi, HubProduct } from '../../services/hubApi';
-import { Card, SectionTitle } from '../../components/ui';
+import { Search, Box, Sparkles, Filter, CheckCircle2, QrCode, Share2, Layers } from 'lucide-react';
+import { SPATIAL_HUB_MODELS, SpatialHubModel, searchSpatialHubModels } from '../../data/spatialHubModels';
+import ThreeProduct, { RenderMode } from '../../components/ThreeProduct';
 import { useToast } from '../../components/Toast';
 
 export function HubFeed() {
-  const { success } = useToast();
-  const [feed, setFeed] = useState<HubProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
+  const { success, info } = useToast();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedMode, setSelectedMode] = useState('All');
+  const [sortBy, setSortBy] = useState<'popular' | 'newest' | 'alphabetical'>('popular');
+  
+  // Quick Preview State in Grid
+  const [previewModes, setPreviewModes] = useState<Record<string, RenderMode>>({});
+  const [activeQrModel, setActiveQrModel] = useState<SpatialHubModel | null>(null);
 
-  useEffect(() => {
-    hubApi.getFeed().then(data => {
-      setFeed(data);
-      setLoading(false);
-    }).catch(console.error);
+  // Extract unique categories
+  const categories = useMemo(() => {
+    const set = new Set(SPATIAL_HUB_MODELS.map(m => m.category));
+    return ['All', ...Array.from(set)];
   }, []);
 
-  const handleFeedLike = (item: HubProduct) => {
-    const currentLiked = likedMap[item.id];
-    setLikedMap(prev => ({ ...prev, [item.id]: !currentLiked }));
-    if (!currentLiked) {
-      success('Liked', `Added ${item.name} to your liked spatial models.`);
+  // Filtered & Sorted Models
+  const filteredModels = useMemo(() => {
+    let result = searchSpatialHubModels(searchQuery, selectedCategory, selectedMode);
+    
+    if (sortBy === 'popular') {
+      result = [...result].sort((a, b) => b.likesCount - a.likesCount);
+    } else if (sortBy === 'alphabetical') {
+      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === 'newest') {
+      result = [...result].sort((a, b) => b.id.localeCompare(a.id));
+    }
+    return result;
+  }, [searchQuery, selectedCategory, selectedMode, sortBy]);
+
+  const handleShare = (model: SpatialHubModel, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const url = `${window.location.origin}/hub/product/${model.slug}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+      success('Link Copied', `Public link for ${model.name} copied to clipboard.`);
+    } else {
+      info('Public Link', url);
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-slate-500">Loading Spatial Hub...</div>;
+  const handleArClick = (model: SpatialHubModel, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setActiveQrModel(model);
+  };
+
+  const togglePreviewMode = (modelId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setPreviewModes(prev => {
+      const current = prev[modelId] || 'solid';
+      const next: RenderMode = current === 'solid' ? 'wireframe' : current === 'wireframe' ? 'xray' : 'solid';
+      return { ...prev, [modelId]: next };
+    });
+  };
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
-      <SectionTitle title="Spatial Hub" />
-      <p className="text-slate-500 mb-8">Discover top industrial models, AR experiences, and catalogs from the community.</p>
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] pb-16">
+      {/* ─── HEADER BAR ─────────────────────────────────────────────────── */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full mb-3 border border-blue-100">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Master 3D Model Library • 30 Curated Industrial Assets</span>
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                Spatial Hub
+              </h1>
+              <p className="mt-1 text-base text-slate-600 max-w-3xl">
+                Explore industrial 3D models and visualize them in Solid, Wireframe, X-Ray and AR.
+              </p>
+            </div>
 
-      {/* Featured Section */}
-      <div className="mb-12">
-        <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center">
-          <Heart className="w-5 h-5 text-rose-500 mr-2" /> Featured Demo Models
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { id: 'demo-machine', name: 'Industrial Machine', icon: '🏭', color: 'bg-blue-100 text-blue-600' },
-            { id: 'demo-car', name: 'Electric Car', icon: '🏎️', color: 'bg-emerald-100 text-emerald-600' },
-            { id: 'demo-motor', name: 'Electric Motor', icon: '⚡', color: 'bg-amber-100 text-amber-600' },
-            { id: 'demo-pump', name: 'Centrifugal Pump', icon: '💧', color: 'bg-cyan-100 text-cyan-600' },
-          ].map(demo => (
-            <Link key={demo.id} to={`/hub/product/${demo.id}`} className="group block">
-              <Card className="p-6 text-center hover:shadow-md transition-shadow border-slate-200 h-full flex flex-col items-center justify-center">
-                <div className={`w-16 h-16 ${demo.color} rounded-2xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform`}>
-                  {demo.icon}
-                </div>
-                <h3 className="font-bold text-slate-900">{demo.name}</h3>
-                <p className="text-xs text-slate-500 mt-1">Free Demo Model</p>
-              </Card>
-            </Link>
-          ))}
+            {/* Header Search Box */}
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search 30 industrial models..."
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all shadow-sm"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 font-bold"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* ─── FILTERS & SORT BAR ────────────────────────────────────────── */}
+          <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            {/* Category Pills */}
+            <div className="flex items-center space-x-2 overflow-x-auto w-full lg:w-auto pb-2 lg:pb-0 no-scrollbar">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center mr-1">
+                <Filter className="w-3.5 h-3.5 mr-1" /> Category:
+              </span>
+              {categories.slice(0, 8).map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                    selectedCategory === cat
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+              {categories.length > 8 && (
+                <select
+                  value={categories.includes(selectedCategory) && !categories.slice(0, 8).includes(selectedCategory) ? selectedCategory : ''}
+                  onChange={e => setSelectedCategory(e.target.value || 'All')}
+                  className="px-2 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 border-none focus:ring-2 focus:ring-blue-600"
+                >
+                  <option value="">More Categories ({categories.length - 8})...</option>
+                  {categories.slice(8).map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {/* Mode & Sort Controls */}
+            <div className="flex items-center space-x-3 self-end lg:self-auto">
+              {/* Visualization Mode filter */}
+              <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+                {['All', 'Solid', 'Wireframe', 'X-Ray', 'AR'].map(mode => (
+                  <button
+                    key={mode}
+                    onClick={() => setSelectedMode(mode)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      selectedMode === mode
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-900'
+                    }`}
+                  >
+                    {mode}
+                  </button>
+                ))}
+              </div>
+
+              {/* Sort Selector */}
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as any)}
+                className="bg-white border border-slate-200 text-slate-700 font-semibold text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-sm"
+              >
+                <option value="popular">Popularity</option>
+                <option value="alphabetical">Name (A–Z)</option>
+                <option value="newest">Recently Added</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mb-4">Community Feed</h2>
+      {/* ─── MODEL GRID ──────────────────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-sm font-semibold text-slate-500">
+            Showing <span className="font-bold text-slate-900">{filteredModels.length}</span> of {SPATIAL_HUB_MODELS.length} curated 3D models
+          </p>
+          {(selectedCategory !== 'All' || selectedMode !== 'All' || searchQuery) && (
+            <button
+              onClick={() => {
+                setSelectedCategory('All');
+                setSelectedMode('All');
+                setSearchQuery('');
+              }}
+              className="text-xs font-bold text-blue-600 hover:underline"
+            >
+              Reset Filters
+            </button>
+          )}
+        </div>
 
-      <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
-        {(feed || []).map(item => {
-          const isLiked = likedMap[item.id];
-          const likesCount = (item.likes_count || 0) + (isLiked ? 1 : 0);
+        {filteredModels.length === 0 ? (
+          <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 shadow-sm max-w-md mx-auto my-12">
+            <Box className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-slate-900 mb-1">No models found</h3>
+            <p className="text-sm text-slate-500 mb-6">No 3D models match "{searchQuery || selectedCategory}". Try adjusting your search query or filters.</p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedCategory('All');
+                setSelectedMode('All');
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition-colors"
+            >
+              Clear Search & Filters
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredModels.map(model => {
+              const currentPreviewMode = previewModes[model.id] || 'solid';
+              return (
+                <div
+                  key={model.id}
+                  className="group bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col"
+                >
+                  {/* 3D Preview Canvas */}
+                  <div className="relative aspect-[4/3] bg-slate-50 border-b border-slate-100 overflow-hidden">
+                    <ThreeProduct
+                      modelUrl={model.modelUrl}
+                      productName={model.name}
+                      renderMode={currentPreviewMode}
+                      autoRotate={false}
+                    />
 
-          return (
-            <Card key={item.id} className="break-inside-avoid overflow-hidden hover:shadow-lg transition-all duration-300 border-slate-200">
-              {/* Header */}
-              <div className="p-4 flex items-center space-x-3 border-b border-slate-100">
-                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold overflow-hidden">
-                  {item.creator_avatar ? <img src={item.creator_avatar} alt="" className="w-full h-full object-cover" /> : item.creator_name?.charAt(0) || item.company_name?.charAt(0) || '?'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 truncate">{item.creator_name || item.company_name}</p>
-                  <p className="text-xs text-slate-500 truncate">{item.company_name}</p>
-                </div>
-              </div>
-
-              {/* Media */}
-              <Link to={`/hub/product/${item.id}`} className="block relative group bg-slate-100 aspect-square flex items-center justify-center overflow-hidden">
-                {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                ) : (
-                  <BoxIcon className="w-16 h-16 text-slate-300" />
-                )}
-                {item.modelUrl && (
-                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur text-xs font-bold px-2 py-1 rounded shadow-sm text-blue-600 flex items-center">
-                    <BoxIcon className="w-3 h-3 mr-1" /> AR Ready
-                  </div>
-                )}
-              </Link>
-
-              {/* Content */}
-              <div className="p-4">
-                <Link to={`/hub/product/${item.id}`} className="hover:text-blue-600">
-                  <h3 className="font-bold text-slate-900 mb-1 line-clamp-1">{item.name}</h3>
-                </Link>
-                <p className="text-xs text-slate-500 mb-4 line-clamp-2">{item.description}</p>
-                
-                <div className="flex flex-wrap gap-1 mb-4">
-                  {item.tags?.slice(0,3).map(tag => (
-                    <span key={tag} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">#{tag}</span>
-                  ))}
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                  <div className="flex space-x-4 text-slate-500">
-                    <button onClick={() => handleFeedLike(item)} className={`flex items-center transition-colors ${isLiked ? 'text-rose-500 font-bold' : 'hover:text-rose-500'}`}>
-                      <Heart className={`w-4 h-4 mr-1.5 ${isLiked ? 'fill-current' : ''}`} />
-                      <span className="text-xs font-medium">{likesCount}</span>
-                    </button>
-                    <div className="flex items-center" title="Views">
-                      <span className="text-xs font-medium mr-1.5 text-slate-400">👀</span>
-                      <span className="text-xs font-medium">{item.views_count || 0}</span>
+                    {/* Mode Selector Overlay */}
+                    <div className="absolute top-3 left-3 z-20">
+                      <button
+                        onClick={(e) => togglePreviewMode(model.id, e)}
+                        className="bg-white/90 backdrop-blur text-[11px] font-bold text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200/80 shadow-sm hover:bg-white flex items-center gap-1.5 transition-colors"
+                        title="Toggle Solid / Wireframe / X-Ray mode"
+                      >
+                        <Layers className="w-3 h-3 text-blue-600" />
+                        <span className="uppercase tracking-wider">{currentPreviewMode}</span>
+                      </button>
                     </div>
-                    <div className="flex items-center" title="Downloads">
-                      <Download className="w-4 h-4 mr-1.5 text-slate-400" />
-                      <span className="text-xs font-medium">{item.downloads_count || 0}</span>
+
+                    {/* AR Ready Badge */}
+                    {model.arEnabled && (
+                      <div className="absolute top-3 right-3 z-20 bg-blue-600 text-white text-[10px] font-extrabold px-2 py-1 rounded-md shadow-sm uppercase tracking-wider flex items-center gap-1">
+                        <Box className="w-3 h-3" /> AR Ready
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Card Content */}
+                  <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between text-xs font-bold text-blue-600 mb-1.5">
+                        <span className="truncate">{model.category}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">3D / AR</span>
+                      </div>
+                      
+                      <Link to={`/hub/product/${model.slug}`} className="block group-hover:text-blue-600 transition-colors">
+                        <h3 className="font-bold text-slate-900 text-base leading-snug line-clamp-1 mb-1.5">
+                          {model.name}
+                        </h3>
+                      </Link>
+
+                      <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-4">
+                        {model.shortDescription}
+                      </p>
+                    </div>
+
+                    <div>
+                      {/* Features Checkmarks */}
+                      <div className="space-y-1 mb-4">
+                        <div className="flex items-center text-[11px] text-slate-600 font-medium">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500 mr-1.5 flex-shrink-0" />
+                          <span className="truncate">Solid • Wireframe • X-Ray</span>
+                        </div>
+                        <div className="flex items-center text-[11px] text-slate-600 font-medium">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500 mr-1.5 flex-shrink-0" />
+                          <span className="truncate">Factual CAD Geometry</span>
+                        </div>
+                      </div>
+
+                      {/* Card Action Buttons */}
+                      <div className="flex items-center space-x-2 pt-3 border-t border-slate-100">
+                        <Link
+                          to={`/hub/product/${model.slug}`}
+                          className="flex-1 bg-slate-900 hover:bg-blue-600 text-white text-center py-2.5 px-3 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                        >
+                          <span>Explore 3D</span>
+                        </Link>
+                        
+                        <button
+                          onClick={(e) => handleArClick(model, e)}
+                          className="bg-blue-50 hover:bg-blue-100 text-blue-600 p-2.5 rounded-xl transition-colors font-bold text-xs"
+                          title="View AR QR Code"
+                        >
+                          <QrCode className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          onClick={(e) => handleShare(model, e)}
+                          className="bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 p-2.5 rounded-xl transition-colors font-bold text-xs"
+                          title="Share Link"
+                        >
+                          <Share2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </Card>
-          );
-        })}
+              );
+            })}
+          </div>
+        )}
       </div>
+
+      {/* ─── DESKTOP -> MOBILE AR QR MODAL ──────────────────────────────── */}
+      {activeQrModel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-100 relative text-center">
+            <button
+              onClick={() => setActiveQrModel(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 text-sm font-bold w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"
+            >
+              ✕
+            </button>
+
+            <div className="inline-flex items-center space-x-2 text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full mb-4">
+              <Box className="w-3.5 h-3.5" />
+              <span>I3DION SPATIAL AR HANDOFF</span>
+            </div>
+
+            <h2 className="text-xl font-extrabold text-slate-900 mb-1">{activeQrModel.name}</h2>
+            <p className="text-xs text-slate-500 mb-6">Scan with your mobile camera to launch direct Augmented Reality preview.</p>
+
+            {/* Generated QR Image with I3DION branding */}
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 inline-block mb-6 shadow-inner relative">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
+                  `${window.location.origin}/hub/product/${activeQrModel.slug}`
+                )}`}
+                alt="AR QR Code"
+                className="w-48 h-48 mx-auto"
+              />
+              <div className="mt-3 text-[11px] font-extrabold text-slate-700 tracking-wider uppercase">
+                I3DION SPATIAL
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}/hub/product/${activeQrModel.slug}`;
+                  navigator.clipboard.writeText(url);
+                  success('Link Copied', 'AR Public Link copied to clipboard');
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-3 rounded-xl transition-colors shadow-sm"
+              >
+                Copy AR Mobile Link
+              </button>
+
+              <button
+                onClick={() => setActiveQrModel(null)}
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2.5 rounded-xl transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
