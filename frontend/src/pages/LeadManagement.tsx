@@ -623,9 +623,11 @@ export function LeadManagementPage() {
     setLoading(true);
     try {
       const data = await api.listLeads(token);
-      setLeads(data as Lead[]);
+      const safeList = Array.isArray(data) ? data : (data as any)?.leads || (data as any)?.data || [];
+      setLeads(safeList as Lead[]);
     } catch (err) {
       showError('Failed to load leads', err instanceof ApiClientError ? err.message : 'Could not fetch leads');
+      setLeads([]);
     } finally {
       setLoading(false);
     }
@@ -639,9 +641,10 @@ export function LeadManagementPage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
-      setTickets(Array.isArray(data) ? data : []);
+      setTickets(Array.isArray(data) ? data : (data as any)?.tickets || []);
     } catch (err) {
       console.error(err);
+      setTickets([]);
     } finally {
       setLoadingTickets(false);
     }
@@ -650,16 +653,17 @@ export function LeadManagementPage() {
   useEffect(() => { loadLeads(); loadTickets(); }, [loadLeads, loadTickets]);
 
   const filteredLeads = useMemo(() => {
-    return leads.filter((l) => {
+    const safeLeads = Array.isArray(leads) ? leads : [];
+    return safeLeads.filter((l) => {
       const q = filter.toLowerCase();
-      const matchSearch = !q || l.name.toLowerCase().includes(q) || l.email.toLowerCase().includes(q) || (l.company ?? '').toLowerCase().includes(q);
+      const matchSearch = !q || (l.name || '').toLowerCase().includes(q) || (l.email || '').toLowerCase().includes(q) || (l.company ?? '').toLowerCase().includes(q);
       const matchStatus = statusFilter === 'All' || l.status === statusFilter;
       const matchPriority = priorityFilter === 'All' || l.priority === priorityFilter;
       return matchSearch && matchStatus && matchPriority;
     }).sort((a, b) => {
       if (sortBy === 'score') return (b.score ?? 0) - (a.score ?? 0);
-      if (sortBy === 'name') return a.name.localeCompare(b.name);
-      if (sortBy === 'date') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
+      if (sortBy === 'date') return new Date(b.created_at || Date.now()).getTime() - new Date(a.created_at || Date.now()).getTime();
       const pOrder: Record<string, number> = { Urgent: 0, High: 1, Normal: 2, Low: 3 };
       return (pOrder[a.priority ?? 'Normal'] ?? 2) - (pOrder[b.priority ?? 'Normal'] ?? 2);
     });

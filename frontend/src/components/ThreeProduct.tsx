@@ -342,10 +342,12 @@ export function LoadingOverlay({ productName }: { productName?: string }) {
   const [show, setShow] = useState(true);
 
   useEffect(() => {
-    if (!active && progress === 100) {
-      const timeout = setTimeout(() => setShow(false), 500);
+    if (!active || progress === 100) {
+      const timeout = setTimeout(() => setShow(false), 400);
       return () => clearTimeout(timeout);
     }
+    const fallbackTimeout = setTimeout(() => setShow(false), 1500);
+    return () => clearTimeout(fallbackTimeout);
   }, [active, progress]);
 
   return (
