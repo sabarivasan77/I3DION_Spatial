@@ -295,32 +295,48 @@ export function HubFeed() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {filteredModels.map(model => {
               const currentPreviewMode = previewModes[model.id] || 'solid';
+              const isInteractive3d = previewModes[model.id] !== undefined;
+
               return (
                 <div
                   key={model.id}
                   className="group bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col"
                 >
-                  {/* 3D Preview Canvas */}
-                  <div className="relative aspect-[4/3] bg-slate-50 border-b border-slate-100 overflow-hidden">
-                    <ThreeProduct
-                      modelUrl={model.modelUrl}
-                      productName={model.name}
-                      renderMode={currentPreviewMode}
-                      autoRotate={false}
-                    />
+                  {/* Thumbnail / 3D Preview Canvas */}
+                  <div className="relative aspect-[4/3] bg-slate-50 border-b border-slate-100 overflow-hidden flex items-center justify-center p-6">
+                    {isInteractive3d ? (
+                      <ThreeProduct
+                        modelUrl={model.modelUrl}
+                        productName={model.name}
+                        renderMode={currentPreviewMode}
+                        autoRotate={false}
+                      />
+                    ) : (
+                      <Link to={`/hub/product/${model.slug}`} className="w-full h-full flex items-center justify-center">
+                        <img
+                          src={model.thumbnail}
+                          alt={model.name}
+                          className="max-h-full max-w-full object-contain filter drop-shadow-md group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            // Fallback if SVG fails
+                            (e.target as HTMLImageElement).src = '/models/thumbnails/thumb_1.svg';
+                          }}
+                        />
+                      </Link>
+                    )}
 
-                    {/* Mode Selector Overlay */}
+                    {/* Mode Selector / 3D Toggle Overlay */}
                     <div className="absolute top-3 left-3 z-20">
                       <button
                         onClick={(e) => togglePreviewMode(model.id, e)}
                         className="bg-white/90 backdrop-blur text-[11px] font-bold text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200/80 shadow-sm hover:bg-white flex items-center gap-1.5 transition-colors"
-                        title="Toggle Solid / Wireframe / X-Ray mode"
+                        title="Toggle 3D Live View / Mode"
                       >
-                        <Layers className="w-3 h-3 text-blue-600" />
-                        <span className="uppercase tracking-wider">{currentPreviewMode}</span>
+                        <Layers className="w-3.5 h-3.5 text-blue-600" />
+                        <span className="uppercase tracking-wider">{isInteractive3d ? currentPreviewMode : '3D PREVIEW'}</span>
                       </button>
                     </div>
 

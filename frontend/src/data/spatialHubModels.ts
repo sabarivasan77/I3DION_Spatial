@@ -1,5 +1,5 @@
 // Master 30-Model Curated Dataset for I3DION Spatial Hub
-// All engineering metadata is factual (Object Type, Category, Topology, Component Hierarchy). No fake commercial specifications (RPM, HP, Voltage, PSI).
+// Every model has its own unique 3D asset file (/models/model_X.gltf) and thumbnail image file (/models/thumbnails/thumb_X.svg).
 
 export interface SpatialHubModel {
   id: string;
@@ -45,8 +45,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Industrial Gearbox',
     shortDescription: 'Mechanical transmission assembly showcasing planetary gear set, sun gear, carrier, and enclosed housing.',
     longDescription: 'High-torque industrial planetary speed reducer designed for heavy machinery drives. Demonstrates gear mesh relationships, internal bearing placement, and outer housing seal boundaries in Solid, Wireframe, and X-Ray visualization modes.',
-    thumbnail: '/models/thumbnails/gearbox.webp',
-    modelUrl: '/models/gearbox_assembly.glb',
+    thumbnail: '/models/thumbnails/thumb_1.svg',
+    modelUrl: '/models/model_1.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -71,11 +71,11 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     tags: ['gearbox', 'transmission', 'mechanical', 'planetary-gears', 'powertrain'],
     source: {
       repository: 'Khronos Group Open Sample Assets',
-      author: 'Industrial CAD CAD-derived model',
+      author: 'Industrial CAD-derived model',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
       originalFormat: 'STEP / IGES',
-      optimizedFormat: 'Binary glTF (GLB)'
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -85,8 +85,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Electric Motor',
     shortDescription: 'Industrial asynchronous electric motor displaying stator windings, rotor shaft, cooling fins, and terminal box.',
     longDescription: 'Enclosed fan-cooled (TEFC) 3-phase induction motor assembly. Features detailed cooling fins, internal rotor core assembly, copper winding heads, and end-shield bearing housings for mechanical and electrical engineering preview.',
-    thumbnail: '/models/thumbnails/motor.webp',
-    modelUrl: '/models/electric_motor.glb',
+    thumbnail: '/models/thumbnails/thumb_2.svg',
+    modelUrl: '/models/model_2.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -115,7 +115,7 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
       originalFormat: 'glTF / OBJ',
-      optimizedFormat: 'Binary glTF (GLB)'
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -125,8 +125,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Centrifugal Pump',
     shortDescription: 'Fluid handling pump assembly showing volute casing, closed impeller, wear rings, and mechanical shaft seal.',
     longDescription: 'Standard industrial centrifugal pump for liquid transfer applications. Highlights the internal hydrodynamic impeller vanes, suction flange, discharge nozzle, and stuffing box arrangement under X-Ray inspection mode.',
-    thumbnail: '/models/thumbnails/pump.webp',
-    modelUrl: '/models/industrial_pump.glb',
+    thumbnail: '/models/thumbnails/thumb_3.svg',
+    modelUrl: '/models/model_3.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -165,8 +165,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Air Compressor',
     shortDescription: 'Twin-screw positive displacement air compressor unit demonstrating helical male and female rotors.',
     longDescription: 'Continuous-duty rotary screw compressor assembly. Reveals interlocking male/female helical rotors, oil separator manifold, and intake filter housing for air compression system studies.',
-    thumbnail: '/models/thumbnails/compressor.webp',
-    modelUrl: '/models/gearbox_assembly.glb',
+    thumbnail: '/models/thumbnails/thumb_4.svg',
+    modelUrl: '/models/model_4.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -194,8 +194,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Industrial Machinery CAD Project',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'glTF / OBJ',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -205,8 +205,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Hydraulic Pump',
     shortDescription: 'High-pressure hydraulic axial piston pump showing swashplate angle mechanism, cylinder barrel, and pistons.',
     longDescription: 'Swashplate design axial piston pump used in fluid power applications. Demonstrates piston slipper pads, rotating cylinder block, valve plate, and control displacement piston in X-Ray structural mode.',
-    thumbnail: '/models/thumbnails/hydraulic_pump.webp',
-    modelUrl: '/models/industrial_pump.glb',
+    thumbnail: '/models/thumbnails/thumb_5.svg',
+    modelUrl: '/models/model_5.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -234,8 +234,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Fluid Power Mechanics Guild',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'STEP',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -245,8 +245,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Industrial Valve',
     shortDescription: 'Flanged linear-motion globe valve featuring handwheel actuator, threaded stem, valve plug, and seat ring.',
     longDescription: 'Heavy-duty industrial globe valve engineered for fluid throttling and flow control. Shows internal seat orifice, parabolic plug profile, packing gland, and heavy cast body flanges in full X-Ray cutaway clarity.',
-    thumbnail: '/models/thumbnails/valve.webp',
-    modelUrl: '/models/industrial_pump.glb',
+    thumbnail: '/models/thumbnails/thumb_6.svg',
+    modelUrl: '/models/model_6.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -275,7 +275,7 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
       originalFormat: 'glTF 2.0',
-      optimizedFormat: 'Binary glTF (GLB)'
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -285,8 +285,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Heat Exchanger',
     shortDescription: 'Industrial thermal exchanger showing outer shell vessel, tube bundle array, baffles, and channel heads.',
     longDescription: 'Two-pass shell and tube heat exchanger assembly. Displays the internal tube bundle array, transverse segment baffles, stationary tube sheet, and fluid inlet/outlet nozzles for process thermal transfer illustration.',
-    thumbnail: '/models/thumbnails/heat_exchanger.webp',
-    modelUrl: '/models/gearbox_assembly.glb',
+    thumbnail: '/models/thumbnails/thumb_7.svg',
+    modelUrl: '/models/model_7.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -314,8 +314,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Thermal Design Open Consortium',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'STEP / IGES',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -325,8 +325,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Pressure Vessel',
     shortDescription: 'Horizontal cylindrical storage vessel with ellipsoidal heads, manway access port, and saddle supports.',
     longDescription: 'Heavy-wall pressure vessel designed for industrial gas or liquid storage under pressure. Includes dished head geometry, reinforced manhole neck, instrument nozzles, and heavy structural steel mounting saddles.',
-    thumbnail: '/models/thumbnails/pressure_vessel.webp',
-    modelUrl: '/models/gearbox_assembly.glb',
+    thumbnail: '/models/thumbnails/thumb_8.svg',
+    modelUrl: '/models/model_8.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -354,8 +354,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Vessel Engineering Association',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'glTF / STEP',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -365,8 +365,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Conveyor Assembly',
     shortDescription: 'Modular powered roller conveyor segment featuring steel rollers, drive chain, motor drive, and side frames.',
     longDescription: 'Factory automation roller conveyor section used in material handling and logistics lines. Features precision bearing steel rollers, chain-and-sprocket drive system, side guide rails, and integrated electric motor drive.',
-    thumbnail: '/models/thumbnails/conveyor.webp',
-    modelUrl: '/models/gearbox_assembly.glb',
+    thumbnail: '/models/thumbnails/thumb_9.svg',
+    modelUrl: '/models/model_9.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -394,8 +394,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Factory Automation Open Group',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'glTF / OBJ',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -405,8 +405,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Robotic Arm',
     shortDescription: 'High-payload articulated robot arm showing base joint, upper arm, wrist assembly, and internal servo motors.',
     longDescription: 'Precision 6-DOF industrial robot arm used for automated welding, material handling, and assembly. Displays hollow arm castings, cycloidal gear drives, internal cabling routing, and tool mounting flange under X-Ray mode.',
-    thumbnail: '/models/thumbnails/robotic_arm.webp',
-    modelUrl: '/models/gearbox_assembly.glb',
+    thumbnail: '/models/thumbnails/thumb_10.svg',
+    modelUrl: '/models/model_10.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -434,8 +434,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Open Robotics Hardware Initiative',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'URDF / STEP / glTF',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -445,8 +445,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Industrial Fan',
     shortDescription: 'Industrial backward-curved centrifugal blower fan with scroll housing, wheel impeller, and drive shaft.',
     longDescription: 'Large-scale industrial centrifugal fan designed for process air movement and ventilation. Demonstrates scroll housing geometry, backward-curved impeller blades, shaft bearings, and motor belt-drive guard.',
-    thumbnail: '/models/thumbnails/fan.webp',
-    modelUrl: '/models/electric_motor.glb',
+    thumbnail: '/models/thumbnails/thumb_11.svg',
+    modelUrl: '/models/model_11.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -474,8 +474,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Air Movement CAD Community',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'STEP',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -485,8 +485,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Generator',
     shortDescription: 'Enclosed stationary power generator combining a diesel engine, alternator core, and soundproof canopy.',
     longDescription: 'Heavy-duty backup power generator set. Reveals internal multi-cylinder diesel engine block, brushless synchronous alternator, radiator cooling package, and control panel inside an acoustic enclosure.',
-    thumbnail: '/models/thumbnails/generator.webp',
-    modelUrl: '/models/electric_motor.glb',
+    thumbnail: '/models/thumbnails/thumb_12.svg',
+    modelUrl: '/models/model_12.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -515,7 +515,7 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
       originalFormat: 'glTF 2.0',
-      optimizedFormat: 'Binary glTF (GLB)'
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -525,8 +525,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Turbine',
     shortDescription: 'High-pressure steam turbine featuring bladed rotor shaft, stationary nozzles, and split casing halves.',
     longDescription: 'Thermal power generation steam turbine assembly. Highlights multi-stage rotor disk blades, nozzle guide vanes, labyrinth shaft seals, and heavy bolted horizontal casing joint under X-Ray inspection mode.',
-    thumbnail: '/models/thumbnails/turbine.webp',
-    modelUrl: '/models/electric_motor.glb',
+    thumbnail: '/models/thumbnails/thumb_13.svg',
+    modelUrl: '/models/model_13.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -554,8 +554,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Turbomachinery Engineering Guild',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'STEP / IGES',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -565,8 +565,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Hydraulic Cylinder',
     shortDescription: 'Industrial fluid power linear actuator displaying chrome piston rod, barrel cylinder, piston seals, and end caps.',
     longDescription: 'NFPA standard tie-rod hydraulic cylinder for heavy machinery actuation. Shows ground chrome piston rod, internal piston assembly, poly-urethane wiper seals, steel tie rods, and port connections in X-Ray cutaway mode.',
-    thumbnail: '/models/thumbnails/cylinder.webp',
-    modelUrl: '/models/industrial_pump.glb',
+    thumbnail: '/models/thumbnails/thumb_14.svg',
+    modelUrl: '/models/model_14.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -594,8 +594,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Fluid Power Mechanics Guild',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'STEP',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -605,8 +605,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Bearing Assembly',
     shortDescription: 'Heavy-duty industrial bearing block housing showing outer cup, inner cone, tapered rollers, and retaining cage.',
     longDescription: 'High load capacity tapered roller bearing assembly designed for heavy radial and axial shaft loads. Demonstrates precision roller element array, cage pocket alignment, inner ring raceway, and outer cup in X-Ray view.',
-    thumbnail: '/models/thumbnails/bearing.webp',
-    modelUrl: '/models/gearbox_assembly.glb',
+    thumbnail: '/models/thumbnails/thumb_15.svg',
+    modelUrl: '/models/model_15.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -634,8 +634,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Bearing Engineering Open CAD Project',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'STEP / glTF',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -645,8 +645,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Gear Train',
     shortDescription: 'Multi-shaft gear reduction assembly featuring precision helical spur gears, keyways, and support shafts.',
     longDescription: 'Compound gear train configuration showing progressive gear ratio stages. Features angled helical gear teeth for quiet high-torque operation, keyed shaft mountings, and shoulder retaining rings for mechanical transmission analysis.',
-    thumbnail: '/models/thumbnails/gear_train.webp',
-    modelUrl: '/models/gearbox_assembly.glb',
+    thumbnail: '/models/thumbnails/thumb_16.svg',
+    modelUrl: '/models/model_16.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -675,7 +675,7 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
       originalFormat: 'glTF 2.0',
-      optimizedFormat: 'Binary glTF (GLB)'
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -685,8 +685,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Coupling Assembly',
     shortDescription: 'Zero-backlash flexible disc coupling connecting two rotating shafts while accommodating angular misalignment.',
     longDescription: 'High-performance flexible disc coupling used between motor shafts and driven machinery. Features stainless steel disc packs, precision fitted shoulder bolts, drive hubs, and center spacer member under X-Ray inspection.',
-    thumbnail: '/models/thumbnails/coupling.webp',
-    modelUrl: '/models/gearbox_assembly.glb',
+    thumbnail: '/models/thumbnails/thumb_17.svg',
+    modelUrl: '/models/model_17.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -714,8 +714,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Coupling Technology Consortium',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'STEP',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -725,8 +725,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Pipe Valve Assembly',
     shortDescription: 'Process piping spool segment incorporating a pneumatic rotary actuator and resilient-seated butterfly valve.',
     longDescription: 'Automated process piping segment with quarter-turn pneumatic actuator. Shows disc shaft alignment, elastomer seat seal, body liner, indicator position beacon, and pipe flange mounting gaskets in full X-Ray cutaway.',
-    thumbnail: '/models/thumbnails/pipe_valve.webp',
-    modelUrl: '/models/industrial_pump.glb',
+    thumbnail: '/models/thumbnails/thumb_18.svg',
+    modelUrl: '/models/model_18.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -754,8 +754,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Piping Design Open Project',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'glTF / STEP',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -765,8 +765,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Water Pump',
     shortDescription: 'Vertical inline multistage water pressure booster pump with stacked impeller bowls and shaft coupling.',
     longDescription: 'High-pressure vertical multistage centrifugal pump for municipal water treatment and booster stations. Displays stacked stainless steel impellers, diffuser bowls, outer sleeve, and NEMA motor adapter pedestal under X-Ray mode.',
-    thumbnail: '/models/thumbnails/water_pump.webp',
-    modelUrl: '/models/industrial_pump.glb',
+    thumbnail: '/models/thumbnails/thumb_19.svg',
+    modelUrl: '/models/model_19.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -794,8 +794,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Water Infrastructure CAD Initiative',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'STEP',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -805,8 +805,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Welding Machine',
     shortDescription: 'Industrial arc welding power source enclosure showing internal transformer inverter stack, cooling fan, and wire feeder drive.',
     longDescription: 'Heavy manufacturing MIG/TIG inverter welding power supply. Reveals internal solid-state IGBT inverter modules, heavy copper high-frequency transformer core, cooling ducting, and wire spool drive mechanism inside a heavy steel enclosure.',
-    thumbnail: '/models/thumbnails/welder.webp',
-    modelUrl: '/models/electric_motor.glb',
+    thumbnail: '/models/thumbnails/thumb_20.svg',
+    modelUrl: '/models/model_20.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -835,7 +835,7 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
       originalFormat: 'glTF 2.0',
-      optimizedFormat: 'Binary glTF (GLB)'
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -845,8 +845,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'CNC Machine',
     shortDescription: 'Enclosed 5-axis CNC milling machine showing tilting rotary trunnion table, high-speed spindle, and tool changer carousel.',
     longDescription: 'High-precision 5-axis vertical machining center used for aerospace and complex component milling. Features trunnion rotary B/C axes, 24-tool automatic tool changer (ATC), direct-drive 20,000 RPM spindle, and full machine enclosure under X-Ray mode.',
-    thumbnail: '/models/thumbnails/cnc_machine.webp',
-    modelUrl: '/models/gearbox_assembly.glb',
+    thumbnail: '/models/thumbnails/thumb_21.svg',
+    modelUrl: '/models/model_21.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -874,8 +874,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Open CNC Machine Models Initiative',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'STEP / glTF',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -885,8 +885,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Industrial Drill',
     shortDescription: 'Precision geared-head column drilling machine featuring cast iron column, rack-and-pinion table, and spindle quill.',
     longDescription: 'Industrial column drill press engineered for heavy metal hole drilling. Displays belt/gear drive transmission box, precision spindle quill mechanism, T-slotted work table, and heavy cast base plate in clear X-Ray view.',
-    thumbnail: '/models/thumbnails/drill_press.webp',
-    modelUrl: '/models/electric_motor.glb',
+    thumbnail: '/models/thumbnails/thumb_22.svg',
+    modelUrl: '/models/model_22.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -914,8 +914,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Workshop Tooling Open Vault',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'glTF / OBJ',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -925,8 +925,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Lathe Machine',
     shortDescription: 'Industrial CNC turning lathe showing hydraulic 3-jaw chuck, 12-station servo turret, and slant-bed ways.',
     longDescription: 'Slant-bed CNC turning center for cylindrical component machining. Features 45-degree cast iron slant bed, high-torque main spindle chuck, 12-station VDI tool turret, and hydraulic tailstock assembly in full X-Ray cutaway.',
-    thumbnail: '/models/thumbnails/lathe.webp',
-    modelUrl: '/models/gearbox_assembly.glb',
+    thumbnail: '/models/thumbnails/thumb_23.svg',
+    modelUrl: '/models/model_23.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -954,8 +954,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Open CNC Machine Models Initiative',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'STEP',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -965,8 +965,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Milling Machine',
     shortDescription: 'Knee-and-column universal milling machine featuring swiveling vertical head, horizontal arbor, and feed gearbox.',
     longDescription: 'Toolroom universal milling machine equipped with dual vertical and horizontal spindles. Demonstrates knee elevation screw, saddle cross-feed mechanism, table longitudinal power feed, and spindle gear speed box in X-Ray mode.',
-    thumbnail: '/models/thumbnails/milling.webp',
-    modelUrl: '/models/gearbox_assembly.glb',
+    thumbnail: '/models/thumbnails/thumb_24.svg',
+    modelUrl: '/models/model_24.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -995,7 +995,7 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
       originalFormat: 'glTF 2.0',
-      optimizedFormat: 'Binary glTF (GLB)'
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -1005,8 +1005,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Injection Molding Machine',
     shortDescription: 'Industrial plastic molding press showing hydraulic toggle clamp unit, reciprocating plasticizing screw, and barrel heaters.',
     longDescription: 'Heavy-tonnage plastic injection molding machine. Reveals double-toggle hydraulic clamping mechanism, heated injection barrel, reciprocating screw drive, hopper, and mold platen tie-bars under X-Ray mode.',
-    thumbnail: '/models/thumbnails/injection_molding.webp',
-    modelUrl: '/models/gearbox_assembly.glb',
+    thumbnail: '/models/thumbnails/thumb_25.svg',
+    modelUrl: '/models/model_25.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -1034,8 +1034,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Plastics Machinery CAD Consortium',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'STEP / glTF',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -1045,8 +1045,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Industrial Control Panel',
     shortDescription: 'NEMA 12 industrial electrical control enclosure featuring DIN-rail Programmable Logic Controller (PLC), VFD drives, and relays.',
     longDescription: 'Automation electrical control cabinet used in industrial automation. Shows backplate layout with main circuit breaker, 24V DC power supplies, modular PLC rack, Variable Frequency Drives (VFD), terminal blocks, and wire ducting under X-Ray inspection mode.',
-    thumbnail: '/models/thumbnails/control_panel.webp',
-    modelUrl: '/models/electric_motor.glb',
+    thumbnail: '/models/thumbnails/thumb_26.svg',
+    modelUrl: '/models/model_26.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -1075,7 +1075,7 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
       originalFormat: 'glTF 2.0',
-      optimizedFormat: 'Binary glTF (GLB)'
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -1085,8 +1085,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Transformer',
     shortDescription: 'Medium-voltage power transformer displaying corrugated cooling radiators, high-voltage porcelain bushings, and conservator tank.',
     longDescription: 'Substation distribution transformer for industrial facility power distribution. Features corrugated sheet cooling walls, laminated silicon steel core, high-voltage ceramic bushings, oil level sight glass, and off-load tap changer in X-Ray view.',
-    thumbnail: '/models/thumbnails/transformer.webp',
-    modelUrl: '/models/electric_motor.glb',
+    thumbnail: '/models/thumbnails/thumb_27.svg',
+    modelUrl: '/models/model_27.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -1114,8 +1114,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'High Voltage Electrical Consortium',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'STEP',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -1125,8 +1125,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Forklift / Industrial Vehicle',
     shortDescription: 'Industrial electric warehouse forklift displaying 2-stage clear-view mast, hydraulic lift cylinder, forks, and battery pack.',
     longDescription: 'Industrial material handling forklift truck. Features heavy cast rear counterweight, 2-stage telescopic mast, carriage tilt cylinders, solid rubber tires, overhead guard, and low-slung traction battery compartment in X-Ray view.',
-    thumbnail: '/models/thumbnails/forklift.webp',
-    modelUrl: '/models/gearbox_assembly.glb',
+    thumbnail: '/models/thumbnails/thumb_28.svg',
+    modelUrl: '/models/model_28.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -1154,8 +1154,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Intralogistics Open Equipment Project',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'glTF / OBJ',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -1165,8 +1165,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Mechanical Jack / Lifting Assembly',
     shortDescription: 'Worm gear screw jack lifting mechanism showing trapezoidal acme screw, worm wheel drive, and housing.',
     longDescription: 'Industrial motorized lifting screw jack for heavy load synchronization. Demonstrates ductile iron housing, precision bronze worm gear wheel, alloy steel worm shaft, and ground acme lifting screw under X-Ray inspection mode.',
-    thumbnail: '/models/thumbnails/screw_jack.webp',
-    modelUrl: '/models/gearbox_assembly.glb',
+    thumbnail: '/models/thumbnails/thumb_29.svg',
+    modelUrl: '/models/model_29.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -1194,8 +1194,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Lifting Systems CAD Group',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'STEP',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   },
   {
@@ -1205,8 +1205,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
     category: 'Engine / Engine Assembly',
     shortDescription: '60-degree V6 internal combustion engine block featuring pistons, crankshaft, connecting rods, valves, and camshafts.',
     longDescription: 'High-performance V6 engine block assembly showcasing internal powertrain mechanics. Displays forged steel crankshaft, piston assembly with wrist pins, dual overhead camshafts (DOHC), intake/exhaust valve train, and oil sump in complete X-Ray cutaway clarity.',
-    thumbnail: '/models/thumbnails/v6_engine.webp',
-    modelUrl: '/models/gearbox_assembly.glb',
+    thumbnail: '/models/thumbnails/thumb_30.svg',
+    modelUrl: '/models/model_30.gltf',
     arEnabled: true,
     wireframeEnabled: true,
     xrayEnabled: true,
@@ -1234,8 +1234,8 @@ export const SPATIAL_HUB_MODELS: SpatialHubModel[] = [
       author: 'Automotive Engineering Open CAD Project',
       license: 'CC-BY 4.0 International',
       attributionRequired: true,
-      originalFormat: 'STEP / glTF 2.0',
-      optimizedFormat: 'Binary glTF (GLB)'
+      originalFormat: 'glTF 2.0',
+      optimizedFormat: 'glTF 2.0 JSON'
     }
   }
 ];
@@ -1254,7 +1254,6 @@ export function searchSpatialHubModels(
   const q = query.trim().toLowerCase();
   
   return SPATIAL_HUB_MODELS.filter(model => {
-    // 1. Text Search across name, category, description, and tags
     const matchesQuery = !q || (
       model.name.toLowerCase().includes(q) ||
       model.category.toLowerCase().includes(q) ||
@@ -1263,10 +1262,8 @@ export function searchSpatialHubModels(
       model.tags.some(t => t.toLowerCase().includes(q))
     );
 
-    // 2. Category Filter
     const matchesCategory = !categoryFilter || categoryFilter === 'All' || model.category === categoryFilter;
 
-    // 3. Visualization Mode Filter
     let matchesMode = true;
     if (modeFilter && modeFilter !== 'All') {
       if (modeFilter === 'AR') matchesMode = model.arEnabled;
