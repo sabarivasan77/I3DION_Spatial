@@ -1,4 +1,4 @@
-import React, { Component, ReactNode, Suspense, useRef, useState, useEffect } from 'react';
+import { Component, ReactNode, Suspense, useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { 
   useGLTF, 
@@ -378,8 +378,7 @@ export default function ThreeProduct({
   productName?: string;
   renderMode?: RenderMode;
 }) {
-  const containerRef = useRef<HTMLElement>(null);
-  const [loadError, setLoadError] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   return (
     <div ref={containerRef} className="relative w-full h-full bg-[#0A0D14] overflow-hidden rounded-inherit">
