@@ -151,8 +151,8 @@ authRouter.post('/login', async (req, res, next) => {
   }
 });
 
-import { OAuth2Client } from 'google-auth-library';
-const googleClient = new OAuth2Client(process.env.VITE_GOOGLE_CLIENT_ID);
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID;
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // POST /api/auth/google
 authRouter.post('/google', async (req, res, next) => {
@@ -170,7 +170,7 @@ authRouter.post('/google', async (req, res, next) => {
     } else {
       const ticket = await googleClient.verifyIdToken({
         idToken,
-        audience: process.env.VITE_GOOGLE_CLIENT_ID,
+        audience: GOOGLE_CLIENT_ID,
       });
       payload = ticket.getPayload();
     }
@@ -251,6 +251,63 @@ authRouter.post('/google', async (req, res, next) => {
     if (error.message.includes('BEGIN') || error.message.includes('COMMIT')) {
         await query('ROLLBACK');
     }
+    next(error);
+  }
+});
+
+// POST /api/auth/forgot-password
+authRouter.post('/forgot-password', async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) throw new ApiError(400, 'Email is required');
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const userRes = await query('SELECT id, name, email FROM users WHERE email = $1', [normalizedEmail]);
+    const user = userRes.rows[0];
+
+    if (user) {
+      const resetToken = jwt.sign(
+        { userId: user.id, type: 'password_reset' },
+        JWT_SECRET,
+        { expiresIn: '1h' }
+      );
+      console.log(`Password reset link generated for ${user.email}: /reset-password?token=${resetToken}`);
+    }
+
+    res.json({ message: 'If an account exists for this email, password reset instructions have been generated.' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/auth/reset-password
+authRouter.post('/reset-password', async (req, res, next) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) throw new ApiError(400, 'Token and new password are required');
+    if (password.length < 6) throw new ApiError(400, 'Password must be at least 6 characters long');
+
+    let decoded: any;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch {
+      throw new ApiError(400, 'Invalid or expired password reset token');
+    }
+
+    if (!decoded.userId || decoded.type !== 'password_reset') {
+      throw new ApiError(400, 'Invalid reset token payload');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    const updateRes = await query('UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING id, email', [passwordHash, decoded.userId]);
+    if (updateRes.rows.length === 0) {
+      throw new ApiError(404, 'User not found');
+    }
+
+    res.json({ message: 'Password has been reset successfully. You can now log in with your new password.' });
+  } catch (error) {
     next(error);
   }
 });

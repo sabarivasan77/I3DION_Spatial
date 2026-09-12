@@ -1,5 +1,7 @@
 
 
+import { API_BASE_URL } from './api';
+
 const VISITOR_ID_KEY = 'i3dion_visitor_id';
 
 class TrackingService {
@@ -59,7 +61,7 @@ class TrackingService {
         slug
       };
 
-      await fetch('http://localhost:4000/api/public/analytics/events', {
+      await fetch(`${API_BASE_URL}/public/analytics/events`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,7 +89,7 @@ class TrackingService {
       };
 
       const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-      navigator.sendBeacon('http://localhost:4000/api/public/analytics/events', blob);
+      navigator.sendBeacon(`${API_BASE_URL}/public/analytics/events`, blob);
     } catch (error) {
       console.error('Failed to send beacon:', error);
     }

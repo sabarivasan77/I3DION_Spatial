@@ -589,12 +589,28 @@ async function offlineFallback<T>(path: string, options: RequestInit & { token?:
 }
 
 export async function checkBackendHealth() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/health`).catch(() => null);
+    if (res && res.ok) {
+      const data = await res.json();
+      return {
+        reachable: true,
+        ok: data.status === 'ok' || data.status === 'degraded',
+        status: res.status,
+        dbConnected: data.database === 'connected' || data.dbConnected === true,
+        storageAvailable: data.storage === 'connected' || data.storageAvailable === true,
+      };
+    }
+  } catch (err) {
+    console.warn('Backend health check warning:', err);
+  }
+
   return {
-    reachable: true,
-    ok: true,
-    status: 200,
-    dbConnected: true,
-    storageAvailable: true,
+    reachable: false,
+    ok: false,
+    status: 503,
+    dbConnected: false,
+    storageAvailable: false,
   };
 }
 
@@ -615,12 +631,18 @@ export async function apiRequest<T>(
     headers.set('Authorization', `Bearer ${options.token}`);
   }
 
+  // If client explicitly uses an offline demo token or offline mode is forced
+  if (isOfflineToken(options.token) || import.meta.env.VITE_OFFLINE_MODE === 'true') {
+    window.clearTimeout(timeout);
+    return offlineFallback<T>(path, options);
+  }
+
   let response: Response;
 
   try {
     response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers, body, signal: controller.signal });
   } catch (error) {
-    if (isApiUnavailable(error) || (error as Error)?.name === 'AbortError' || import.meta.env.VITE_OFFLINE_MODE === 'true') {
+    if (isApiUnavailable(error) || (error as Error)?.name === 'AbortError') {
       return offlineFallback<T>(path, options);
     }
     throw error;
@@ -631,12 +653,7 @@ export async function apiRequest<T>(
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    // If backend returns error (500, 404, 503), gracefully fall back to local preview mode
-    try {
-      return await offlineFallback<T>(path, options);
-    } catch {
-      throw new ApiClientError(response.status, data.message ?? 'Request failed', data.details);
-    }
+    throw new ApiClientError(response.status, data.message ?? 'API request failed', data.details);
   }
 
   return data as T;

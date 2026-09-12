@@ -106,6 +106,63 @@ export async function ensureMigrated() {
         created_at timestamptz NOT NULL DEFAULT now(),
         updated_at timestamptz NOT NULL DEFAULT now()
       );
+
+      CREATE TABLE IF NOT EXISTS plans (
+        id text PRIMARY KEY,
+        name text NOT NULL,
+        description text,
+        price_monthly_inr integer NOT NULL DEFAULT 0,
+        price_yearly_inr integer NOT NULL DEFAULT 0,
+        max_products integer NOT NULL DEFAULT 3,
+        max_catalogs integer NOT NULL DEFAULT 2,
+        max_3d_models integer NOT NULL DEFAULT 3,
+        max_storage_bytes bigint NOT NULL DEFAULT 52428800,
+        max_team_members integer NOT NULL DEFAULT 1,
+        features jsonb NOT NULL DEFAULT '{}'::jsonb,
+        is_active boolean NOT NULL DEFAULT true,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      INSERT INTO plans (id, name, description, price_monthly_inr, price_yearly_inr, max_products, max_catalogs, max_3d_models, max_storage_bytes, max_team_members, features)
+      VALUES 
+        ('FREE', 'Free Tier', 'Ideal for exploring spatial catalog features', 0, 0, 3, 2, 3, 52428800, 1, '{"ar_views": true, "qr_codes": true}'::jsonb),
+        ('STARTER', 'Starter Plan', 'Essential tools for growing spatial catalogs', 1499, 14990, 25, 10, 25, 1073741824, 3, '{"ar_views": true, "qr_codes": true, "advanced_analytics": true}'::jsonb),
+        ('BUSINESS', 'Business Pro', 'Complete suite for active sales & marketing teams', 4999, 49990, 100, 50, 100, 10737418240, 10, '{"ar_views": true, "qr_codes": true, "advanced_analytics": true, "custom_branding": true}'::jsonb),
+        ('UNLIMITED', 'Enterprise Unlimited', 'Unrestricted catalog scale and priority support', 14999, 149990, 999999, 999999, 999999, 107374182400, 50, '{"ar_views": true, "qr_codes": true, "advanced_analytics": true, "custom_branding": true, "priority_support": true}'::jsonb)
+      ON CONFLICT (id) DO NOTHING;
+
+      CREATE TABLE IF NOT EXISTS subscriptions (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL UNIQUE REFERENCES organizations(id) ON DELETE CASCADE,
+        plan_id text NOT NULL REFERENCES plans(id),
+        billing_cycle text NOT NULL DEFAULT 'monthly',
+        status text NOT NULL DEFAULT 'active',
+        razorpay_subscription_id text UNIQUE,
+        razorpay_customer_id text,
+        current_period_start timestamptz NOT NULL DEFAULT now(),
+        current_period_end timestamptz NOT NULL DEFAULT (now() + interval '30 days'),
+        cancel_at_period_end boolean NOT NULL DEFAULT false,
+        cancelled_at timestamptz,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      CREATE TABLE IF NOT EXISTS ml_models (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        name text NOT NULL,
+        version text NOT NULL DEFAULT 'v1.0',
+        status text NOT NULL DEFAULT 'Active',
+        metrics jsonb NOT NULL DEFAULT '{}'::jsonb,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      INSERT INTO ml_models (name, version, status, metrics)
+      VALUES 
+        ('Lead Propensity Scorer', 'v2.1', 'Active', '{"accuracy": 0.92, "f1_score": 0.89}'::jsonb),
+        ('Spatial Recommender Engine', 'v1.4', 'Active', '{"precision": 0.88, "recall": 0.85}'::jsonb)
+      ON CONFLICT DO NOTHING;
     `);
     
     // Non-blocking schema enhancements

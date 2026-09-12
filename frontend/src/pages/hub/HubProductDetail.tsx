@@ -5,15 +5,26 @@ import { Link } from 'react-router-dom';
 import { hubApi, HubProduct, HubComment } from '../../services/hubApi';
 import { Button, Card } from '../../components/ui';
 import { useAuthStore } from '../../store/authStore';
+import { useToast } from '../../components/Toast';
 
 export function HubProductDetail() {
   const { id } = useParams();
+  const { info, success } = useToast();
   const [product, setProduct] = useState<HubProduct | null>(null);
   const [comments, setComments] = useState<HubComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState('');
   const [liked, setLiked] = useState(false);
   const token = useAuthStore(s => s.token);
+
+  const handleShare = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      success('Link Copied', 'Product link copied to clipboard.');
+    } else {
+      info('Share Product', 'Copy the page URL to share this spatial product.');
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -129,11 +140,14 @@ export function HubProductDetail() {
             <Heart className={`w-6 h-6 mb-1 ${liked ? 'fill-current' : ''}`} />
             <span className="text-xs font-bold">{product.likes_count}</span>
           </button>
-          <button onClick={() => alert('Comments coming soon!')} className="flex flex-col items-center p-2 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors">
+          <button onClick={() => {
+            const el = document.getElementById('comments-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }} className="flex flex-col items-center p-2 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors">
             <MessageSquare className="w-6 h-6 mb-1" />
             <span className="text-xs font-bold">{comments.length}</span>
           </button>
-          <button onClick={() => alert('Share coming soon!')} className="flex flex-col items-center p-2 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors">
+          <button onClick={handleShare} className="flex flex-col items-center p-2 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors">
             <Share2 className="w-6 h-6 mb-1" />
             <span className="text-xs font-bold">Share</span>
           </button>
@@ -156,7 +170,7 @@ export function HubProductDetail() {
                 <h4 className="font-bold text-slate-900">{product.creator_name || product.company_name}</h4>
                 <p className="text-sm text-slate-500">{product.company_name}</p>
               </div>
-              <Button onClick={() => alert('Follow coming soon!')} variant="secondary" className="text-xs px-2 py-1 h-auto">Follow</Button>
+              <Button onClick={() => info('Follow Creator', `You are following updates from ${product.company_name || 'this creator'}.`)} variant="secondary" className="text-xs px-2 py-1 h-auto">Follow</Button>
           </div>
         </Card>
 

@@ -85,17 +85,12 @@ apiRouter.get('/health', async (_req, res) => {
     }
   } catch (err) {}
   
-  res.status(dbConnected && storageAvailable ? 200 : 503).json({
-    ok: dbConnected && storageAvailable,
+  res.status(dbConnected ? 200 : 503).json({
+    status: dbConnected ? 'ok' : 'degraded',
     service: 'i3dion-spatial-api',
-    dbConnected,
-    storageAvailable,
-    debug: {
-      supabaseUrl: config.supabaseUrl,
-      supabaseKeyLength: config.supabaseKey?.length,
-      vercelUrl: config.appUrl,
-      dbUrl: config.databaseUrl?.substring(0, 30) + '...'
-    }
+    database: dbConnected ? 'connected' : 'disconnected',
+    storage: storageAvailable ? 'connected' : 'local_fs',
+    timestamp: new Date().toISOString(),
   });
 });
 
