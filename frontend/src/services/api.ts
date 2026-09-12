@@ -1,4 +1,7 @@
 /// <reference types="vite/client" />
+import { Tracker } from './Tracker';
+import { LeadEngine } from './leadEngine';
+
 export const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
 const API_TIMEOUT_MS = 60000; // Increased to 60s for 3D model uploads
 
@@ -334,15 +337,124 @@ async function offlineFallback<T>(rawPath: string, options: RequestInit & { toke
       appearance_preferences: { theme: 'light', density: 'comfortable' },
     } as T;
   }
-  if (path === '/support-tickets') return [] as T;
-  if (path === '/leads') return [] as T;
-  if (path.startsWith('/leads/') && method === 'DELETE') return undefined as T;
-  if (path.startsWith('/leads/') && method === 'PUT') return {} as T;
-  if (path === '/analytics/summary') return { events: [], leads: [] } as T;
-  if (path === '/analytics/dashboard') return { total_leads: 14, hot_leads: 5, product_views: 128, ar_launches: 42 } as T;
+  if (path === '/support-tickets' || path === '/support/tickets') {
+    if (method === 'POST') {
+      const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+      const stored = JSON.parse(localStorage.getItem('i3dion.support_tickets') ?? '[]') as any[];
+      const newTicket = {
+        id: `ticket-${Date.now()}`,
+        ticket_number: `TKT-${Math.floor(1000 + Math.random() * 9000)}`,
+        subject: body.subject || 'Support Inquiry',
+        category: body.category || 'General Support',
+        description: body.description || '',
+        status: body.status || 'OPEN',
+        priority: body.priority || 'Normal',
+        product_id: body.product_id || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      stored.unshift(newTicket);
+      localStorage.setItem('i3dion.support_tickets', JSON.stringify(stored));
+      return offlineClone(newTicket) as T;
+    }
+    const stored = JSON.parse(localStorage.getItem('i3dion.support_tickets') ?? 'null');
+    if (!stored) {
+      const defaultTickets = [
+        {
+          id: 'ticket-1',
+          ticket_number: 'TKT-8901',
+          subject: 'USDZ QuickLook model alignment error on iOS',
+          category: 'AR Issue',
+          description: 'Model bounds appear slightly misaligned when launched in iOS QuickLook WebXR.',
+          status: 'IN_PROGRESS',
+          priority: 'High',
+          created_at: new Date(Date.now() - 86400000).toISOString(),
+          updated_at: new Date(Date.now() - 3600000).toISOString(),
+        },
+        {
+          id: 'ticket-2',
+          ticket_number: 'TKT-8902',
+          subject: 'Request for custom enterprise catalog branding',
+          category: 'Catalog Issue',
+          description: 'Need assistance uploading SVG vector logo for catalog header.',
+          status: 'RESOLVED',
+          priority: 'Normal',
+          created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
+          updated_at: new Date(Date.now() - 86400000).toISOString(),
+        }
+      ];
+      localStorage.setItem('i3dion.support_tickets', JSON.stringify(defaultTickets));
+      return offlineClone(defaultTickets) as T;
+    }
+    return offlineClone(stored) as T;
+  }
+
+  if ((path.startsWith('/support-tickets/') || path.startsWith('/support/tickets/')) && method === 'PUT') {
+    const id = path.split('/').pop();
+    const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+    const stored = JSON.parse(localStorage.getItem('i3dion.support_tickets') ?? '[]') as any[];
+    const idx = stored.findIndex((t) => t.id === id);
+    if (idx !== -1) {
+      stored[idx] = { ...stored[idx], ...body, updated_at: new Date().toISOString() };
+      localStorage.setItem('i3dion.support_tickets', JSON.stringify(stored));
+      return offlineClone(stored[idx]) as T;
+    }
+  }
+
+  if (path === '/leads' && method === 'GET') {
+    const leads = LeadEngine.getStoredLeads();
+    return offlineClone(leads) as T;
+  }
+  if (path === '/leads' && method === 'POST') {
+    const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+    const lead = LeadEngine.submitLeadForm({
+      name: body.name || 'Anonymous Visitor',
+      email: body.email || 'visitor@i3dion.local',
+      phone: body.phone,
+      company: body.company,
+      designation: body.designation,
+      productInterested: body.productInterested,
+      notes: body.notes,
+      source: body.source || 'Dashboard Manual Entry',
+    });
+    return offlineClone(lead) as T;
+  }
+  if (path.startsWith('/leads/') && method === 'DELETE') {
+    const id = path.split('/').pop();
+    const leads = LeadEngine.getStoredLeads().filter((l) => l.id !== id);
+    LeadEngine.saveLeads(leads);
+    return undefined as T;
+  }
+  if (path.startsWith('/leads/') && method === 'PUT') {
+    const id = path.split('/').pop();
+    const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+    const leads = LeadEngine.getStoredLeads();
+    const idx = leads.findIndex((l) => l.id === id);
+    if (idx !== -1) {
+      leads[idx] = { ...leads[idx], ...body, updated_at: new Date().toISOString() };
+      LeadEngine.saveLeads(leads);
+      return offlineClone(leads[idx]) as T;
+    }
+  }
+
+  if (path === '/analytics/summary') return { events: Tracker.getLocalEvents(), leads: LeadEngine.getStoredLeads() } as T;
+  if (path === '/analytics/dashboard') {
+    const events = Tracker.getLocalEvents();
+    const leads = LeadEngine.getStoredLeads();
+    const hotLeads = leads.filter((l) => l.intent_level === 'HOT' || l.intent_level === 'HIGH INTENT').length;
+    const views = Math.max(events.filter((e) => e.eventName === 'product_view_started' || e.eventName === 'product_view').length, 128);
+    const arLaunches = Math.max(events.filter((e) => e.eventName === 'ar_clicked' || e.eventName === 'ar_launch_success').length, 42);
+
+    return {
+      total_leads: leads.length,
+      hot_leads: hotLeads,
+      product_views: views,
+      ar_launches: arLaunches,
+    } as T;
+  }
   if (path === '/analytics/insights') return [
-    { type: 'action_required', urgency: 'high', message: '3 prospect organizations requested custom Enterprise quotes this week.' },
-    { type: 'opportunity', urgency: 'medium', message: 'AR launch conversion up 24% for Industrial Machinery category.' }
+    { type: 'action_required', urgency: 'high', message: `${LeadEngine.getStoredLeads().filter(l => l.intent_level === 'HIGH INTENT').length} High-Intent prospect organizations requested custom Enterprise quotes.` },
+    { type: 'opportunity', urgency: 'medium', message: 'AR launch conversion up 24% across industrial products.' }
   ] as T;
   if (path === '/analytics/top-products') return [
     { id: '1', name: 'Industrial Valve System 3000', interactions: 48, ar_launches: 18 },
@@ -363,7 +475,10 @@ async function offlineFallback<T>(rawPath: string, options: RequestInit & { toke
     { query: 'AR View', count: 35 },
     { query: 'Industrial Catalog PDF', count: 28 }
   ] as T;
-  if (path === '/analytics/charts/funnel') return { visitors: 150, product_views: 120, ar_launches: 45, leads: 14 } as T;
+  if (path === '/analytics/charts/funnel') {
+    const leads = LeadEngine.getStoredLeads();
+    return { visitors: 150, product_views: 120, ar_launches: 45, leads: leads.length } as T;
+  }
   if (path === '/analytics/charts/downloads') return [
     { name: 'Industrial Valve PDF', downloads: 34 },
     { name: 'Robotic Arm Brochure', downloads: 22 }
@@ -829,8 +944,12 @@ export const api = {
   updatePreferences: (token: string, payload: unknown) =>
     apiRequest('/preferences', { token, method: 'PUT', body: JSON.stringify(payload) }),
   listSupportTickets: (token: string) => apiRequest('/support-tickets', { token }),
+  getSupportTickets: (token: string) => apiRequest('/support-tickets', { token }),
   createSupportTicket: (token: string, payload: unknown) =>
     apiRequest('/support-tickets', { token, method: 'POST', body: JSON.stringify(payload) }),
+  updateSupportTicket: (token: string, id: string, payload: unknown) =>
+    apiRequest(`/support-tickets/${id}`, { token, method: 'PUT', body: JSON.stringify(payload) }),
+  getLeads: (token: string) => apiRequest('/leads', { token }),
   uploadFile: (token: string, formData: FormData) =>
     apiRequest('/uploads', { token, method: 'POST', formData }),
   deleteFile: (token: string, id: string) => apiRequest<void>(`/uploads/${id}`, { token, method: 'DELETE' }),

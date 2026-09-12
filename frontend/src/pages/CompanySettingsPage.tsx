@@ -1,11 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Building2, Lock, Save, Bell, Settings, Sparkles, RefreshCw, Upload, LogOut } from 'lucide-react';
+import { Building2, Lock, Save, Bell, Settings, Sparkles, RefreshCw, Upload, LogOut, Headphones } from 'lucide-react';
 import { Button, Card, PageHeader, SectionTitle } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { api, ApiClientError, uploadFileWithProgress } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { cx } from '../utils/format';
 import { NotificationSettingsPage } from './settings/NotificationSettingsPage';
+import { SupportDashboardPage } from './SupportDashboard';
 
 // ─── Settings ───
 
@@ -24,7 +25,7 @@ function validateUrl(url: string) {
 export function CompanySettingsPage() {
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
-  const [tab, setTab] = useState<'profile' | 'company' | 'security' | 'notifications' | 'appearance'>('profile');
+  const [tab, setTab] = useState<'profile' | 'company' | 'security' | 'notifications' | 'appearance' | 'support'>('profile');
   const { success, error: showError } = useToast();
 
   const tabs = [
@@ -33,6 +34,7 @@ export function CompanySettingsPage() {
     { key: 'security', label: 'Security', icon: Lock },
     { key: 'notifications', label: 'Notifications', icon: Bell },
     { key: 'appearance', label: 'Appearance', icon: Sparkles },
+    { key: 'support', label: 'Support', icon: Headphones },
   ] as const;
 
   // Profile state
@@ -352,6 +354,12 @@ export function CompanySettingsPage() {
                 </div>
               </div>
               <Button onClick={() => void savePreferences()} disabled={prefsSaving}><Save size={18} />{prefsSaving ? 'Saving...' : 'Save Appearance'}</Button>
+            </div>
+          )}
+
+          {tab === 'support' && (
+            <div className="pt-2">
+              <SupportDashboardPage />
             </div>
           )}
         </Card>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Send, User, Building, Mail, Phone, Lock } from 'lucide-react';
 import { Tracker } from '../services/Tracker';
-
+import { LeadEngine } from '../services/leadEngine';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SmartLeadCaptureProps {
@@ -62,30 +62,22 @@ export function SmartLeadCapture({
 
     setSubmitting(true);
     try {
-      const visitorId = localStorage.getItem('i3dion_visitor_id') || `v_${Date.now()}`;
-      const res = await fetch(`${import.meta.env.VITE_API_URL ?? '/api'}/public/leads`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          slug: productSlug || 'default',
-          visitorId,
-          name: formData.name,
-          email: formData.email || `${formData.phone.replace(/[^0-9]/g, '')}@lead.i3dion.com`,
-          phone: formData.phone,
-          company: formData.company,
-          intent,
-          message: formData.message,
-        }),
+      LeadEngine.submitLeadForm({
+        name: formData.name,
+        email: formData.email || `${formData.phone.replace(/[^0-9]/g, '')}@lead.i3dion.local`,
+        phone: formData.phone,
+        company: formData.company,
+        productInterested: productSlug || 'Industrial 3D Asset',
+        notes: `Intent: ${intent}${formData.message ? `\nMessage: ${formData.message}` : ''}`,
+        source: 'SmartLeadCapture Public Modal',
       });
 
-      if (res.ok) {
-        localStorage.setItem('i3dion:registered', 'true');
-        setSuccess(true);
-        setTimeout(() => {
-          setSuccess(false);
-          handleClose();
-        }, 2000);
-      }
+      localStorage.setItem('i3dion:registered', 'true');
+      setSuccess(true);
+      setTimeout(() => {
+        setSuccess(false);
+        handleClose();
+      }, 2000);
     } catch (err) {
       console.error('Failed to submit lead', err);
     } finally {

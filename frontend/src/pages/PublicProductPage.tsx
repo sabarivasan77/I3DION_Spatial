@@ -28,6 +28,7 @@ import { useToast } from '../components/Toast';
 import { detectPlatform } from '../utils/deviceDetection';
 import { launchSceneViewer } from '../services/sceneViewer';
 import { launchQuickLook } from '../services/quickLook';
+import { Tracker } from '../services/Tracker';
 
 export function PublicProductPage() {
   const { slug = '' } = useParams();
@@ -76,6 +77,8 @@ export function PublicProductPage() {
           document.title = `${data.name} — ${data.organization?.name || 'I3DION Spatial'}`;
         }
 
+        void Tracker.track('product_view_started', data.id, { slug, name: data.name });
+
         // Check if opened via AR handoff link (?ar=1)
         const isArHandoff = searchParams.get('ar') === '1' || searchParams.get('ar') === 'true';
         if (isArHandoff) {
@@ -97,6 +100,7 @@ export function PublicProductPage() {
   }, [slug, searchParams]);
 
   const handleShare = () => {
+    void Tracker.track('share_clicked', product?.id, { slug });
     const shareUrl = window.location.href;
     if (navigator.share) {
       navigator.share({
