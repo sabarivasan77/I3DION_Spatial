@@ -43,11 +43,11 @@ export default function App() {
   }, [initialize]);
 
   if (!initialized) {
-    return <div className="flex h-screen items-center justify-center text-slate-500">Initializing App...</div>;
+    return <div className="min-h-screen bg-[#F8FAFC]" />;
   }
 
   return (
-    <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-500">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#F8FAFC]" />}>
       <RouteTracker />
       <Routes>
       <Route element={<PublicLayout />}>
