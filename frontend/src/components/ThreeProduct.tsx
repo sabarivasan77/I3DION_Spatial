@@ -1,4 +1,4 @@
-import { Suspense, useRef, useState, useEffect } from 'react';
+import React, { Component, ReactNode, Suspense, useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { 
   useGLTF, 
@@ -15,7 +15,40 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export type RenderMode = 'solid' | 'wireframe' | 'xray';
 
-// ─── Real GLTF Model Loader with Safe Error Boundary Fallback ────────────────
+// ─── React Error Boundary for Async GLTF Model Loading ────────────────────────
+
+interface ErrorBoundaryProps {
+  fallback: ReactNode;
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
+
+class GLTFErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any) {
+    console.warn('3D GLTF asset loading failed, seamlessly falling back to procedural CAD model:', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
+
+// ─── Real GLTF Model Loader ──────────────────────────────────────────────────
 
 function RealModel({ url, renderMode = 'solid' }: { url: string; renderMode?: RenderMode }) {
   const { scene } = useGLTF(url);
@@ -394,8 +427,10 @@ export default function ThreeProduct({
 
           <Bounds fit clip observe margin={1.2}>
             <Suspense fallback={null}>
-              {modelUrl && !loadError ? (
-                <RealModel url={modelUrl} renderMode={renderMode} />
+              {modelUrl ? (
+                <GLTFErrorBoundary fallback={<DetailedProceduralModel productName={productName} renderMode={renderMode} />}>
+                  <RealModel url={modelUrl} renderMode={renderMode} />
+                </GLTFErrorBoundary>
               ) : (
                 <DetailedProceduralModel productName={productName} renderMode={renderMode} />
               )}

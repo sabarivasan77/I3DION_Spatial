@@ -24,14 +24,14 @@ import ThreeProduct from '../components/ThreeProduct';
 import { ViewInARButton } from '../components/ViewInARButton';
 import { Logo } from '../components/Logo';
 
-// Sample demo models for interactive showcase with real GLTF asset URLs
+// Sample demo models for interactive showcase
 const DEMO_MODELS = [
   {
     id: 'compressor',
     name: 'Rotary Air Compressor 500',
     category: 'Industrial Machinery',
     icon: Factory,
-    modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/GearboxAssy/glTF-Binary/GearboxAssy.glb',
+    modelUrl: '',
     desc: 'High-pressure multi-stage industrial air compressor for heavy manufacturing environments.',
     specs: { Power: '250 kW', Voltage: '440V', Weight: '1,450 kg', FlowRate: '42 m³/min' },
   },
@@ -40,7 +40,7 @@ const DEMO_MODELS = [
     name: 'Electric Drivetrain Assembly',
     category: 'Automotive Engineering',
     icon: Car,
-    modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/DamagedHelmet/glTF-Binary/DamagedHelmet.glb',
+    modelUrl: '',
     desc: 'High-torque dual-motor electric drivetrain with integrated thermal management system.',
     specs: { Torque: '780 Nm', Output: '350 kW', Efficiency: '97.4%', Cooling: 'Liquid' },
   },
@@ -49,7 +49,7 @@ const DEMO_MODELS = [
     name: 'Precision Centrifugal Turbine',
     category: 'Energy & Aerodynamics',
     icon: Activity,
-    modelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/SciFiHelmet/glTF-Binary/SciFiHelmet.glb',
+    modelUrl: '',
     desc: 'Aerospace-grade centrifugal gas turbine for power generation and pressure regulation.',
     specs: { RPM: '36,000', Pressure: '12.5 Bar', Material: 'Titanium Alloy', Rating: 'IP68' },
   },
