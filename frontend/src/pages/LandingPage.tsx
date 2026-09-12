@@ -1,157 +1,492 @@
-import { useEffect, useState } from 'react';
-import { ArrowRight, Sparkles, Box } from 'lucide-react';
+import { useState } from 'react';
+import {
+  ArrowRight,
+  Sparkles,
+  Box,
+  Smartphone,
+  ShieldCheck,
+  Zap,
+  BarChart3,
+  Cpu,
+  Layers,
+  FileText,
+  Bot,
+  QrCode,
+  RotateCw,
+  CheckCircle2,
+  Globe2,
+  Factory,
+  Car,
+  Activity,
+  Award
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Card } from '../components/ui';
-import LogoCube from '../components/LogoCube';
+import { motion, AnimatePresence } from 'framer-motion';
+import ThreeProduct from '../components/ThreeProduct';
+import { ViewInARButton } from '../components/ViewInARButton';
 import { Logo } from '../components/Logo';
 
-export function LandingPage() {
-  const [recommendations, setRecommendations] = useState<any[]>([]);
+// Sample demo models for interactive showcase
+const DEMO_MODELS = [
+  {
+    id: 'compressor',
+    name: 'Rotary Air Compressor 500',
+    category: 'Industrial Machinery',
+    icon: Factory,
+    desc: 'High-pressure multi-stage industrial air compressor for heavy manufacturing environments.',
+    specs: { Power: '250 kW', Voltage: '440V', Weight: '1,450 kg', FlowRate: '42 m³/min' },
+  },
+  {
+    id: 'motor',
+    name: 'Electric Drivetrain Assembly',
+    category: 'Automotive Engineering',
+    icon: Car,
+    desc: 'High-torque dual-motor electric drivetrain with integrated thermal management system.',
+    specs: { Torque: '780 Nm', Output: '350 kW', Efficiency: '97.4%', Cooling: 'Liquid' },
+  },
+  {
+    id: 'turbine',
+    name: 'Precision Centrifugal Turbine',
+    category: 'Energy & Aerodynamics',
+    icon: Activity,
+    desc: 'Aerospace-grade centrifugal gas turbine for power generation and pressure regulation.',
+    specs: { RPM: '36,000', Pressure: '12.5 Bar', Material: 'Titanium Alloy', Rating: 'IP68' },
+  },
+];
 
-  useEffect(() => {
-    fetch('/api/ai/recommendations')
-      .then(r => r.json())
-      .then(d => {
-        if (d.recommendations?.length > 0) {
-          setRecommendations(d.recommendations);
-        } else {
-          setRecommendations([
-            { id: '1', name: 'Rotary Air Compressor', category: 'Industrial Energy', score: 0.95 },
-            { id: '2', name: 'Centrifugal Pump X-1', category: 'Heavy Manufacturing', score: 0.88 },
-            { id: '3', name: 'Industrial Robotic Arm', category: 'Automation', score: 0.82 },
-          ]);
-        }
-      })
-      .catch(() => {
-        setRecommendations([
-          { id: '1', name: 'Rotary Air Compressor', category: 'Industrial Energy', score: 0.95 },
-          { id: '2', name: 'Centrifugal Pump X-1', category: 'Heavy Manufacturing', score: 0.88 },
-          { id: '3', name: 'Industrial Robotic Arm', category: 'Automation', score: 0.82 },
-        ]);
-      });
-  }, []);
+export function LandingPage() {
+  const [activeModelIndex, setActiveModelIndex] = useState(0);
+  const [autoRotate, setAutoRotate] = useState(true);
+
+  const currentModel = DEMO_MODELS[activeModelIndex];
 
   return (
-    <main className="min-h-screen bg-white text-slate-900 pt-16">
-      {/* Hero Section */}
-
-      {/* Hero Section */}
-      <section className="relative overflow-hidden px-4 py-20 md:px-6 md:py-28 text-center flex flex-col items-center">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(37,99,235,0.1),rgba(255,255,255,0))]" />
+    <main className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 pt-16">
+      {/* ─── 1. HERO SECTION WITH MOTION GRAPHICS ─────────────────────────────────── */}
+      <section className="relative overflow-hidden px-4 py-16 md:px-8 md:py-24 text-center flex flex-col items-center">
+        {/* Subtle Motion Graphic Radial Gradient */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-10%,rgba(37,99,235,0.12),rgba(255,255,255,0))]" />
         
-        <div className="relative z-10 max-w-3xl mx-auto">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-xs font-semibold text-blue-700 backdrop-blur-md">
+        {/* Floating Motion Graphics Particles (Subtle Accent) */}
+        <motion.div
+          animate={{ y: [0, -12, 0], opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute top-20 left-[10%] hidden lg:block"
+        >
+          <div className="flex items-center gap-2 rounded-2xl border border-blue-200 bg-white/80 p-3 backdrop-blur-md shadow-lg">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <Zap size={18} />
+            </div>
+            <div className="text-left text-xs">
+              <p className="font-bold text-slate-900">+340% Engagement</p>
+              <p className="text-[10px] text-slate-500">WebAR Product Demos</p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          animate={{ y: [0, 14, 0], opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+          className="absolute top-28 right-[10%] hidden lg:block"
+        >
+          <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-white/80 p-3 backdrop-blur-md shadow-lg">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+              <Smartphone size={18} />
+            </div>
+            <div className="text-left text-xs">
+              <p className="font-bold text-slate-900">Instant QR Handoff</p>
+              <p className="text-[10px] text-slate-500">1:1 Real-Scale AR</p>
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="relative z-10 max-w-4xl mx-auto space-y-6">
+          {/* Tagline Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-xs font-semibold text-blue-700 shadow-xs"
+          >
             <Sparkles size={14} className="animate-pulse text-blue-600" />
-            <span>Next-Gen Enterprise Spatial SaaS Platform</span>
-          </div>
-          <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-slate-900 md:text-6xl">
-            Immersive <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">3D & AR</span> Product Experiences
-          </h1>
-          <p className="mt-6 text-lg leading-relaxed text-slate-600 mx-auto max-w-2xl">
-            Transform your physical products into interactive 3D visualizations, instant WebAR experiences, and smart lead-capture engines.
-          </p>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Link to="/login" className="flex items-center gap-2.5 rounded-xl bg-primary px-7 py-3.5 text-sm font-semibold text-white shadow-xl shadow-blue-500/25 hover:bg-blue-600 transition">
-              Launch Workspace <ArrowRight size={18} />
+            <span>Next-Gen Enterprise Industrial Product Showcase & AR Platform</span>
+          </motion.div>
+
+          {/* Hero Headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.15]"
+          >
+            Transform Physical Products into{' '}
+            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 bg-clip-text text-transparent">
+              Interactive 3D & WebAR
+            </span>{' '}
+            Experiences
+          </motion.h1>
+
+          {/* Hero Subtitle */}
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-base sm:text-lg leading-relaxed text-slate-600 mx-auto max-w-2xl font-normal"
+          >
+            Empower technical buyers and enterprise customers to inspect, analyze specifications, and place industrial products directly into their real-world environment via QR code.
+          </motion.p>
+
+          {/* Hero Action CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex flex-wrap items-center justify-center gap-3 pt-4"
+          >
+            <Link
+              to="/signup"
+              className="inline-flex h-13 items-center justify-center gap-2.5 rounded-2xl bg-blue-600 px-8 text-sm font-bold text-white shadow-lg shadow-blue-600/25 hover:bg-blue-500 transition active:scale-95 border border-blue-500"
+            >
+              Start Free Enterprise Trial <ArrowRight size={18} />
             </Link>
-            <Link to="/spatial-hub" className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-              Explore Spatial Hub
+            <Link
+              to="/hub"
+              className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-7 text-sm font-bold text-slate-700 hover:bg-slate-50 transition active:scale-95 shadow-xs"
+            >
+              <Globe2 size={18} className="text-blue-600" /> Explore Spatial Hub
             </Link>
-          </div>
+          </motion.div>
         </div>
 
-        {/* 3D Visual Centerpiece */}
-        <div className="relative mt-16 w-full max-w-4xl z-10 mx-auto">
-          <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-blue-100 to-indigo-100 opacity-50 blur-2xl" />
-          <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 p-4 bg-white z-10 relative">
+        {/* ─── 2. INTERACTIVE 3D MOTION GRAPHIC SHOWCASE ───────────────────────────── */}
+        <div className="relative mt-14 w-full max-w-6xl z-10 mx-auto">
+          <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl flex flex-col">
+            {/* Header / Model Picker Navigation Tabs */}
+            <div className="flex flex-wrap items-center justify-between border-b border-slate-200 p-4 bg-slate-50/80 gap-3">
               <div className="flex items-center gap-2">
-                <span className="relative flex h-2.5 w-2.5">
+                <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                 </span>
-                <p className="text-xs font-bold text-slate-700 uppercase tracking-wider">3D Spatial Interactive Engine</p>
+                <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                  Live Interactive 3D Studio Engine
+                </span>
+              </div>
+
+              {/* Model Switcher Buttons */}
+              <div className="flex flex-wrap items-center gap-1.5 bg-white p-1 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">
+                {DEMO_MODELS.map((model, idx) => {
+                  const Icon = model.icon;
+                  const isActive = idx === activeModelIndex;
+                  return (
+                    <button
+                      key={model.id}
+                      onClick={() => setActiveModelIndex(idx)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
+                        isActive
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'hover:bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      <Icon size={14} />
+                      <span>{model.name}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-            <div className="h-[400px] flex items-center justify-center">
-              <LogoCube />
+
+            {/* 3D Showcase Grid (Viewer + Specs Panel) */}
+            <div className="grid lg:grid-cols-[1.5fr_1fr] items-stretch">
+              {/* 3D Interactive Canvas */}
+              <div className="relative h-[380px] sm:h-[460px] lg:h-[500px] w-full bg-white border-b lg:border-b-0 lg:border-r border-slate-100 overflow-hidden">
+                <ThreeProduct
+                  key={currentModel.id}
+                  modelUrl=""
+                  productName={currentModel.name}
+                  autoRotate={autoRotate}
+                />
+
+                {/* Canvas Control Overlay */}
+                <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-auto">
+                  <button
+                    onClick={() => setAutoRotate(!autoRotate)}
+                    className="flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white/90 px-3 py-2 text-xs font-semibold text-slate-700 shadow-md backdrop-blur-md hover:bg-white transition"
+                  >
+                    <RotateCw size={14} className={autoRotate ? 'animate-spin text-blue-600' : ''} />
+                    <span>{autoRotate ? 'Auto Rotating' : 'Rotate Off'}</span>
+                  </button>
+
+                  <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-3 py-2 text-xs font-bold text-slate-700 shadow-md backdrop-blur-md">
+                    <Box size={14} className="text-blue-600" />
+                    <span>Real-Time 3D Studio</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dynamic Product Info Panel */}
+              <div className="p-6 md:p-8 bg-slate-50/50 space-y-6 flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-md bg-blue-50 px-2.5 py-1 text-[11px] font-bold uppercase text-blue-700 border border-blue-100">
+                      {currentModel.category}
+                    </span>
+                    <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
+                      <ShieldCheck size={14} /> Verified CAD Asset
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl md:text-2xl font-extrabold text-slate-900">
+                    {currentModel.name}
+                  </h3>
+
+                  <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+                    {currentModel.desc}
+                  </p>
+
+                  <div className="space-y-2 pt-2 border-t border-slate-200/60">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Technical Highlights</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.entries(currentModel.specs).map(([key, val]) => (
+                        <div key={key} className="rounded-xl bg-white border border-slate-200/80 p-2.5 text-xs">
+                          <span className="block text-[10px] font-bold text-slate-400 uppercase">{key}</span>
+                          <span className="font-bold text-slate-900 block mt-0.5">{val}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 pt-4 border-t border-slate-200/60">
+                  <ViewInARButton
+                    title={currentModel.name}
+                    className="w-full h-12 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-md shadow-blue-600/20"
+                  />
+                  <Link
+                    to="/signup"
+                    className="flex w-full h-11 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
+                  >
+                    Configure Industrial Catalog <ArrowRight size={14} />
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Recommendations Section */}
-      <section className="bg-slate-50 px-4 py-20 md:px-6 border-y border-slate-100">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-10 flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-              <Sparkles className="text-blue-600" size={22} /> Recommended Industrial Assets
+      {/* ─── 3. ENTERPRISE PLATFORM CAPABILITIES ─────────────────────────────────── */}
+      <section className="bg-white py-20 px-4 md:px-8 border-y border-slate-200/80">
+        <div className="max-w-7xl mx-auto space-y-12">
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <h2 className="text-xs font-extrabold uppercase tracking-widest text-blue-600">
+              Enterprise Spatial Capabilities
             </h2>
+            <p className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Engineered for Industrial Sales & Product Marketing
+            </p>
+            <p className="text-sm text-slate-600">
+              Everything your organization needs to deploy immersive 3D catalogs, manage CAD assets, and capture qualified commercial leads.
+            </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {recommendations.map(r => (
-              <Card key={r.id} className="p-6 border-slate-200 bg-white hover:border-slate-300 transition shadow-sm">
-                <div className="h-36 bg-slate-50 rounded-xl mb-4 flex items-center justify-center border border-slate-100">
-                  <Box className="text-blue-500" size={40} />
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                icon: QrCode,
+                color: 'bg-blue-50 text-blue-600 border-blue-100',
+                title: 'Instant WebAR QR Handoff',
+                desc: 'Scan QR codes on desktop to automatically project 1:1 scale products in real-world environments via iOS Quick Look & Android SceneViewer.',
+              },
+              {
+                icon: Layers,
+                color: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+                title: 'CAD & 3D Asset Pipeline',
+                desc: 'Seamlessly upload GLB, USDZ, thumbnail imagery, technical PDF datasheets, and maintenance manuals in one unified dashboard.',
+              },
+              {
+                icon: BarChart3,
+                color: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                title: 'Spatial Telemetry & Funnel',
+                desc: 'Track user 3D interactions, rotation metrics, AR session lengths, document downloads, and high-intent quote requests.',
+              },
+              {
+                icon: Bot,
+                color: 'bg-purple-50 text-purple-600 border-purple-100',
+                title: 'Contextual AI Sales Assistant',
+                desc: 'Embedded AI chatbot answers technical product questions 24/7, handles specification inquiries, and escalates leads.',
+              },
+            ].map((feat, idx) => {
+              const Icon = feat.icon;
+              return (
+                <motion.div
+                  key={feat.title}
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="rounded-3xl border border-slate-200 bg-[#F8FAFC] p-6 shadow-xs hover:border-blue-200 hover:shadow-md transition space-y-4 flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${feat.color}`}>
+                      <Icon size={22} />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900">{feat.title}</h3>
+                    <p className="text-xs text-slate-600 leading-relaxed">{feat.desc}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 4. INDUSTRY USE CASES & APPLICATION USERS ─────────────────────────────── */}
+      <section className="py-20 px-4 md:px-8 bg-[#F8FAFC]">
+        <div className="max-w-7xl mx-auto space-y-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-200 pb-8">
+            <div className="space-y-2 max-w-2xl">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-600">Industry Applications</span>
+              <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                Designed for High-Value Physical Products
+              </h2>
+            </div>
+            <p className="text-xs text-slate-500 max-w-md">
+              From heavy industrial machinery to medical devices, I3DION Spatial delivers the spatial performance enterprise buyers demand.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              {
+                icon: Factory,
+                title: 'Heavy Machinery & Equipment',
+                items: ['Air Compressors & Turbines', 'Industrial Centrifugal Pumps', 'Power Generators & Transformers', 'Robotic Manufacturing Arms'],
+              },
+              {
+                icon: Car,
+                title: 'Automotive & Mobility',
+                items: ['Electric Vehicle Powertrains', 'Battery Module Assemblies', 'Custom Chassis & Suspension', 'Fleet Charging Infrastructure'],
+              },
+              {
+                icon: Cpu,
+                title: 'Aerospace & Electronics',
+                items: ['Avionics & Control Units', 'Precision Gas Turbines', 'Medical Imaging Systems', 'Server & Racking Infrastructure'],
+              },
+            ].map((sector) => {
+              const Icon = sector.icon;
+              return (
+                <div key={sector.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                      <Icon size={20} />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900">{sector.title}</h3>
+                  </div>
+                  <ul className="space-y-2 pt-2 border-t border-slate-100">
+                    {sector.items.map((item) => (
+                      <li key={item} className="flex items-center gap-2 text-xs font-medium text-slate-600">
+                        <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 className="font-bold text-lg text-slate-900">{r.name}</h3>
-                <p className="text-sm text-slate-500">{r.category}</p>
-                <div className="mt-4 flex justify-between items-center text-xs font-semibold text-blue-600">
-                  <span>Relevance Score</span>
-                  <span>{Math.round(r.score * 100)}%</span>
-                </div>
-                <div className="w-full bg-slate-100 h-1.5 rounded-full mt-1.5">
-                  <div className="bg-gradient-to-r from-blue-500 to-indigo-500 h-1.5 rounded-full" style={{ width: `${r.score * 100}%` }} />
-                </div>
-              </Card>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 5. STEP-BY-STEP WORKFLOW ────────────────────────────────────────────── */}
+      <section className="py-20 px-4 md:px-8 bg-white border-y border-slate-200/80">
+        <div className="max-w-7xl mx-auto space-y-12">
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-600">End-to-End Workflow</span>
+            <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">How I3DION Spatial Works</h2>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { num: '01', title: 'Upload 3D Models', desc: 'Drag and drop your GLB, USDZ, thumbnails, and technical datasheets.' },
+              { num: '02', title: 'Auto-Generate QR', desc: 'System automatically compiles studio lighting and outputs dynamic spatial QR codes.' },
+              { num: '03', title: 'Customer WebAR', desc: 'Buyers scan QR with their phone camera to project products in 1:1 real-world scale.' },
+              { num: '04', title: 'Conversion & Leads', desc: 'Capture commercial quote requests, document downloads, and sales interactions.' },
+            ].map((step) => (
+              <div key={step.num} className="rounded-3xl border border-slate-200 bg-[#F8FAFC] p-6 space-y-3 relative">
+                <span className="text-3xl font-black text-blue-600/30">{step.num}</span>
+                <h3 className="text-base font-bold text-slate-900">{step.title}</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">{step.desc}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Expanded Professional Footer */}
-      <footer className="border-t border-slate-200 bg-white px-6 py-12 text-sm text-slate-600">
-        <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          <div className="space-y-4">
+      {/* ─── 6. ENTERPRISE STATS BANNER ────────────────────────────────────────── */}
+      <section className="py-16 px-4 md:px-8 bg-slate-900 text-white">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div>
+            <p className="text-3xl md:text-4xl font-extrabold text-blue-400">99.9%</p>
+            <p className="mt-1 text-xs text-slate-400 font-medium uppercase tracking-wider">WebAR Session Uptime</p>
+          </div>
+          <div>
+            <p className="text-3xl md:text-4xl font-extrabold text-blue-400">&lt; 2.5s</p>
+            <p className="mt-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Average 3D Load Time</p>
+          </div>
+          <div>
+            <p className="text-3xl md:text-4xl font-extrabold text-blue-400">120+</p>
+            <p className="mt-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Enterprise Catalogs</p>
+          </div>
+          <div>
+            <p className="text-3xl md:text-4xl font-extrabold text-blue-400">50,000+</p>
+            <p className="mt-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Spatial Events Tracked</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 7. MINIMAL ENTERPRISE LIGHT FOOTER ───────────────────────────────────── */}
+      <footer className="border-t border-slate-200 bg-white px-6 py-12 text-xs text-slate-600">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+          <div className="space-y-3">
             <Logo />
-            <p className="text-slate-500 mt-4 leading-relaxed">
-              Empowering enterprises with next-generation spatial computing, 3D visualization, and AR technologies for superior product experiences.
+            <p className="text-slate-500 leading-relaxed text-xs">
+              Next-generation spatial computing, 3D visualization, and AR platform for enterprise industrial products.
             </p>
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 mb-4 uppercase tracking-wider text-xs">Products</h3>
-            <ul className="space-y-3 text-slate-500">
-              <li><Link to="/spatial-hub" className="hover:text-blue-600 transition">Spatial Hub</Link></li>
-              <li><Link to="#" className="hover:text-blue-600 transition">3D Viewer Engine</Link></li>
-              <li><Link to="#" className="hover:text-blue-600 transition">AR Applets</Link></li>
-              <li><Link to="#" className="hover:text-blue-600 transition">Lead Capture Integrations</Link></li>
+            <h3 className="font-bold text-slate-900 mb-3 uppercase tracking-wider text-[11px]">Platform</h3>
+            <ul className="space-y-2 text-slate-500">
+              <li><Link to="/hub" className="hover:text-blue-600 transition">Spatial Hub</Link></li>
+              <li><Link to="/login" className="hover:text-blue-600 transition">3D Studio Engine</Link></li>
+              <li><Link to="/login" className="hover:text-blue-600 transition">WebAR QR Handoff</Link></li>
+              <li><Link to="/login" className="hover:text-blue-600 transition">Lead Capture System</Link></li>
             </ul>
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 mb-4 uppercase tracking-wider text-xs">Company</h3>
-            <ul className="space-y-3 text-slate-500">
-              <li><Link to="#" className="hover:text-blue-600 transition">About Us</Link></li>
-              <li><Link to="#" className="hover:text-blue-600 transition">Careers</Link></li>
-              <li><Link to="#" className="hover:text-blue-600 transition">Partners</Link></li>
-              <li><Link to="#" className="hover:text-blue-600 transition">Contact Sales</Link></li>
+            <h3 className="font-bold text-slate-900 mb-3 uppercase tracking-wider text-[11px]">Solutions</h3>
+            <ul className="space-y-2 text-slate-500">
+              <li><span className="text-slate-600">Heavy Machinery</span></li>
+              <li><span className="text-slate-600">Automotive Engineering</span></li>
+              <li><span className="text-slate-600">Energy & Utilities</span></li>
+              <li><span className="text-slate-600">Medical Devices</span></li>
             </ul>
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 mb-4 uppercase tracking-wider text-xs">Legal</h3>
-            <ul className="space-y-3 text-slate-500">
-              <li><Link to="#" className="hover:text-blue-600 transition">Privacy Policy</Link></li>
-              <li><Link to="#" className="hover:text-blue-600 transition">Terms of Service</Link></li>
-              <li><Link to="#" className="hover:text-blue-600 transition">Cookie Policy</Link></li>
-              <li><Link to="#" className="hover:text-blue-600 transition">Security</Link></li>
+            <h3 className="font-bold text-slate-900 mb-3 uppercase tracking-wider text-[11px]">Account</h3>
+            <ul className="space-y-2 text-slate-500">
+              <li><Link to="/login" className="hover:text-blue-600 transition">Sign In</Link></li>
+              <li><Link to="/signup" className="hover:text-blue-600 transition">Register Workspace</Link></li>
+              <li><Link to="/support" className="hover:text-blue-600 transition">Support & Documentation</Link></li>
             </ul>
           </div>
         </div>
-        <div className="mx-auto max-w-7xl border-t border-slate-100 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto border-t border-slate-100 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-slate-400">
           <p>© 2026 I3DION Spatial Enterprise. All rights reserved.</p>
           <div className="flex gap-4">
-            <span className="cursor-pointer hover:text-blue-600">Twitter</span>
-            <span className="cursor-pointer hover:text-blue-600">LinkedIn</span>
-            <span className="cursor-pointer hover:text-blue-600">GitHub</span>
+            <span className="hover:text-slate-600 transition">Privacy Policy</span>
+            <span className="hover:text-slate-600 transition">Terms of Service</span>
+            <span className="hover:text-slate-600 transition">Security</span>
           </div>
         </div>
       </footer>
