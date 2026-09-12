@@ -124,6 +124,7 @@ class TrackingService {
       source: metadata.source || (typeof window !== 'undefined' ? window.location.pathname : 'direct'),
       metadata: {
         ...metadata,
+        slug: slug || metadata.slug,
         deviceCategory: typeof window !== 'undefined' && window.innerWidth < 768 ? 'mobile' : 'desktop',
       },
       activeDurationSeconds: this.getActiveTimeSeconds(),
