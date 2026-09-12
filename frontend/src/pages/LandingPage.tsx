@@ -143,19 +143,22 @@ export function LandingPage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-wrap items-center justify-center gap-3 pt-2"
+            className="flex flex-wrap items-center justify-center gap-3.5 pt-3"
           >
             <Link
               to="/signup"
-              className="inline-flex h-13 items-center justify-center gap-2.5 rounded-2xl bg-blue-600 px-8 text-sm font-bold text-white shadow-lg shadow-blue-600/25 hover:bg-blue-500 transition active:scale-95 border border-blue-500"
+              className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-200 active:scale-[0.98]"
             >
-              Start Free Enterprise Trial <ArrowRight size={18} />
+              <span>Start Free Enterprise Trial</span>
+              <ArrowRight size={17} className="transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
+
             <Link
               to="/hub"
-              className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-7 text-sm font-bold text-slate-700 hover:bg-slate-50 transition active:scale-95 shadow-xs"
+              className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-6 text-sm font-semibold text-slate-800 shadow-xs hover:bg-slate-50 hover:border-slate-400 hover:shadow-sm transition-all duration-200 active:scale-[0.98]"
             >
-              <Globe2 size={18} className="text-blue-600" /> Explore Spatial Hub
+              <Globe2 size={17} className="text-slate-500 group-hover:text-blue-600 transition-colors duration-200" />
+              <span>Explore Spatial Hub</span>
             </Link>
           </motion.div>
         </div>
