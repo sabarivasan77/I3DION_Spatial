@@ -14,7 +14,12 @@ import {
   Check,
   ShieldCheck,
   Cpu,
-  Smartphone
+  Smartphone,
+  Layers,
+  Eye,
+  Play,
+  RotateCcw,
+  Pause
 } from 'lucide-react';
 import ThreeProduct from '../components/ThreeProduct';
 import { ViewInARButton } from '../components/ViewInARButton';
@@ -56,6 +61,31 @@ export function PublicProductPage() {
   const [leadIntent, setLeadIntent] = useState<'quote' | 'demo' | 'brochure' | 'contact'>('quote');
   const [copied, setCopied] = useState(false);
   const [arIntentModal, setArIntentModal] = useState(false);
+
+  // 3D View Modes & Animations State
+  const [renderMode, setRenderMode] = useState<'solid' | 'wireframe' | 'xray'>('solid');
+  const [hasAnimations, setHasAnimations] = useState(false);
+  const [animationSpeed, setAnimationSpeed] = useState<number>(0); // 0 = stopped, 1 = forward, -1 = reverse
+
+  const handleToggleRenderMode = (mode: 'solid' | 'wireframe' | 'xray') => {
+    setRenderMode(mode);
+    if (product?.id) {
+      void Tracker.track('viewer_mode_changed', product.id, { mode, slug });
+    }
+  };
+
+  const handleToggleAnimation = () => {
+    if (animationSpeed === 0) {
+      setAnimationSpeed(1); // Forward Play
+      if (product?.id) void Tracker.track('model_animated', product.id, { direction: 'forward', slug });
+    } else if (animationSpeed === 1) {
+      setAnimationSpeed(-1); // Reverse Play
+      if (product?.id) void Tracker.track('model_animated', product.id, { direction: 'reverse', slug });
+    } else {
+      setAnimationSpeed(0); // Pause / Reset
+      if (product?.id) void Tracker.track('model_animated', product.id, { direction: 'stopped', slug });
+    }
+  };
 
   const { returningVisitor, visitorInfo, trackEvent } = useVisitorSession(slug, product?.organization_id);
 
@@ -319,36 +349,100 @@ export function PublicProductPage() {
                 modelUrl={product.model_url || ''}
                 productName={product.name}
                 autoRotate={autoRotate}
+                renderMode={renderMode}
+                animationSpeed={animationSpeed}
+                onHasAnimations={(has) => setHasAnimations(has)}
               />
             </div>
 
             {/* Viewer Control Bar Overlay (Touch Targets >= 44px) */}
-            <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-auto">
-              <div className="flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white/90 p-1.5 backdrop-blur-xl shadow-md">
+            <div className="absolute bottom-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-auto">
+              {/* LEFT GROUP: Render Modes & Animation */}
+              <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-slate-200 bg-white/95 p-1.5 backdrop-blur-xl shadow-md text-xs">
+                {/* Render Mode Pills */}
+                <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/60 font-semibold">
+                  <button
+                    onClick={() => handleToggleRenderMode('solid')}
+                    title="Solid Geometry Mode"
+                    className={`flex h-9 items-center gap-1.5 px-3 rounded-lg transition ${
+                      renderMode === 'solid' ? 'bg-blue-600 text-white font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                    }`}
+                  >
+                    <Box size={14} />
+                    <span>Solid</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleToggleRenderMode('wireframe')}
+                    title="CAD Wireframe Mesh Mode"
+                    className={`flex h-9 items-center gap-1.5 px-3 rounded-lg transition ${
+                      renderMode === 'wireframe' ? 'bg-blue-600 text-white font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                    }`}
+                  >
+                    <Layers size={14} />
+                    <span>Wireframe</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleToggleRenderMode('xray')}
+                    title="Translucent X-Ray Shell Mode"
+                    className={`flex h-9 items-center gap-1.5 px-3 rounded-lg transition ${
+                      renderMode === 'xray' ? 'bg-blue-600 text-white font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                    }`}
+                  >
+                    <Eye size={14} />
+                    <span>X-Ray</span>
+                  </button>
+                </div>
+
+                {/* Conditional Animation Button */}
+                {hasAnimations && (
+                  <button
+                    onClick={handleToggleAnimation}
+                    title={
+                      animationSpeed === 0 ? 'Play Animation' :
+                      animationSpeed === 1 ? 'Re-click for Reverse Playback' : 'Pause Animation'
+                    }
+                    className={`flex h-9 items-center gap-1.5 px-3.5 rounded-xl font-bold transition border ${
+                      animationSpeed === 1
+                        ? 'bg-emerald-600 text-white border-emerald-500 shadow-xs'
+                        : animationSpeed === -1
+                        ? 'bg-amber-600 text-white border-amber-500 shadow-xs'
+                        : 'bg-white text-slate-700 hover:bg-slate-100 border-slate-200'
+                    }`}
+                  >
+                    {animationSpeed === 0 && <Play size={14} className="text-emerald-600 fill-emerald-600" />}
+                    {animationSpeed === 1 && <RotateCcw size={14} className="animate-spin" style={{ animationDuration: '4s' }} />}
+                    {animationSpeed === -1 && <Pause size={14} />}
+                    <span>
+                      {animationSpeed === 0 ? 'Animation' :
+                       animationSpeed === 1 ? 'Playing (Click: Reverse)' : 'Reversed (Click: Pause)'}
+                    </span>
+                  </button>
+                )}
+              </div>
+
+              {/* RIGHT GROUP: Auto Rotate & Fullscreen */}
+              <div className="flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white/95 p-1.5 backdrop-blur-xl shadow-md">
                 <button
                   onClick={() => setAutoRotate(!autoRotate)}
-                  title={autoRotate ? 'Pause Rotation' : 'Auto Rotate'}
+                  title={autoRotate ? 'Pause Auto Rotation' : 'Enable Auto Rotation'}
                   aria-label="Toggle Auto Rotation"
-                  className={`flex h-11 w-11 items-center justify-center rounded-xl transition ${
+                  className={`flex h-9 w-9 items-center justify-center rounded-xl transition ${
                     autoRotate ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  <RotateCw size={18} className={autoRotate ? 'animate-spin' : ''} style={{ animationDuration: '10s' }} />
+                  <RotateCw size={16} className={autoRotate ? 'animate-spin' : ''} style={{ animationDuration: '10s' }} />
                 </button>
 
                 <button
                   onClick={toggleFullscreen}
-                  title="Fullscreen"
+                  title="Fullscreen View"
                   aria-label="Toggle Fullscreen"
-                  className="flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 transition"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 transition"
                 >
-                  {fullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+                  {fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
                 </button>
-              </div>
-
-              <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-3 py-1.5 backdrop-blur-xl shadow-md text-xs font-semibold text-slate-600">
-                <Box size={14} className="text-blue-600" />
-                <span>3D Interactive Studio</span>
               </div>
             </div>
           </div>

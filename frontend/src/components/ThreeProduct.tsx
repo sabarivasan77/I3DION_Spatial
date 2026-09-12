@@ -2,6 +2,7 @@ import { Component, ReactNode, Suspense, useRef, useState, useEffect } from 'rea
 import { Canvas, useFrame } from '@react-three/fiber';
 import { 
   useGLTF, 
+  useAnimations,
   Environment, 
   ContactShadows, 
   OrbitControls, 
@@ -54,14 +55,42 @@ class GLTFErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState
 function RealModel({ 
   url, 
   renderMode = 'solid',
-  themeMode = 'light'
+  themeMode = 'light',
+  animationSpeed = 0,
+  onHasAnimations
 }: { 
   url: string; 
   renderMode?: RenderMode;
   themeMode?: ThemeMode;
+  animationSpeed?: number;
+  onHasAnimations?: (has: boolean) => void;
 }) {
-  const { scene } = useGLTF(url);
+  const { scene, animations } = useGLTF(url);
   const clonedScene = useRef<Group>(null);
+  const { actions, names } = useAnimations(animations, clonedScene);
+
+  useEffect(() => {
+    if (animations && animations.length > 0) {
+      onHasAnimations?.(true);
+    } else {
+      onHasAnimations?.(false);
+    }
+  }, [animations, onHasAnimations]);
+
+  useEffect(() => {
+    if (!names || names.length === 0) return;
+    const actionName = names[0];
+    const action = actions[actionName];
+    if (!action) return;
+
+    if (animationSpeed === 0) {
+      action.stop();
+    } else {
+      action.reset();
+      action.timeScale = animationSpeed;
+      action.play();
+    }
+  }, [actions, names, animationSpeed]);
 
   useEffect(() => {
     if (!clonedScene.current) return;
@@ -121,25 +150,44 @@ function RealModel({
 function DetailedProceduralModel({ 
   productName, 
   renderMode = 'solid',
-  themeMode: _themeMode = 'light'
+  themeMode: _themeMode = 'light',
+  animationSpeed = 0,
+  onHasAnimations
 }: { 
   productName?: string; 
   renderMode?: RenderMode; 
   themeMode?: ThemeMode;
+  animationSpeed?: number;
+  onHasAnimations?: (has: boolean) => void;
 }) {
   const mainGroup = useRef<Group>(null);
   const internalRotor = useRef<Group>(null);
   const fanBlades = useRef<Group>(null);
 
+  useEffect(() => {
+    // Procedural models always support animation
+    onHasAnimations?.(true);
+  }, [onHasAnimations]);
+
   useFrame((_, delta) => {
     if (mainGroup.current) {
       mainGroup.current.rotation.y += delta * 0.15;
     }
-    if (internalRotor.current) {
-      internalRotor.current.rotation.z += delta * 1.2;
-    }
-    if (fanBlades.current) {
-      fanBlades.current.rotation.z += delta * 2.0;
+    if (animationSpeed !== 0) {
+      const speedMult = animationSpeed;
+      if (internalRotor.current) {
+        internalRotor.current.rotation.z += delta * 2.5 * speedMult;
+      }
+      if (fanBlades.current) {
+        fanBlades.current.rotation.z += delta * 4.0 * speedMult;
+      }
+    } else {
+      if (internalRotor.current) {
+        internalRotor.current.rotation.z += delta * 0.5;
+      }
+      if (fanBlades.current) {
+        fanBlades.current.rotation.z += delta * 0.8;
+      }
     }
   });
 
@@ -348,7 +396,9 @@ export default function ThreeProduct({
   productName,
   renderMode = 'solid',
   themeMode = 'light',
-  className = ''
+  className = '',
+  animationSpeed = 0,
+  onHasAnimations
 }: { 
   modelUrl?: string;
   autoRotate?: boolean;
@@ -356,6 +406,8 @@ export default function ThreeProduct({
   renderMode?: RenderMode;
   themeMode?: ThemeMode;
   className?: string;
+  animationSpeed?: number;
+  onHasAnimations?: (hasAnimations: boolean) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -408,11 +460,11 @@ export default function ThreeProduct({
           <Bounds fit clip observe margin={1.2}>
             <Suspense fallback={null}>
               {modelUrl ? (
-                <GLTFErrorBoundary fallback={<DetailedProceduralModel productName={productName} renderMode={renderMode} themeMode={themeMode} />}>
-                  <RealModel url={modelUrl} renderMode={renderMode} themeMode={themeMode} />
+                <GLTFErrorBoundary fallback={<DetailedProceduralModel productName={productName} renderMode={renderMode} themeMode={themeMode} animationSpeed={animationSpeed} onHasAnimations={onHasAnimations} />}>
+                  <RealModel url={modelUrl} renderMode={renderMode} themeMode={themeMode} animationSpeed={animationSpeed} onHasAnimations={onHasAnimations} />
                 </GLTFErrorBoundary>
               ) : (
-                <DetailedProceduralModel productName={productName} renderMode={renderMode} themeMode={themeMode} />
+                <DetailedProceduralModel productName={productName} renderMode={renderMode} themeMode={themeMode} animationSpeed={animationSpeed} onHasAnimations={onHasAnimations} />
               )}
             </Suspense>
           </Bounds>
