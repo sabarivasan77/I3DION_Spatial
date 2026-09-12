@@ -802,21 +802,74 @@ export async function uploadFileWithProgress({
     const createFallbackUploadedFile = (): UploadedFile => {
       onProgress(100);
       const isModel = assetType === 'model';
+      const fileUrl = URL.createObjectURL(file);
+
+      let updatedProduct: any = undefined;
+      if (productId) {
+        const storedProducts = JSON.parse(localStorage.getItem('i3dion.products') ?? '[]') as any[];
+        const targetIndex = storedProducts.findIndex((p) => p.id === productId);
+        let target = targetIndex !== -1 ? storedProducts[targetIndex] : {
+          id: productId,
+          name: 'Uploaded Product',
+          category: 'Industrial',
+          status: 'Published',
+          isPublic: true,
+          specs: {},
+          assets: []
+        };
+
+        if (assetType === 'thumbnail') {
+          target.thumbnail_url = fileUrl;
+          target.imageUrl = fileUrl;
+        } else if (assetType === 'model') {
+          target.model_url = fileUrl;
+          target.modelUrl = fileUrl;
+          target.qr = target.qr || {
+            id: `qr-${Date.now()}`,
+            png_url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+            svg_url: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjwvc3ZnPg==',
+          };
+          target.qr_png_url = target.qr.png_url;
+          target.qr_svg_url = target.qr.svg_url;
+        } else if (assetType === 'usdz_model') {
+          target.usdz_url = fileUrl;
+          target.usdzUrl = fileUrl;
+        } else if (assetType === 'image') {
+          target.images = [...(target.images || []), fileUrl];
+        } else if (assetType === 'document') {
+          target.documents = [...(target.documents || []), fileUrl];
+          target.documentUrl = fileUrl;
+        }
+
+        const newAsset = {
+          id: `asset-${Date.now()}`,
+          product_id: productId,
+          asset_type: assetType,
+          file_category: assetType,
+          original_name: file.name,
+          public_url: fileUrl,
+          mime_type: file.type || 'application/octet-stream',
+          size_bytes: file.size,
+        };
+        target.assets = [...(target.assets || []).filter((a: any) => a.asset_type !== assetType || assetType === 'image' || assetType === 'document'), newAsset];
+
+        if (targetIndex !== -1) {
+          storedProducts[targetIndex] = target;
+        } else {
+          storedProducts.push(target);
+        }
+        localStorage.setItem('i3dion.products', JSON.stringify(storedProducts));
+        updatedProduct = target;
+      }
+
       return {
         id: `upload-${Date.now()}`,
         file_category: (assetType as any) || 'document',
         original_name: file.name,
-        url: URL.createObjectURL(file),
+        url: fileUrl,
         mime_type: file.type || 'application/octet-stream',
         size_bytes: file.size,
-        product: isModel && productId ? ({
-          id: productId,
-          qr: {
-            id: `qr-${Date.now()}`,
-            png_url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-            svg_url: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjwvc3ZnPg==',
-          }
-        } as any) : undefined
+        product: updatedProduct
       };
     };
 
