@@ -4,7 +4,6 @@ import {
   ArrowLeft, 
   Box, 
   Share2, 
-  QrCode, 
   CheckCircle2, 
   Layers, 
   Maximize2, 
