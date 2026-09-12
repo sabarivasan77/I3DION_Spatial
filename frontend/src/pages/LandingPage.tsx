@@ -70,11 +70,7 @@ export function LandingPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-10%,rgba(37,99,235,0.12),rgba(255,255,255,0))]" />
         
         {/* Floating Motion Graphics Particles (Subtle Accent) */}
-        <motion.div
-          animate={{ y: [0, -12, 0], opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-20 left-[8%] hidden lg:block"
-        >
+        <div className="absolute top-20 left-[8%] hidden lg:block animate-bounce" style={{ animationDuration: '6s' }}>
           <div className="flex items-center gap-2 rounded-2xl border border-blue-200/80 bg-white/80 p-3 backdrop-blur-md shadow-lg">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
               <Zap size={18} />
@@ -84,13 +80,9 @@ export function LandingPage() {
               <p className="text-[10px] text-slate-500">WebAR Product Demos</p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          animate={{ y: [0, 14, 0], opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-          className="absolute top-28 right-[8%] hidden lg:block"
-        >
+        <div className="absolute top-28 right-[8%] hidden lg:block animate-bounce" style={{ animationDuration: '7s', animationDelay: '1s' }}>
           <div className="flex items-center gap-2 rounded-2xl border border-emerald-200/80 bg-white/80 p-3 backdrop-blur-md shadow-lg">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
               <Smartphone size={18} />
@@ -100,51 +92,31 @@ export function LandingPage() {
               <p className="text-[10px] text-slate-500">1:1 Real-Scale AR</p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         <div className="relative z-10 max-w-4xl mx-auto space-y-6">
           {/* Tagline Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/90 px-4 py-1.5 text-xs font-semibold text-blue-700 shadow-xs"
-          >
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/90 px-4 py-1.5 text-xs font-semibold text-blue-700 shadow-xs">
             <Sparkles size={14} className="animate-pulse text-blue-600" />
             <span>Next-Gen Enterprise Industrial Product Showcase & WebAR Platform</span>
-          </motion.div>
+          </div>
 
           {/* Hero Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.15]"
-          >
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.15]">
             Transform Physical Products into{' '}
             <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 bg-clip-text text-transparent">
               Interactive Monochromatic 3D & WebAR
             </span>{' '}
             Experiences
-          </motion.h1>
+          </h1>
 
           {/* Hero Subtitle */}
-          <motion.p
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-base sm:text-lg leading-relaxed text-slate-600 mx-auto max-w-2xl font-normal"
-          >
+          <p className="text-base sm:text-lg leading-relaxed text-slate-600 mx-auto max-w-2xl font-normal">
             Empower technical buyers and enterprise customers to inspect CAD models in real-time, toggle X-Ray structures, and launch instant 1:1 scale AR directly via mobile QR.
-          </motion.p>
+          </p>
 
           {/* Hero Action CTAs */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-wrap items-center justify-center gap-3.5 pt-3"
-          >
+          <div className="flex flex-wrap items-center justify-center gap-3.5 pt-3">
             <Link
               to="/signup"
               className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-200 active:scale-[0.98]"
@@ -160,7 +132,7 @@ export function LandingPage() {
               <Globe2 size={17} className="text-slate-500 group-hover:text-blue-600 transition-colors duration-200" />
               <span>Explore Spatial Hub</span>
             </Link>
-          </motion.div>
+          </div>
         </div>
 
         {/* ─── 2. HIGH-IMPACT MONOCHROMATIC 3D STUDIO SHOWCASE ───────────────────── */}
