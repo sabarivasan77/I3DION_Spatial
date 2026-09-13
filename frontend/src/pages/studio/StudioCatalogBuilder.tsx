@@ -31,7 +31,8 @@ import {
   LayoutGrid,
   Database,
   Sliders,
-  Settings
+  Settings,
+  Sparkles
 } from 'lucide-react';
 import { studioApi, StudioProject } from '../../api/studioApi';
 import { vaultApi } from '../../api/vaultApi';
@@ -119,7 +120,7 @@ export const StudioCatalogBuilder: React.FC = () => {
       await vaultApi.getAssets();
     } catch (err) {
       console.error('Failed to load catalog builder:', err);
-    } finally {
+    } flex: {
       setLoading(false);
     }
   };
@@ -142,10 +143,10 @@ export const StudioCatalogBuilder: React.FC = () => {
 
   if (loading || !project) {
     return (
-      <div className="h-screen bg-[#0B0F19] text-white flex items-center justify-center">
+      <div className="h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] text-slate-900 dark:text-white flex items-center justify-center">
         <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs text-slate-400 font-mono">Loading OmniStudio Canvas Builder...</p>
+          <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs text-slate-500 font-mono">Loading OmniStudio Canvas Builder...</p>
         </div>
       </div>
     );
@@ -153,22 +154,22 @@ export const StudioCatalogBuilder: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col bg-[#F1F5F9] dark:bg-[#0B0F19] text-slate-900 dark:text-slate-100 overflow-hidden font-sans selection:bg-indigo-500 selection:text-white">
-      {/* 1. Clean Top Bar (Exact matching Screenshot 2) */}
-      <header className="h-14 bg-white dark:bg-[#0D111D] border-b border-slate-200 dark:border-slate-800/80 px-4 flex items-center justify-between shrink-0 z-30 shadow-sm">
-        {/* Left: Collapsed Nav & Breadcrumb */}
+      {/* 1. Clean Top Bar (Exact matching Annotated Screenshot 2) */}
+      <header className="h-14 bg-white dark:bg-[#0D111D] border-b border-slate-200 dark:border-slate-800 px-4 flex items-center justify-between shrink-0 z-30 shadow-xs">
+        {/* Left: Collapsed Nav (Hamburger Menu) & Breadcrumb */}
         <div className="flex items-center gap-3">
           <button 
             onClick={() => navigate('/omni-studio')}
             className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
-            title="Menu / Exit to Studio"
+            title="Collapsed Navigation (Hamburger Menu)"
           >
             <Menu className="w-5 h-5" />
           </button>
 
           <div className="flex items-center gap-2 text-xs">
-            <span className="font-bold text-slate-900 dark:text-white tracking-wide">I3DION SPATIAL</span>
+            <span className="font-extrabold text-slate-900 dark:text-white tracking-wide">I3DION SPATIAL</span>
             <span className="text-slate-400">›</span>
-            <span className="text-slate-500 dark:text-slate-400 font-medium">OmniStudio</span>
+            <span className="text-slate-500 dark:text-slate-400 font-semibold">OmniStudio</span>
             <span className="text-slate-400">›</span>
             
             {isEditingTitle ? (
@@ -177,13 +178,13 @@ export const StudioCatalogBuilder: React.FC = () => {
                 value={projectTitle}
                 onChange={(e) => setProjectTitle(e.target.value)}
                 onBlur={() => setIsEditingTitle(false)}
-                className="px-2 py-0.5 text-xs font-bold bg-slate-100 dark:bg-slate-800 border border-indigo-500 rounded text-slate-900 dark:text-white outline-none"
+                className="px-2 py-0.5 text-xs font-bold bg-slate-100 dark:bg-slate-800 border border-blue-500 rounded text-slate-900 dark:text-white outline-none"
                 autoFocus
               />
             ) : (
               <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                 {projectTitle}
-                <button onClick={() => setIsEditingTitle(true)} className="text-slate-400 hover:text-indigo-600">
+                <button onClick={() => setIsEditingTitle(true)} className="text-slate-400 hover:text-blue-600">
                   <Edit3 className="w-3.5 h-3.5" />
                 </button>
               </span>
@@ -203,12 +204,12 @@ export const StudioCatalogBuilder: React.FC = () => {
             </button>
           </div>
 
-          {/* Responsive View Selector */}
+          {/* Responsive View Selector (Desktop / Tablet / Mobile) */}
           <div className="flex items-center bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
             <button
               onClick={() => setDevice('desktop')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition ${
-                device === 'desktop' ? 'bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-sm font-semibold' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-semibold transition ${
+                device === 'desktop' ? 'bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <Monitor className="w-3.5 h-3.5" />
@@ -217,8 +218,8 @@ export const StudioCatalogBuilder: React.FC = () => {
 
             <button
               onClick={() => setDevice('tablet')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition ${
-                device === 'tablet' ? 'bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-sm font-semibold' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-semibold transition ${
+                device === 'tablet' ? 'bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <Tablet className="w-3.5 h-3.5" />
@@ -227,8 +228,8 @@ export const StudioCatalogBuilder: React.FC = () => {
 
             <button
               onClick={() => setDevice('mobile')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition ${
-                device === 'mobile' ? 'bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-sm font-semibold' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-semibold transition ${
+                device === 'mobile' ? 'bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <Smartphone className="w-3.5 h-3.5" />
@@ -236,12 +237,12 @@ export const StudioCatalogBuilder: React.FC = () => {
             </button>
           </div>
 
-          {/* Canvas Zoom Controls */}
+          {/* Canvas Zoom Controls (50% - 200%) */}
           <div className="flex items-center gap-1 text-xs">
             <select
               value={zoomLevel}
               onChange={(e) => setZoomLevel(Number(e.target.value))}
-              className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-700 dark:text-slate-200 font-medium focus:outline-none"
+              className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-700 dark:text-slate-200 font-bold focus:outline-none"
             >
               <option value={50}>50%</option>
               <option value={75}>75%</option>
@@ -253,8 +254,8 @@ export const StudioCatalogBuilder: React.FC = () => {
           </div>
 
           {/* Timeline */}
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition">
-            <Clock className="w-3.5 h-3.5 text-indigo-500" />
+          <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition">
+            <Clock className="w-3.5 h-3.5 text-blue-600" />
             Timeline
           </button>
         </div>
@@ -263,16 +264,16 @@ export const StudioCatalogBuilder: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowPreview(true)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-xl transition"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/60 bg-blue-50/50 dark:bg-blue-950/40 hover:bg-blue-100 rounded-xl transition"
           >
-            <Play className="w-3.5 h-3.5 fill-indigo-600 dark:fill-indigo-400" />
+            <Play className="w-3.5 h-3.5 fill-blue-600 dark:fill-blue-400" />
             Preview
           </button>
 
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition disabled:opacity-50"
+            className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition disabled:opacity-50"
           >
             <Save className="w-3.5 h-3.5" />
             {saving ? 'Saving...' : 'Save'}
@@ -288,7 +289,7 @@ export const StudioCatalogBuilder: React.FC = () => {
             <MessageSquare className="w-4 h-4" />
           </button>
 
-          <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center shadow-sm">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
             SV
           </div>
         </div>
@@ -296,8 +297,8 @@ export const StudioCatalogBuilder: React.FC = () => {
 
       {/* Main 3-Column Studio Workbench */}
       <div className="flex-1 flex overflow-hidden">
-        {/* 2. Left Panel: Organized Widget Library (Exact matching Screenshot 2) */}
-        <aside className="w-72 bg-white dark:bg-[#0D111D] border-r border-slate-200 dark:border-slate-800/80 flex flex-col shrink-0">
+        {/* 2. Left Panel: Organized Widget Library (Categories with clear icons) */}
+        <aside className="w-72 bg-white dark:bg-[#0D111D] border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0">
           {/* Panel Header Tabs */}
           <div className="flex border-b border-slate-200 dark:border-slate-800 text-xs font-bold">
             <button
@@ -323,7 +324,7 @@ export const StudioCatalogBuilder: React.FC = () => {
           </div>
 
           {/* Search Widgets */}
-          <div className="p-3 border-b border-slate-200 dark:border-slate-800/60">
+          <div className="p-3 border-b border-slate-200 dark:border-slate-800">
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
               <input
@@ -346,8 +347,8 @@ export const StudioCatalogBuilder: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-2 pt-1">
-                <div className="p-2.5 bg-slate-50 dark:bg-[#141A29] hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 rounded-xl transition cursor-grab flex items-center gap-2.5">
-                  <div className="p-1.5 bg-red-100 dark:bg-red-950/60 text-red-500 rounded-lg">
+                <div className="p-2.5 bg-slate-50 dark:bg-[#141A29] hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 rounded-xl transition cursor-grab flex items-center gap-2.5">
+                  <div className="p-1.5 bg-red-100 text-red-500 rounded-lg">
                     <Type className="w-3.5 h-3.5" />
                   </div>
                   <div>
@@ -356,8 +357,8 @@ export const StudioCatalogBuilder: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-2.5 bg-slate-50 dark:bg-[#141A29] hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 rounded-xl transition cursor-grab flex items-center gap-2.5">
-                  <div className="p-1.5 bg-orange-100 dark:bg-orange-950/60 text-orange-500 rounded-lg">
+                <div className="p-2.5 bg-slate-50 dark:bg-[#141A29] hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 rounded-xl transition cursor-grab flex items-center gap-2.5">
+                  <div className="p-1.5 bg-orange-100 text-orange-500 rounded-lg">
                     <MousePointer className="w-3.5 h-3.5" />
                   </div>
                   <div>
@@ -366,18 +367,18 @@ export const StudioCatalogBuilder: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-2.5 bg-slate-50 dark:bg-[#141A29] hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 rounded-xl transition cursor-grab flex items-center gap-2.5">
-                  <div className="p-1.5 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-500 rounded-lg">
+                <div className="p-2.5 bg-slate-50 dark:bg-[#141A29] hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 rounded-xl transition cursor-grab flex items-center gap-2.5">
+                  <div className="p-1.5 bg-emerald-100 text-emerald-500 rounded-lg">
                     <ImageIcon className="w-3.5 h-3.5" />
                   </div>
                   <div>
                     <div className="font-bold text-slate-800 dark:text-slate-200 text-[11px]">Image</div>
-                    <div className="text-[9px] text-slate-400">Image with library</div>
+                    <div className="text-[9px] text-slate-400">Image with media library</div>
                   </div>
                 </div>
 
-                <div className="p-2.5 bg-slate-50 dark:bg-[#141A29] hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 rounded-xl transition cursor-grab flex items-center gap-2.5">
-                  <div className="p-1.5 bg-rose-100 dark:bg-rose-950/60 text-rose-500 rounded-lg">
+                <div className="p-2.5 bg-slate-50 dark:bg-[#141A29] hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 rounded-xl transition cursor-grab flex items-center gap-2.5">
+                  <div className="p-1.5 bg-rose-100 text-rose-500 rounded-lg">
                     <Video className="w-3.5 h-3.5" />
                   </div>
                   <div>
@@ -386,8 +387,8 @@ export const StudioCatalogBuilder: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-2.5 bg-slate-50 dark:bg-[#141A29] hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 rounded-xl transition cursor-grab flex items-center gap-2.5">
-                  <div className="p-1.5 bg-blue-100 dark:bg-blue-950/60 text-blue-500 rounded-lg">
+                <div className="p-2.5 bg-slate-50 dark:bg-[#141A29] hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 rounded-xl transition cursor-grab flex items-center gap-2.5">
+                  <div className="p-1.5 bg-blue-100 text-blue-500 rounded-lg">
                     <Star className="w-3.5 h-3.5" />
                   </div>
                   <div>
@@ -396,8 +397,8 @@ export const StudioCatalogBuilder: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-2.5 bg-slate-50 dark:bg-[#141A29] hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 rounded-xl transition cursor-grab flex items-center gap-2.5">
-                  <div className="p-1.5 bg-purple-100 dark:bg-purple-950/60 text-purple-500 rounded-lg">
+                <div className="p-2.5 bg-slate-50 dark:bg-[#141A29] hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 rounded-xl transition cursor-grab flex items-center gap-2.5">
+                  <div className="p-1.5 bg-purple-100 text-purple-500 rounded-lg">
                     <Square className="w-3.5 h-3.5" />
                   </div>
                   <div>
@@ -421,7 +422,7 @@ export const StudioCatalogBuilder: React.FC = () => {
             ].map((cat, idx) => (
               <div key={idx} className="p-2.5 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between cursor-pointer transition">
                 <div className="flex items-center gap-2.5 font-bold text-slate-700 dark:text-slate-300">
-                  <cat.icon className="w-4 h-4 text-blue-500" />
+                  <cat.icon className="w-4 h-4 text-blue-600" />
                   <span>{cat.name}</span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -430,7 +431,7 @@ export const StudioCatalogBuilder: React.FC = () => {
           </div>
         </aside>
 
-        {/* 3. Center Main Canvas (Exact matching Screenshot 2) */}
+        {/* 3. Center Main Canvas (Zoom, Drag, Drop, Edit 100%, 90%, 75%, 50%) */}
         <div className="flex-1 bg-slate-200 dark:bg-[#080B12] overflow-y-auto p-6 flex justify-center items-start relative">
           <div 
             className={`transition-all duration-300 ${
@@ -439,7 +440,7 @@ export const StudioCatalogBuilder: React.FC = () => {
             style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
           >
             {/* Canvas Outer Boundary Card */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-blue-500/80 shadow-2xl overflow-hidden relative">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-blue-500 shadow-2xl overflow-hidden relative">
               {/* Section Header Label Overlay */}
               <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5 px-2.5 py-1 bg-blue-600 text-white text-[10px] font-bold rounded shadow-md">
                 <Box className="w-3 h-3" />
@@ -463,7 +464,7 @@ export const StudioCatalogBuilder: React.FC = () => {
                     <span>Industries</span>
                     <span>Support</span>
                   </div>
-                  <button className="px-4 py-1.5 bg-blue-600 text-white font-semibold text-xs rounded-xl shadow-sm">
+                  <button className="px-4 py-1.5 bg-blue-600 text-white font-semibold text-xs rounded-xl shadow-xs">
                     Get a Quote
                   </button>
                 </div>
@@ -472,7 +473,7 @@ export const StudioCatalogBuilder: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center pt-4">
                   {/* Left Hero Content */}
                   <div className="space-y-5">
-                    <span className="text-xs font-bold tracking-widest text-blue-600 dark:text-blue-400 uppercase">
+                    <span className="text-xs font-bold tracking-widest text-blue-600 uppercase">
                       ENGINEERED FOR A CLEANER TOMORROW
                     </span>
 
@@ -501,27 +502,40 @@ export const StudioCatalogBuilder: React.FC = () => {
                   </div>
 
                   {/* Right Interactive 3D Model Display */}
-                  <div className="h-80 bg-gradient-to-tr from-slate-100 to-blue-50 dark:from-slate-800 dark:to-blue-950/40 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-center relative shadow-inner overflow-hidden">
-                    <div className="text-center space-y-2">
-                      <div className="w-40 h-40 mx-auto rounded-full bg-blue-600/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                        <Box className="w-24 h-24 animate-pulse" />
-                      </div>
-                      <span className="text-xs font-semibold text-slate-400 flex items-center justify-center gap-1">
-                        <MousePointer className="w-3.5 h-3.5" />
-                        Drag to rotate 3D Air Compressor
-                      </span>
+                  <div className="h-80 bg-gradient-to-tr from-slate-50 to-blue-50/60 dark:from-slate-800 dark:to-blue-950/40 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-center relative shadow-inner overflow-hidden group">
+                    <img 
+                      src="/images/industrial_compressor_3d.jpg" 
+                      alt="Industrial Compressor 3D Render" 
+                      className="h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
+                    />
+
+                    {/* Pagination Dots at Bottom Center */}
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xs px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-800 shadow-xs">
+                      <div className="w-2 h-2 rounded-full bg-blue-600" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+                    </div>
+
+                    {/* Drag to Rotate Badge at Bottom Right */}
+                    <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-full border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-300 shadow-xs">
+                      <MousePointer className="w-3 h-3 text-blue-600" />
+                      <span>Drag to rotate</span>
                     </div>
 
                     {/* Floating Viewport Toolbar */}
                     <div className="absolute right-3 top-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-1 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-1 text-slate-400 shadow-md">
-                      <button className="p-1.5 hover:text-blue-600 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="3D Viewport">
+                      <button className="p-1.5 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 rounded-lg" title="3D Viewport">
                         <Box className="w-4 h-4" />
                       </button>
                       <button className="p-1.5 hover:text-blue-600 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="Exploded View">
-                        <Layers className="w-4 h-4" />
+                        <ImageIcon className="w-4 h-4" />
                       </button>
                       <button className="p-1.5 hover:text-blue-600 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="Annotations">
-                        <Edit3 className="w-4 h-4" />
+                        <Type className="w-4 h-4" />
+                      </button>
+                      <button className="p-1.5 hover:text-blue-600 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="Rotate Controls">
+                        <Sliders className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -532,8 +546,8 @@ export const StudioCatalogBuilder: React.FC = () => {
                   <h3 className="text-xl font-bold text-center text-slate-900 dark:text-white">Key Features</h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm space-y-2 text-center">
-                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-xs space-y-2 text-center">
+                      <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
                         <Settings className="w-5 h-5" />
                       </div>
                       <h4 className="font-bold text-slate-900 dark:text-white text-sm">Superior Performance</h4>
@@ -542,8 +556,8 @@ export const StudioCatalogBuilder: React.FC = () => {
                       </p>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm space-y-2 text-center">
-                      <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-xs space-y-2 text-center">
+                      <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-3">
                         <Zap className="w-5 h-5" />
                       </div>
                       <h4 className="font-bold text-slate-900 dark:text-white text-sm">Smart Monitoring</h4>
@@ -552,8 +566,8 @@ export const StudioCatalogBuilder: React.FC = () => {
                       </p>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm space-y-2 text-center">
-                      <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-xs space-y-2 text-center">
+                      <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-3">
                         <ShieldCheck className="w-5 h-5" />
                       </div>
                       <h4 className="font-bold text-slate-900 dark:text-white text-sm">Built to Last</h4>
@@ -568,8 +582,8 @@ export const StudioCatalogBuilder: React.FC = () => {
           </div>
         </div>
 
-        {/* 4. Right Panel: Properties Inspector (Exact matching Screenshot 2) */}
-        <aside className="w-80 bg-white dark:bg-[#0D111D] border-l border-slate-200 dark:border-slate-800/80 flex flex-col shrink-0 text-xs">
+        {/* 4. Right Panel: Properties Inspector (Clean & Sectioned) */}
+        <aside className="w-80 bg-white dark:bg-[#0D111D] border-l border-slate-200 dark:border-slate-800 flex flex-col shrink-0 text-xs">
           {/* Properties Inspector Header Tabs */}
           <div className="flex border-b border-slate-200 dark:border-slate-800 font-bold">
             {(['content', 'style', 'layout', 'events'] as const).map((tab) => (
@@ -735,6 +749,69 @@ export const StudioCatalogBuilder: React.FC = () => {
             ))}
           </div>
         </aside>
+      </div>
+
+      {/* 5. Bottom Feature Highlight Cards (Exact matching Annotated Screenshot 2) */}
+      <div className="h-16 bg-white dark:bg-[#0D111D] border-t border-slate-200 dark:border-slate-800 px-4 flex items-center justify-between gap-3 text-xs shrink-0 overflow-x-auto shadow-inner">
+        <div className="flex items-center gap-3 p-2 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 rounded-xl min-w-[180px]">
+          <div className="p-2 bg-emerald-600 text-white rounded-lg shadow-xs">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="font-bold text-slate-900 dark:text-white">Clean & Modern UI</div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">Power Apps inspired</div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 p-2 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 rounded-xl min-w-[180px]">
+          <div className="p-2 bg-blue-600 text-white rounded-lg shadow-xs">
+            <Maximize2 className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="font-bold text-slate-900 dark:text-white">More Canvas Space</div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">Minimal UI, maximum focus</div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 p-2 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/50 rounded-xl min-w-[180px]">
+          <div className="p-2 bg-purple-600 text-white rounded-lg shadow-xs">
+            <Zap className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="font-bold text-slate-900 dark:text-white">Easy for Anyone</div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">Simple and Intuitive</div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 p-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 rounded-xl min-w-[180px]">
+          <div className="p-2 bg-amber-600 text-white rounded-lg shadow-xs">
+            <Box className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="font-bold text-slate-900 dark:text-white">All Core Features</div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">Nothing removed</div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 p-2 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-xl min-w-[180px]">
+          <div className="p-2 bg-rose-600 text-white rounded-lg shadow-xs">
+            <Play className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="font-bold text-slate-900 dark:text-white">Preview Mode</div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">Full customer experience</div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 p-2 bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-200 dark:border-cyan-900/50 rounded-xl min-w-[180px]">
+          <div className="p-2 bg-cyan-600 text-white rounded-lg shadow-xs">
+            <Monitor className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="font-bold text-slate-900 dark:text-white">Responsive Design</div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">Desktop • Tablet • Mobile</div>
+          </div>
+        </div>
       </div>
 
       {/* Preview Modal */}
