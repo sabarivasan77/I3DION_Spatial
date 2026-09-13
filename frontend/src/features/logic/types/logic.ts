@@ -86,3 +86,41 @@ export interface GraphValidationResult {
   errors: string[];
   warnings?: string[];
 }
+
+export type TriggerType = string;
+export type ActionType = string;
+
+export interface LogicCondition {
+  id: string;
+  type?: string;
+  field?: string;
+  operator?: string;
+  value?: any;
+  targetNodeId?: string;
+  propertyName?: string;
+}
+
+export interface LogicAction {
+  id: string;
+  type: ActionType;
+  target?: string;
+  payload?: any;
+  targetNodeId?: string;
+  propertyName?: string;
+  value?: any;
+}
+
+export interface LogicRule {
+  id: string;
+  name: string;
+  description?: string;
+  trigger?: TriggerType;
+  triggerType?: TriggerType;
+  sourceNodeId?: string;
+  conditions?: LogicCondition[];
+  actions?: LogicAction[];
+  enabled?: boolean;
+  isEnabled?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}

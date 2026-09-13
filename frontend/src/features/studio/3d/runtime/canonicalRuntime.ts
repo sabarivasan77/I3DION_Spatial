@@ -127,10 +127,10 @@ class CanonicalExperienceRuntime {
     }
 
     // Sync changes back to OmniStudio StudioStore if node exists
-    const studioStore = useStudioStore.getState();
-    const node = studioStore.experience.nodes[invocation.targetId];
+    const studioStore = useStudioStore.getState() as any;
+    const node = studioStore.experience?.nodes?.[invocation.targetId];
     if (node) {
-      studioStore.updateNodeProperties(invocation.targetId, {
+      studioStore.updateNodeProperties?.(invocation.targetId, {
         visible: state.visible,
         position3D: state.position,
         rotation3D: state.rotation,

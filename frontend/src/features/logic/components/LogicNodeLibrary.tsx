@@ -23,15 +23,7 @@ import {
   Plus,
   ChevronDown,
   ChevronRight,
-  Sliders,
-  Layers,
 } from 'lucide-react';
-
-interface CategoryGroup {
-  id: string;
-  name: string;
-  count: number;
-}
 
 export const LogicNodeLibrary: React.FC = () => {
   const { addNode, selectedNodeId, getActiveGraph } = useLogicCraftStore();
@@ -92,15 +84,15 @@ export const LogicNodeLibrary: React.FC = () => {
     Actions: [],
     Logic: [],
     Data: [
-      { type: 'get_var', name: 'Get Variable', description: 'Read state variable', category: 'logic', iconName: 'Database', inputPorts: [], outputPorts: [], defaultProperties: {} },
-      { type: 'set_var', name: 'Set Variable', description: 'Modify state variable', category: 'logic', iconName: 'Database', inputPorts: [], outputPorts: [], defaultProperties: {} },
+      { type: 'get_var', name: 'Get Variable', description: 'Read state variable', category: 'logic', iconName: 'Database', version: 1, inputPorts: [], outputPorts: [], defaultProperties: {} },
+      { type: 'set_var', name: 'Set Variable', description: 'Modify state variable', category: 'logic', iconName: 'Database', version: 1, inputPorts: [], outputPorts: [], defaultProperties: {} },
     ],
     UI: [
-      { type: 'show_panel', name: 'Show UI Panel', description: 'Display HUD panel', category: 'actions', iconName: 'Eye', inputPorts: [], outputPorts: [], defaultProperties: {} },
-      { type: 'show_tooltip', name: 'Show Tooltip', description: 'Show text tooltip', category: 'actions', iconName: 'HelpCircle', inputPorts: [], outputPorts: [], defaultProperties: {} },
+      { type: 'show_panel', name: 'Show UI Panel', description: 'Display HUD panel', category: 'actions', iconName: 'Eye', version: 1, inputPorts: [], outputPorts: [], defaultProperties: {} },
+      { type: 'show_tooltip', name: 'Show Tooltip', description: 'Show text tooltip', category: 'actions', iconName: 'HelpCircle', version: 1, inputPorts: [], outputPorts: [], defaultProperties: {} },
     ],
     Advanced: [
-      { type: 'call_function', name: 'Call Function', description: 'Execute iScript routine', category: 'logic', iconName: 'Sparkles', inputPorts: [], outputPorts: [], defaultProperties: {} },
+      { type: 'call_function', name: 'Call Function', description: 'Execute iScript routine', category: 'logic', iconName: 'Sparkles', version: 1, inputPorts: [], outputPorts: [], defaultProperties: {} },
     ],
   };
 

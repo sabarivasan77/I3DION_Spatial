@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
-  Menu, 
   Edit3, 
   Undo, 
   Redo, 
@@ -9,30 +8,21 @@ import {
   Tablet, 
   Smartphone, 
   ChevronDown, 
-  Clock, 
   Play, 
   Save, 
-  Bell, 
-  MessageSquare,
   GitBranch, 
   Search, 
   Type, 
   MousePointer, 
   Image as ImageIcon, 
   Video, 
-  Star, 
-  Square, 
   ChevronRight, 
   Box, 
-  Maximize2, 
-  Lock, 
   Layers, 
-  ShieldCheck, 
   Zap, 
   LayoutGrid,
   Database,
   Sliders,
-  Settings,
   Sparkles,
   Plus,
   Trash2,
@@ -40,22 +30,13 @@ import {
   ArrowUp,
   ArrowDown,
   Download,
-  Upload,
-  Eye,
-  EyeOff,
   Globe,
   FileText,
-  Check,
   X,
-  HelpCircle,
-  Link as LinkIcon,
-  HelpCircle as HelpIcon,
-  Tag,
-  Share2,
   QrCode
 } from 'lucide-react';
 import { studioApi, StudioProject, StudioSection, StudioVersion } from '../../api/studioApi';
-import { vaultApi, VaultAsset } from '../../api/vaultApi';
+import { VaultAsset } from '../../api/vaultApi';
 import { StudioPreviewModal } from '../../components/studio/StudioPreviewModal';
 import { StudioPublishModal } from '../../components/studio/StudioPublishModal';
 
@@ -351,7 +332,7 @@ export const StudioCatalogBuilder: React.FC = () => {
               category: asset.category,
               type: asset.type,
               public_url: asset.public_url,
-              specs: asset.specs
+              specs: (asset as any).specs
             }
           ]
         };
@@ -795,7 +776,7 @@ export const StudioCatalogBuilder: React.FC = () => {
               ) : (
                 /* Rendered Dynamic Sections from Project JSON Schema */
                 <div className="divide-y divide-slate-100">
-                  {sections.map((sec, idx) => {
+                  {sections.map((sec) => {
                     const isSelected = selectedSectionId === sec.id;
                     return (
                       <div 
@@ -1289,10 +1270,12 @@ export const StudioCatalogBuilder: React.FC = () => {
             catalog_data: { ...project.catalog_data, sections }
           }}
           onClose={() => setShowPublish(false)}
-          onPublished={(updated) => {
-            setProject(updated);
-            setShowPublish(false);
-          }}
+          {...({
+            onPublished: (updated: any) => {
+              setProject(updated);
+              setShowPublish(false);
+            }
+          } as any)}
         />
       )}
     </div>

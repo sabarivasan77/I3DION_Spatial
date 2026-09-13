@@ -181,7 +181,7 @@ export const useCollaborationStore = create<CollaborationState>((set, get) => ({
     const targetId = currentDocument ? currentDocument.id : 'exp_default_01';
     api.updatePresence(targetId, editingSection).then((activeCollaborators) => {
       if (activeCollaborators) {
-        set({ collaborators: activeCollaborators });
+        set({ collaborators: activeCollaborators as unknown as CollaboratorPresence[] });
       }
     });
   },

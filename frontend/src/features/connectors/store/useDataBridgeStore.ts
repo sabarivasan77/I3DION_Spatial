@@ -68,7 +68,7 @@ export const useDataBridgeStore = create<DataBridgeStore>((set, get) => ({
     const connector = connectorRegistry.getConnector(id);
     if (connector) {
       const newState = connector.state === 'DISABLED' ? 'ACTIVE' : 'DISABLED';
-      const updated = { ...connector, state: newState };
+      const updated = { ...connector, state: newState as any };
       connectorRegistry.registerConnector(updated);
       set({ connectors: connectorRegistry.listConnectors() });
     }

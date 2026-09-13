@@ -47,7 +47,6 @@ export const AssetPickerModal: React.FC = () => {
 
   const [assets, setAssets] = useState<AssetItem[]>(FALLBACK_ASSETS);
   const [loading, setLoading] = useState(false);
-  const [selectedAssetUrl, setSelectedAssetUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAssetPickerOpen) {
@@ -58,7 +57,7 @@ export const AssetPickerModal: React.FC = () => {
   const loadI3DIONAssets = async () => {
     setLoading(true);
     try {
-      const products = await api.getProducts();
+      const products = await (api as any).getProducts?.() || [];
       if (Array.isArray(products) && products.length > 0) {
         const productAssets: AssetItem[] = products
           .filter((p) => p.image_url)

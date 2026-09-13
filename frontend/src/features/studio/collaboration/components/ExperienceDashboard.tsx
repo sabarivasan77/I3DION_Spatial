@@ -9,13 +9,8 @@ import {
   X,
   FileText,
   Clock,
-  User,
   Copy,
-  Trash2,
   Archive,
-  ExternalLink,
-  CheckCircle2,
-  AlertCircle,
 } from 'lucide-react';
 
 export const ExperienceDashboard: React.FC = () => {
@@ -29,7 +24,7 @@ export const ExperienceDashboard: React.FC = () => {
     setLoading(true);
     try {
       const docs = await api.listExperiences({ status: activeFilter === 'ALL' ? undefined : activeFilter });
-      setExperiences(docs || []);
+      setExperiences((docs as unknown as ExperienceDocument[]) || []);
     } catch (e) {
       console.error('Failed to fetch experiences:', e);
     }
@@ -48,6 +43,26 @@ export const ExperienceDashboard: React.FC = () => {
     doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (doc.description && doc.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  const handleCreateNew = async () => {
+    try {
+      const created = await api.createExperience({
+        name: 'Untitled Experience',
+        description: 'New interactive 3D spatial experience',
+      });
+      if (created) {
+        await loadExperienceDocument(created.id);
+        closeDashboard();
+      }
+    } catch (err) {
+      console.error('Failed to create experience:', err);
+    }
+  };
+
+  const handleOpenExperience = async (id: string) => {
+    await loadExperienceDocument(id);
+    closeDashboard();
+  };
 
   const handleDuplicate = async (e: React.MouseEvent, doc: ExperienceDocument) => {
     e.stopPropagation();
@@ -68,7 +83,7 @@ export const ExperienceDashboard: React.FC = () => {
     e.stopPropagation();
     try {
       const nextStatus = currentStatus === 'ARCHIVED' ? 'DRAFT' : 'ARCHIVED';
-      await api.updateExperience(id, { status: nextStatus });
+      await (api as any).updateExperience?.(id, { status: nextStatus });
       fetchExperiences();
     } catch (err) {
       console.error('Failed to archive experience:', err);

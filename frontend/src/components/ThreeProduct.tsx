@@ -400,7 +400,8 @@ export default function ThreeProduct({
   themeMode = 'light',
   className = '',
   animationSpeed = 0,
-  onHasAnimations
+  onHasAnimations,
+  interactive: _interactive
 }: { 
   modelUrl?: string;
   autoRotate?: boolean;
@@ -410,6 +411,7 @@ export default function ThreeProduct({
   className?: string;
   animationSpeed?: number;
   onHasAnimations?: (hasAnimations: boolean) => void;
+  interactive?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
 

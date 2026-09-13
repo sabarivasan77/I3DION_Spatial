@@ -13,7 +13,6 @@ import {
   HelpCircle,
   LogOut,
   RefreshCw,
-  ShieldCheck,
   CheckCircle2
 } from 'lucide-react';
 
@@ -69,7 +68,7 @@ export const LensSidebar: React.FC = () => {
         {/* Main Navigation List */}
         <nav className="space-y-1">
           {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
+            const Icon = item.icon as any;
             const isActive = activeView === item.id;
             return (
               <button

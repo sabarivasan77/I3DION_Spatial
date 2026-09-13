@@ -72,7 +72,7 @@ export const PublishWorkflowModal: React.FC = () => {
               ) : (
                 <ul className="list-disc pl-4 mt-1.5 space-y-1 text-rose-300">
                   {validationResult.errors.map((err, idx) => (
-                    <li key={idx}>{err}</li>
+                    <li key={idx}>{typeof err === 'string' ? err : err.message || JSON.stringify(err)}</li>
                   ))}
                 </ul>
               )}
