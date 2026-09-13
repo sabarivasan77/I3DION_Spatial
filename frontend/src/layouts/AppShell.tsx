@@ -26,7 +26,6 @@ import { GlobalSearch, SearchTrigger } from '../components/GlobalSearch';
 import { NotificationCenter } from '../components/NotificationCenter';
 
 const navItems = [
-  { label: 'Dashboard', path: '/dashboard', icon: BarChart3 },
   { label: 'Spatial Hub', path: '/hub', icon: Globe },
   { label: 'Products', path: '/products', icon: Box },
   { label: 'Facility Buildings', path: '/buildings', icon: Building2 },
@@ -71,7 +70,7 @@ function Sidebar({
         )}
       >
         <div className="mb-8 flex items-center justify-between px-2">
-          <NavLink to="/dashboard" className="flex items-center gap-3" onClick={onClose}>
+          <NavLink to="/hub" className="flex items-center gap-3" onClick={onClose}>
             <Logo theme="dark" />
           </NavLink>
           <button className="rounded-lg p-2 text-slate-300 hover:bg-slate-800 transition" onClick={onClose}>

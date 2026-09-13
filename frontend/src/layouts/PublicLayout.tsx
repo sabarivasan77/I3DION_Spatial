@@ -10,9 +10,9 @@ export default function PublicLayout() {
   const location = useLocation();
 
   useEffect(() => {
-    // Only redirect to dashboard if they are on /login or /signup and already logged in
+    // Only redirect to Spatial Hub if they are on /login or /signup and already logged in
     if (user && (location.pathname === '/login' || location.pathname === '/signup')) {
-      navigate('/dashboard', { replace: true });
+      navigate('/hub', { replace: true });
     }
   }, [user, location.pathname, navigate]);
 
@@ -29,8 +29,8 @@ export default function PublicLayout() {
             <input className="w-40 bg-transparent text-sm outline-none" placeholder="Search catalog..." />
           </div>
           {user ? (
-            <NavLink className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600" to="/dashboard">
-              Go to Dashboard
+            <NavLink className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600" to="/hub">
+              Open Spatial Hub
             </NavLink>
           ) : (
             <>

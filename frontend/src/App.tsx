@@ -97,6 +97,7 @@ export default function App() {
         </Route>
 
         {/* INTERNAL ORGANIZATION APPLICATIONS SHELL */}
+        <Route path="dashboard" element={<Navigate to="/hub" replace />} />
         <Route
           element={
             <ProtectedRoute>
@@ -104,7 +105,6 @@ export default function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="dashboard" element={<DashboardPage />} />
 
           {/* 2. I3DION SPATIAL VAULT */}
           <Route
