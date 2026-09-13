@@ -39,6 +39,7 @@ const HubOrganizationPage = lazy(() => import('./pages/hub/HubOrganizationPage')
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
 const SecurityDashboard = lazy(() => import('./pages/SecurityDashboard').then((m) => ({ default: m.SecurityDashboard })));
 const BillingSettingsPage = lazy(() => import('./pages/settings/BillingSettingsPage').then((m) => ({ default: m.BillingSettingsPage })));
+const TeamManagementPage = lazy(() => import('./pages/settings/TeamManagementPage').then((m) => ({ default: m.TeamManagementPage })));
 const EnginePage = lazy(() => import('./features/engine/EnginePage').then((m) => ({ default: m.EnginePage })));
 const OmniStudioPage = lazy(() => import('./features/studio/OmniStudioPage').then((m) => ({ default: m.OmniStudioPage })));
 const BuildingManagementPage = lazy(() => import('./pages/BuildingManagementPage').then((m) => ({ default: m.BuildingManagementPage })));

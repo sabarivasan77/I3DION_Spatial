@@ -165,6 +165,8 @@ apiRouter.post('/verify-payment', async (req, res) => {
   }
 });
 
+import aiGatewayRouter from './routes/aiGateway.js';
+
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/public', publicRouter);
 apiRouter.use('/analytics', analyticsRouter);
@@ -172,6 +174,7 @@ apiRouter.use('/leads', leadsRouter);
 apiRouter.use('/hub', hubRouter);
 apiRouter.use('/search', searchRouter);
 apiRouter.use('/ai', aiRouter);
+apiRouter.use('/ai/gateway', aiGatewayRouter);
 apiRouter.use('/support', supportRouter);
 apiRouter.use('/device', deviceRouter);
 apiRouter.use('/security', securityRouter);
