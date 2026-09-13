@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { getUserContext } from '../utils/permissions';
+import { AppLauncher } from '../components/AppLauncher';
 
 export default function SpatialHubLayout() {
   const { user, logout } = useAuthStore();
@@ -325,6 +326,9 @@ export default function SpatialHubLayout() {
 
           {/* Right Header Actions */}
           <div className="flex items-center gap-3">
+            {/* App Launcher */}
+            <AppLauncher />
+
             {/* Notification Bell */}
             <button
               title="Notifications"

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
-import { Grid, Database, Sparkles, Cpu, BarChart3, Lock, ShieldCheck } from 'lucide-react';
+
+import { Grid, Database, Sparkles, Cpu, BarChart3, Lock, ShieldCheck, LucideIcon } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useLicenseStore, AppKey } from '../store/licenseStore';
 import { canAccessApp } from '../utils/permissions';
@@ -10,7 +10,7 @@ interface AppDefinition {
   name: string;
   subtitle: string;
   path: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   badge: string;
   color: string;
   bgLight: string;
@@ -59,6 +59,22 @@ const APPS: AppDefinition[] = [
   },
 ];
 
+const getAppUrl = (appKey: AppKey, fallbackPath: string): string => {
+  const origin = window.location.origin;
+  switch (appKey) {
+    case 'vault':
+      return import.meta.env.VITE_VAULT_URL || `${origin}${fallbackPath}`;
+    case 'studio':
+      return import.meta.env.VITE_OMNI_STUDIO_URL || `${origin}${fallbackPath}`;
+    case 'engine':
+      return import.meta.env.VITE_ENGINE_URL || `${origin}${fallbackPath}`;
+    case 'lens':
+      return import.meta.env.VITE_LENS_URL || `${origin}${fallbackPath}`;
+    default:
+      return `${origin}${fallbackPath}`;
+  }
+};
+
 export const AppLauncher: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -76,7 +92,12 @@ export const AppLauncher: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div 
+      className="relative" 
+      ref={dropdownRef}
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
       {/* Launcher Icon Button (Microsoft 365 style 3x3 Grid) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -127,9 +148,9 @@ export const AppLauncher: React.FC = () => {
               }
 
               return (
-                <NavLink
+                <a
                   key={app.key}
-                  to={app.path}
+                  href={getAppUrl(app.key, app.path)}
                   onClick={() => setIsOpen(false)}
                   className={`flex items-center gap-3 rounded-xl border p-2.5 transition active:scale-[0.98] ${app.bgLight}`}
                 >
@@ -140,7 +161,7 @@ export const AppLauncher: React.FC = () => {
                     <span className="block text-xs font-bold text-slate-800 truncate">{app.name}</span>
                     <p className="text-[10px] text-slate-500 truncate">{app.subtitle}</p>
                   </div>
-                </NavLink>
+                </a>
               );
             })}
           </div>
