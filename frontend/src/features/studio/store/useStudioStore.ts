@@ -90,10 +90,14 @@ interface StudioState {
   };
   isAssetPickerOpen: boolean;
   assetPickerTargetNodeId: string | null;
-
   copiedWidgetNode: StudioWidgetNode | null;
 
+  isTimelineOpen: boolean;
+  isLeftPanelOpen: boolean;
+
   // Actions
+  toggleTimeline: () => void;
+  toggleLeftPanel: () => void;
   selectWidget: (id: string | null, isMultiSelect?: boolean) => void;
   deleteSelectedWidgets: () => void;
   addWidget: (type: string, parentId?: string | null) => string | null;
@@ -147,6 +151,12 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   isAssetPickerOpen: false,
   assetPickerTargetNodeId: null,
   copiedWidgetNode: null,
+
+  isTimelineOpen: false,
+  isLeftPanelOpen: true,
+
+  toggleTimeline: () => set((state) => ({ isTimelineOpen: !state.isTimelineOpen })),
+  toggleLeftPanel: () => set((state) => ({ isLeftPanelOpen: !state.isLeftPanelOpen })),
 
   selectWidget: (id, isMultiSelect = false) => {
     if (!id) {

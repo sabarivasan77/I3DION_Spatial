@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, Bot, User, Loader2, ArrowRight, Compass, ShieldCheck } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, User, Loader2, ArrowRight, Compass } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { cx } from '../utils/format';
@@ -137,17 +137,23 @@ export function ChatbotWidget() {
     }, 400);
   };
 
+  const isStudio = location.pathname === '/studio';
+
   return (
     <>
-      {/* Floating Action Button */}
+      {/* Floating Action Button - Relocated on /studio to avoid canvas interference */}
       <button
         onClick={() => setIsOpen(true)}
         className={cx(
-          'fixed bottom-6 right-6 p-4 rounded-full bg-blue-600 text-white shadow-xl hover:scale-105 transition-transform z-50 border border-blue-400/30',
+          isStudio
+            ? 'fixed top-3.5 right-64 z-50 p-2 rounded-xl bg-slate-900 text-white shadow-md border border-slate-700 hover:bg-slate-800 transition-all flex items-center gap-1.5 text-xs font-semibold'
+            : 'fixed bottom-6 right-6 p-4 rounded-full bg-blue-600 text-white shadow-xl hover:scale-105 transition-transform z-50 border border-blue-400/30 flex items-center justify-center',
           isOpen ? 'hidden' : 'flex'
         )}
+        title="Open I3DION Assistant"
       >
-        <MessageSquare size={24} />
+        <MessageSquare size={isStudio ? 15 : 24} />
+        {isStudio && <span className="hidden xl:inline text-xs">Assistant</span>}
       </button>
 
       {/* Chat Window */}

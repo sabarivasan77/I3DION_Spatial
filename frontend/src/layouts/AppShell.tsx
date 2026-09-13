@@ -1,5 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Logo } from '../components/Logo';
 import {
   BarChart3,
@@ -18,7 +17,7 @@ import {
   X,
   Sparkles,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { cx } from '../utils/format';
 import { GlobalSearch, SearchTrigger } from '../components/GlobalSearch';
@@ -38,87 +37,115 @@ const navItems = [
   { label: 'Settings', path: '/settings', icon: Settings },
 ];
 
-
 function Sidebar({
   open,
+  isStudio,
   onClose,
   onLogout,
   onSupport,
 }: {
   open: boolean;
+  isStudio: boolean;
   onClose: () => void;
   onLogout: () => void;
   onSupport: () => void;
 }) {
   return (
-    <aside
-      className={cx(
-        'fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-navy px-4 py-6 text-white transition-transform lg:translate-x-0',
-        open ? 'translate-x-0' : '-translate-x-full',
+    <>
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm transition-opacity"
+          onClick={onClose}
+        />
       )}
-    >
-      <div className="mb-8 flex items-center justify-between px-2">
-        <NavLink to="/dashboard" className="flex items-center gap-3" onClick={onClose}>
-          <Logo theme="dark" />
-        </NavLink>
-        <button className="rounded-lg p-2 text-slate-300 lg:hidden" onClick={onClose}>
-          <X size={20} />
-        </button>
-      </div>
-
-      <NavLink
-        to="/products/upload"
-        onClick={onClose}
-        className="mb-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-600 active:scale-[0.98]"
+      <aside
+        className={cx(
+          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-navy px-4 py-6 text-white transition-transform duration-300 ease-in-out shadow-2xl',
+          isStudio
+            ? open
+              ? 'translate-x-0'
+              : '-translate-x-full'
+            : 'lg:translate-x-0 ' + (open ? 'translate-x-0' : '-translate-x-full'),
+        )}
       >
-        <Plus size={18} />
-        New Visualization
-      </NavLink>
+        <div className="mb-8 flex items-center justify-between px-2">
+          <NavLink to="/dashboard" className="flex items-center gap-3" onClick={onClose}>
+            <Logo theme="dark" />
+          </NavLink>
+          <button className="rounded-lg p-2 text-slate-300 hover:bg-slate-800 transition" onClick={onClose}>
+            <X size={20} />
+          </button>
+        </div>
 
-      <nav className="no-scrollbar flex-1 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={onClose}
-              className={({ isActive }) =>
-                cx(
-                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-slate-800 text-white'
-                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-white',
-                )
-              }
-            >
-              <Icon size={20} />
-              {item.label}
-            </NavLink>
-          );
-        })}
-      </nav>
+        <NavLink
+          to="/products/upload"
+          onClick={onClose}
+          className="mb-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-600 active:scale-[0.98]"
+        >
+          <Plus size={18} />
+          New Visualization
+        </NavLink>
 
-      <div className="mt-6 space-y-1 border-t border-slate-800 pt-6">
-        <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-400 hover:bg-slate-800/60 hover:text-white" onClick={onSupport}>
-          <Headphones size={20} />
-          Support Dashboard
-        </button>
-        <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-400 hover:bg-red-500/20 hover:text-red-400" onClick={onLogout}>
-          <LogOut size={20} />
-          Logout
-        </button>
-      </div>
-    </aside>
+        <nav className="no-scrollbar flex-1 space-y-1 overflow-y-auto">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  cx(
+                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-slate-800 text-white font-semibold'
+                      : 'text-slate-400 hover:bg-slate-800/60 hover:text-white',
+                  )
+                }
+              >
+                <Icon size={20} />
+                {item.label}
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        <div className="mt-6 space-y-1 border-t border-slate-800 pt-6">
+          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-400 hover:bg-slate-800/60 hover:text-white" onClick={onSupport}>
+            <Headphones size={20} />
+            Support Dashboard
+          </button>
+          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-400 hover:bg-red-500/20 hover:text-red-400" onClick={onLogout}>
+            <LogOut size={20} />
+            Logout
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }
 
 export default function AppShell() {
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const location = useLocation();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+
+  const isStudio = location.pathname === '/studio';
+
+  // Listen for custom menu trigger events from StudioHeader
+  useEffect(() => {
+    const handleOpenMenu = () => setOpen(true);
+    window.addEventListener('i3dion:open_app_menu', handleOpenMenu);
+    return () => window.removeEventListener('i3dion:open_app_menu', handleOpenMenu);
+  }, []);
+
+  // Collapse drawer when navigating routes
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
 
   // Avatar initial
   const initials = user?.name
@@ -133,59 +160,67 @@ export default function AppShell() {
   return (
     <div className="min-h-screen bg-background text-slate-950">
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
-      <Sidebar open={open} onClose={() => setOpen(false)} onLogout={handleLogout} onSupport={() => navigate('/support')} />
-      <div className="lg:pl-64">
-        <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-8">
-          <div className="flex flex-1 items-center gap-4">
-            <button className="rounded-xl p-2 text-slate-600 lg:hidden" onClick={() => setOpen(true)}>
-              <Menu size={22} />
-            </button>
-            <SearchTrigger onClick={() => setSearchOpen(true)} />
-            {/* Mobile search icon */}
-            <button
-              className="rounded-xl p-2 text-slate-600 hover:bg-slate-100 sm:hidden"
-              onClick={() => setSearchOpen(true)}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            </button>
-          </div>
-          <div className="flex items-center gap-3">
-            <NotificationCenter />
-            <button
-              className="rounded-full p-2 text-slate-600 hover:bg-slate-100"
-              onClick={() => navigate('/support')}
-              title="Help & Support"
-            >
-              <HelpCircle size={20} />
-            </button>
-            <div className="hidden text-right sm:block">
-              <p className="text-sm font-semibold">{user?.name ?? 'User'}</p>
-              <p className="text-[11px] font-medium text-slate-500">{user?.role ?? 'Admin'}</p>
+      <Sidebar
+        open={open}
+        isStudio={isStudio}
+        onClose={() => setOpen(false)}
+        onLogout={handleLogout}
+        onSupport={() => navigate('/support')}
+      />
+
+      <div className={cx('transition-all duration-300', isStudio ? 'pl-0' : 'lg:pl-64')}>
+        {!isStudio && (
+          <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-8">
+            <div className="flex flex-1 items-center gap-4">
+              <button className="rounded-xl p-2 text-slate-600 lg:hidden" onClick={() => setOpen(true)}>
+                <Menu size={22} />
+              </button>
+              <SearchTrigger onClick={() => setSearchOpen(true)} />
+              <button
+                className="rounded-xl p-2 text-slate-600 hover:bg-slate-100 sm:hidden"
+                onClick={() => setSearchOpen(true)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              </button>
             </div>
-            {/* Clickable avatar → /profile */}
-            <button
-              onClick={() => navigate('/profile')}
-              className="relative h-9 w-9 overflow-hidden rounded-full ring-2 ring-slate-100 transition hover:ring-primary hover:ring-offset-1 focus:outline-none focus:ring-primary"
-              title="View profile"
-            >
-              {(user as any)?.avatarUrl ? (
-                <img
-                  className="h-full w-full object-cover"
-                  alt={user?.name ?? 'Profile'}
-                  src={(user as any).avatarUrl}
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-500 to-blue-700 text-xs font-bold text-white">
-                  {initials}
-                </div>
-              )}
-            </button>
-          </div>
-        </header>
-        <main className="mx-auto min-h-[calc(100vh-64px)] w-full max-w-[1440px] p-4 md:p-8">
+            <div className="flex items-center gap-3">
+              <NotificationCenter />
+              <button
+                className="rounded-full p-2 text-slate-600 hover:bg-slate-100"
+                onClick={() => navigate('/support')}
+                title="Help & Support"
+              >
+                <HelpCircle size={20} />
+              </button>
+              <div className="hidden text-right sm:block">
+                <p className="text-sm font-semibold">{user?.name ?? 'User'}</p>
+                <p className="text-[11px] font-medium text-slate-500">{user?.role ?? 'Admin'}</p>
+              </div>
+              <button
+                onClick={() => navigate('/profile')}
+                className="relative h-9 w-9 overflow-hidden rounded-full ring-2 ring-slate-100 transition hover:ring-primary hover:ring-offset-1 focus:outline-none focus:ring-primary"
+                title="View profile"
+              >
+                {(user as any)?.avatarUrl ? (
+                  <img
+                    className="h-full w-full object-cover"
+                    alt={user?.name ?? 'Profile'}
+                    src={(user as any).avatarUrl}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-500 to-blue-700 text-xs font-bold text-white">
+                    {initials}
+                  </div>
+                )}
+              </button>
+            </div>
+          </header>
+        )}
+        <main className={cx('w-full', isStudio ? 'h-screen overflow-hidden p-0' : 'mx-auto min-h-[calc(100vh-64px)] max-w-[1440px] p-4 md:p-8')}>
           <Outlet />
         </main>
       </div>
     </div>
   );
 }
+

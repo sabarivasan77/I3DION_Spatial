@@ -2,10 +2,9 @@ import React from 'react';
 import { useStudioStore } from '../store/useStudioStore';
 import { useCollaborationStore } from '../collaboration/store/collaborationStore';
 import {
+  Menu,
   Undo2,
   Redo2,
-  Eye,
-  EyeOff,
   Monitor,
   Tablet,
   Smartphone,
@@ -18,6 +17,8 @@ import {
   Maximize2,
   Workflow,
   Box,
+  Film,
+  Play,
 } from 'lucide-react';
 
 export interface StudioHeaderProps {
@@ -33,9 +34,10 @@ export const StudioHeader: React.FC<StudioHeaderProps> = ({
   const {
     experience,
     canvasViewport,
-    isPreview,
     history,
     zoomLevel,
+    isTimelineOpen,
+    toggleTimeline,
     setCanvasViewport,
     setPreview,
     zoomIn,
@@ -57,28 +59,36 @@ export const StudioHeader: React.FC<StudioHeaderProps> = ({
   } = useCollaborationStore();
 
   return (
-    <header className="flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white px-6 shadow-sm select-none shrink-0">
-      {/* Left: Brand Badge & Title & Workspace Dashboard */}
+    <header className="flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6 shadow-sm select-none shrink-0 z-20">
+      {/* Left: Hamburger Drawer Trigger & Brand Badge & Workspace Title */}
       <div className="flex items-center gap-3">
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('i3dion:open_app_menu'))}
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition shadow-sm"
+          title="Open Main Navigation Drawer"
+        >
+          <Menu size={18} />
+        </button>
+
         <button
           onClick={openDashboard}
           className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm hover:bg-slate-800 transition"
-          title="Open Experience Workspace Dashboard"
+          title="Open Workspace Dashboard"
         >
           <FolderKanban size={18} />
         </button>
 
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-base font-bold text-slate-900">
+            <h1 className="text-sm font-bold text-slate-900">
               {currentDocument?.name || experience.name}
             </h1>
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600 font-mono border border-slate-200">
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 font-mono border border-slate-200">
               v{currentDocument?.currentVersion || experience.version}
             </span>
           </div>
 
-          {/* Cloud Save Status & Collaborator Avatars */}
+          {/* Cloud Save Status & Sync */}
           <div className="flex items-center gap-3 text-xs text-slate-500 font-mono mt-0.5">
             {saveStatus === 'saving' && (
               <span className="flex items-center gap-1 text-amber-600 font-medium">
@@ -113,7 +123,7 @@ export const StudioHeader: React.FC<StudioHeaderProps> = ({
         </div>
 
         {/* WORKSPACE SECTION SWITCHER: Canvas Design | Full Canvas | Logic & Functions */}
-        <div className="ml-4 flex items-center rounded-xl border border-slate-200 bg-slate-100 p-1">
+        <div className="ml-2 hidden md:flex items-center rounded-xl border border-slate-200 bg-slate-100 p-1">
           <button
             type="button"
             onClick={() => onSectionViewChange && onSectionViewChange('canvas')}
@@ -161,38 +171,41 @@ export const StudioHeader: React.FC<StudioHeaderProps> = ({
           <button
             type="button"
             onClick={() => setCanvasViewport('desktop')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
               canvasViewport === 'desktop'
                 ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
+            title="Desktop Viewport"
           >
             <Monitor size={14} />
-            <span>Desktop</span>
+            <span className="hidden lg:inline">Desktop</span>
           </button>
           <button
             type="button"
             onClick={() => setCanvasViewport('tablet')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
               canvasViewport === 'tablet'
                 ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
+            title="Tablet Viewport"
           >
             <Tablet size={14} />
-            <span>Tablet</span>
+            <span className="hidden lg:inline">Tablet</span>
           </button>
           <button
             type="button"
             onClick={() => setCanvasViewport('mobile')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
               canvasViewport === 'mobile'
                 ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
+            title="Mobile Viewport"
           >
             <Smartphone size={14} />
-            <span>Mobile</span>
+            <span className="hidden lg:inline">Mobile</span>
           </button>
         </div>
 
@@ -208,7 +221,7 @@ export const StudioHeader: React.FC<StudioHeaderProps> = ({
           <button
             type="button"
             onClick={resetZoom}
-            className="px-2 text-[11px] font-mono font-semibold text-slate-700 hover:text-blue-600"
+            className="px-1.5 text-[11px] font-mono font-semibold text-slate-700 hover:text-blue-600"
           >
             {Math.round(zoomLevel * 100)}%
           </button>
@@ -231,6 +244,7 @@ export const StudioHeader: React.FC<StudioHeaderProps> = ({
             onClick={undo}
             disabled={history.past.length === 0}
             className="rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30"
+            title="Undo (Ctrl+Z)"
           >
             <Undo2 size={16} />
           </button>
@@ -239,33 +253,47 @@ export const StudioHeader: React.FC<StudioHeaderProps> = ({
             onClick={redo}
             disabled={history.future.length === 0}
             className="rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30"
+            title="Redo (Ctrl+Y)"
           >
             <Redo2 size={16} />
           </button>
         </div>
+
+        {/* Timeline Toggle Drawer Button */}
+        <button
+          type="button"
+          onClick={toggleTimeline}
+          className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold shadow-sm transition-all ${
+            isTimelineOpen
+              ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold'
+              : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+          }`}
+          title="Toggle Animation Timeline Drawer"
+        >
+          <Film size={14} className={isTimelineOpen ? 'text-blue-600' : 'text-slate-500'} />
+          <span className="hidden sm:inline">Timeline</span>
+        </button>
 
         {/* Version History */}
         <button
           type="button"
           onClick={openVersionHistory}
           className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+          title="Version History"
         >
           <History size={14} className="text-slate-500" />
-          <span>Versions</span>
+          <span className="hidden sm:inline">Versions</span>
         </button>
 
-        {/* Preview Toggle */}
+        {/* PROMINENT PREVIEW BUTTON */}
         <button
           type="button"
-          onClick={() => setPreview(!isPreview)}
-          className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold shadow-sm transition-all ${
-            isPreview
-              ? 'bg-amber-500 text-white hover:bg-amber-600'
-              : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-          }`}
+          onClick={() => setPreview(true)}
+          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-md hover:bg-emerald-700 transition active:scale-95"
+          title="Enter Customer Preview Mode"
         >
-          {isPreview ? <EyeOff size={15} /> : <Eye size={15} />}
-          {isPreview ? 'Exit Preview' : 'Preview'}
+          <Play size={14} fill="currentColor" />
+          <span>Preview</span>
         </button>
 
         {/* Save Draft Button */}
@@ -281,12 +309,13 @@ export const StudioHeader: React.FC<StudioHeaderProps> = ({
         <button
           type="button"
           onClick={openPublishModal}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 transition"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 transition"
         >
           <Send size={14} />
-          Publish
+          <span>Publish</span>
         </button>
       </div>
     </header>
   );
 };
+
