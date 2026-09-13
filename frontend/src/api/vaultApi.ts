@@ -116,11 +116,22 @@ export interface VaultDatasetSummary {
 
 export const vaultApi = {
   // --- Datasets & Multi-Source Summary ---
-  getDatasetsSummary: () => apiRequest<VaultDatasetSummary>('/api/vault/datasets/summary', { method: 'GET' }),
+  getDatasetsSummary: () => apiRequest<VaultDatasetSummary>('/api/vault/datasets/summary', { method: 'GET' })
+    .catch(() => ({ total_assets: 0, total_3d_models: 0, total_products: 0, total_catalogs: 0, total_templates: 0, total_collections: 0, total_storage_bytes: 0, storage_quota_bytes: 107374182400 })),
   
-  getProductDataset: () => apiRequest<{ collection: VaultCollection; records: VaultRecord[] }>('/api/vault/datasets/products', { method: 'GET' }),
+  getProductDataset: () => apiRequest<{ collection: VaultCollection; records: VaultRecord[] }>('/api/vault/datasets/products', { method: 'GET' })
+    .then(res => ({
+      collection: res?.collection || { id: 'products', name: 'Products Dataset', description: '', schema_fields: [], created_at: '', updated_at: '' },
+      records: Array.isArray(res?.records) ? res.records : []
+    }))
+    .catch(() => ({ collection: { id: 'products', name: 'Products Dataset', description: '', schema_fields: [], created_at: '', updated_at: '' }, records: [] })),
   
-  getCatalogDataset: () => apiRequest<{ collection: VaultCollection; records: VaultRecord[] }>('/api/vault/datasets/catalogs', { method: 'GET' }),
+  getCatalogDataset: () => apiRequest<{ collection: VaultCollection; records: VaultRecord[] }>('/api/vault/datasets/catalogs', { method: 'GET' })
+    .then(res => ({
+      collection: res?.collection || { id: 'catalogs', name: 'Catalogs Dataset', description: '', schema_fields: [], created_at: '', updated_at: '' },
+      records: Array.isArray(res?.records) ? res.records : []
+    }))
+    .catch(() => ({ collection: { id: 'catalogs', name: 'Catalogs Dataset', description: '', schema_fields: [], created_at: '', updated_at: '' }, records: [] })),
 
   // --- Assets ---
   getAssets: (params?: { search?: string; type?: string; status?: string; collection_id?: string; is_deleted?: boolean; sort?: string }) => {
@@ -132,7 +143,9 @@ export const vaultApi = {
     if (params?.is_deleted) query.set('is_deleted', 'true');
     if (params?.sort) query.set('sort', params.sort);
     
-    return apiRequest<VaultAsset[]>(`/api/vault/assets?${query.toString()}`, { method: 'GET' });
+    return apiRequest<VaultAsset[]>(`/api/vault/assets?${query.toString()}`, { method: 'GET' })
+      .then(res => (Array.isArray(res) ? res : []))
+      .catch(() => []);
   },
   
   getAsset: (id: string) => apiRequest<VaultAsset>(`/api/vault/assets/${id}`, { method: 'GET' }),
@@ -199,7 +212,9 @@ export const vaultApi = {
     }),
 
   // --- Collections / Data Sources ---
-  getCollections: () => apiRequest<VaultCollection[]>('/api/vault/collections', { method: 'GET' }),
+  getCollections: () => apiRequest<VaultCollection[]>('/api/vault/collections', { method: 'GET' })
+    .then(res => (Array.isArray(res) ? res : []))
+    .catch(() => []),
   
   createCollection: (data: { name: string; description?: string; schema_fields?: VaultSchemaField[] }) =>
     apiRequest<VaultCollection>('/api/vault/collections', {
@@ -218,7 +233,15 @@ export const vaultApi = {
 
   // --- Data Workspace Records ---
   getRecords: (collectionId: string) =>
-    apiRequest<{ collection: VaultCollection; records: VaultRecord[] }>(`/api/vault/collections/${collectionId}/records`, { method: 'GET' }),
+    apiRequest<{ collection: VaultCollection; records: VaultRecord[] }>(`/api/vault/collections/${collectionId}/records`, { method: 'GET' })
+      .then(res => ({
+        collection: res?.collection || { id: collectionId, name: 'Collection', description: '', schema_fields: [], created_at: '', updated_at: '' },
+        records: Array.isArray(res?.records) ? res.records : []
+      }))
+      .catch(() => ({
+        collection: { id: collectionId, name: 'Collection', description: '', schema_fields: [], created_at: '', updated_at: '' },
+        records: []
+      })),
 
   createRecord: (collectionId: string, record: { name: string; data?: Record<string, any>; asset_id?: string; status?: string }) =>
     apiRequest<VaultRecord>(`/api/vault/collections/${collectionId}/records`, {
@@ -236,7 +259,9 @@ export const vaultApi = {
     apiRequest<{ message: string }>(`/api/vault/collections/${collectionId}/records/${recordId}`, { method: 'DELETE' }),
 
   // --- Templates ---
-  getTemplates: () => apiRequest<VaultTemplate[]>('/api/vault/templates', { method: 'GET' }),
+  getTemplates: () => apiRequest<VaultTemplate[]>('/api/vault/templates', { method: 'GET' })
+    .then(res => (Array.isArray(res) ? res : []))
+    .catch(() => []),
 
   createTemplate: (data: { name: string; description?: string; schema?: any }) =>
     apiRequest<VaultTemplate>('/api/vault/templates', {
@@ -254,11 +279,15 @@ export const vaultApi = {
     apiRequest<{ message: string }>(`/api/vault/templates/${id}`, { method: 'DELETE' }),
 
   // --- Trash, Processing & Activity ---
-  getTrash: () => apiRequest<any[]>('/api/vault/trash', { method: 'GET' }),
+  getTrash: () => apiRequest<any[]>('/api/vault/trash', { method: 'GET' })
+    .then(res => (Array.isArray(res) ? res : []))
+    .catch(() => []),
 
   emptyTrash: () => apiRequest<{ message: string }>('/api/vault/trash/empty', { method: 'POST' }),
 
-  getProcessingJobs: () => apiRequest<VaultProcessingJob[]>('/api/vault/processing/jobs', { method: 'GET' }),
+  getProcessingJobs: () => apiRequest<VaultProcessingJob[]>('/api/vault/processing/jobs', { method: 'GET' })
+    .then(res => (Array.isArray(res) ? res : []))
+    .catch(() => []),
 
   getActivityLogs: (params?: { search?: string; action?: string; target_type?: string }) => {
     const query = new URLSearchParams();
@@ -266,6 +295,8 @@ export const vaultApi = {
     if (params?.action) query.set('action', params.action);
     if (params?.target_type) query.set('target_type', params.target_type);
 
-    return apiRequest<VaultAuditLog[]>(`/api/vault/activity?${query.toString()}`, { method: 'GET' });
+    return apiRequest<VaultAuditLog[]>(`/api/vault/activity?${query.toString()}`, { method: 'GET' })
+      .then(res => (Array.isArray(res) ? res : []))
+      .catch(() => []);
   }
 };

@@ -35,9 +35,10 @@ export function VaultCollections() {
     setIsLoading(true);
     try {
       const data = await vaultApi.getCollections();
-      setCollections(data);
+      setCollections(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load collections', err);
+      setCollections([]);
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +76,7 @@ export function VaultCollections() {
 
       {isLoading ? (
         <div className="flex h-64 items-center justify-center text-slate-400">Loading data sources...</div>
-      ) : collections.length === 0 ? (
+      ) : (!collections || collections.length === 0) ? (
         <div className="flex h-64 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500">
           <Database size={48} className="mb-4 opacity-40 text-emerald-600" />
           <p className="text-sm font-bold text-slate-800">No Data Sources created yet</p>
@@ -89,7 +90,7 @@ export function VaultCollections() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {collections.map(c => (
+          {(collections || []).map(c => (
             <div
               key={c.id}
               onClick={() => navigate(`/vault/workspace/${c.id}`)}
@@ -178,9 +179,10 @@ export function VaultTemplates() {
     setIsLoading(true);
     try {
       const data = await vaultApi.getTemplates();
-      setTemplates(data);
+      setTemplates(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load templates', err);
+      setTemplates([]);
     } finally {
       setIsLoading(false);
     }
@@ -235,7 +237,7 @@ export function VaultTemplates() {
 
       {isLoading ? (
         <div className="flex h-64 items-center justify-center text-slate-400">Loading templates...</div>
-      ) : templates.length === 0 ? (
+      ) : (!templates || templates.length === 0) ? (
         <div className="flex h-64 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500">
           <FileText size={48} className="mb-4 opacity-40 text-indigo-600" />
           <p className="text-sm font-bold text-slate-800">No Templates available</p>
@@ -243,7 +245,7 @@ export function VaultTemplates() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {templates.map(t => (
+          {(templates || []).map(t => (
             <div key={t.id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-emerald-300 transition flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-4 mb-4">
@@ -316,8 +318,8 @@ export function VaultProcessing() {
 
   useEffect(() => {
     vaultApi.getProcessingJobs()
-      .then(data => { setJobs(data); setIsLoading(false); })
-      .catch(() => setIsLoading(false));
+      .then(data => { setJobs(Array.isArray(data) ? data : []); setIsLoading(false); })
+      .catch(() => { setJobs([]); setIsLoading(false); });
   }, []);
 
   return (
@@ -330,7 +332,7 @@ export function VaultProcessing() {
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm overflow-hidden">
         {isLoading ? (
           <div className="flex h-64 items-center justify-center text-slate-400">Loading background jobs...</div>
-        ) : jobs.length === 0 ? (
+        ) : (!jobs || jobs.length === 0) ? (
           <div className="flex items-center justify-center h-64 flex-col text-slate-500">
             <Cpu size={48} className="mb-4 opacity-40 text-emerald-600" />
             <p className="text-sm font-bold text-slate-800">No active processing tasks</p>
@@ -348,7 +350,7 @@ export function VaultProcessing() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {jobs.map(j => (
+              {(jobs || []).map(j => (
                 <tr key={j.id}>
                   <td className="px-4 py-3 font-bold text-slate-900">{j.job_type}</td>
                   <td className="px-4 py-3 font-medium text-slate-700">{j.asset_name}</td>
@@ -386,9 +388,10 @@ export function VaultTrash() {
     setIsLoading(true);
     try {
       const data = await vaultApi.getTrash();
-      setItems(data);
+      setItems(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
+      setItems([]);
     } finally {
       setIsLoading(false);
     }
@@ -420,7 +423,7 @@ export function VaultTrash() {
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Trash & Recovery</h1>
           <p className="text-xs text-slate-500 mt-1">Deleted items remain here for 30 days before permanent deletion.</p>
         </div>
-        {items.length > 0 && (
+        {(items?.length || 0) > 0 && (
           <button
             onClick={handleEmptyTrash}
             className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-xs font-bold text-red-700 hover:bg-red-100 transition"
@@ -433,7 +436,7 @@ export function VaultTrash() {
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
         {isLoading ? (
           <div className="flex h-64 items-center justify-center text-slate-400">Loading trash...</div>
-        ) : items.length === 0 ? (
+        ) : (!items || items.length === 0) ? (
           <div className="flex items-center justify-center h-64 flex-col text-slate-500">
             <Trash2 size={48} className="mb-4 opacity-40 text-slate-400" />
             <p className="text-sm font-bold text-slate-800">Trash is empty</p>
@@ -449,7 +452,7 @@ export function VaultTrash() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {items.map(i => (
+              {(items || []).map(i => (
                 <tr key={i.id}>
                   <td className="px-4 py-3 font-bold text-slate-900">{i.name}</td>
                   <td className="px-4 py-3 text-slate-600">{i.type}</td>

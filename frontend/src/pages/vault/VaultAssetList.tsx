@@ -34,10 +34,11 @@ export default function VaultAssetList() {
     try {
       const typeFilter = activeTab === 'All' ? undefined : activeTab.endsWith('s') ? activeTab.slice(0, -1) : activeTab;
       const data = await vaultApi.getAssets({ search, type: typeFilter });
-      setAssets(data);
+      setAssets(Array.isArray(data) ? data : []);
       setError('');
     } catch (err: any) {
       console.error('Failed to load assets', err);
+      setAssets([]);
       setError('Failed to load assets');
     } finally {
       setIsLoading(false);
@@ -168,7 +169,7 @@ export default function VaultAssetList() {
           <div className="flex h-64 items-center justify-center text-slate-400">Loading assets...</div>
         ) : error ? (
           <div className="flex h-64 items-center justify-center text-red-500">{error}</div>
-        ) : assets.length === 0 ? (
+        ) : (!assets || assets.length === 0) ? (
           <div className="flex h-64 items-center justify-center text-slate-400 flex-col rounded-2xl border border-slate-200 bg-white">
             <Box size={48} className="mb-4 opacity-40 text-emerald-600" />
             <p className="text-sm font-semibold">No assets found</p>

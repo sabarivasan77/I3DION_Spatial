@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ShieldCheck,
   Search,
-  Filter,
   RefreshCw,
   User,
   Clock,
-  Activity,
-  FileText
+  Activity
 } from 'lucide-react';
 import { vaultApi, VaultAuditLog } from '../../api/vaultApi';
 
@@ -15,7 +13,7 @@ export default function VaultAuditTrail() {
   const [logs, setLogs] = useState<VaultAuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [actionFilter, setActionFilter] = useState('');
+  const [actionFilter] = useState('');
 
   useEffect(() => {
     loadAuditLogs();
@@ -25,9 +23,10 @@ export default function VaultAuditTrail() {
     setIsLoading(true);
     try {
       const data = await vaultApi.getActivityLogs({ search, action: actionFilter });
-      setLogs(data);
+      setLogs(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load audit logs', err);
+      setLogs([]);
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +73,7 @@ export default function VaultAuditTrail() {
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex-1 overflow-auto">
         {isLoading ? (
           <div className="flex h-64 items-center justify-center text-slate-400">Loading audit trail...</div>
-        ) : logs.length === 0 ? (
+        ) : (!logs || logs.length === 0) ? (
           <div className="flex flex-col items-center justify-center h-64 text-slate-400">
             <ShieldCheck size={48} className="mb-4 opacity-40 text-emerald-600" />
             <p className="text-sm font-semibold text-slate-800">No activity logs matching criteria</p>

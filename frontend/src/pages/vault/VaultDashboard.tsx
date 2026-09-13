@@ -7,9 +7,7 @@ import {
   Layers,
   ArrowUpRight,
   Database,
-  FileDown,
   UploadCloud,
-  CheckCircle2,
   Cpu
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
@@ -35,9 +33,10 @@ export default function VaultDashboard() {
         vaultApi.getAssets({ sort: 'newest' }).catch(() => [])
       ]);
       setSummary(sumData);
-      setRecentAssets(assetsData.slice(0, 4));
+      setRecentAssets(Array.isArray(assetsData) ? assetsData.slice(0, 4) : []);
     } catch (err) {
       console.error('Failed to load dashboard metrics', err);
+      setRecentAssets([]);
     } finally {
       setIsLoading(false);
     }

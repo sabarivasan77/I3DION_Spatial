@@ -3,20 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Search,
-  Filter,
   Plus,
   Download,
   UploadCloud,
   Settings2,
-  MoreHorizontal,
-  Box,
   Grid,
   List,
   Trash2,
-  Share2,
   Edit3,
-  Copy,
-  RefreshCw,
   X,
   CheckCircle2,
   Database,
@@ -63,11 +57,12 @@ export default function VaultDataWorkspace() {
     try {
       const res = await vaultApi.getRecords(id);
       setCollection(res.collection);
-      setTitleName(res.collection.name);
-      setRecords(res.records);
+      setTitleName(res.collection?.name || 'Workspace');
+      setRecords(Array.isArray(res?.records) ? res.records : []);
       setError('');
     } catch (err: any) {
       console.error(err);
+      setRecords([]);
       setError('Failed to load data workspace');
     } finally {
       setIsLoading(false);
@@ -95,7 +90,7 @@ export default function VaultDataWorkspace() {
         data: newRecordData,
         status: 'Active'
       });
-      setRecords([created, ...records]);
+      setRecords([created, ...(records || [])]);
       setNewRecordName('');
       setNewRecordData({});
       setIsAddRecordOpen(false);
@@ -108,7 +103,7 @@ export default function VaultDataWorkspace() {
     if (!collection) return;
     try {
       await vaultApi.deleteRecord(collection.id, recordId);
-      setRecords(records.filter(r => r.id !== recordId));
+      setRecords((records || []).filter(r => r.id !== recordId));
       if (activeRecord?.id === recordId) setActiveRecord(null);
     } catch (err) {
       console.error('Delete record failed', err);
@@ -119,7 +114,7 @@ export default function VaultDataWorkspace() {
     if (!collection || selectedRecordIds.length === 0) return;
     try {
       await Promise.all(selectedRecordIds.map(id => vaultApi.deleteRecord(collection.id, id)));
-      setRecords(records.filter(r => !selectedRecordIds.includes(r.id)));
+      setRecords((records || []).filter(r => !selectedRecordIds.includes(r.id)));
       setSelectedRecordIds([]);
     } catch (err) {
       console.error('Bulk delete records failed', err);
@@ -132,13 +127,13 @@ export default function VaultDataWorkspace() {
       const createdRecords = await Promise.all(
         importedList.map(rec => vaultApi.createRecord(collection.id, rec))
       );
-      setRecords([...createdRecords, ...records]);
+      setRecords([...createdRecords, ...(records || [])]);
     } catch (err) {
       console.error('Batch import failed', err);
     }
   };
 
-  const filteredRecords = records.filter(r => {
+  const filteredRecords = (records || []).filter(r => {
     if (!search) return true;
     const term = search.toLowerCase();
     return (

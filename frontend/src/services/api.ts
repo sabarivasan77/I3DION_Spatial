@@ -926,6 +926,20 @@ async function offlineFallback<T>(rawPath: string, options: RequestInit & { toke
     } as T;
   }
 
+  // --- Spatial Vault Offline / Network Guard Fallbacks ---
+  if (path.startsWith('/api/vault') || path.startsWith('/vault')) {
+    if (path.includes('/datasets/summary')) {
+      return { total_assets: 0, total_3d_models: 0, total_products: 0, total_catalogs: 0, total_templates: 0, total_collections: 0, total_storage_bytes: 0, storage_quota_bytes: 107374182400 } as T;
+    }
+    if (path.includes('/records')) {
+      return { collection: { id: 'default', name: 'Collection Workspace', description: '', schema_fields: [], created_at: new Date().toISOString(), updated_at: new Date().toISOString() }, records: [] } as T;
+    }
+    if (path.includes('/assets') || path.includes('/collections') || path.includes('/templates') || path.includes('/trash') || path.includes('/processing') || path.includes('/activity')) {
+      return [] as unknown as T;
+    }
+    return {} as T;
+  }
+
   if (isOfflineToken(token)) {
     return undefined as T;
   }
