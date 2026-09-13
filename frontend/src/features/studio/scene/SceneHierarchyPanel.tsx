@@ -89,14 +89,14 @@ export const SceneHierarchyPanel: React.FC = () => {
   };
 
   const getWidgetIcon = (type: string, isGroup?: boolean) => {
-    if (isGroup) return <Folder size={13} className="text-amber-400" />;
+    if (isGroup) return <Folder size={13} className="text-amber-600" />;
     if (type === '3d-model-viewer' || type === 'three_model_viewer' || type === 'hotspot')
-      return <Box size={13} className="text-cyan-400" />;
+      return <Box size={13} className="text-blue-600" />;
     if (type === 'heading' || type === 'text' || type === 'paragraph')
-      return <Type size={13} className="text-blue-400" />;
-    if (type === 'image' || type === 'video') return <ImageIcon size={13} className="text-emerald-400" />;
-    if (type === 'button') return <MousePointerClick size={13} className="text-indigo-400" />;
-    return <Layers size={13} className="text-slate-400" />;
+      return <Type size={13} className="text-indigo-600" />;
+    if (type === 'image' || type === 'video') return <ImageIcon size={13} className="text-emerald-600" />;
+    if (type === 'button') return <MousePointerClick size={13} className="text-violet-600" />;
+    return <Layers size={13} className="text-slate-500" />;
   };
 
   const renderNodeItem = (node: StudioWidgetNode, depth = 0) => {
@@ -111,8 +111,8 @@ export const SceneHierarchyPanel: React.FC = () => {
           style={{ paddingLeft: `${depth * 14 + 10}px` }}
           className={`flex items-center justify-between h-8 pr-2 text-xs font-mono select-none cursor-pointer border-l-2 transition ${
             isSelected
-              ? 'bg-cyan-950/40 border-cyan-500 text-cyan-200'
-              : 'border-transparent text-slate-300 hover:bg-slate-800/50'
+              ? 'bg-blue-50 border-blue-600 text-blue-900 font-semibold'
+              : 'border-transparent text-slate-700 hover:bg-slate-100'
           } ${isHidden ? 'opacity-40' : ''}`}
         >
           <div className="flex items-center gap-2 truncate">
@@ -124,12 +124,12 @@ export const SceneHierarchyPanel: React.FC = () => {
                   type="text"
                   value={editingName}
                   onChange={(e) => setEditingName(e.target.value)}
-                  className="bg-slate-900 border border-slate-700 rounded px-1 text-xs text-white"
+                  className="bg-white border border-slate-300 rounded px-1 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
                   autoFocus
                 />
                 <button
                   onClick={() => handleSaveRename(node.id)}
-                  className="p-0.5 hover:bg-slate-800 rounded text-emerald-400"
+                  className="p-0.5 hover:bg-slate-200 rounded text-emerald-600"
                 >
                   <Check size={12} />
                 </button>
@@ -144,23 +144,23 @@ export const SceneHierarchyPanel: React.FC = () => {
             <button
               onClick={(e) => handleStartRename(node, e)}
               title="Rename Node"
-              className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-slate-200"
+              className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-900"
             >
               <Edit2 size={11} />
             </button>
             <button
               onClick={(e) => handleToggleHide(node, e)}
               title={isHidden ? 'Show Node' : 'Hide Node'}
-              className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-slate-200"
+              className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-900"
             >
-              {isHidden ? <EyeOff size={11} className="text-amber-400" /> : <Eye size={11} />}
+              {isHidden ? <EyeOff size={11} className="text-amber-600" /> : <Eye size={11} />}
             </button>
             <button
               onClick={(e) => handleToggleLock(node, e)}
               title={isLocked ? 'Unlock Node' : 'Lock Node'}
-              className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-slate-200"
+              className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-900"
             >
-              {isLocked ? <Lock size={11} className="text-rose-400" /> : <Unlock size={11} />}
+              {isLocked ? <Lock size={11} className="text-rose-600" /> : <Unlock size={11} />}
             </button>
           </div>
         </div>
@@ -174,11 +174,11 @@ export const SceneHierarchyPanel: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-900/90 text-slate-200 border-r border-slate-800 select-none">
+    <div className="flex flex-col h-full bg-white text-slate-800 border-r border-slate-200 select-none">
       {/* Panel Header */}
-      <div className="h-10 px-3 border-b border-slate-800 flex items-center justify-between bg-slate-950/60 shrink-0">
-        <div className="flex items-center gap-2 font-mono text-xs font-bold text-cyan-400">
-          <Layers size={14} />
+      <div className="h-10 px-3 border-b border-slate-200 flex items-center justify-between bg-slate-50 shrink-0">
+        <div className="flex items-center gap-2 font-mono text-xs font-bold text-slate-800">
+          <Layers size={14} className="text-blue-600" />
           <span>SCENE HIERARCHY</span>
         </div>
 
@@ -188,7 +188,7 @@ export const SceneHierarchyPanel: React.FC = () => {
             <button
               onClick={handleGroupSelected}
               title="Group Selected Nodes (Ctrl+G)"
-              className="p-1 hover:bg-slate-800 rounded text-amber-400 transition"
+              className="p-1 hover:bg-slate-200 rounded text-amber-600 transition"
             >
               <Group size={14} />
             </button>
@@ -198,7 +198,7 @@ export const SceneHierarchyPanel: React.FC = () => {
               <button
                 onClick={handleUngroupSelected}
                 title="Ungroup Node"
-                className="p-1 hover:bg-slate-800 rounded text-amber-400 transition"
+                className="p-1 hover:bg-slate-200 rounded text-amber-600 transition"
               >
                 <Ungroup size={14} />
               </button>
@@ -207,7 +207,7 @@ export const SceneHierarchyPanel: React.FC = () => {
             <button
               onClick={() => duplicateWidget(selectedWidgetId)}
               title="Duplicate Node"
-              className="p-1 hover:bg-slate-800 rounded text-cyan-400 transition"
+              className="p-1 hover:bg-slate-200 rounded text-blue-600 transition"
             >
               <Copy size={13} />
             </button>
@@ -216,7 +216,7 @@ export const SceneHierarchyPanel: React.FC = () => {
             <button
               onClick={() => deleteWidget(selectedWidgetId)}
               title="Delete Node"
-              className="p-1 hover:bg-slate-800 rounded text-rose-400 transition"
+              className="p-1 hover:bg-slate-200 rounded text-rose-600 transition"
             >
               <Trash2 size={13} />
             </button>
@@ -225,12 +225,12 @@ export const SceneHierarchyPanel: React.FC = () => {
       </div>
 
       {/* Node Tree View */}
-      <div className="flex-1 overflow-y-auto py-2">
-        <div className="px-3 py-1 text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider">
+      <div className="flex-1 overflow-y-auto py-2 bg-white">
+        <div className="px-3 py-1 text-[10px] font-mono text-slate-400 font-bold uppercase tracking-wider">
           Root Scene
         </div>
         {widgets.length === 0 ? (
-          <div className="p-4 text-center text-slate-500 text-xs font-mono">Scene is empty</div>
+          <div className="p-4 text-center text-slate-400 text-xs font-mono">Scene is empty</div>
         ) : (
           widgets.map((node) => renderNodeItem(node))
         )}

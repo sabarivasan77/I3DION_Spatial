@@ -5,6 +5,7 @@ import { SceneHierarchyPanel } from './scene/SceneHierarchyPanel';
 import { CanvasArea } from './components/CanvasArea';
 import { PropertiesInspector } from './components/PropertiesInspector';
 import { TimelinePanel } from './timeline/components/TimelinePanel';
+import { SpatialLogicSection } from './components/SpatialLogicSection';
 import { AssetPickerModal } from './components/AssetPickerModal';
 import { TemplateGalleryModal } from './components/TemplateGalleryModal';
 import { LogicCraftPanel } from '../logic/components/LogicCraftPanel';
@@ -15,7 +16,6 @@ import { PublishWorkflowModal } from './collaboration/components/PublishWorkflow
 import { ExperienceDashboard } from './collaboration/components/ExperienceDashboard';
 import { CollaboratorPresenceDrawer } from './collaboration/components/CollaboratorPresenceDrawer';
 import { collaborationTransport } from './collaboration/transport/collaborationTransport';
-import { useStudioStore } from './store/useStudioStore';
 import { useCollaborationStore } from './collaboration/store/collaborationStore';
 import { useAuthStore } from '../../store/authStore';
 import { useStudioKeyboardShortcuts } from './interaction/selectionManager';
@@ -26,6 +26,7 @@ import { LocalMediaPreview } from './communication/components/LocalMediaPreview'
 import { SpatialVoiceIndicator } from './communication/components/SpatialVoiceIndicator';
 
 export const OmniStudioPage: React.FC = () => {
+  const [sectionView, setSectionView] = useState<'canvas' | 'fullCanvas' | 'logic'>('canvas');
   const [isIScriptOpen, setIsIScriptOpen] = useState(false);
   const [leftTab, setLeftTab] = useState<'widgets' | 'hierarchy'>('widgets');
   const user = useAuthStore((s) => s.user);
@@ -52,49 +53,71 @@ export const OmniStudioPage: React.FC = () => {
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden bg-slate-100 font-sans select-none">
-      {/* 1. Top Header Toolbar */}
-      <StudioHeader onOpenIScript={() => setIsIScriptOpen(true)} />
+      {/* 1. Top Header Toolbar with Section Switcher */}
+      <StudioHeader
+        sectionView={sectionView}
+        onSectionViewChange={(view) => setSectionView(view)}
+        onOpenIScript={() => setIsIScriptOpen(true)}
+      />
 
       {/* 2. Main Studio Workspace Layout */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Panel with Tab Switcher */}
-        <div className="w-80 border-r border-slate-800 bg-slate-900 flex flex-col shrink-0">
-          <div className="flex border-b border-slate-800 bg-slate-950 text-xs font-mono text-slate-400">
-            <button
-              onClick={() => setLeftTab('widgets')}
-              className={`flex-1 py-2 flex items-center justify-center gap-1.5 transition ${
-                leftTab === 'widgets' ? 'bg-slate-900 text-cyan-400 border-b-2 border-cyan-500 font-bold' : 'hover:bg-slate-900/50'
-              }`}
-            >
-              <Grid size={13} />
-              <span>Widgets</span>
-            </button>
-            <button
-              onClick={() => setLeftTab('hierarchy')}
-              className={`flex-1 py-2 flex items-center justify-center gap-1.5 transition ${
-                leftTab === 'hierarchy' ? 'bg-slate-900 text-cyan-400 border-b-2 border-cyan-500 font-bold' : 'hover:bg-slate-900/50'
-              }`}
-            >
-              <Layers size={13} />
-              <span>Hierarchy</span>
-            </button>
-          </div>
-          <div className="flex-1 overflow-hidden">
-            {leftTab === 'widgets' ? <WidgetLibraryPanel /> : <SceneHierarchyPanel />}
-          </div>
-        </div>
-
-        {/* Center Canvas & Bottom Timeline */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-hidden relative">
+        {sectionView === 'logic' ? (
+          /* DEDICATED LOGIC & FUNCTIONS SECTION */
+          <SpatialLogicSection />
+        ) : sectionView === 'fullCanvas' ? (
+          /* FULL CANVAS VIEWPORT (100% Canvas Space) */
+          <div className="flex-1 flex flex-col overflow-hidden bg-slate-900 relative">
             <SpatialVoiceIndicator />
             <CanvasArea />
           </div>
-          <TimelinePanel />
-        </div>
+        ) : (
+          /* STANDARD CANVAS DESIGN WORKSPACE */
+          <>
+            {/* Left Panel with Tab Switcher */}
+            <div className="w-80 border-r border-slate-200 bg-white flex flex-col shrink-0">
+              <div className="flex border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
+                <button
+                  onClick={() => setLeftTab('widgets')}
+                  className={`flex-1 py-2 flex items-center justify-center gap-1.5 transition ${
+                    leftTab === 'widgets'
+                      ? 'bg-white text-blue-600 border-b-2 border-blue-600 font-bold'
+                      : 'hover:bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  <Grid size={14} />
+                  <span>Widgets</span>
+                </button>
+                <button
+                  onClick={() => setLeftTab('hierarchy')}
+                  className={`flex-1 py-2 flex items-center justify-center gap-1.5 transition ${
+                    leftTab === 'hierarchy'
+                      ? 'bg-white text-blue-600 border-b-2 border-blue-600 font-bold'
+                      : 'hover:bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  <Layers size={14} />
+                  <span>Hierarchy</span>
+                </button>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                {leftTab === 'widgets' ? <WidgetLibraryPanel /> : <SceneHierarchyPanel />}
+              </div>
+            </div>
 
-        {/* Right Properties Inspector */}
-        <PropertiesInspector />
+            {/* Center Canvas & Bottom Timeline */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-hidden relative">
+                <SpatialVoiceIndicator />
+                <CanvasArea />
+              </div>
+              <TimelinePanel />
+            </div>
+
+            {/* Right Properties Inspector */}
+            <PropertiesInspector />
+          </>
+        )}
       </div>
 
       {/* 3. Modals & Panels */}
@@ -110,7 +133,7 @@ export const OmniStudioPage: React.FC = () => {
       <ExperienceDashboard />
       <CollaboratorPresenceDrawer />
 
-      {/* 5. Phase 12 Real-Time Spatial Communication UI */}
+      {/* 5. Real-Time Spatial Communication UI */}
       <CommunicationBar />
       <ParticipantPanel />
       <LocalMediaPreview />
@@ -118,7 +141,7 @@ export const OmniStudioPage: React.FC = () => {
   );
 };
 
-
 export default OmniStudioPage;
+
 
 

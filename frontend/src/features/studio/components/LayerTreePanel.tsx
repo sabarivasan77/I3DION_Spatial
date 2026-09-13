@@ -8,11 +8,11 @@ export const LayerTreePanel: React.FC = () => {
   const widgets = experience.widgets || [];
 
   const getWidgetIcon = (type: string) => {
-    if (type === '3d-model-viewer' || type === 'three_model_viewer' || type === 'hotspot') return <Box size={13} className="text-cyan-400" />;
-    if (type === 'heading' || type === 'text') return <Type size={13} className="text-blue-400" />;
-    if (type === 'image') return <ImageIcon size={13} className="text-emerald-400" />;
-    if (type === 'button') return <MousePointerClick size={13} className="text-indigo-400" />;
-    return <Folder size={13} className="text-amber-400" />;
+    if (type === '3d-model-viewer' || type === 'three_model_viewer' || type === 'hotspot') return <Box size={13} className="text-blue-600" />;
+    if (type === 'heading' || type === 'text') return <Type size={13} className="text-indigo-600" />;
+    if (type === 'image') return <ImageIcon size={13} className="text-emerald-600" />;
+    if (type === 'button') return <MousePointerClick size={13} className="text-violet-600" />;
+    return <Folder size={13} className="text-amber-600" />;
   };
 
   const renderTreeNode = (node: StudioWidgetNode, depth = 0) => {
@@ -30,8 +30,8 @@ export const LayerTreePanel: React.FC = () => {
           style={{ paddingLeft: `${depth * 14 + 12}px` }}
           className={`group flex items-center justify-between py-1.5 pr-2 rounded-lg text-xs cursor-pointer transition ${
             isSelected
-              ? 'bg-blue-600/30 text-blue-200 border border-blue-500/40 font-semibold'
-              : 'hover:bg-slate-800/60 text-slate-300'
+              ? 'bg-blue-50 text-blue-900 border border-blue-200 font-semibold'
+              : 'hover:bg-slate-100 text-slate-700'
           } ${isHidden ? 'opacity-40' : ''}`}
         >
           <div className="flex items-center gap-2 truncate">
@@ -46,7 +46,7 @@ export const LayerTreePanel: React.FC = () => {
                 updateWidgetProperties(node.id, { hidden: !isHidden });
               }}
               title={isHidden ? 'Unhide' : 'Hide'}
-              className="p-0.5 text-slate-400 hover:text-slate-200"
+              className="p-0.5 text-slate-400 hover:text-slate-700"
             >
               {isHidden ? <EyeOff size={12} /> : <Eye size={12} />}
             </button>
@@ -57,9 +57,9 @@ export const LayerTreePanel: React.FC = () => {
                 updateWidgetProperties(node.id, { locked: !isLocked });
               }}
               title={isLocked ? 'Unlock' : 'Lock'}
-              className="p-0.5 text-slate-400 hover:text-slate-200"
+              className="p-0.5 text-slate-400 hover:text-slate-700"
             >
-              {isLocked ? <Lock size={12} className="text-amber-400" /> : <Unlock size={12} />}
+              {isLocked ? <Lock size={12} className="text-amber-600" /> : <Unlock size={12} />}
             </button>
 
             <button
@@ -68,7 +68,7 @@ export const LayerTreePanel: React.FC = () => {
                 deleteWidget(node.id);
               }}
               title="Delete"
-              className="p-0.5 text-slate-400 hover:text-rose-400"
+              className="p-0.5 text-slate-400 hover:text-rose-600"
             >
               <Trash2 size={12} />
             </button>
@@ -81,18 +81,18 @@ export const LayerTreePanel: React.FC = () => {
   };
 
   return (
-    <div className="w-64 border-r border-slate-800 bg-slate-950 flex flex-col h-full">
-      <div className="p-3 border-b border-slate-800 flex items-center gap-2">
-        <Layers className="text-cyan-400" size={16} />
+    <div className="w-full border-t border-slate-200 bg-white flex flex-col shrink-0">
+      <div className="p-3 border-b border-slate-200 flex items-center gap-2 bg-slate-50">
+        <Layers className="text-blue-600" size={16} />
         <div>
-          <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Layers Tree</h3>
-          <p className="text-[10px] text-slate-400">{widgets.length} Elements in Scene</p>
+          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Layers Tree</h3>
+          <p className="text-[10px] text-slate-500">{widgets.length} Elements in Scene</p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 space-y-1">
+      <div className="max-h-48 overflow-y-auto p-2 space-y-1 bg-white">
         {widgets.length === 0 ? (
-          <div className="p-4 text-center text-xs text-slate-500">No widgets on canvas.</div>
+          <div className="p-4 text-center text-xs text-slate-400">No widgets on canvas.</div>
         ) : (
           widgets.map((node) => renderTreeNode(node, 0))
         )}

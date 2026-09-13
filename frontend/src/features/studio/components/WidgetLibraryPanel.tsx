@@ -94,14 +94,14 @@ export const WidgetLibraryPanel: React.FC = () => {
   };
 
   return (
-    <aside className="flex h-full w-80 flex-col border-r border-slate-800 bg-slate-900 text-slate-100">
+    <aside className="flex h-full w-80 flex-col border-r border-slate-200 bg-white text-slate-800">
       {/* Library Header */}
-      <div className="border-b border-slate-800 p-4">
-        <h2 className="flex items-center gap-2 text-sm font-bold text-white">
-          <Layers size={18} className="text-blue-400" />
+      <div className="border-b border-slate-200 p-4 bg-white">
+        <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900">
+          <Layers size={18} className="text-blue-600" />
           Widget Ecosystem
         </h2>
-        <p className="mt-0.5 text-xs text-slate-400">
+        <p className="mt-0.5 text-xs text-slate-500">
           Click or drag widgets directly onto the spatial canvas
         </p>
 
@@ -109,20 +109,20 @@ export const WidgetLibraryPanel: React.FC = () => {
         <div className="relative mt-3">
           <Search
             size={15}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
           />
           <input
             type="text"
             placeholder="Search widgets..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-slate-800 bg-slate-950 py-2 pl-9 pr-3 text-xs text-slate-200 placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none"
           />
         </div>
       </div>
 
       {/* Category Tabs */}
-      <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-slate-800 p-2.5 bg-slate-950/40">
+      <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-slate-200 p-2.5 bg-slate-50">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.key}
@@ -130,8 +130,8 @@ export const WidgetLibraryPanel: React.FC = () => {
             onClick={() => setActiveCategory(cat.key)}
             className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors ${
               activeCategory === cat.key
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-800/80 text-slate-400 hover:bg-slate-800 hover:text-white'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-white text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 border border-slate-200'
             }`}
           >
             {cat.label}
@@ -140,7 +140,7 @@ export const WidgetLibraryPanel: React.FC = () => {
       </div>
 
       {/* Widget Cards List with HTML5 Drag & Drop Support */}
-      <div className="no-scrollbar flex-1 space-y-2.5 overflow-y-auto p-4">
+      <div className="no-scrollbar flex-1 space-y-2 overflow-y-auto p-3 bg-white">
         {filteredWidgets.length > 0 ? (
           filteredWidgets.map((widget: WidgetDefinition) => (
             <div
@@ -150,27 +150,27 @@ export const WidgetLibraryPanel: React.FC = () => {
                 e.dataTransfer.setData('widgetType', widget.type);
               }}
               onClick={() => addWidget(widget.type)}
-              className="group relative flex cursor-grab active:cursor-grabbing items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 transition-all hover:border-blue-500/60 hover:bg-slate-800/40 hover:shadow-md"
+              className="group relative flex cursor-grab active:cursor-grabbing items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 transition-all hover:border-blue-400 hover:bg-slate-50 hover:shadow-sm"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-800 bg-slate-900 shadow-inner">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 shadow-inner">
                 {getWidgetIcon(widget.iconName)}
               </div>
               <div className="flex-1 pr-6">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-xs font-bold text-slate-200 group-hover:text-blue-400 transition-colors">
+                  <h3 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                     {widget.displayName}
                   </h3>
-                  <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[9px] font-mono text-slate-400 capitalize">
+                  <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-mono text-slate-500 capitalize">
                     {widget.category}
                   </span>
                 </div>
-                <p className="mt-0.5 text-[10px] text-slate-400 line-clamp-2 leading-tight">
+                <p className="mt-0.5 text-[10px] text-slate-500 line-clamp-2 leading-tight">
                   {widget.description}
                 </p>
               </div>
               <button
                 type="button"
-                className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-lg bg-slate-800 text-slate-400 opacity-0 group-hover:bg-blue-600 group-hover:text-white group-hover:opacity-100 transition-all"
+                className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-lg bg-slate-100 text-slate-500 opacity-0 group-hover:bg-blue-600 group-hover:text-white group-hover:opacity-100 transition-all"
                 title={`Add ${widget.displayName}`}
               >
                 <Plus size={14} />
@@ -178,7 +178,7 @@ export const WidgetLibraryPanel: React.FC = () => {
             </div>
           ))
         ) : (
-          <div className="py-8 text-center text-xs text-slate-500">
+          <div className="py-8 text-center text-xs text-slate-400">
             No matching widgets found.
           </div>
         )}
@@ -189,4 +189,5 @@ export const WidgetLibraryPanel: React.FC = () => {
     </aside>
   );
 };
+
 
