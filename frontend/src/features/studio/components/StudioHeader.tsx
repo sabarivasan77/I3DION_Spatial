@@ -19,6 +19,9 @@ import {
   Box,
   Film,
   Play,
+  Bell,
+  MessageSquare,
+  HelpCircle,
 } from 'lucide-react';
 
 export interface StudioHeaderProps {
@@ -122,45 +125,51 @@ export const StudioHeader: React.FC<StudioHeaderProps> = ({
           </div>
         </div>
 
-        {/* WORKSPACE SECTION SWITCHER: Canvas Design | Full Canvas | Logic & Functions */}
-        <div className="ml-2 hidden md:flex items-center rounded-xl border border-slate-200 bg-slate-100 p-1">
+        {/* WORKSPACE SECTION SWITCHER: Design | Crafting | Preview */}
+        <div className="ml-4 flex items-center rounded-xl border border-slate-200 bg-slate-100 p-1">
           <button
             type="button"
-            onClick={() => onSectionViewChange && onSectionViewChange('canvas')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-              sectionView === 'canvas'
-                ? 'bg-white text-blue-600 shadow-sm'
+            onClick={() => {
+              setPreview(false);
+              onSectionViewChange && onSectionViewChange('canvas');
+            }}
+            className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition ${
+              sectionView === 'canvas' && !isPreview
+                ? 'bg-blue-600 text-white shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Box size={14} />
-            <span>Canvas Design</span>
+            <span>Design</span>
           </button>
 
           <button
             type="button"
-            onClick={() => onSectionViewChange && onSectionViewChange('fullCanvas')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-              sectionView === 'fullCanvas'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Maximize2 size={14} />
-            <span>Full Canvas</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onSectionViewChange && onSectionViewChange('logic')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-              sectionView === 'logic'
-                ? 'bg-white text-blue-600 shadow-sm'
+            onClick={() => {
+              setPreview(false);
+              onSectionViewChange && onSectionViewChange('logic');
+            }}
+            className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition ${
+              sectionView === 'logic' && !isPreview
+                ? 'bg-blue-600 text-white shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Workflow size={14} />
-            <span>Logic & Functions</span>
+            <span>Crafting</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setPreview(true)}
+            className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition ${
+              isPreview
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Play size={14} fill="currentColor" />
+            <span>Preview</span>
           </button>
         </div>
       </div>
@@ -289,7 +298,7 @@ export const StudioHeader: React.FC<StudioHeaderProps> = ({
         <button
           type="button"
           onClick={() => setPreview(true)}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-md hover:bg-emerald-700 transition active:scale-95"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-md hover:bg-blue-700 transition active:scale-95"
           title="Enter Customer Preview Mode"
         >
           <Play size={14} fill="currentColor" />
@@ -300,7 +309,7 @@ export const StudioHeader: React.FC<StudioHeaderProps> = ({
         <button
           type="button"
           onClick={() => saveCurrentExperience()}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 transition"
         >
           Save Draft
         </button>
@@ -309,11 +318,41 @@ export const StudioHeader: React.FC<StudioHeaderProps> = ({
         <button
           type="button"
           onClick={openPublishModal}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 transition"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
         >
           <Send size={14} />
           <span>Publish</span>
         </button>
+
+        {/* Notification Bell, Help, and User Avatar (Matching Reference Item 6) */}
+        <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
+          {/* Bell with Badge */}
+          <button
+            type="button"
+            className="relative rounded-xl border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition"
+            title="Notifications"
+          >
+            <Bell size={16} />
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
+              1
+            </span>
+          </button>
+
+          {/* Chatbot / Assistant Trigger */}
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent('i3dion:open_assistant'))}
+            className="rounded-xl border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition"
+            title="I3DION Assistant"
+          >
+            <MessageSquare size={16} />
+          </button>
+
+          {/* User Avatar */}
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white shadow-sm">
+            SV
+          </div>
+        </div>
       </div>
     </header>
   );

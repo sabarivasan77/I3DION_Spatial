@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLogicCraftStore } from '../store/useLogicCraftStore';
 import { logicNodeRegistry } from '../registry/logicNodeRegistry';
-import { NodeCategory, LogicNodeDefinition } from '../types/logic';
+import { LogicNodeDefinition } from '../types/logic';
 import {
   Search,
   Zap,
@@ -21,103 +21,119 @@ import {
   Eye,
   Camera,
   Plus,
+  ChevronDown,
+  ChevronRight,
+  Sliders,
+  Layers,
 } from 'lucide-react';
 
-const CATEGORIES: { key: 'all' | NodeCategory; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'triggers', label: 'Triggers' },
-  { key: 'logic', label: 'Logic' },
-  { key: 'conditions', label: 'Conditions' },
-  { key: 'actions', label: 'Actions' },
-  { key: '3d', label: '3D' },
-];
+interface CategoryGroup {
+  id: string;
+  name: string;
+  count: number;
+}
 
 export const LogicNodeLibrary: React.FC = () => {
   const { addNode, selectedNodeId, getActiveGraph } = useLogicCraftStore();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<'all' | NodeCategory>('all');
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
+    Events: true,
+    Actions: true,
+    Logic: true,
+    Data: false,
+    UI: false,
+    Advanced: false,
+  });
 
   const allNodes = logicNodeRegistry.getAll();
   const activeGraph = getActiveGraph();
   const selectedNode = activeGraph.nodes.find((n) => n.id === selectedNodeId);
   const selectedDef = selectedNode ? logicNodeRegistry.get(selectedNode.type) : null;
 
-  const filteredNodes = allNodes.filter((node) => {
-    const matchesCategory =
-      activeCategory === 'all' || node.category === activeCategory;
-    const matchesSearch =
-      node.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      node.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const toggleCategory = (cat: string) => {
+    setExpandedCategories((prev) => ({ ...prev, [cat]: !prev[cat] }));
+  };
 
   const getNodeIcon = (iconName?: string) => {
     switch (iconName) {
-      case 'MousePointerClick': return <MousePointerClick size={16} className="text-amber-400" />;
-      case 'Sparkles': return <Sparkles size={16} className="text-blue-400" />;
-      case 'Box': return <Box size={16} className="text-indigo-400" />;
-      case 'MousePointer': return <MousePointer size={16} className="text-cyan-400" />;
-      case 'MapPin': return <MapPin size={16} className="text-sky-400" />;
-      case 'Play': return <Play size={16} className="text-emerald-400" />;
-      case 'CheckCircle2': return <CheckCircle2 size={16} className="text-emerald-400" />;
-      case 'Send': return <Send size={16} className="text-blue-400" />;
-      case 'ListOrdered': return <ListOrdered size={16} className="text-violet-400" />;
-      case 'Clock': return <Clock size={16} className="text-amber-400" />;
-      case 'GitFork': return <GitFork size={16} className="text-orange-400" />;
-      case 'Database': return <Database size={16} className="text-purple-400" />;
-      case 'HelpCircle': return <HelpCircle size={16} className="text-blue-400" />;
-      case 'Eye': return <Eye size={16} className="text-emerald-400" />;
-      case 'Camera': return <Camera size={16} className="text-indigo-400" />;
-      default: return <Zap size={16} className="text-slate-400" />;
+      case 'MousePointerClick': return <MousePointerClick size={14} className="text-red-500" />;
+      case 'Sparkles': return <Sparkles size={14} className="text-blue-500" />;
+      case 'Box': return <Box size={14} className="text-indigo-500" />;
+      case 'MousePointer': return <MousePointer size={14} className="text-cyan-500" />;
+      case 'MapPin': return <MapPin size={14} className="text-sky-500" />;
+      case 'Play': return <Play size={14} className="text-emerald-500" />;
+      case 'CheckCircle2': return <CheckCircle2 size={14} className="text-emerald-500" />;
+      case 'Send': return <Send size={14} className="text-blue-500" />;
+      case 'ListOrdered': return <ListOrdered size={14} className="text-violet-500" />;
+      case 'Clock': return <Clock size={14} className="text-amber-500" />;
+      case 'GitFork': return <GitFork size={14} className="text-orange-500" />;
+      case 'Database': return <Database size={14} className="text-purple-500" />;
+      case 'HelpCircle': return <HelpCircle size={14} className="text-blue-500" />;
+      case 'Eye': return <Eye size={14} className="text-emerald-500" />;
+      case 'Camera': return <Camera size={14} className="text-indigo-500" />;
+      default: return <Zap size={14} className="text-slate-500" />;
     }
   };
 
+  // Group nodes into Events, Actions, Logic, Data, UI, Advanced
+  const getCategoryName = (cat: string) => {
+    switch (cat) {
+      case 'triggers': return 'Events';
+      case 'actions':
+      case '3d': return 'Actions';
+      case 'conditions':
+      case 'logic': return 'Logic';
+      default: return 'Advanced';
+    }
+  };
+
+  const nodeGroups: Record<string, LogicNodeDefinition[]> = {
+    Events: [],
+    Actions: [],
+    Logic: [],
+    Data: [
+      { type: 'get_var', name: 'Get Variable', description: 'Read state variable', category: 'logic', iconName: 'Database', inputPorts: [], outputPorts: [], defaultProperties: {} },
+      { type: 'set_var', name: 'Set Variable', description: 'Modify state variable', category: 'logic', iconName: 'Database', inputPorts: [], outputPorts: [], defaultProperties: {} },
+    ],
+    UI: [
+      { type: 'show_panel', name: 'Show UI Panel', description: 'Display HUD panel', category: 'actions', iconName: 'Eye', inputPorts: [], outputPorts: [], defaultProperties: {} },
+      { type: 'show_tooltip', name: 'Show Tooltip', description: 'Show text tooltip', category: 'actions', iconName: 'HelpCircle', inputPorts: [], outputPorts: [], defaultProperties: {} },
+    ],
+    Advanced: [
+      { type: 'call_function', name: 'Call Function', description: 'Execute iScript routine', category: 'logic', iconName: 'Sparkles', inputPorts: [], outputPorts: [], defaultProperties: {} },
+    ],
+  };
+
+  allNodes.forEach((node) => {
+    const group = getCategoryName(node.category);
+    if (!nodeGroups[group]) nodeGroups[group] = [];
+    nodeGroups[group].push(node);
+  });
+
   return (
-    <aside className="flex h-full w-80 flex-col border-r border-slate-800 bg-slate-900 text-slate-100">
+    <aside className="flex h-full w-64 flex-col border-r border-slate-200 bg-white text-slate-800 shrink-0">
       {/* Search Header */}
-      <div className="border-b border-slate-800 p-4">
-        <h2 className="flex items-center gap-2 text-xs font-bold text-white">
-          <Zap size={16} className="text-indigo-400" />
-          Logic Node Library
-        </h2>
-        <div className="relative mt-3">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+      <div className="border-b border-slate-200 p-3">
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search nodes (e.g. animation, click)..."
+            placeholder="Search nodes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-slate-800 bg-slate-950 py-2 pl-9 pr-3 text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-8 pr-3 text-xs text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none"
           />
         </div>
       </div>
 
-      {/* Category Pills */}
-      <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-slate-800 p-2.5 bg-slate-950/40">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.key}
-            type="button"
-            onClick={() => setActiveCategory(cat.key)}
-            className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors ${
-              activeCategory === cat.key
-                ? 'bg-indigo-600 text-white'
-                : 'bg-slate-800/80 text-slate-400 hover:bg-slate-800 hover:text-white'
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Contextual Suggestions Box */}
+      {/* Suggested Actions if Node Selected */}
       {selectedDef && selectedDef.suggestedNextNodes && selectedDef.suggestedNextNodes.length > 0 && (
-        <div className="border-b border-slate-800 bg-indigo-950/30 p-3">
-          <div className="flex items-center gap-1.5 text-[11px] font-bold text-indigo-300">
-            <Sparkles size={13} className="text-indigo-400 animate-pulse" />
-            <span>Suggested Next Actions for "{selectedDef.name}":</span>
+        <div className="border-b border-slate-200 bg-blue-50/60 p-3">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold text-blue-700">
+            <Sparkles size={12} className="text-blue-500 animate-pulse" />
+            <span>Suggested for "{selectedDef.name}":</span>
           </div>
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="mt-1.5 flex flex-wrap gap-1">
             {selectedDef.suggestedNextNodes.map((nodeType) => {
               const suggestedDef = logicNodeRegistry.get(nodeType);
               if (!suggestedDef) return null;
@@ -126,7 +142,7 @@ export const LogicNodeLibrary: React.FC = () => {
                   key={nodeType}
                   type="button"
                   onClick={() => addNode(nodeType)}
-                  className="inline-flex items-center gap-1 rounded bg-indigo-900/60 px-2 py-1 text-[10px] font-semibold text-indigo-200 border border-indigo-700/50 hover:bg-indigo-600 hover:text-white transition-all"
+                  className="inline-flex items-center gap-1 rounded bg-white px-2 py-0.5 text-[10px] font-medium text-blue-700 border border-blue-200 shadow-2xs hover:bg-blue-600 hover:text-white transition-all"
                 >
                   <Plus size={10} />
                   {suggestedDef.name}
@@ -137,44 +153,62 @@ export const LogicNodeLibrary: React.FC = () => {
         </div>
       )}
 
-      {/* Node Cards List */}
-      <div className="no-scrollbar flex-1 space-y-2.5 overflow-y-auto p-4">
-        {filteredNodes.length > 0 ? (
-          filteredNodes.map((node: LogicNodeDefinition) => (
-            <div
-              key={node.type}
-              onClick={() => addNode(node.type)}
-              className="group relative flex cursor-pointer items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 transition-all hover:border-indigo-500/60 hover:bg-slate-800/40 hover:shadow-md"
-            >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-800 bg-slate-900 shadow-inner">
-                {getNodeIcon(node.iconName)}
-              </div>
-              <div className="flex-1 pr-6">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xs font-bold text-slate-200 group-hover:text-indigo-400 transition-colors">
-                    {node.name}
-                  </h3>
-                  <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[9px] font-mono text-slate-400 capitalize">
-                    {node.category}
-                  </span>
-                </div>
-                <p className="mt-0.5 text-[10px] text-slate-400 line-clamp-2 leading-tight">
-                  {node.description}
-                </p>
-              </div>
+      {/* Categorized Accordion Tree */}
+      <div className="no-scrollbar flex-1 space-y-1 overflow-y-auto p-2">
+        {Object.entries(nodeGroups).map(([categoryName, nodes]) => {
+          const filtered = nodes.filter(
+            (n) =>
+              n.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              n.description.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+          if (searchQuery && filtered.length === 0) return null;
+
+          const isExpanded = expandedCategories[categoryName];
+
+          return (
+            <div key={categoryName} className="rounded-lg border border-transparent">
+              {/* Category Accordion Header */}
               <button
                 type="button"
-                className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-lg bg-slate-800 text-slate-400 opacity-0 group-hover:bg-indigo-600 group-hover:text-white group-hover:opacity-100 transition-all"
-                title={`Add ${node.name}`}
+                onClick={() => toggleCategory(categoryName)}
+                className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
               >
-                <Plus size={14} />
+                <div className="flex items-center gap-1.5">
+                  {isExpanded ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />}
+                  <span>{categoryName}</span>
+                </div>
+                <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+                  {filtered.length}
+                </span>
               </button>
+
+              {/* Category Items */}
+              {isExpanded && (
+                <div className="mt-1 space-y-1 pl-3">
+                  {filtered.map((node) => (
+                    <div
+                      key={node.type}
+                      onClick={() => addNode(node.type)}
+                      className="group flex cursor-pointer items-center justify-between rounded-lg border border-slate-100 bg-slate-50/70 px-2.5 py-1.5 text-xs transition-all hover:border-blue-300 hover:bg-blue-50/50 hover:shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-5 w-5 items-center justify-center rounded bg-white shadow-2xs">
+                          {getNodeIcon(node.iconName)}
+                        </div>
+                        <span className="font-medium text-slate-700 group-hover:text-blue-600">
+                          {node.name}
+                        </span>
+                      </div>
+                      <Plus size={13} className="text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          ))
-        ) : (
-          <div className="py-8 text-center text-xs text-slate-500">No matching logic nodes found.</div>
-        )}
+          );
+        })}
       </div>
     </aside>
   );
 };
+

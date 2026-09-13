@@ -94,6 +94,7 @@ interface LogicCraftState {
   zoomIn: () => void;
   zoomOut: () => void;
   resetZoom: () => void;
+  setZoomLevel: (zoom: number) => void;
   setPanOffset: (offset: { x: number; y: number }) => void;
   undo: () => void;
   redo: () => void;
@@ -416,6 +417,7 @@ export const useLogicCraftStore = create<LogicCraftState>((set, get) => ({
   zoomIn: () => set((s) => ({ zoomLevel: Math.min(2.0, parseFloat((s.zoomLevel + 0.1).toFixed(2))) })),
   zoomOut: () => set((s) => ({ zoomLevel: Math.max(0.5, parseFloat((s.zoomLevel - 0.1).toFixed(2))) })),
   resetZoom: () => set({ zoomLevel: 1.0 }),
+  setZoomLevel: (zoom) => set({ zoomLevel: Math.max(0.4, Math.min(2.0, parseFloat(zoom.toFixed(2)))) }),
   setPanOffset: (offset) => set({ panOffset: offset }),
 
   undo: () => {

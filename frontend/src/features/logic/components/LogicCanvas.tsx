@@ -172,13 +172,13 @@ export const LogicCanvas: React.FC = () => {
       onMouseMove={handleMouseMoveCanvas}
       onMouseUp={handleMouseUpCanvas}
       onClick={() => selectNode(null)}
-      className="no-scrollbar relative flex-1 overflow-hidden bg-slate-950 p-6 select-none cursor-crosshair min-h-[calc(100vh-4rem)]"
+      className="no-scrollbar relative flex-1 overflow-hidden bg-slate-50 p-6 select-none cursor-crosshair min-h-[calc(100vh-4rem)]"
     >
       {/* Grid Pattern Overlay */}
       <div
-        className="absolute inset-0 opacity-20 pointer-events-none"
+        className="absolute inset-0 opacity-40 pointer-events-none"
         style={{
-          backgroundImage: `radial-gradient(#475569 1px, transparent 1px)`,
+          backgroundImage: `radial-gradient(#cbd5e1 1.5px, transparent 1.5px)`,
           backgroundSize: '24px 24px',
         }}
       />

@@ -39,6 +39,12 @@ export function ChatbotWidget() {
     }
   }, [messages, isOpen]);
 
+  useEffect(() => {
+    const handleOpen = () => setIsOpen((prev) => !prev);
+    window.addEventListener('i3dion:open_assistant', handleOpen);
+    return () => window.removeEventListener('i3dion:open_assistant', handleOpen);
+  }, []);
+
   // Requirement 53: REMOVE / HIDE CHATBOT FROM THE HOME PAGE
   if (location.pathname === '/' || location.pathname === '') {
     return null;
@@ -141,20 +147,19 @@ export function ChatbotWidget() {
 
   return (
     <>
-      {/* Floating Action Button - Relocated on /studio to avoid canvas interference */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className={cx(
-          isStudio
-            ? 'fixed top-3.5 right-64 z-50 p-2 rounded-xl bg-slate-900 text-white shadow-md border border-slate-700 hover:bg-slate-800 transition-all flex items-center gap-1.5 text-xs font-semibold'
-            : 'fixed bottom-6 right-6 p-4 rounded-full bg-blue-600 text-white shadow-xl hover:scale-105 transition-transform z-50 border border-blue-400/30 flex items-center justify-center',
-          isOpen ? 'hidden' : 'flex'
-        )}
-        title="Open I3DION Assistant"
-      >
-        <MessageSquare size={isStudio ? 15 : 24} />
-        {isStudio && <span className="hidden xl:inline text-xs">Assistant</span>}
-      </button>
+      {/* Floating Action Button */}
+      {!isStudio && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className={cx(
+            'fixed bottom-6 right-6 p-4 rounded-full bg-blue-600 text-white shadow-xl hover:scale-105 transition-transform z-50 border border-blue-400/30 flex items-center justify-center',
+            isOpen ? 'hidden' : 'flex'
+          )}
+          title="Open I3DION Assistant"
+        >
+          <MessageSquare size={24} />
+        </button>
+      )}
 
       {/* Chat Window */}
       {isOpen && (
