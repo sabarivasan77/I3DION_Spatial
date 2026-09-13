@@ -41,7 +41,6 @@ const SecurityDashboard = lazy(() => import('./pages/SecurityDashboard').then((m
 const BillingSettingsPage = lazy(() => import('./pages/settings/BillingSettingsPage').then((m) => ({ default: m.BillingSettingsPage })));
 const TeamManagementPage = lazy(() => import('./pages/settings/TeamManagementPage').then((m) => ({ default: m.TeamManagementPage })));
 const EnginePage = lazy(() => import('./features/engine/EnginePage').then((m) => ({ default: m.EnginePage })));
-const OmniStudioPage = lazy(() => import('./features/studio/OmniStudioPage').then((m) => ({ default: m.OmniStudioPage })));
 const BuildingManagementPage = lazy(() => import('./pages/BuildingManagementPage').then((m) => ({ default: m.BuildingManagementPage })));
 
 const VaultLayout = lazy(() => import('./layouts/VaultLayout'));
