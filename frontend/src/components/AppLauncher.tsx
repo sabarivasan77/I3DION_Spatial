@@ -109,7 +109,7 @@ export const AppLauncher: React.FC = () => {
 
       {/* App Launcher Modal/Dropdown */}
       {isOpen && (
-        <div className="absolute left-0 top-11 z-50 w-80 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 top-11 z-50 w-80 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-150 text-slate-900">
           <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2.5">
             <div className="flex items-center gap-2">
               <Grid size={16} className="text-blue-600" />
