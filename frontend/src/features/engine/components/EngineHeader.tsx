@@ -19,7 +19,8 @@ import {
   FolderKanban,
   Edit2,
   Check,
-  Zap
+  Zap,
+  ArrowLeft
 } from 'lucide-react';
 
 export const EngineHeader: React.FC = () => {
@@ -71,8 +72,17 @@ export const EngineHeader: React.FC = () => {
 
         <div className="h-5 w-px bg-slate-200" />
 
-        {/* Project Selector & Title Breadcrumb */}
+        {/* Navigation & Project Context */}
         <div className="flex items-center gap-2">
+          <a
+            href="/hub"
+            className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 text-xs font-semibold flex items-center gap-1.5 transition"
+            title="Exit Engine to Spatial Hub"
+          >
+            <ArrowLeft size={14} />
+            <span className="hidden md:inline">Hub</span>
+          </a>
+
           <button
             onClick={() => setActiveMode('workspace')}
             className={`p-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition ${

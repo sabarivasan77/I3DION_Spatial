@@ -220,27 +220,6 @@ export default function App() {
             }
           />
 
-          {/* 4. I3DION SPATIAL ENGINE */}
-          <Route
-            path="engine"
-            element={
-              <ApplicationErrorBoundary appName="I3DION Spatial Engine">
-                <EntitlementGuard appKey="engine">
-                  <EnginePage />
-                </EntitlementGuard>
-              </ApplicationErrorBoundary>
-            }
-          />
-          <Route
-            path="studio"
-            element={
-              <ApplicationErrorBoundary appName="I3DION Spatial Engine">
-                <EntitlementGuard appKey="engine">
-                  <EnginePage />
-                </EntitlementGuard>
-              </ApplicationErrorBoundary>
-            }
-          />
           <Route
             path="product-experience"
             element={
@@ -288,8 +267,57 @@ export default function App() {
           <Route path="settings" element={<CompanySettingsPage />} />
           <Route path="settings/billing" element={<BillingSettingsPage />} />
           <Route path="settings/team" element={<TeamManagementPage />} />
-          <Route path="security" element={<SecurityDashboard />} />
         </Route>
+
+        {/* 4. DEDICATED STANDALONE I3DION SPATIAL ENGINE */}
+        <Route
+          path="engine"
+          element={
+            <ProtectedRoute>
+              <ApplicationErrorBoundary appName="I3DION Spatial Engine">
+                <EntitlementGuard appKey="engine">
+                  <EnginePage />
+                </EntitlementGuard>
+              </ApplicationErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="engine/*"
+          element={
+            <ProtectedRoute>
+              <ApplicationErrorBoundary appName="I3DION Spatial Engine">
+                <EntitlementGuard appKey="engine">
+                  <EnginePage />
+                </EntitlementGuard>
+              </ApplicationErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="studio"
+          element={
+            <ProtectedRoute>
+              <ApplicationErrorBoundary appName="I3DION Spatial Engine">
+                <EntitlementGuard appKey="engine">
+                  <EnginePage />
+                </EntitlementGuard>
+              </ApplicationErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="studio/*"
+          element={
+            <ProtectedRoute>
+              <ApplicationErrorBoundary appName="I3DION Spatial Engine">
+                <EntitlementGuard appKey="engine">
+                  <EnginePage />
+                </EntitlementGuard>
+              </ApplicationErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
