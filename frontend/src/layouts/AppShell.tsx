@@ -1,4 +1,6 @@
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { AppLauncher } from '../components/AppLauncher';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
 import { Logo } from '../components/Logo';
 import {
   BarChart3,
@@ -184,6 +186,7 @@ export default function AppShell() {
               </button>
             </div>
             <div className="flex items-center gap-3">
+              <AppLauncher />
               <NotificationCenter />
               <button
                 className="rounded-full p-2 text-slate-600 hover:bg-slate-100"

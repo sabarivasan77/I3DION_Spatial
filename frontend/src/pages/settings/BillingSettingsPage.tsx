@@ -13,6 +13,7 @@ import {
   OrganizationBillingInfo,
   BillingInvoice
 } from '../../services/api';
+import { useLicenseStore, LicenseTier } from '../../store/licenseStore';
 import {
   CreditCard,
   Check,
@@ -243,6 +244,46 @@ export const BillingSettingsPage: React.FC = () => {
           <span className="font-semibold">{message.text}</span>
         </div>
       )}
+
+      {/* 3-TIER ECOSYSTEM LICENSE ENTITLEMENT BANNER */}
+      <div className="rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-50/80 via-indigo-50/50 to-white p-8 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div>
+            <span className="text-xs uppercase tracking-widest font-bold text-blue-600 block mb-1">
+              Ecosystem License Tier
+            </span>
+            <h2 className="text-2xl font-extrabold text-slate-900">
+              Active Tier: {useLicenseStore((s) => s.currentTier)}
+            </h2>
+            <p className="text-xs text-slate-600 mt-1 max-w-2xl">
+              Application access across <b>Spatial Hub</b>, <b>Spatial Vault</b>, <b>Omni Studio</b>, <b>Spatial Engine</b>, and <b>Spatial Lens</b> is governed by your organization license tier.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            {(['Basic', 'Professional', 'Enterprise'] as LicenseTier[]).map((tier) => {
+              const currentTier = useLicenseStore.getState().currentTier;
+              const isSelected = currentTier === tier;
+              return (
+                <button
+                  key={tier}
+                  onClick={() => {
+                    useLicenseStore.getState().setLicenseTier(tier);
+                    setMessage({ type: 'success', text: `Switched organization to ${tier} License Tier.` });
+                  }}
+                  className={`px-5 py-2.5 rounded-2xl text-xs font-extrabold transition-all border shadow-xs ${
+                    isSelected
+                      ? 'bg-blue-600 text-white border-blue-600 ring-2 ring-blue-500/20'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                  }`}
+                >
+                  {tier} Tier
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
       {/* CURRENT PLAN & USAGE SUMMARY CARD */}
       {usageData && limits && usage && (
