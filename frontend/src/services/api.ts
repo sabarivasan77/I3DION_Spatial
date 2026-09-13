@@ -926,17 +926,406 @@ async function offlineFallback<T>(rawPath: string, options: RequestInit & { toke
     } as T;
   }
 
-  // --- Spatial Vault Offline / Network Guard Fallbacks ---
+  // --- Spatial Vault Enterprise Datasets & Fallbacks ---
   if (path.startsWith('/api/vault') || path.startsWith('/vault')) {
+    const DEFAULT_VAULT_ASSETS = [
+      {
+        id: 'asset-3d-01',
+        name: 'Heavy Duty Planetary Speed Reducer',
+        description: 'High-torque planetary speed reducer with sun gear, planetary carrier, and enclosed housing.',
+        category: 'Industrial Machinery',
+        tags: ['gearbox', 'transmission', 'mechanical', 'planetary-gears', 'powertrain'],
+        type: '3D Model',
+        original_name: 'planetary_speed_reducer.gltf',
+        storage_key: 'models/planetary_speed_reducer.gltf',
+        mime_type: 'model/gltf+json',
+        public_url: '/models/model_1.gltf',
+        size_bytes: 44564480,
+        status: 'Ready',
+        visibility: 'Organization',
+        connected_apps: ['Spatial Hub', 'Omni Studio', 'Spatial Engine'],
+        created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
+        updated_at: new Date(Date.now() - 86400000 * 1).toISOString(),
+        versions: [
+          {
+            id: 'ver-01-v2',
+            asset_id: 'asset-3d-01',
+            version_number: 2,
+            original_name: 'planetary_speed_reducer_v2.gltf',
+            storage_key: 'models/planetary_speed_reducer_v2.gltf',
+            public_url: '/models/model_1.gltf',
+            mime_type: 'model/gltf+json',
+            size_bytes: 44564480,
+            change_description: 'Updated mesh LOD levels and PBR materials',
+            created_at: new Date(Date.now() - 86400000 * 1).toISOString()
+          },
+          {
+            id: 'ver-01-v1',
+            asset_id: 'asset-3d-01',
+            version_number: 1,
+            original_name: 'planetary_speed_reducer_v1.gltf',
+            storage_key: 'models/planetary_speed_reducer_v1.gltf',
+            public_url: '/models/model_1.gltf',
+            mime_type: 'model/gltf+json',
+            size_bytes: 42100000,
+            change_description: 'Initial CAD import',
+            created_at: new Date(Date.now() - 86400000 * 5).toISOString()
+          }
+        ]
+      },
+      {
+        id: 'asset-3d-02',
+        name: 'Reciprocating Saw Power Actuator',
+        description: 'Industrial motor-driven reciprocating saw assembly displaying internal drive linkage and blade clamp.',
+        category: 'Power Tools & Actuators',
+        tags: ['actuator', 'saw', 'reciprocating', 'power-tool', 'linkage'],
+        type: '3D Model',
+        original_name: 'reciprocating_saw.usdz',
+        storage_key: 'models/reciprocating_saw.usdz',
+        mime_type: 'model/vnd.usdz+zip',
+        public_url: '/models/model_2.gltf',
+        size_bytes: 19084000,
+        status: 'Ready',
+        visibility: 'Organization',
+        connected_apps: ['Spatial Hub', 'Omni Studio'],
+        created_at: new Date(Date.now() - 86400000 * 4).toISOString(),
+        updated_at: new Date(Date.now() - 86400000 * 2).toISOString()
+      },
+      {
+        id: 'asset-3d-03',
+        name: 'Off-Road Industrial Transport Chassis',
+        description: 'Heavy-duty tubular chassis vehicle featuring independent suspension, wheel hubs, and roll-cage frame.',
+        category: 'Mobile Equipment',
+        tags: ['buggy', 'vehicle', 'chassis', 'suspension', 'transport'],
+        type: '3D Model',
+        original_name: 'transport_chassis.gltf',
+        storage_key: 'models/transport_chassis.gltf',
+        mime_type: 'model/gltf+json',
+        public_url: '/models/model_3.gltf',
+        size_bytes: 67200000,
+        status: 'Ready',
+        visibility: 'Organization',
+        connected_apps: ['Spatial Hub', 'Spatial Engine'],
+        created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
+        updated_at: new Date(Date.now() - 86400000 * 1).toISOString()
+      },
+      {
+        id: 'asset-doc-01',
+        name: 'Industrial Valve System 3000 Blueprint',
+        description: 'Complete mechanical CAD engineering drawings and hydraulic pressure tolerance documentation.',
+        category: 'Engineering Specifications',
+        tags: ['blueprint', 'pdf', 'valve', 'specifications'],
+        type: 'Document',
+        original_name: 'valve_system_3000_blueprint.pdf',
+        storage_key: 'docs/valve_system_3000_blueprint.pdf',
+        mime_type: 'application/pdf',
+        public_url: '/docs/sample_spec.pdf',
+        size_bytes: 4718592,
+        status: 'Ready',
+        visibility: 'Public',
+        connected_apps: ['Spatial Hub'],
+        created_at: new Date(Date.now() - 86400000 * 6).toISOString(),
+        updated_at: new Date(Date.now() - 86400000 * 2).toISOString()
+      },
+      {
+        id: 'asset-img-01',
+        name: 'Precision AR Robotic Arm High-Res Render',
+        description: 'Studio rendering of precision 6-axis robotic manipulator with joint callouts.',
+        category: 'Marketing & Presentations',
+        tags: ['render', 'robotic-arm', 'presentation', 'png'],
+        type: 'Image',
+        original_name: 'robotic_arm_render.png',
+        storage_key: 'images/robotic_arm_render.png',
+        mime_type: 'image/png',
+        public_url: 'https://images.unsplash.com/photo-1581091215367-59ab6f5e6f34?auto=format&fit=crop&w=900&q=80',
+        size_bytes: 8493465,
+        status: 'Ready',
+        visibility: 'Organization',
+        connected_apps: ['Spatial Hub', 'Omni Studio'],
+        created_at: new Date(Date.now() - 86400000 * 7).toISOString(),
+        updated_at: new Date(Date.now() - 86400000 * 3).toISOString()
+      },
+      {
+        id: 'asset-vid-01',
+        name: 'Compressor Assembly Inspection Footage',
+        description: 'Pneumatic seal pressure testing video footage recorded at factory facility.',
+        category: 'Quality Inspection',
+        tags: ['video', 'inspection', 'compressor', 'factory'],
+        type: 'Video',
+        original_name: 'compressor_inspection.mp4',
+        storage_key: 'videos/compressor_inspection.mp4',
+        mime_type: 'video/mp4',
+        public_url: '/videos/sample_inspection.mp4',
+        size_bytes: 130023424,
+        status: 'Ready',
+        visibility: 'Private',
+        connected_apps: ['Spatial Hub'],
+        created_at: new Date(Date.now() - 86400000 * 8).toISOString(),
+        updated_at: new Date(Date.now() - 86400000 * 4).toISOString()
+      }
+    ];
+
+    const DEFAULT_VAULT_COLLECTIONS = [
+      {
+        id: 'coll-machinery',
+        name: 'Industrial Machinery & Compressors',
+        description: 'Enterprise dataset repository for rotary screw compressors, turbines, and planetary speed reducers.',
+        record_count: 24,
+        asset_count: 12,
+        schema_fields: [
+          { key: 'serial_number', name: 'Serial Number', type: 'Text', required: true },
+          { key: 'operating_pressure', name: 'Operating Pressure (bar)', type: 'Number' },
+          { key: 'power_rating', name: 'Power Rating (kW)', type: 'Number' },
+          { key: 'inspection_status', name: 'QC Inspection Status', type: 'Status' }
+        ],
+        created_at: new Date(Date.now() - 86400000 * 10).toISOString(),
+        updated_at: new Date(Date.now() - 86400000 * 1).toISOString()
+      },
+      {
+        id: 'coll-valves',
+        name: 'Pneumatic Control Valves & Actuators',
+        description: 'High-pressure solenoid valves, butterfly valves, and electrical linear actuators.',
+        record_count: 18,
+        asset_count: 8,
+        schema_fields: [
+          { key: 'valve_code', name: 'Valve ID Code', type: 'Text', required: true },
+          { key: 'flow_rate', name: 'Flow Rate (L/min)', type: 'Number' },
+          { key: 'body_material', name: 'Body Material', type: 'Text' },
+          { key: 'compliance_cert', name: 'ISO Certification', type: 'Boolean' }
+        ],
+        created_at: new Date(Date.now() - 86400000 * 12).toISOString(),
+        updated_at: new Date(Date.now() - 86400000 * 2).toISOString()
+      },
+      {
+        id: 'coll-cad-models',
+        name: 'Facility CAD & Spatial 3D Models',
+        description: 'High-density 3D spatial models, USDZ QuickLook assets, and plant digital twin assemblies.',
+        record_count: 15,
+        asset_count: 15,
+        schema_fields: [
+          { key: 'model_id', name: 'Spatial Model ID', type: 'Text', required: true },
+          { key: 'polygon_count', name: 'Polygon Count', type: 'Number' },
+          { key: 'usdz_enabled', name: 'USDZ QuickLook Supported', type: 'Boolean' }
+        ],
+        created_at: new Date(Date.now() - 86400000 * 14).toISOString(),
+        updated_at: new Date(Date.now() - 86400000 * 3).toISOString()
+      }
+    ];
+
+    const DEFAULT_VAULT_TEMPLATES = [
+      {
+        id: 'tmpl-spec',
+        name: 'Industrial Equipment Spec Template',
+        description: 'Standard technical specification schema for heavy machinery and power tools.',
+        schema: {
+          fields: [
+            { key: 'serial_number', name: 'Serial Number', type: 'Text', required: true },
+            { key: 'power_rating', name: 'Power Rating (kW)', type: 'Number' },
+            { key: 'voltage_requirement', name: 'Operating Voltage', type: 'Text' },
+            { key: 'warranty_years', name: 'Warranty Period (Years)', type: 'Number' }
+          ]
+        },
+        created_at: new Date(Date.now() - 86400000 * 15).toISOString(),
+        updated_at: new Date(Date.now() - 86400000 * 2).toISOString()
+      },
+      {
+        id: 'tmpl-spatial',
+        name: '3D Spatial Asset Metadata Schema',
+        description: 'Predefined spatial metadata standard for WebXR, AR QuickLook, and OmniStudio 3D models.',
+        schema: {
+          fields: [
+            { key: 'lod_levels', name: 'LOD Levels Count', type: 'Number' },
+            { key: 'has_animations', name: 'Kinematic Animations', type: 'Boolean' },
+            { key: 'bounding_box', name: 'Dimensions (X, Y, Z)', type: 'Text' }
+          ]
+        },
+        created_at: new Date(Date.now() - 86400000 * 18).toISOString(),
+        updated_at: new Date(Date.now() - 86400000 * 4).toISOString()
+      }
+    ];
+
+    const DEFAULT_VAULT_PROCESSING_JOBS = [
+      {
+        id: 'job-01',
+        job_type: 'GLTF to USDZ Conversion',
+        asset_name: 'Heavy Duty Planetary Speed Reducer',
+        status: 'Completed',
+        progress_pct: 100,
+        started_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+        completed_at: new Date(Date.now() - 3600000 * 1).toISOString()
+      },
+      {
+        id: 'job-02',
+        job_type: 'Mesh Topology & Normal Optimization',
+        asset_name: 'Off-Road Industrial Transport Chassis',
+        status: 'Completed',
+        progress_pct: 100,
+        started_at: new Date(Date.now() - 3600000 * 5).toISOString(),
+        completed_at: new Date(Date.now() - 3600000 * 4).toISOString()
+      }
+    ];
+
+    const DEFAULT_VAULT_AUDIT_LOGS = [
+      {
+        id: 'log-01',
+        user_name: 'I3DION Admin',
+        action: 'Uploaded Asset',
+        target_type: '3D Model',
+        target_name: 'Heavy Duty Planetary Speed Reducer',
+        details: { file_name: 'planetary_speed_reducer.gltf', size_mb: 44.5 },
+        created_at: new Date(Date.now() - 3600000 * 3).toISOString()
+      },
+      {
+        id: 'log-02',
+        user_name: 'I3DION Admin',
+        action: 'Created Data Source',
+        target_type: 'Collection',
+        target_name: 'Industrial Machinery & Compressors',
+        details: { initial_fields: 4 },
+        created_at: new Date(Date.now() - 3600000 * 8).toISOString()
+      },
+      {
+        id: 'log-03',
+        user_name: 'I3DION Admin',
+        action: 'Created Record',
+        target_type: 'Workspace Record',
+        target_name: 'Rotary Compressor Suite Alpha-1',
+        details: { collection: 'Industrial Machinery & Compressors' },
+        created_at: new Date(Date.now() - 3600000 * 14).toISOString()
+      }
+    ];
+
+    // --- Datasets Summary ---
     if (path.includes('/datasets/summary')) {
-      return { total_assets: 0, total_3d_models: 0, total_products: 0, total_catalogs: 0, total_templates: 0, total_collections: 0, total_storage_bytes: 0, storage_quota_bytes: 107374182400 } as T;
+      const storedAssetsRaw = localStorage.getItem('i3dion.vault_assets');
+      const assetList = storedAssetsRaw ? JSON.parse(storedAssetsRaw) : DEFAULT_VAULT_ASSETS;
+      const storedCollsRaw = localStorage.getItem('i3dion.vault_collections');
+      const collList = storedCollsRaw ? JSON.parse(storedCollsRaw) : DEFAULT_VAULT_COLLECTIONS;
+      const storedTemplatesRaw = localStorage.getItem('i3dion.vault_templates');
+      const templateList = storedTemplatesRaw ? JSON.parse(storedTemplatesRaw) : DEFAULT_VAULT_TEMPLATES;
+
+      const totalAssets = assetList.length;
+      const total3DModels = assetList.filter((a: any) => a.type === '3D Model').length;
+      const totalStorageBytes = assetList.reduce((acc: number, a: any) => acc + (a.size_bytes || 0), 0);
+
+      return offlineClone({
+        total_assets: totalAssets,
+        total_3d_models: total3DModels,
+        total_products: 30,
+        total_catalogs: 5,
+        total_templates: templateList.length,
+        total_collections: collList.length,
+        total_storage_bytes: totalStorageBytes,
+        storage_quota_bytes: 107374182400
+      }) as T;
     }
+
+    // --- Data Workspace Records ---
     if (path.includes('/records')) {
-      return { collection: { id: 'default', name: 'Collection Workspace', description: '', schema_fields: [], created_at: new Date().toISOString(), updated_at: new Date().toISOString() }, records: [] } as T;
+      const parts = path.split('/');
+      const collIdIndex = parts.indexOf('collections');
+      const collectionId = collIdIndex !== -1 && parts[collIdIndex + 1] ? parts[collIdIndex + 1] : 'coll-machinery';
+      
+      const storedCollsRaw = localStorage.getItem('i3dion.vault_collections');
+      const collList = storedCollsRaw ? JSON.parse(storedCollsRaw) : DEFAULT_VAULT_COLLECTIONS;
+      const collection = collList.find((c: any) => c.id === collectionId) || collList[0];
+
+      const storedRecordsRaw = localStorage.getItem(`i3dion.vault_records_${collectionId}`);
+      const records = storedRecordsRaw ? JSON.parse(storedRecordsRaw) : [
+        {
+          id: 'rec-01',
+          collection_id: collectionId,
+          name: 'Rotary Compressor Suite Alpha-1',
+          status: 'Active',
+          data: {
+            serial_number: 'RC-2026-X901',
+            operating_pressure: 16.5,
+            power_rating: 45,
+            inspection_status: 'Passed'
+          },
+          created_at: new Date(Date.now() - 86400000 * 4).toISOString(),
+          updated_at: new Date(Date.now() - 86400000 * 1).toISOString()
+        },
+        {
+          id: 'rec-02',
+          collection_id: collectionId,
+          name: 'Planetary Gearbox Assembly B-12',
+          status: 'Active',
+          data: {
+            serial_number: 'PG-2026-M402',
+            operating_pressure: 24.0,
+            power_rating: 110,
+            inspection_status: 'Passed'
+          },
+          created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
+          updated_at: new Date(Date.now() - 86400000 * 2).toISOString()
+        }
+      ];
+
+      return offlineClone({ collection, records }) as T;
     }
-    if (path.includes('/assets') || path.includes('/collections') || path.includes('/templates') || path.includes('/trash') || path.includes('/processing') || path.includes('/activity')) {
-      return [] as unknown as T;
+
+    // --- Single Asset Detail ---
+    if (path.match(/\/api\/vault\/assets\/[a-zA-Z0-9_-]+$/)) {
+      const assetId = path.split('/').pop();
+      const storedAssetsRaw = localStorage.getItem('i3dion.vault_assets');
+      const assetList = storedAssetsRaw ? JSON.parse(storedAssetsRaw) : DEFAULT_VAULT_ASSETS;
+      const match = assetList.find((a: any) => a.id === assetId) || assetList[0];
+      return offlineClone(match) as T;
     }
+
+    // --- Assets List ---
+    if (path.includes('/assets')) {
+      const storedAssetsRaw = localStorage.getItem('i3dion.vault_assets');
+      let assetList = storedAssetsRaw ? JSON.parse(storedAssetsRaw) : DEFAULT_VAULT_ASSETS;
+      if (!storedAssetsRaw) {
+        localStorage.setItem('i3dion.vault_assets', JSON.stringify(DEFAULT_VAULT_ASSETS));
+      }
+      const queryPart = path.split('?')[1] || '';
+      const params = new URLSearchParams(queryPart);
+      const type = params.get('type');
+      const search = params.get('search');
+      if (type) assetList = assetList.filter((a: any) => a.type === type || a.type?.toLowerCase() === type.toLowerCase());
+      if (search) assetList = assetList.filter((a: any) => a.name.toLowerCase().includes(search.toLowerCase()) || a.category?.toLowerCase().includes(search.toLowerCase()));
+      return offlineClone(assetList) as unknown as T;
+    }
+
+    // --- Collections List ---
+    if (path.includes('/collections')) {
+      const storedCollsRaw = localStorage.getItem('i3dion.vault_collections');
+      let collList = storedCollsRaw ? JSON.parse(storedCollsRaw) : DEFAULT_VAULT_COLLECTIONS;
+      if (!storedCollsRaw) {
+        localStorage.setItem('i3dion.vault_collections', JSON.stringify(DEFAULT_VAULT_COLLECTIONS));
+      }
+      return offlineClone(collList) as unknown as T;
+    }
+
+    // --- Templates List ---
+    if (path.includes('/templates')) {
+      const storedTemplatesRaw = localStorage.getItem('i3dion.vault_templates');
+      let templateList = storedTemplatesRaw ? JSON.parse(storedTemplatesRaw) : DEFAULT_VAULT_TEMPLATES;
+      if (!storedTemplatesRaw) {
+        localStorage.setItem('i3dion.vault_templates', JSON.stringify(DEFAULT_VAULT_TEMPLATES));
+      }
+      return offlineClone(templateList) as unknown as T;
+    }
+
+    // --- Trash List ---
+    if (path.includes('/trash')) {
+      const storedTrash = localStorage.getItem('i3dion.vault_trash');
+      return offlineClone(storedTrash ? JSON.parse(storedTrash) : []) as unknown as T;
+    }
+
+    // --- Processing Jobs ---
+    if (path.includes('/processing')) {
+      return offlineClone(DEFAULT_VAULT_PROCESSING_JOBS) as unknown as T;
+    }
+
+    // --- Activity Audit Logs ---
+    if (path.includes('/activity')) {
+      return offlineClone(DEFAULT_VAULT_AUDIT_LOGS) as unknown as T;
+    }
+
     return {} as T;
   }
 

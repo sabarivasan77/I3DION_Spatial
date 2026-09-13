@@ -713,8 +713,68 @@ export async function seedSpatialHubDatabase() {
       ]);
     }
 
+    // 3. Ensure Admin User exists
+    const adminEmail = 'admin@i3dion.com';
+    let userRes = await client.query(`SELECT id FROM users WHERE email = $1`, [adminEmail]);
+    let userId;
+    if (userRes.rows.length === 0) {
+      // Hashed password for 'Password123!'
+      const passwordHash = '$2a$10$3euP5d/D74P.S.59K1Zg3.7N2.WwR0YxQ.E1k6sVv.7a3M1mQ9m5u'; 
+      const newUser = await client.query(`
+        INSERT INTO users (organization_id, name, email, password_hash, role)
+        VALUES ($1, 'I3DION Admin', $2, $3, 'Admin')
+        RETURNING id
+      `, [orgId, adminEmail, passwordHash]);
+      userId = newUser.rows[0].id;
+    } else {
+      userId = userRes.rows[0].id;
+    }
+
+    // 4. Seed initial Vault Collections
+    const defaultColls = [
+      { id: 'coll-machinery', name: 'Industrial Machinery & Compressors', description: 'Enterprise dataset repository for rotary screw compressors, turbines, and planetary speed reducers.' },
+      { id: 'coll-valves', name: 'Pneumatic Control Valves & Actuators', description: 'High-pressure solenoid valves, butterfly valves, and electrical linear actuators.' },
+      { id: 'coll-cad-models', name: 'Facility CAD & Spatial 3D Models', description: 'High-density 3D spatial models, USDZ QuickLook assets, and plant digital twin assemblies.' }
+    ];
+    for (const c of defaultColls) {
+      await client.query(`
+        INSERT INTO vault_collections (id, organization_id, name, description, schema_fields)
+        VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (id) DO NOTHING
+      `, [c.id, orgId, c.name, c.description, JSON.stringify([
+        { key: 'serial_number', name: 'Serial Number', type: 'Text', required: true },
+        { key: 'operating_pressure', name: 'Operating Pressure (bar)', type: 'Number' }
+      ])]);
+    }
+
+    // 5. Seed initial Vault Assets
+    const defaultAssets = [
+      { id: 'asset-3d-01', name: 'Heavy Duty Planetary Speed Reducer', category: 'Industrial Machinery', type: '3D Model', url: '/models/model_1.gltf', size: 44564480 },
+      { id: 'asset-3d-02', name: 'Reciprocating Saw Power Actuator', category: 'Power Tools & Actuators', type: '3D Model', url: '/models/model_2.gltf', size: 19084000 },
+      { id: 'asset-3d-03', name: 'Off-Road Industrial Transport Chassis', category: 'Mobile Equipment', type: '3D Model', url: '/models/model_3.gltf', size: 67200000 },
+      { id: 'asset-doc-01', name: 'Industrial Valve System 3000 Blueprint', category: 'Engineering Specifications', type: 'Document', url: '/docs/sample_spec.pdf', size: 4718592 }
+    ];
+    for (const a of defaultAssets) {
+      await client.query(`
+        INSERT INTO vault_assets (id, organization_id, owner_id, name, category, type, public_url, size_bytes, status, visibility)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Ready', 'Organization')
+        ON CONFLICT (id) DO NOTHING
+      `, [a.id, orgId, userId, a.name, a.category, a.type, a.url, a.size]);
+    }
+
+    // 6. Seed initial Vault Templates
+    await client.query(`
+      INSERT INTO vault_templates (id, organization_id, name, description, schema)
+      VALUES (
+        'tmpl-spec', $1, 'Industrial Equipment Spec Template',
+        'Standard technical specification schema for heavy machinery and power tools.',
+        $2
+      )
+      ON CONFLICT (id) DO NOTHING
+    `, [orgId, JSON.stringify({ fields: [{ key: 'serial_number', name: 'Serial Number', type: 'Text', required: true }] })]);
+
     await client.query('COMMIT');
-    console.log('Successfully seeded 30 Spatial Hub models into PostgreSQL database!');
+    console.log('Successfully seeded 30 Spatial Hub models, Admin user, and Vault datasets into PostgreSQL database!');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Failed to seed Spatial Hub database:', err.message);
