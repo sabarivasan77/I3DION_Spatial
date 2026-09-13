@@ -1,4 +1,4 @@
-import { apiCall } from './core';
+import { apiRequest } from '../services/api';
 
 export interface VaultAsset {
   id: string;
@@ -17,9 +17,9 @@ export interface VaultAsset {
 }
 
 export const vaultApi = {
-  getAssets: () => apiCall<VaultAsset[]>('/api/vault/assets', { method: 'GET' }),
+  getAssets: () => apiRequest<VaultAsset[]>('/api/vault/assets', { method: 'GET' }),
   
-  getAsset: (id: string) => apiCall<VaultAsset>(`/api/vault/assets/${id}`, { method: 'GET' }),
+  getAsset: (id: string) => apiRequest<VaultAsset>(`/api/vault/assets/${id}`, { method: 'GET' }),
   
   uploadAsset: (file: File, metadata: Partial<VaultAsset>) => {
     const formData = new FormData();
@@ -45,7 +45,7 @@ export const vaultApi = {
   },
 
   updateAsset: (id: string, metadata: Partial<VaultAsset>) => 
-    apiCall<VaultAsset>(`/api/vault/assets/${id}`, {
+    apiRequest<VaultAsset>(`/api/vault/assets/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(metadata)
     })
