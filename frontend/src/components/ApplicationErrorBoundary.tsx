@@ -23,9 +23,23 @@ export class ApplicationErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error(`[ApplicationErrorBoundary Failure Isolated - ${this.props.appName}]:`, error, errorInfo);
+    
+    // Auto reload once if error is due to a stale dynamic chunk hash on Vercel redeployment
+    const isChunkError =
+      error?.message?.includes('Failed to fetch dynamically imported module') ||
+      error?.message?.includes('Importing a module script failed');
+
+    if (isChunkError) {
+      const hasReloaded = sessionStorage.getItem('i3dion_boundary_chunk_reload');
+      if (!hasReloaded) {
+        sessionStorage.setItem('i3dion_boundary_chunk_reload', 'true');
+        window.location.reload();
+      }
+    }
   }
 
   private handleReset = () => {
+    sessionStorage.removeItem('i3dion_boundary_chunk_reload');
     this.setState({ hasError: false, error: null });
     window.location.reload();
   };
