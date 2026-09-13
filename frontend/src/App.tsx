@@ -14,7 +14,6 @@ const LoginPage = lazy(() => import('./pages/auth/AuthPages').then((m) => ({ def
 const SignupPage = lazy(() => import('./pages/auth/AuthPages').then((m) => ({ default: m.SignupPage })));
 const ForgotPasswordPage = lazy(() => import('./pages/auth/AuthPages').then((m) => ({ default: m.ForgotPasswordPage })));
 const ResetPasswordPage = lazy(() => import('./pages/auth/AuthPages').then((m) => ({ default: m.ResetPasswordPage })));
-const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })));
 const ProductManagementPage = lazy(() => import('./pages/ProductFlow').then((m) => ({ default: m.ProductManagementPage })));
 const ProductUploadWizardPage = lazy(() => import('./pages/ProductFlow').then((m) => ({ default: m.ProductUploadWizardPage })));
 const CatalogBuilderPage = lazy(() => import('./pages/CatalogBuilder').then((m) => ({ default: m.CatalogBuilderPage })));
@@ -91,6 +90,7 @@ export default function App() {
           <Route path="hub/liked" element={<HubLikedPage />} />
           <Route path="hub/enquiries" element={<HubEnquiriesPage />} />
           <Route path="hub/organization" element={<HubOrganizationPage />} />
+          <Route path="hub/organization/:tab" element={<HubOrganizationPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<ProfilePage />} />
           <Route path="support" element={<SupportDashboardPage />} />

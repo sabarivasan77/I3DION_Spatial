@@ -17,7 +17,6 @@ import {
   Bell,
   Menu,
   X,
-  User,
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { getUserContext } from '../utils/permissions';
@@ -28,7 +27,7 @@ export default function SpatialHubLayout() {
   const location = useLocation();
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [orgDropdownOpen, setOrgDropdownOpen] = useState(true);
+  const [orgDropdownOpen, setOrgDropdownOpen] = useState(location.pathname.startsWith('/hub/organization'));
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -178,37 +177,57 @@ export default function SpatialHubLayout() {
                     Overview
                   </NavLink>
                   <NavLink
-                    to="/hub/organization?tab=products"
+                    to="/hub/organization/products"
                     onClick={() => setMobileSidebarOpen(false)}
-                    className="block rounded-lg px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-white transition"
+                    className={({ isActive }) =>
+                      `block rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                        isActive ? 'text-blue-400 font-bold bg-slate-800/60' : 'text-slate-400 hover:text-white'
+                      }`
+                    }
                   >
                     Products
                   </NavLink>
                   <NavLink
-                    to="/hub/organization?tab=catalogs"
+                    to="/hub/organization/catalogs"
                     onClick={() => setMobileSidebarOpen(false)}
-                    className="block rounded-lg px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-white transition"
+                    className={({ isActive }) =>
+                      `block rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                        isActive ? 'text-blue-400 font-bold bg-slate-800/60' : 'text-slate-400 hover:text-white'
+                      }`
+                    }
                   >
                     Catalogs
                   </NavLink>
                   <NavLink
-                    to="/hub/organization?tab=experiences"
+                    to="/hub/organization/experiences"
                     onClick={() => setMobileSidebarOpen(false)}
-                    className="block rounded-lg px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-white transition"
+                    className={({ isActive }) =>
+                      `block rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                        isActive ? 'text-blue-400 font-bold bg-slate-800/60' : 'text-slate-400 hover:text-white'
+                      }`
+                    }
                   >
                     Experiences
                   </NavLink>
                   <NavLink
-                    to="/hub/organization?tab=ar"
+                    to="/hub/organization/ar"
                     onClick={() => setMobileSidebarOpen(false)}
-                    className="block rounded-lg px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-white transition"
+                    className={({ isActive }) =>
+                      `block rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                        isActive ? 'text-blue-400 font-bold bg-slate-800/60' : 'text-slate-400 hover:text-white'
+                      }`
+                    }
                   >
                     AR Experiences
                   </NavLink>
                   <NavLink
-                    to="/hub/organization?tab=dashboards"
+                    to="/hub/organization/dashboards"
                     onClick={() => setMobileSidebarOpen(false)}
-                    className="block rounded-lg px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-white transition"
+                    className={({ isActive }) =>
+                      `block rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                        isActive ? 'text-blue-400 font-bold bg-slate-800/60' : 'text-slate-400 hover:text-white'
+                      }`
+                    }
                   >
                     Dashboards
                   </NavLink>

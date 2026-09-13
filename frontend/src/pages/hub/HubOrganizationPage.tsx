@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Box, BookOpen, Sparkles, QrCode, BarChart3, ShieldCheck, ArrowRight, Eye, CheckCircle2, Building2, Check, Plus } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { SPATIAL_HUB_MODELS } from '../../data/spatialHubModels';
@@ -7,12 +7,11 @@ import ThreeProduct from '../../components/ThreeProduct';
 
 export function HubOrganizationPage() {
   const user = useAuthStore((s) => s.user);
-  const [searchParams] = useSearchParams();
-  const initialTab = (searchParams.get('tab') as any) || 'products';
+  const { tab } = useParams<{ tab?: string }>();
+  const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<'products' | 'catalogs' | 'experiences' | 'ar' | 'dashboards'>(initialTab);
+  const activeTab = tab || 'products';
   const [selectedPlan, setSelectedPlan] = useState<'basic' | 'professional' | 'enterprise'>('professional');
-  const [isCreatingOrg, setIsCreatingOrg] = useState(false);
   const [orgFormName, setOrgFormName] = useState('');
   const [createdSuccess, setCreatedSuccess] = useState(false);
 
@@ -52,7 +51,6 @@ export function HubOrganizationPage() {
     e.preventDefault();
     if (!orgFormName.trim()) return;
     setCreatedSuccess(true);
-    setIsCreatingOrg(false);
   };
 
   if (!hasOrg) {
@@ -182,7 +180,7 @@ export function HubOrganizationPage() {
           {/* Tab Bar Matching Screen 7 */}
           <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
             <button
-              onClick={() => setActiveTab('products')}
+              onClick={() => navigate('/hub/organization/products')}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
                 activeTab === 'products' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
@@ -191,7 +189,7 @@ export function HubOrganizationPage() {
               Products (12)
             </button>
             <button
-              onClick={() => setActiveTab('catalogs')}
+              onClick={() => navigate('/hub/organization/catalogs')}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
                 activeTab === 'catalogs' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
@@ -200,7 +198,7 @@ export function HubOrganizationPage() {
               Catalogs (4)
             </button>
             <button
-              onClick={() => setActiveTab('experiences')}
+              onClick={() => navigate('/hub/organization/experiences')}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
                 activeTab === 'experiences' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
@@ -209,7 +207,7 @@ export function HubOrganizationPage() {
               Experiences (6)
             </button>
             <button
-              onClick={() => setActiveTab('ar')}
+              onClick={() => navigate('/hub/organization/ar')}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
                 activeTab === 'ar' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
@@ -218,7 +216,7 @@ export function HubOrganizationPage() {
               AR (3)
             </button>
             <button
-              onClick={() => setActiveTab('dashboards')}
+              onClick={() => navigate('/hub/organization/dashboards')}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
                 activeTab === 'dashboards' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
