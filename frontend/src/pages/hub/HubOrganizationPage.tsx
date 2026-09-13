@@ -1,15 +1,18 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Building2, Box, BookOpen, Sparkles, QrCode, BarChart3, ShieldCheck, ArrowRight, Eye, CheckCircle2 } from 'lucide-react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { Box, BookOpen, Sparkles, QrCode, BarChart3, ShieldCheck, ArrowRight, Eye, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { SPATIAL_HUB_MODELS } from '../../data/spatialHubModels';
 import ThreeProduct from '../../components/ThreeProduct';
 
 export function HubOrganizationPage() {
   const user = useAuthStore((s) => s.user);
-  const [activeTab, setActiveTab] = useState<'products' | 'catalogs' | 'experiences' | 'ar' | 'dashboards'>('products');
+  const [searchParams] = useSearchParams();
+  const initialTab = (searchParams.get('tab') as any) || 'products';
 
-  const companyName = user?.companyId ? 'I3DION Enterprise Org' : 'Organization Workspace';
+  const [activeTab, setActiveTab] = useState<'products' | 'catalogs' | 'experiences' | 'ar' | 'dashboards'>(initialTab);
+
+  const companyName = user?.companyId ? 'Vertex Buildings' : 'Organization Workspace';
 
   const publishedProducts = SPATIAL_HUB_MODELS.slice(0, 4);
 
@@ -41,21 +44,21 @@ export function HubOrganizationPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-16 pt-6 px-4 md:px-8">
-      <div className="mx-auto max-w-7xl">
-        {/* Organization Header */}
-        <div className="mb-8 rounded-2xl bg-white p-6 md:p-8 shadow-sm border border-slate-200/80">
+    <div className="min-h-screen bg-[#F8FAFC] pb-16 pt-6 px-4 md:px-8 select-none">
+      <div className="mx-auto max-w-7xl space-y-6">
+        {/* Organization Banner Matching Screen 7 */}
+        <div className="rounded-3xl bg-white p-6 md:p-8 shadow-2xs border border-slate-200/80">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md">
-                <Building2 size={24} />
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0F172A] text-lg font-extrabold text-white shadow-md">
+                V
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl md:text-2xl font-bold text-slate-900">{companyName}</h1>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
-                    <ShieldCheck size={12} />
-                    Verified Org
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-0.5 text-xs font-bold text-blue-700 border border-blue-100">
+                    <ShieldCheck size={13} />
+                    Enterprise Plan
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -64,13 +67,13 @@ export function HubOrganizationPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
               <CheckCircle2 size={15} className="text-blue-600" />
-              <span>Read-Only Published Consumption Area</span>
+              <span>Read-Only Organization Consumption View</span>
             </div>
           </div>
 
-          {/* Context Navigation Tabs */}
+          {/* Tab Bar Matching Screen 7 */}
           <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
             <button
               onClick={() => setActiveTab('products')}
@@ -79,7 +82,7 @@ export function HubOrganizationPage() {
               }`}
             >
               <Box size={15} />
-              Published Products
+              Products (12)
             </button>
             <button
               onClick={() => setActiveTab('catalogs')}
@@ -88,7 +91,7 @@ export function HubOrganizationPage() {
               }`}
             >
               <BookOpen size={15} />
-              Published Catalogs
+              Catalogs (4)
             </button>
             <button
               onClick={() => setActiveTab('experiences')}
@@ -97,7 +100,7 @@ export function HubOrganizationPage() {
               }`}
             >
               <Sparkles size={15} />
-              3D Experiences
+              Experiences (6)
             </button>
             <button
               onClick={() => setActiveTab('ar')}
@@ -106,7 +109,7 @@ export function HubOrganizationPage() {
               }`}
             >
               <QrCode size={15} />
-              AR Experiences
+              AR (3)
             </button>
             <button
               onClick={() => setActiveTab('dashboards')}
@@ -115,7 +118,7 @@ export function HubOrganizationPage() {
               }`}
             >
               <BarChart3 size={15} />
-              Published Lens Dashboards
+              Dashboards (2)
             </button>
           </div>
         </div>
@@ -125,8 +128,8 @@ export function HubOrganizationPage() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {publishedProducts.map((p) => (
               <div key={p.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs hover:shadow-md transition">
-                <div className="h-40 w-full bg-slate-900 rounded-xl overflow-hidden mb-3">
-                  <ThreeProduct modelUrl={p.modelUrl} renderMode="solid" autoRotate={true} interactive={false} className="h-full w-full" />
+                <div className="h-40 w-full bg-[#0F172A] rounded-xl overflow-hidden mb-3">
+                  <ThreeProduct modelUrl={p.modelUrl} renderMode="solid" autoRotate={true} className="h-full w-full" />
                 </div>
                 <span className="text-[10px] font-bold text-blue-600 uppercase">{p.category}</span>
                 <h3 className="text-sm font-bold text-slate-900 mt-0.5">{p.name}</h3>

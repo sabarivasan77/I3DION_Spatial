@@ -86,7 +86,7 @@ function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
         await login(email, password);
         Tracker.trackEvent('user_login', { email });
       }
-      navigate('/dashboard');
+      navigate('/hub');
     } catch (err: any) {
       showError('Authentication failed', authError ?? err.message ?? 'Please check your credentials');
     }
@@ -97,7 +97,7 @@ function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
       try {
         await loginGoogle(tokenResponse.access_token);
         Tracker.trackEvent('user_login', { method: 'google' });
-        navigate('/dashboard');
+        navigate('/hub');
       } catch (err: any) {
         showError('Google Sign-In failed', err.message);
       }

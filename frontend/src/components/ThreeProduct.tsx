@@ -1,4 +1,4 @@
-import { Component, ReactNode, Suspense, useRef, useState, useEffect } from 'react';
+import { Component, ReactNode, Suspense, useRef, useState, useEffect, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { 
   useGLTF, 
@@ -66,8 +66,9 @@ function RealModel({
   onHasAnimations?: (has: boolean) => void;
 }) {
   const { scene, animations } = useGLTF(url);
-  const clonedScene = useRef<Group>(null);
-  const { actions, names } = useAnimations(animations, clonedScene);
+  const clonedSceneObject = useMemo(() => scene.clone(true), [scene]);
+  const clonedSceneRef = useRef<Group>(null);
+  const { actions, names } = useAnimations(animations, clonedSceneRef);
 
   useEffect(() => {
     if (animations && animations.length > 0) {
@@ -93,10 +94,10 @@ function RealModel({
   }, [actions, names, animationSpeed]);
 
   useEffect(() => {
-    if (!clonedScene.current) return;
+    if (!clonedSceneRef.current) return;
     
     let meshIndex = 0;
-    clonedScene.current.traverse((child: any) => {
+    clonedSceneRef.current.traverse((child: any) => {
       if (child.isMesh) {
         meshIndex++;
         const meshName = (child.name || '').toLowerCase();
@@ -111,21 +112,21 @@ function RealModel({
           meshIndex === 1;
 
         if (renderMode === 'wireframe') {
+          child.material = child.material.clone();
           child.material.wireframe = true;
           child.material.color.set(themeMode === 'light' ? '#2563EB' : '#00F0FF');
           child.material.transparent = false;
           child.material.opacity = 1.0;
         } else if (renderMode === 'xray') {
+          child.material = child.material.clone();
           child.material.wireframe = false;
           if (isHousing) {
-            // Outer casing becomes translucent X-Ray shell
             child.material.transparent = true;
             child.material.opacity = 0.2;
             child.material.color.set('#64748B');
             child.material.metalness = 0.9;
             child.material.roughness = 0.1;
           } else {
-            // Internal mechanisms stay solid and vividly highlighted
             child.material.transparent = false;
             child.material.opacity = 1.0;
             child.material.color.set(themeMode === 'light' ? '#2563EB' : '#38BDF8');
@@ -133,16 +134,15 @@ function RealModel({
             child.material.roughness = 0.2;
           }
         } else {
-          // Solid Mode
           child.material.wireframe = false;
           child.material.transparent = false;
           child.material.opacity = 1.0;
         }
       }
     });
-  }, [scene, renderMode, themeMode]);
+  }, [clonedSceneObject, renderMode, themeMode]);
 
-  return <primitive ref={clonedScene} object={scene} />;
+  return <primitive ref={clonedSceneRef} object={clonedSceneObject} />;
 }
 
 // ─── High-Fidelity Monochromatic Industrial Procedural Assemblies ───────────

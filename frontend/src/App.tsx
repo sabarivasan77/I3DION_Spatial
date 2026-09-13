@@ -28,12 +28,14 @@ const SupportDashboardPage = lazy(() => import('./pages/SupportDashboard').then(
 const HelpCenterPage = lazy(() => import('./pages/HelpCenter').then((m) => ({ default: m.HelpCenterPage })));
 
 // Spatial Hub Pages
+const HubExplorePage = lazy(() => import('./pages/hub/HubExplore').then((m) => ({ default: m.HubExplore })));
 const HubFeedPage = lazy(() => import('./pages/hub/HubFeed').then((m) => ({ default: m.HubFeed })));
 const HubProductDetailPage = lazy(() => import('./pages/hub/HubProductDetail').then((m) => ({ default: m.HubProductDetail })));
 const HubSearchPage = lazy(() => import('./pages/hub/HubSearch').then((m) => ({ default: m.HubSearch })));
 const CreatorProfilePage = lazy(() => import('./pages/hub/CreatorProfile').then((m) => ({ default: m.CreatorProfile })));
 const HubSavedPage = lazy(() => import('./pages/hub/HubSavedPage').then((m) => ({ default: m.HubSavedPage })));
 const HubLikedPage = lazy(() => import('./pages/hub/HubLikedPage').then((m) => ({ default: m.HubLikedPage })));
+const HubEnquiriesPage = lazy(() => import('./pages/hub/HubEnquiriesPage').then((m) => ({ default: m.HubEnquiriesPage })));
 const HubOrganizationPage = lazy(() => import('./pages/hub/HubOrganizationPage').then((m) => ({ default: m.HubOrganizationPage })));
 
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
@@ -80,12 +82,14 @@ export default function App() {
             </ApplicationErrorBoundary>
           }
         >
-          <Route path="hub" element={<HubFeedPage />} />
+          <Route path="hub" element={<HubExplorePage />} />
+          <Route path="hub/feed" element={<HubFeedPage />} />
           <Route path="hub/search" element={<HubSearchPage />} />
           <Route path="hub/product/:id" element={<HubProductDetailPage />} />
           <Route path="hub/creator/:id" element={<CreatorProfilePage />} />
           <Route path="hub/saved" element={<HubSavedPage />} />
           <Route path="hub/liked" element={<HubLikedPage />} />
+          <Route path="hub/enquiries" element={<HubEnquiriesPage />} />
           <Route path="hub/organization" element={<HubOrganizationPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="support" element={<SupportDashboardPage />} />

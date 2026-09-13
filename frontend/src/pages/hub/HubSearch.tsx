@@ -1,107 +1,231 @@
 import { useState, useMemo } from 'react';
-import { Search, Filter, Box } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { SPATIAL_HUB_MODELS, searchSpatialHubModels } from '../../data/spatialHubModels';
+import { useSearchParams, Link } from 'react-router-dom';
+import { Search, Heart, Filter, ArrowUpRight, Box, QrCode, Sparkles } from 'lucide-react';
+import { SPATIAL_HUB_MODELS, SpatialHubModel } from '../../data/spatialHubModels';
 import ThreeProduct from '../../components/ThreeProduct';
 
 export function HubSearch() {
-  const [query, setQuery] = useState('');
-  const [category, setCategory] = useState('All');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialQuery = searchParams.get('q') || '';
+  const [query, setQuery] = useState(initialQuery);
 
-  const categories = useMemo(() => {
-    const set = new Set(SPATIAL_HUB_MODELS.map(m => m.category));
-    return ['All', ...Array.from(set)];
-  }, []);
+  const [selectedContentTypes, setSelectedContentTypes] = useState<string[]>([]);
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  const [selectedFileTypes, setSelectedFileTypes] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<'relevant' | 'newest'>('relevant');
 
-  const results = useMemo(() => {
-    return searchSpatialHubModels(query, category);
-  }, [query, category]);
+  const [likedIds, setLikedIds] = useState<string[]>(() => {
+    return JSON.parse(localStorage.getItem('i3dion_liked_items') || '[]');
+  });
+
+  const toggleLike = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    let updated: string[];
+    if (likedIds.includes(id)) {
+      updated = likedIds.filter((item) => item !== id);
+    } else {
+      updated = [...likedIds, id];
+    }
+    setLikedIds(updated);
+    localStorage.setItem('i3dion_liked_items', JSON.stringify(updated));
+  };
+
+  const handleContentTypeToggle = (type: string) => {
+    setSelectedContentTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
+  const handleIndustryToggle = (ind: string) => {
+    setSelectedIndustries((prev) =>
+      prev.includes(ind) ? prev.filter((i) => i !== ind) : [...prev, ind]
+    );
+  };
+
+  const filteredResults = useMemo(() => {
+    return SPATIAL_HUB_MODELS.filter((item) => {
+      const q = query.toLowerCase().trim();
+      const matchesQuery =
+        !q ||
+        item.name.toLowerCase().includes(q) ||
+        item.category.toLowerCase().includes(q) ||
+        item.shortDescription.toLowerCase().includes(q);
+
+      const matchesIndustry =
+        selectedIndustries.length === 0 || selectedIndustries.includes(item.category);
+
+      return matchesQuery && matchesIndustry;
+    });
+  }, [query, selectedIndustries]);
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
-      {/* Search Header */}
-      <div className="mb-10 text-center">
-        <h1 className="text-4xl font-extrabold text-slate-900 mb-2 tracking-tight">Search Spatial Hub</h1>
-        <p className="text-sm text-slate-500 mb-6 max-w-xl mx-auto">Instant search across 30 curated industrial CAD models, assembly categories, and tags.</p>
+    <div className="min-h-screen bg-[#F8FAFC] pb-16 pt-6 px-4 md:px-8 select-none">
+      <div className="mx-auto max-w-7xl space-y-6">
+        {/* Search Header Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-3xl bg-white p-6 shadow-2xs border border-slate-200/80">
+          <div className="relative flex-1 w-full">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search products, experiences, or organizations..."
+              className="w-full rounded-2xl border border-slate-200 bg-[#F8FAFC] py-3 pl-11 pr-4 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
 
-        <div className="max-w-2xl mx-auto relative flex items-center mb-8">
-          <Search className="absolute left-4 w-5 h-5 text-slate-400 z-10" />
-          <input 
-            type="text" 
-            placeholder="Search by model name, category, or tag (e.g. pump, gearbox, motor, valve)..." 
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            className="w-full pl-12 pr-6 py-3.5 rounded-2xl border border-slate-200 bg-white shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-100 text-base transition-shadow relative z-10 font-medium text-slate-900"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery('')}
-              className="absolute right-4 text-xs font-bold text-slate-400 hover:text-slate-600 z-20"
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs font-bold text-slate-500">Sort by</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700"
             >
-              Clear
-            </button>
-          )}
+              <option value="relevant">Most Relevant</option>
+              <option value="newest">Newest</option>
+            </select>
+          </div>
         </div>
 
-        {/* Categories / Filters */}
-        <div className="flex flex-wrap justify-center gap-2 max-w-5xl mx-auto">
-          {categories.slice(0, 10).map(c => (
-            <button 
-              key={c}
-              onClick={() => setCategory(c)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${category === c ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-            >
-              {c}
-            </button>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6">
+          {/* ─── LEFT FILTER SIDEBAR MATCHING SCREEN 2 OF UI REFERENCE ──────────── */}
+          <div className="rounded-3xl border border-slate-200/80 bg-white p-5 space-y-6 h-fit shadow-2xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <span className="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                <Filter size={15} /> Filters
+              </span>
+              {(selectedContentTypes.length > 0 || selectedIndustries.length > 0) && (
+                <button
+                  onClick={() => {
+                    setSelectedContentTypes([]);
+                    setSelectedIndustries([]);
+                  }}
+                  className="text-[10px] font-bold text-blue-600 hover:underline"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
+
+            {/* Content Type Filter */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Content Type</span>
+              <div className="space-y-1.5 text-xs font-medium text-slate-700">
+                <label className="flex items-center gap-2 cursor-pointer hover:text-slate-900">
+                  <input type="checkbox" checked={selectedContentTypes.includes('3D Products')} onChange={() => handleContentTypeToggle('3D Products')} className="rounded text-blue-600" />
+                  <span>3D Products (12)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer hover:text-slate-900">
+                  <input type="checkbox" checked={selectedContentTypes.includes('Experiences')} onChange={() => handleContentTypeToggle('Experiences')} className="rounded text-blue-600" />
+                  <span>Experiences (6)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer hover:text-slate-900">
+                  <input type="checkbox" checked={selectedContentTypes.includes('AR Experiences')} onChange={() => handleContentTypeToggle('AR Experiences')} className="rounded text-blue-600" />
+                  <span>AR Experiences (4)</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Industry Filter */}
+            <div className="space-y-2 pt-3 border-t border-slate-100">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Industry</span>
+              <div className="space-y-1.5 text-xs font-medium text-slate-700">
+                {['Industrial Equipment', 'Machinery', 'Manufacturing', 'Automotive', 'Architecture', 'Consumer Products'].map((ind) => (
+                  <label key={ind} className="flex items-center gap-2 cursor-pointer hover:text-slate-900">
+                    <input
+                      type="checkbox"
+                      checked={selectedIndustries.includes(ind)}
+                      onChange={() => handleIndustryToggle(ind)}
+                      className="rounded text-blue-600"
+                    />
+                    <span>{ind}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* File Type Filter */}
+            <div className="space-y-2 pt-3 border-t border-slate-100">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">File Type</span>
+              <div className="space-y-1.5 text-xs font-medium text-slate-700">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" defaultChecked className="rounded text-blue-600" />
+                  <span>3D Model (glTF / GLB)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" defaultChecked className="rounded text-blue-600" />
+                  <span>Interactive 3D</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" defaultChecked className="rounded text-blue-600" />
+                  <span>AR WebXR Anchor</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* ─── MAIN SEARCH RESULTS GRID MATCHING SCREEN 2 OF UI REFERENCE ────── */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-slate-800">
+                Search Results ({filteredResults.length})
+              </h2>
+            </div>
+
+            {filteredResults.length === 0 ? (
+              <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
+                <Search size={32} className="mx-auto text-slate-300 mb-2" />
+                <p className="text-sm font-bold text-slate-800">No results found</p>
+                <p className="text-xs text-slate-500 mt-1">Try adjusting your search query or filters.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredResults.map((item) => {
+                  const isLiked = likedIds.includes(item.id);
+                  return (
+                    <div
+                      key={item.id}
+                      className="group flex flex-col rounded-2xl border border-slate-200/80 bg-white shadow-2xs hover:shadow-md transition overflow-hidden"
+                    >
+                      <div className="relative h-44 w-full bg-[#0F172A] overflow-hidden">
+                        <ThreeProduct modelUrl={item.modelUrl} renderMode="solid" autoRotate={true} interactive={false} className="h-full w-full" />
+                        
+                        <button
+                          onClick={(e) => toggleLike(e, item.id)}
+                          className={`absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md transition ${
+                            isLiked ? 'bg-rose-500 text-white' : 'bg-slate-900/60 text-slate-300 hover:bg-slate-900 hover:text-white'
+                          }`}
+                        >
+                          <Heart size={14} fill={isLiked ? 'currentColor' : 'none'} />
+                        </button>
+                      </div>
+
+                      <div className="flex flex-1 flex-col p-4">
+                        <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">
+                          {item.category}
+                        </span>
+                        <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition">{item.name}</h3>
+                        <p className="text-xs text-slate-500 line-clamp-2 mt-1">{item.shortDescription}</p>
+
+                        <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-100">
+                          <span className="text-[11px] font-medium text-slate-500">{item.viewsCount} views</span>
+                          <Link
+                            to={`/hub/product/${item.id}`}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700"
+                          >
+                            Explore <ArrowUpRight size={14} />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      {/* Results Grid */}
-      {results.length === 0 ? (
-        <div className="text-center py-16 text-slate-400 flex flex-col items-center bg-white rounded-3xl border border-slate-200 max-w-md mx-auto">
-          <Filter className="w-12 h-12 mb-3 text-slate-300" />
-          <p className="text-lg font-bold text-slate-700">No matching models found</p>
-          <p className="mt-1 text-xs text-slate-500 mb-4">Try adjusting your search terms or selecting a different category.</p>
-          <button
-            onClick={() => { setQuery(''); setCategory('All'); }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors"
-          >
-            Reset Search
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {results.map(item => (
-            <Link key={item.id} to={`/hub/product/${item.slug}`} className="group block h-full">
-              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-                <div className="aspect-[4/3] bg-slate-50 relative overflow-hidden border-b border-slate-100">
-                  <ThreeProduct
-                    modelUrl={item.modelUrl}
-                    productName={item.name}
-                    renderMode="solid"
-                  />
-                  <div className="absolute top-2 right-2 bg-blue-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm uppercase tracking-wider flex items-center gap-1">
-                    <Box className="w-3 h-3" /> AR Ready
-                  </div>
-                </div>
-                <div className="p-4 flex-1 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[11px] font-bold text-blue-600 uppercase tracking-wider block mb-1">{item.category}</span>
-                    <h3 className="font-bold text-slate-900 text-sm mb-1.5 group-hover:text-blue-600 transition-colors line-clamp-1">{item.name}</h3>
-                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-3">{item.shortDescription}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-1 pt-2 border-t border-slate-100">
-                    {item.tags.slice(0, 3).map(tag => (
-                      <span key={tag} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium">#{tag}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
