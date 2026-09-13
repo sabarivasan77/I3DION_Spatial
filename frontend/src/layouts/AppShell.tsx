@@ -30,7 +30,7 @@ const navItems = [
   { label: 'Products', path: '/products', icon: Box },
   { label: 'Facility Buildings', path: '/buildings', icon: Building2 },
   { label: 'Catalogs', path: '/catalog-builder', icon: BookOpen },
-  { label: '3DION OmniStudio', path: '/studio', icon: Sparkles },
+  { label: 'Spatial Engine', path: '/engine', icon: Cpu },
   { label: 'Leads', path: '/leads', icon: Users },
   { label: 'Analytics', path: '/analytics', icon: BarChart3 },
   { label: 'Billing & Subscriptions', path: '/settings/billing', icon: CreditCard },

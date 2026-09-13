@@ -295,30 +295,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="studio"
-          element={
-            <ProtectedRoute>
-              <ApplicationErrorBoundary appName="I3DION Spatial Engine">
-                <EntitlementGuard appKey="engine">
-                  <EnginePage />
-                </EntitlementGuard>
-              </ApplicationErrorBoundary>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="studio/*"
-          element={
-            <ProtectedRoute>
-              <ApplicationErrorBoundary appName="I3DION Spatial Engine">
-                <EntitlementGuard appKey="engine">
-                  <EnginePage />
-                </EntitlementGuard>
-              </ApplicationErrorBoundary>
-            </ProtectedRoute>
-          }
-        />
+        <Route path="studio" element={<Navigate to="/omni-studio" replace />} />
+        <Route path="studio/*" element={<Navigate to="/omni-studio" replace />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

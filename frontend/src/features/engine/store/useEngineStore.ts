@@ -76,7 +76,7 @@ interface EngineStoreState {
 }
 
 export const useEngineStore = create<EngineStoreState>((set, get) => ({
-  activeMode: 'ui',
+  activeMode: 'workspace',
   setActiveMode: (mode) => set({ activeMode: mode }),
   viewportDevice: 'desktop',
   setViewportDevice: (device) => set({ viewportDevice: device }),
