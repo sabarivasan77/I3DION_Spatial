@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useEngineStore } from '../store/useEngineStore';
 import {
-  Box,
   Layout,
   Cpu,
   Monitor,
@@ -9,12 +8,8 @@ import {
   Smartphone,
   Play,
   Save,
-  RotateCcw,
-  RotateCw,
-  Eye,
   CheckCircle,
   Clock,
-  Bell,
   ChevronDown,
   FolderKanban,
   Edit2,
@@ -31,12 +26,8 @@ export const EngineHeader: React.FC = () => {
     viewportDevice,
     setViewportDevice,
     zoomLevel,
-    setZoomLevel,
     autosaveStatus,
     saveCurrentProject,
-    undo,
-    redo,
-    isRunning,
     setIsRunning,
     triggerLogicEvent
   } = useEngineStore();

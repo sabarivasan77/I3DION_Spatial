@@ -267,6 +267,7 @@ export default function App() {
           <Route path="settings" element={<CompanySettingsPage />} />
           <Route path="settings/billing" element={<BillingSettingsPage />} />
           <Route path="settings/team" element={<TeamManagementPage />} />
+          <Route path="security" element={<SecurityDashboard />} />
         </Route>
 
         {/* 4. DEDICATED STANDALONE I3DION SPATIAL ENGINE */}
