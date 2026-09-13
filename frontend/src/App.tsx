@@ -92,6 +92,7 @@ export default function App() {
           <Route path="hub/enquiries" element={<HubEnquiriesPage />} />
           <Route path="hub/organization" element={<HubOrganizationPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="settings" element={<ProfilePage />} />
           <Route path="support" element={<SupportDashboardPage />} />
           <Route path="support/kb" element={<HelpCenterPage />} />
         </Route>

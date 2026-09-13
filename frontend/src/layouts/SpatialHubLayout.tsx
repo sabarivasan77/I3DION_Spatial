@@ -149,8 +149,8 @@ export default function SpatialHubLayout() {
             <span>Enquiries</span>
           </NavLink>
 
-          {/* Organization Accordion Section (Only for Authorized Org Users) */}
-          {isOrgUser && (
+          {/* Organization Navigation Section */}
+          {isOrgUser ? (
             <div className="pt-3">
               <button
                 onClick={() => setOrgDropdownOpen(!orgDropdownOpen)}
@@ -215,6 +215,21 @@ export default function SpatialHubLayout() {
                 </div>
               )}
             </div>
+          ) : (
+            <div className="pt-2">
+              <NavLink
+                to="/hub/organization"
+                onClick={() => setMobileSidebarOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-bold transition ${
+                    isActive ? 'bg-[#2563EB] text-white shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                  }`
+                }
+              >
+                <Building2 size={17} />
+                <span>Organization</span>
+              </NavLink>
+            </div>
           )}
         </nav>
 
@@ -245,14 +260,6 @@ export default function SpatialHubLayout() {
             <HelpCircle size={17} />
             <span>Support</span>
           </NavLink>
-
-          <button
-            onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-400 hover:bg-rose-500/20 hover:text-rose-400 transition"
-          >
-            <LogOut size={17} />
-            <span>Sign Out</span>
-          </button>
         </div>
 
         {/* Sidebar Footer Badge */}

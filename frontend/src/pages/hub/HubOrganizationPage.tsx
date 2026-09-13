@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Box, BookOpen, Sparkles, QrCode, BarChart3, ShieldCheck, ArrowRight, Eye, CheckCircle2 } from 'lucide-react';
+import { Box, BookOpen, Sparkles, QrCode, BarChart3, ShieldCheck, ArrowRight, Eye, CheckCircle2, Building2, Check, Plus } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { SPATIAL_HUB_MODELS } from '../../data/spatialHubModels';
 import ThreeProduct from '../../components/ThreeProduct';
@@ -11,8 +11,13 @@ export function HubOrganizationPage() {
   const initialTab = (searchParams.get('tab') as any) || 'products';
 
   const [activeTab, setActiveTab] = useState<'products' | 'catalogs' | 'experiences' | 'ar' | 'dashboards'>(initialTab);
+  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'professional' | 'enterprise'>('professional');
+  const [isCreatingOrg, setIsCreatingOrg] = useState(false);
+  const [orgFormName, setOrgFormName] = useState('');
+  const [createdSuccess, setCreatedSuccess] = useState(false);
 
-  const companyName = user?.companyId ? 'Vertex Buildings' : 'Organization Workspace';
+  const hasOrg = !!(user?.companyId || createdSuccess);
+  const companyName = hasOrg ? (orgFormName || 'Vertex Buildings') : 'Organization Workspace';
 
   const publishedProducts = SPATIAL_HUB_MODELS.slice(0, 4);
 
@@ -42,6 +47,107 @@ export function HubOrganizationPage() {
       updatedAt: '1 day ago',
     },
   ];
+
+  const handleCreateOrganizationSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!orgFormName.trim()) return;
+    setCreatedSuccess(true);
+    setIsCreatingOrg(false);
+  };
+
+  if (!hasOrg) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] pb-16 pt-6 px-4 md:px-8 select-none">
+        <div className="mx-auto max-w-4xl space-y-8">
+          <div className="rounded-3xl bg-white p-8 md:p-12 shadow-xl border border-slate-200 text-center space-y-4">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-blue-50 text-blue-600 shadow-inner">
+              <Building2 size={32} />
+            </div>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Create your own Organization</h1>
+            <p className="text-sm text-slate-500 max-w-xl mx-auto font-medium leading-relaxed">
+              Transform your 3D CAD assets into interactive spatial products, create brand catalogs, and collaborate securely with team members.
+            </p>
+
+            {/* Plan Tier Selection Cards (Requirement 24) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left pt-6">
+              <div
+                onClick={() => setSelectedPlan('basic')}
+                className={`cursor-pointer rounded-2xl p-5 border-2 transition ${
+                  selectedPlan === 'basic' ? 'border-blue-600 bg-blue-50/40 shadow-md' : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <span className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Entry Tier</span>
+                <h3 className="text-base font-bold text-slate-900 mt-1">Spatial Basic</h3>
+                <p className="text-xs text-slate-500 mt-1">$49 / mo</p>
+                <ul className="mt-4 space-y-2 text-xs text-slate-600 font-medium">
+                  <li className="flex items-center gap-1.5"><Check size={14} className="text-blue-600" /> Up to 10 3D Models</li>
+                  <li className="flex items-center gap-1.5"><Check size={14} className="text-blue-600" /> Standard AR Viewing</li>
+                  <li className="flex items-center gap-1.5"><Check size={14} className="text-blue-600" /> 2 Team Members</li>
+                </ul>
+              </div>
+
+              <div
+                onClick={() => setSelectedPlan('professional')}
+                className={`cursor-pointer rounded-2xl p-5 border-2 relative transition ${
+                  selectedPlan === 'professional' ? 'border-blue-600 bg-blue-50/40 shadow-md' : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <span className="absolute -top-3 right-4 rounded-full bg-blue-600 px-3 py-0.5 text-[10px] font-extrabold uppercase text-white shadow-xs">
+                  Most Popular
+                </span>
+                <span className="text-[10px] font-extrabold uppercase text-blue-600 tracking-wider">Growth Tier</span>
+                <h3 className="text-base font-bold text-slate-900 mt-1">Spatial Professional</h3>
+                <p className="text-xs text-slate-500 mt-1">$199 / mo</p>
+                <ul className="mt-4 space-y-2 text-xs text-slate-600 font-medium">
+                  <li className="flex items-center gap-1.5"><Check size={14} className="text-blue-600" /> Unlimited 3D Models</li>
+                  <li className="flex items-center gap-1.5"><Check size={14} className="text-blue-600" /> Interactive Hotspots</li>
+                  <li className="flex items-center gap-1.5"><Check size={14} className="text-blue-600" /> 10 Team Members</li>
+                </ul>
+              </div>
+
+              <div
+                onClick={() => setSelectedPlan('enterprise')}
+                className={`cursor-pointer rounded-2xl p-5 border-2 transition ${
+                  selectedPlan === 'enterprise' ? 'border-blue-600 bg-blue-50/40 shadow-md' : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <span className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Custom Enterprise</span>
+                <h3 className="text-base font-bold text-slate-900 mt-1">Spatial Enterprise</h3>
+                <p className="text-xs text-slate-500 mt-1">Custom Pricing</p>
+                <ul className="mt-4 space-y-2 text-xs text-slate-600 font-medium">
+                  <li className="flex items-center gap-1.5"><Check size={14} className="text-blue-600" /> Spatial Lens BI Access</li>
+                  <li className="flex items-center gap-1.5"><Check size={14} className="text-blue-600" /> Private RBAC Controls</li>
+                  <li className="flex items-center gap-1.5"><Check size={14} className="text-blue-600" /> Dedicated SLA Support</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Setup Form */}
+            <form onSubmit={handleCreateOrganizationSubmit} className="pt-6 max-w-md mx-auto space-y-4 text-left">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Organization / Company Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Acme Industrial Robotics"
+                  value={orgFormName}
+                  onChange={(e) => setOrgFormName(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-900 focus:border-blue-600 focus:outline-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-3.5 text-xs font-bold text-white shadow-md hover:bg-blue-700 transition"
+              >
+                <Plus size={16} /> Create Organization & Setup Billing
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-16 pt-6 px-4 md:px-8 select-none">

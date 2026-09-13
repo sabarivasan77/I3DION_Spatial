@@ -1,10 +1,17 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { User, Bell, Shield, Settings as SettingsIcon, StickyNote, HelpCircle, Save, CheckCircle2 } from 'lucide-react';
+import { User, Bell, Shield, Settings as SettingsIcon, StickyNote, HelpCircle, Save, CheckCircle2, LogOut } from 'lucide-react';
 
 export function ProfilePage() {
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'Account' | 'Notifications' | 'Privacy' | 'Preferences' | 'SideNote' | 'Support'>('Account');
+
+  const handleSignOut = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   const [fullName, setFullName] = useState(user?.name || 'John Smith');
   const [email, setEmail] = useState(user?.email || 'john.smith@example.com');
@@ -91,6 +98,15 @@ export function ProfilePage() {
             >
               <HelpCircle size={16} /> Support
             </button>
+            <div className="pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-xs font-bold text-red-600 bg-red-50/60 hover:bg-red-100/80 hover:text-red-700 transition border border-red-200/80"
+              >
+                <LogOut size={16} /> Sign Out
+              </button>
+            </div>
           </div>
 
           {/* Main Tab Body */}
