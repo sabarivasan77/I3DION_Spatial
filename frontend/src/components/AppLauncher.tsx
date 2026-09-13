@@ -31,7 +31,7 @@ const APPS: AppDefinition[] = [
     key: 'studio',
     name: 'I3DION Omni Studio',
     subtitle: 'Catalog & Visual Content Builder',
-    path: '/catalog-builder',
+    path: '/omni-studio',
     icon: Sparkles,
     badge: 'OmniStudio',
     color: 'text-indigo-500',

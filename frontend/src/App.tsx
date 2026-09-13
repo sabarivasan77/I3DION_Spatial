@@ -16,7 +16,6 @@ const ForgotPasswordPage = lazy(() => import('./pages/auth/AuthPages').then((m) 
 const ResetPasswordPage = lazy(() => import('./pages/auth/AuthPages').then((m) => ({ default: m.ResetPasswordPage })));
 const ProductManagementPage = lazy(() => import('./pages/ProductFlow').then((m) => ({ default: m.ProductManagementPage })));
 const ProductUploadWizardPage = lazy(() => import('./pages/ProductFlow').then((m) => ({ default: m.ProductUploadWizardPage })));
-const CatalogBuilderPage = lazy(() => import('./pages/CatalogBuilder').then((m) => ({ default: m.CatalogBuilderPage })));
 const ProductExperiencePage = lazy(() => import('./pages/ProductFlow').then((m) => ({ default: m.ProductExperiencePage })));
 const PublicProductPage = lazy(() => import('./pages/PublicProductPage').then((m) => ({ default: m.PublicProductPage })));
 const AnalyticsDashboardPage = lazy(() => import('./pages/SalesIntelligence').then((m) => ({ default: m.SalesIntelligencePage })));
@@ -57,6 +56,18 @@ const VaultProcessing = lazy(() => import('./pages/vault/VaultSecondaryViews').t
 const VaultTrash = lazy(() => import('./pages/vault/VaultSecondaryViews').then((m) => ({ default: m.VaultTrash })));
 const VaultShared = lazy(() => import('./pages/vault/VaultSecondaryViews').then((m) => ({ default: m.VaultShared })));
 const VaultSettings = lazy(() => import('./pages/vault/VaultSecondaryViews').then((m) => ({ default: m.VaultSettings })));
+
+// Omni Studio Pages
+const StudioLayout = lazy(() => import('./layouts/StudioLayout'));
+const StudioOverview = lazy(() => import('./pages/studio/StudioOverview').then((m) => ({ default: m.StudioOverview })));
+const StudioProjects = lazy(() => import('./pages/studio/StudioProjects').then((m) => ({ default: m.StudioProjects })));
+const StudioCatalogBuilder = lazy(() => import('./pages/studio/StudioCatalogBuilder').then((m) => ({ default: m.StudioCatalogBuilder })));
+const StudioTemplates = lazy(() => import('./pages/studio/StudioTemplates').then((m) => ({ default: m.StudioTemplates })));
+const StudioPublished = lazy(() => import('./pages/studio/StudioPublished').then((m) => ({ default: m.StudioPublished })));
+const StudioDrafts = lazy(() => import('./pages/studio/StudioSecondaryViews').then((m) => ({ default: m.StudioDrafts })));
+const StudioVersions = lazy(() => import('./pages/studio/StudioSecondaryViews').then((m) => ({ default: m.StudioVersions })));
+const StudioSettings = lazy(() => import('./pages/studio/StudioSecondaryViews').then((m) => ({ default: m.StudioSettings })));
+const StudioSupport = lazy(() => import('./pages/studio/StudioSecondaryViews').then((m) => ({ default: m.StudioSupport })));
 
 export default function App() {
   const initialize = useAuthStore((state) => state.initialize);
@@ -138,6 +149,35 @@ export default function App() {
           <Route path="settings" element={<VaultSettings />} />
         </Route>
 
+        {/* 3. I3DION OMNI STUDIO — DEDICATED NEW APPLICATION SHELL */}
+        <Route
+          path="omni-studio"
+          element={
+            <ProtectedRoute>
+              <ApplicationErrorBoundary appName="I3DION Omni Studio">
+                <EntitlementGuard appKey="studio">
+                  <StudioLayout />
+                </EntitlementGuard>
+              </ApplicationErrorBoundary>
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<StudioOverview />} />
+          <Route path="overview" element={<StudioOverview />} />
+          <Route path="projects" element={<StudioProjects />} />
+          <Route path="builder/:id" element={<StudioCatalogBuilder />} />
+          <Route path="templates" element={<StudioTemplates />} />
+          <Route path="published" element={<StudioPublished />} />
+          <Route path="drafts" element={<StudioDrafts />} />
+          <Route path="versions" element={<StudioVersions />} />
+          <Route path="settings" element={<StudioSettings />} />
+          <Route path="support" element={<StudioSupport />} />
+        </Route>
+
+        {/* Legacy Catalog Builder Redirect to Omni Studio */}
+        <Route path="catalog-builder" element={<Navigate to="/omni-studio/projects" replace />} />
+        <Route path="catalog-builder/*" element={<Navigate to="/omni-studio/projects" replace />} />
+
         {/* INTERNAL ORGANIZATION APPLICATIONS SHELL */}
         <Route path="dashboard" element={<Navigate to="/hub" replace />} />
         <Route
@@ -175,18 +215,6 @@ export default function App() {
               <ApplicationErrorBoundary appName="I3DION Spatial Vault">
                 <EntitlementGuard appKey="vault">
                   <BuildingManagementPage />
-                </EntitlementGuard>
-              </ApplicationErrorBoundary>
-            }
-          />
-
-          {/* 3. I3DION OMNI STUDIO */}
-          <Route
-            path="catalog-builder"
-            element={
-              <ApplicationErrorBoundary appName="I3DION Omni Studio">
-                <EntitlementGuard appKey="studio">
-                  <CatalogBuilderPage />
                 </EntitlementGuard>
               </ApplicationErrorBoundary>
             }
