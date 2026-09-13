@@ -33,6 +33,8 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ defaul
 const SecurityDashboard = lazy(() => import('./pages/SecurityDashboard').then(m => ({ default: m.SecurityDashboard })));
 const BillingSettingsPage = lazy(() => import('./pages/settings/BillingSettingsPage').then(m => ({ default: m.BillingSettingsPage })));
 const TeamManagementPage = lazy(() => import('./pages/settings/TeamManagementPage').then(m => ({ default: m.TeamManagementPage })));
+const OmniStudioPage = lazy(() => import('./features/studio/OmniStudioPage').then(m => ({ default: m.OmniStudioPage })));
+const BuildingManagementPage = lazy(() => import('./pages/BuildingManagementPage').then(m => ({ default: m.BuildingManagementPage })));
 
 export default function App() {
   const initialize = useAuthStore(state => state.initialize);
@@ -58,6 +60,7 @@ export default function App() {
         <Route path="reset-password" element={<ResetPasswordPage />} />
       </Route>
       <Route path="product/:slug" element={<PublicProductPage />} />
+      <Route path="experience/:publicId" element={<PublicProductPage />} />
       <Route
         element={
           <ProtectedRoute>
@@ -72,7 +75,9 @@ export default function App() {
         <Route path="hub/creator/:id" element={<CreatorProfilePage />} />
         <Route path="products" element={<ProductManagementPage />} />
         <Route path="products/upload" element={<ProductUploadWizardPage />} />
+        <Route path="buildings" element={<BuildingManagementPage />} />
         <Route path="catalog-builder" element={<CatalogBuilderPage />} />
+        <Route path="studio" element={<OmniStudioPage />} />
         <Route path="product-experience" element={<ProductExperiencePage />} />
 
         <Route path="leads" element={<LeadsDashboardPage />} />

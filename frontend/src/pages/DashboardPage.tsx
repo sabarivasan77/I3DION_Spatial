@@ -78,7 +78,7 @@ export function DashboardPage() {
     <div className="space-y-8">
       <PageHeader
         title={`Welcome back, ${user?.name?.split(' ')[0] ?? 'Alex'}`}
-        eyebrow="Here's what's happening with your AR catalog."
+        eyebrow="Here's what's happening with your spatial product experiences."
         action={
           <div className="flex gap-3">
             <Button variant="secondary" onClick={() => navigate('/analytics')}><Calendar size={18} />View Analytics</Button>
@@ -86,6 +86,46 @@ export function DashboardPage() {
           </div>
         }
       />
+
+      {/* Phase 16 Customer Onboarding Banner */}
+      <Card className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-indigo-900/50 p-6 text-white shadow-xl">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="bg-indigo-500/20 text-indigo-300 font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-indigo-500/30">
+                Core Customer Onboarding Journey
+              </span>
+            </div>
+            <h3 className="text-base font-bold text-white">Get Started with Your First 3D Spatial Experience</h3>
+            <p className="text-xs text-slate-300 max-w-2xl mt-0.5">
+              Create a product, design interactive 3D spatial experiences in OmniStudio, publish to web/AR, and capture customer leads.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2 shrink-0">
+            <button
+              onClick={() => navigate('/products/upload')}
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold font-mono transition flex items-center gap-1 shadow-sm"
+            >
+              <span>1. Add Product</span>
+            </button>
+            <button
+              onClick={() => navigate('/studio')}
+              className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-semibold font-mono transition flex items-center gap-1 shadow-sm"
+            >
+              <Sparkles size={13} />
+              <span>2. Open OmniStudio</span>
+            </button>
+            <button
+              onClick={() => navigate('/leads')}
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold font-mono transition flex items-center gap-1 shadow-sm"
+            >
+              <Users size={13} />
+              <span>3. View Leads</span>
+            </button>
+          </div>
+        </div>
+      </Card>
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         {kpis.map((item) => <KpiCard key={item.label} item={item} />)}
       </div>

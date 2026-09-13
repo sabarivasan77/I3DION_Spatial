@@ -36,7 +36,8 @@ import { launchQuickLook } from '../services/quickLook';
 import { Tracker } from '../services/Tracker';
 
 export function PublicProductPage() {
-  const { slug = '' } = useParams();
+  const { slug = '', publicId = '' } = useParams();
+  const identifier = slug || publicId;
   const [searchParams] = useSearchParams();
   const { success } = useToast();
 
@@ -70,34 +71,34 @@ export function PublicProductPage() {
   const handleToggleRenderMode = (mode: 'solid' | 'wireframe' | 'xray') => {
     setRenderMode(mode);
     if (product?.id) {
-      void Tracker.track('viewer_mode_changed', product.id, { mode, slug });
+      void Tracker.track('viewer_mode_changed', product.id, { mode, slug: identifier });
     }
   };
 
   const handleToggleAnimation = () => {
     if (animationSpeed === 0) {
       setAnimationSpeed(1); // Forward Play
-      if (product?.id) void Tracker.track('model_animated', product.id, { direction: 'forward', slug });
+      if (product?.id) void Tracker.track('model_animated', product.id, { direction: 'forward', slug: identifier });
     } else if (animationSpeed === 1) {
       setAnimationSpeed(-1); // Reverse Play
-      if (product?.id) void Tracker.track('model_animated', product.id, { direction: 'reverse', slug });
+      if (product?.id) void Tracker.track('model_animated', product.id, { direction: 'reverse', slug: identifier });
     } else {
       setAnimationSpeed(0); // Pause / Reset
-      if (product?.id) void Tracker.track('model_animated', product.id, { direction: 'stopped', slug });
+      if (product?.id) void Tracker.track('model_animated', product.id, { direction: 'stopped', slug: identifier });
     }
   };
 
-  const { returningVisitor, visitorInfo, trackEvent } = useVisitorSession(slug, product?.organization_id);
+  const { returningVisitor, visitorInfo, trackEvent } = useVisitorSession(identifier, product?.organization_id);
 
   const viewerContainerRef = useRef<HTMLDivElement>(null);
 
   // Fetch product data
   useEffect(() => {
-    if (!slug) return;
+    if (!identifier) return;
     setLoading(true);
     setErrorMsg(null);
 
-    api.getPublicProduct(slug)
+    api.getPublicProduct(identifier)
       .then((data: any) => {
         if (!data) {
           throw new Error('Product unavailable or draft mode.');
@@ -107,7 +108,7 @@ export function PublicProductPage() {
           document.title = `${data.name} — ${data.organization?.name || 'I3DION Spatial'}`;
         }
 
-        void Tracker.track('product_view_started', data.id, { slug, name: data.name });
+        void Tracker.track('product_view_started', data.id, { slug: identifier, name: data.name });
 
         // Check if opened via AR handoff link (?ar=1)
         const isArHandoff = searchParams.get('ar') === '1' || searchParams.get('ar') === 'true';
@@ -127,10 +128,10 @@ export function PublicProductPage() {
         setErrorMsg(err.message || 'Could not load product experience.');
       })
       .finally(() => setLoading(false));
-  }, [slug, searchParams]);
+  }, [identifier, searchParams]);
 
   const handleShare = () => {
-    void Tracker.track('share_clicked', product?.id, { slug });
+    void Tracker.track('share_clicked', product?.id, { slug: identifier });
     const shareUrl = window.location.href;
     if (navigator.share) {
       navigator.share({

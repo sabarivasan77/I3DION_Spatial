@@ -1,0 +1,92 @@
+import { TemplateDefinition } from '../../types/studio';
+
+export const immersive3dTemplate: TemplateDefinition = {
+  id: 'tmpl_immersive_3d',
+  name: '3D Spatial Exploration Experience',
+  description: 'Immersive 3D-first interactive environment featuring real Three.js canvas viewport, hotspot cards, and AR launcher.',
+  category: '3d',
+  useCase: '3D Product Configurator, Spatial Inspection, Virtual Showrooms',
+  version: 2,
+  access: 'free',
+  previewMetadata: {
+    tags: ['Real 3D Engine', 'R3F Canvas', 'Spatial Hotspots', 'AR Launch'],
+    icon: 'Box',
+    themeColor: '#4f46e5',
+  },
+  canvasConfig: {
+    viewport: 'desktop',
+    width: 1200,
+    height: 1040,
+    backgroundColor: '#090d16',
+  },
+  supportedCapabilities: ['Real 3D Viewport', '3D Orbit Controls', 'Hotspot Callouts', 'AR Launcher'],
+  initialWidgetTree: [
+    {
+      id: 'imm3d_title_text',
+      type: 'heading',
+      name: 'Viewport Title',
+      properties: {
+        content: 'SPATIAL 3D PRODUCT CANVAS',
+        level: 'h2',
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#818cf8',
+        textAlign: 'left',
+        marginBottom: 16,
+      },
+    },
+    {
+      id: 'imm3d_real_3d_viewer',
+      type: 'three_model_viewer',
+      name: 'Real 3D Model Viewer Canvas',
+      properties: {
+        modelUrl: '',
+        height: 380,
+        backgroundColor: '#0f172a',
+        autoRotate: true,
+        controlsEnabled: true,
+        lightIntensity: 1.4,
+        initialScale: 1.0,
+        borderRadius: 16,
+      },
+    },
+    {
+      id: 'imm3d_ar_launcher',
+      type: 'ar_launch',
+      name: 'AR Launcher Button',
+      properties: {
+        label: 'View Model in Augmented Reality (AR)',
+        subtitle: 'Tap to place spatial product model in physical space',
+        backgroundColor: '#4f46e5',
+        textColor: '#ffffff',
+        borderRadius: 12,
+      },
+    },
+    {
+      id: 'imm3d_hotspot_01',
+      type: 'hotspot',
+      name: 'Hotspot Callout 01',
+      properties: {
+        label: 'Hotspot 01: Carbon-Fiber Chassis Frame',
+        description: 'Ultra-lightweight structural core engineered for aerospace rigidity.',
+        pinColor: '#3b82f6',
+        backgroundColor: '#1e293b',
+        textColor: '#f8fafc',
+        borderRadius: 12,
+      },
+    },
+    {
+      id: 'imm3d_hotspot_02',
+      type: 'hotspot',
+      name: 'Hotspot Callout 02',
+      properties: {
+        label: 'Hotspot 02: Electro-Magnetic Actuators',
+        description: 'Sub-nanometer precision motion control modules.',
+        pinColor: '#10b981',
+        backgroundColor: '#1e293b',
+        textColor: '#f8fafc',
+        borderRadius: 12,
+      },
+    },
+  ],
+};

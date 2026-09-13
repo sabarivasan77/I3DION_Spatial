@@ -517,6 +517,14 @@ export function ProductManagementPage() {
                       <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-2">
                           <button
+                            title="Design 3D Spatial Experience"
+                            onClick={() => navigate(`/studio?productId=${product.id}`)}
+                            className="rounded-lg p-1.5 text-indigo-600 font-medium transition hover:bg-indigo-50 flex items-center gap-1 text-xs"
+                          >
+                            <Sparkles size={15} />
+                            <span>Experience</span>
+                          </button>
+                          <button
                             title="Edit product"
                             onClick={() => setEditingProduct(product)}
                             className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-blue-600"

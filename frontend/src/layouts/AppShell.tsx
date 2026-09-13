@@ -5,6 +5,7 @@ import {
   BarChart3,
   BookOpen,
   Box,
+  Building2,
   CreditCard,
   Headphones,
   HelpCircle,
@@ -15,6 +16,7 @@ import {
   Users,
   Globe,
   X,
+  Sparkles,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
@@ -26,13 +28,16 @@ const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: BarChart3 },
   { label: 'Spatial Hub', path: '/hub', icon: Globe },
   { label: 'Products', path: '/products', icon: Box },
+  { label: 'Facility Buildings', path: '/buildings', icon: Building2 },
   { label: 'Catalogs', path: '/catalog-builder', icon: BookOpen },
+  { label: '3DION OmniStudio', path: '/studio', icon: Sparkles },
   { label: 'Leads', path: '/leads', icon: Users },
   { label: 'Analytics', path: '/analytics', icon: BarChart3 },
   { label: 'Billing & Subscriptions', path: '/settings/billing', icon: CreditCard },
   { label: 'Team Members', path: '/settings/team', icon: Users },
   { label: 'Settings', path: '/settings', icon: Settings },
 ];
+
 
 function Sidebar({
   open,
@@ -98,6 +103,10 @@ function Sidebar({
         <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-400 hover:bg-slate-800/60 hover:text-white" onClick={onSupport}>
           <Headphones size={20} />
           Support Dashboard
+        </button>
+        <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-400 hover:bg-red-500/20 hover:text-red-400" onClick={onLogout}>
+          <LogOut size={20} />
+          Logout
         </button>
       </div>
     </aside>

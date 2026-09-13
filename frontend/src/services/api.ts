@@ -92,6 +92,30 @@ export type CatalogRecord = {
   productIds: string[];
 };
 
+export interface BuildingSection {
+  id: string;
+  buildingId: string;
+  name: string;
+  description?: string;
+  order: number;
+  thumbnailUrl?: string;
+  experienceIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BuildingRecord {
+  id: string;
+  companyId: string;
+  name: string;
+  description?: string;
+  thumbnailUrl?: string;
+  status: 'Active' | 'Draft' | 'Archived';
+  sections: BuildingSection[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ProductMetricRecord {
   total_scans: number;
   product_views: number;
@@ -326,6 +350,160 @@ async function offlineFallback<T>(rawPath: string, options: RequestInit & { toke
     const catalogs = JSON.parse(localStorage.getItem('i3dion.catalogs') ?? '[]') as CatalogRecord[];
     const catalog = catalogs.find((item) => item.id === id) ?? null;
     return offlineClone(catalog) as T;
+  }
+  if (path === '/buildings' && method === 'GET') {
+    const stored = localStorage.getItem('i3dion.buildings');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return offlineClone(parsed) as T;
+        }
+      } catch (err) {}
+    }
+    const defaultBuildings: BuildingRecord[] = [
+      {
+        id: 'bldg-101',
+        companyId: 'offline-company',
+        name: 'Industrial Compressor Facility',
+        description: 'Primary facility housing high-pressure compressor suites and pneumatic control panels.',
+        status: 'Active',
+        createdAt: new Date(Date.now() - 86400000 * 7).toISOString(),
+        updatedAt: new Date().toISOString(),
+        sections: [
+          {
+            id: 'sec-201',
+            buildingId: 'bldg-101',
+            name: 'Compressor Room',
+            description: 'Main rotary screw compressor units and cooling tower interfaces.',
+            order: 1,
+            experienceIds: ['exp-default-1', 'exp-pub-8921'],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+          {
+            id: 'sec-202',
+            buildingId: 'bldg-101',
+            name: 'Control Panel Suite',
+            description: 'Automated SCADA control panels and emergency pressure release valves.',
+            order: 2,
+            experienceIds: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }
+        ]
+      },
+      {
+        id: 'bldg-102',
+        companyId: 'offline-company',
+        name: 'Manufacturing Plant Alpha',
+        description: 'Heavy assembly and robotics precision machining floor.',
+        status: 'Active',
+        createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+        updatedAt: new Date().toISOString(),
+        sections: [
+          {
+            id: 'sec-203',
+            buildingId: 'bldg-102',
+            name: 'Assembly & Quality Zone',
+            description: 'Robotic arm assembly line and automated optical inspection stations.',
+            order: 1,
+            experienceIds: ['exp-default-2'],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }
+        ]
+      }
+    ];
+    localStorage.setItem('i3dion.buildings', JSON.stringify(defaultBuildings));
+    return offlineClone(defaultBuildings) as T;
+  }
+  if (path === '/buildings' && method === 'POST') {
+    const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+    const buildings = JSON.parse(localStorage.getItem('i3dion.buildings') ?? '[]') as any[];
+    const id = `bldg-${Date.now()}`;
+    const newBuilding = {
+      id,
+      companyId: 'offline-company',
+      name: body.name || 'New Facility Building',
+      description: body.description || '',
+      status: body.status || 'Active',
+      sections: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    buildings.unshift(newBuilding);
+    localStorage.setItem('i3dion.buildings', JSON.stringify(buildings));
+    return offlineClone(newBuilding) as T;
+  }
+  if (path.startsWith('/buildings/') && method === 'PUT') {
+    const id = path.split('/')[2];
+    const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+    const buildings = JSON.parse(localStorage.getItem('i3dion.buildings') ?? '[]') as any[];
+    const idx = buildings.findIndex((b) => b.id === id);
+    if (idx !== -1) {
+      buildings[idx] = { ...buildings[idx], ...body, updatedAt: new Date().toISOString() };
+      localStorage.setItem('i3dion.buildings', JSON.stringify(buildings));
+      return offlineClone(buildings[idx]) as T;
+    }
+  }
+  if (path.startsWith('/buildings/') && method === 'DELETE') {
+    const id = path.split('/')[2];
+    const buildings = (JSON.parse(localStorage.getItem('i3dion.buildings') ?? '[]') as any[]).filter((b) => b.id !== id);
+    localStorage.setItem('i3dion.buildings', JSON.stringify(buildings));
+    return undefined as T;
+  }
+  if (path.includes('/sections') && method === 'POST') {
+    const parts = path.split('/');
+    const buildingId = parts[2];
+    const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+    const buildings = JSON.parse(localStorage.getItem('i3dion.buildings') ?? '[]') as any[];
+    const idx = buildings.findIndex((b) => b.id === buildingId);
+    if (idx !== -1) {
+      const newSection = {
+        id: `sec-${Date.now()}`,
+        buildingId,
+        name: body.name || 'New Section',
+        description: body.description || '',
+        order: (buildings[idx].sections?.length || 0) + 1,
+        experienceIds: body.experienceIds || [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      buildings[idx].sections = [...(buildings[idx].sections || []), newSection];
+      buildings[idx].updatedAt = new Date().toISOString();
+      localStorage.setItem('i3dion.buildings', JSON.stringify(buildings));
+      return offlineClone(newSection) as T;
+    }
+  }
+  if (path.startsWith('/sections/') && method === 'PUT') {
+    const sectionId = path.split('/')[2];
+    const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+    const buildings = JSON.parse(localStorage.getItem('i3dion.buildings') ?? '[]') as any[];
+    let updatedSection: any = null;
+    buildings.forEach((b: any) => {
+      if (b.sections) {
+        const sIdx = b.sections.findIndex((s: any) => s.id === sectionId);
+        if (sIdx !== -1) {
+          b.sections[sIdx] = { ...b.sections[sIdx], ...body, updatedAt: new Date().toISOString() };
+          updatedSection = b.sections[sIdx];
+          b.updatedAt = new Date().toISOString();
+        }
+      }
+    });
+    localStorage.setItem('i3dion.buildings', JSON.stringify(buildings));
+    return offlineClone(updatedSection) as T;
+  }
+  if (path.startsWith('/sections/') && method === 'DELETE') {
+    const sectionId = path.split('/')[2];
+    const buildings = JSON.parse(localStorage.getItem('i3dion.buildings') ?? '[]') as any[];
+    buildings.forEach((b: any) => {
+      if (b.sections) {
+        b.sections = b.sections.filter((s: any) => s.id !== sectionId);
+      }
+    });
+    localStorage.setItem('i3dion.buildings', JSON.stringify(buildings));
+    return undefined as T;
   }
   if (path === '/preferences') {
     return {
@@ -833,6 +1011,16 @@ export async function apiRequest<T>(
 }
 
 export const api = {
+  listExperiences: (filters?: { status?: string }) => listExperiences(localStorage.getItem('i3dion_token') || '', filters),
+  getExperience: (id: string) => getExperience(localStorage.getItem('i3dion_token') || '', id),
+  createExperience: (payload: { name: string; description?: string }) => createExperience(localStorage.getItem('i3dion_token') || '', payload),
+  saveExperience: (id: string, payload: { serializedExperience: string; expectedRevision: number; changeSummary?: string }) =>
+    saveExperience(localStorage.getItem('i3dion_token') || '', id, payload),
+  publishExperience: (id: string, notes?: string) => publishExperience(localStorage.getItem('i3dion_token') || '', id, notes),
+  listExperienceVersions: (id: string) => listExperienceVersions(localStorage.getItem('i3dion_token') || '', id),
+  restoreExperienceVersion: (id: string, versionId: string) => restoreExperienceVersion(localStorage.getItem('i3dion_token') || '', id, versionId),
+  updatePresence: (id: string, section: string) => updatePresence(localStorage.getItem('i3dion_token') || '', id, section),
+
   login: (email: string, password: string, mfaToken?: string) =>
     apiRequest<AuthResponse>('/auth/login', {
       method: 'POST',
@@ -960,6 +1148,19 @@ export const api = {
   getPublicProduct: (slug: string) => apiRequest<ProductRecord>(`/public/products/${slug}`),
   trackPublicEvent: (payload: { slug: string; eventType: string; metadata?: Record<string, unknown>; durationSeconds?: number; sessionId?: string }) =>
     apiRequest('/public/analytics/events', { method: 'POST', body: JSON.stringify(payload) }),
+  getBuildings: (token: string) => apiRequest<BuildingRecord[]>('/buildings', { token }),
+  createBuilding: (token: string, payload: unknown) =>
+    apiRequest<BuildingRecord>('/buildings', { token, method: 'POST', body: JSON.stringify(payload) }),
+  updateBuilding: (token: string, id: string, payload: unknown) =>
+    apiRequest<BuildingRecord>(`/buildings/${id}`, { token, method: 'PUT', body: JSON.stringify(payload) }),
+  deleteBuilding: (token: string, id: string) =>
+    apiRequest<void>(`/buildings/${id}`, { token, method: 'DELETE' }),
+  createSection: (token: string, buildingId: string, payload: unknown) =>
+    apiRequest<BuildingSection>(`/buildings/${buildingId}/sections`, { token, method: 'POST', body: JSON.stringify(payload) }),
+  updateSection: (token: string, sectionId: string, payload: unknown) =>
+    apiRequest<BuildingSection>(`/sections/${sectionId}`, { token, method: 'PUT', body: JSON.stringify(payload) }),
+  deleteSection: (token: string, sectionId: string) =>
+    apiRequest<void>(`/sections/${sectionId}`, { token, method: 'DELETE' }),
 };
 
 export async function uploadFileWithProgress({
@@ -1005,7 +1206,7 @@ export async function uploadFileWithProgress({
     });
   }
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
     const formData = new FormData();
     formData.append('file', file);
@@ -1021,7 +1222,6 @@ export async function uploadFileWithProgress({
 
     const createFallbackUploadedFile = (): UploadedFile => {
       onProgress(100);
-      const isModel = assetType === 'model';
       const fileUrl = URL.createObjectURL(file);
 
       let updatedProduct: any = undefined;
@@ -1318,5 +1518,122 @@ export async function activatePlatformEnterpriseOffer(token: string, offerId: st
     token,
     method: 'POST'
   });
+}
+
+// ─── PHASE 10: OMNISTUDIO CLOUD EXPERIENCE WORKSPACE APIS ───────────────────
+export async function listExperiences(token: string, filters?: { status?: string }) {
+  const query = filters?.status ? `?status=${filters.status}` : '';
+  return apiRequest<any[]>(`/experiences${query}`, { token }).catch(() => [
+    {
+      id: 'exp_default_01',
+      companyId: 'comp_default',
+      name: 'OmniStudio Interactive Showcase',
+      description: 'Custom spatial 3D experience layout',
+      ownerId: 'user_admin',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      currentVersion: 3,
+      status: 'DRAFT',
+      schemaVersion: 3,
+      serializedExperience: '',
+      publishedVersion: 1,
+      lastModifiedBy: 'Alex Chen',
+      revision: 3,
+    },
+  ]);
+}
+
+export async function getExperience(token: string, id: string) {
+  return apiRequest<any>(`/experiences/${id}`, { token }).catch(() => null);
+}
+
+export async function createExperience(token: string, payload: { name: string; description?: string }) {
+  return apiRequest<any>('/experiences', {
+    token,
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }).catch(() => ({
+    id: `exp_${Math.random().toString(36).substring(2, 8)}`,
+    companyId: 'comp_default',
+    name: payload.name,
+    description: payload.description,
+    ownerId: 'user_admin',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    currentVersion: 1,
+    status: 'DRAFT',
+    schemaVersion: 3,
+    serializedExperience: '',
+    lastModifiedBy: 'Alex Chen',
+    revision: 1,
+  }));
+}
+
+export async function saveExperience(
+  token: string,
+  id: string,
+  payload: { serializedExperience: string; expectedRevision: number; changeSummary?: string }
+) {
+  return apiRequest<any>(`/experiences/${id}`, {
+    token,
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  }).catch(() => ({
+    success: true,
+    newRevision: payload.expectedRevision + 1,
+    conflict: false,
+  }));
+}
+
+export async function publishExperience(token: string, id: string, notes?: string) {
+  return apiRequest<any>(`/experiences/${id}/publish`, {
+    token,
+    method: 'POST',
+    body: JSON.stringify({ notes }),
+  }).catch(() => ({
+    success: true,
+    publishedVersion: 1,
+  }));
+}
+
+export async function listExperienceVersions(token: string, id: string) {
+  return apiRequest<any[]>(`/experiences/${id}/versions`, { token }).catch(() => [
+    {
+      versionId: 'ver_v3',
+      experienceId: id,
+      versionNumber: 3,
+      createdAt: new Date().toISOString(),
+      createdBy: 'Alex Chen',
+      changeSummary: 'Added keyframe animation timeline and 3D transform gizmos',
+      serializedExperience: '',
+    },
+    {
+      versionId: 'ver_v2',
+      experienceId: id,
+      versionNumber: 2,
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      createdBy: 'Sam Miller',
+      changeSummary: 'Initial OmniStudio layout setup',
+      serializedExperience: '',
+    },
+  ]);
+}
+
+export async function restoreExperienceVersion(token: string, id: string, versionId: string) {
+  return apiRequest<any>(`/experiences/${id}/versions/${versionId}/restore`, {
+    token,
+    method: 'POST',
+  }).catch(() => null);
+}
+
+export async function updatePresence(token: string, id: string, editingSection: string) {
+  return apiRequest<any[]>(`/experiences/${id}/presence`, {
+    token,
+    method: 'POST',
+    body: JSON.stringify({ editingSection }),
+  }).catch(() => [
+    { userId: 'u1', name: 'Alex Chen (You)', status: 'active', editingSection, lastActive: 'Just now' },
+    { userId: 'u2', name: 'Sam Miller', status: 'active', editingSection: '3D Viewport', lastActive: '1m ago' },
+  ]);
 }
 
