@@ -28,6 +28,16 @@ export const StudioLayout: React.FC = () => {
   const user = useAuthStore((s) => s.user);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const isBuilderMode = location.pathname.includes('/omni-studio/builder');
+
+  if (isBuilderMode) {
+    return (
+      <div className="h-screen w-screen overflow-hidden bg-[#F8FAFC] font-sans">
+        <Outlet />
+      </div>
+    );
+  }
+
   const isCurrent = (path: string) => {
     if (path === '/omni-studio' && (location.pathname === '/omni-studio' || location.pathname === '/omni-studio/')) {
       return true;

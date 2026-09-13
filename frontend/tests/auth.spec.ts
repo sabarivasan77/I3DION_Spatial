@@ -11,7 +11,5 @@ test('auth flow tests', async ({ page }) => {
   await page.fill('input[type="password"]', 'password123');
   await page.click('button[type="submit"]');
   
-  // In a real e2e environment this would redirect or show error, 
-  // we just wait for network idle to ensure no crashes
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 });

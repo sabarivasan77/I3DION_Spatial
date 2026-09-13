@@ -466,5 +466,49 @@ export const studioApi = {
   // --- Spatial Vault Assets Selector Helper ---
   fetchVaultAssets: async (): Promise<VaultAsset[]> => {
     return vaultApi.getAssets();
+  },
+
+  // --- Import / Export Schema (.omni.json) ---
+  exportProjectJson: (project: StudioProject): string => {
+    const payload = {
+      schemaVersion: '1.0',
+      exported_at: new Date().toISOString(),
+      project: {
+        id: project.id,
+        name: project.name,
+        description: project.description,
+        version: project.version,
+        visibility: project.visibility,
+        product_ids: project.product_ids,
+        vault_asset_ids: project.vault_asset_ids,
+        catalog_data: project.catalog_data
+      }
+    };
+    return JSON.stringify(payload, null, 2);
+  },
+
+  importProjectJson: async (jsonStr: string): Promise<StudioProject> => {
+    let parsed: any;
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch (e) {
+      throw new Error('Invalid JSON format');
+    }
+
+    if (!parsed || !parsed.project || !parsed.project.catalog_data) {
+      throw new Error('Malformed project JSON structure. Missing project or catalog_data.');
+    }
+
+    const data = parsed.project;
+    const newProj = await studioApi.createProject({
+      name: `${data.name || 'Imported Catalog'} (Imported)`,
+      description: data.description || 'Imported .omni.json project configuration',
+    });
+
+    return studioApi.updateProject(newProj.id, {
+      catalog_data: data.catalog_data,
+      product_ids: data.product_ids || [],
+      vault_asset_ids: data.vault_asset_ids || []
+    });
   }
 };

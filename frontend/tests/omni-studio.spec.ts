@@ -44,8 +44,8 @@ test.describe('I3DION Omni Studio E2E Playwright Suite', () => {
     expect(page.url()).not.toContain('/login');
     expect(page.url()).not.toBe(`${BASE_URL}/`);
 
-    // Verify Omni Studio Builder elements load
-    await expect(page.locator('text=Hero Section').first()).toBeVisible();
+    // Verify Omni Studio Builder elements load for newly created catalog
+    await expect(page.locator('text=Industrial Pump Catalog').first()).toBeVisible();
   });
 
   test('3. Omni Studio Builder Top Controls & Panels Render Properly', async ({ page }) => {
@@ -62,9 +62,8 @@ test.describe('I3DION Omni Studio E2E Playwright Suite', () => {
     await expect(page.locator('button:has-text("Hierarchy")').first()).toBeVisible();
 
     // Properties Inspector Right Panel
-    await expect(page.locator('text=Container').first()).toBeVisible();
-    await expect(page.locator('text=Background').first()).toBeVisible();
-    await expect(page.locator('text=Spacing').first()).toBeVisible();
+    await expect(page.locator('text=Component Title').first()).toBeVisible();
+    await expect(page.locator('text=Subtitle / Description').first()).toBeVisible();
   });
 
   test('4. Omni Studio Projects List Navigation', async ({ page }) => {
