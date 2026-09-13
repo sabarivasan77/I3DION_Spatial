@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -13,23 +13,59 @@ import {
   Grid,
   List
 } from 'lucide-react';
-
-const mockAssets = [
-  { id: '1', name: 'Compressor Assembly', type: '3D Model', size: '24.8 MB', status: 'Ready', updated: '2 hrs ago', icon: Box },
-  { id: '2', name: 'Motor Housing', type: '3D Model', size: '18.4 MB', status: 'Ready', updated: '5 hrs ago', icon: Box },
-  { id: '3', name: 'Technical Drawing', type: 'Document', size: '2.4 MB', status: 'Ready', updated: '1 day ago', icon: FileText },
-  { id: '4', name: 'Product Render', type: 'Image', size: '4.1 MB', status: 'Ready', updated: '1 day ago', icon: ImageIcon },
-  { id: '5', name: 'Installation Video', type: 'Video', size: '124 MB', status: 'Processing', updated: '2 days ago', icon: Video },
-  { id: '6', name: 'Spare Parts List', type: 'Template', size: '1.2 MB', status: 'Ready', updated: '4 days ago', icon: FileBox },
-  { id: '7', name: 'Factory Layout', type: '3D Model', size: '52.8 MB', status: 'Ready', updated: '5 days ago', icon: Box },
-];
+import { vaultApi, VaultAsset } from '../../api/vaultApi';
 
 export default function VaultAssetList() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('All');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [assets, setAssets] = useState<VaultAsset[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    vaultApi.getAssets()
+      .then((data: VaultAsset[]) => {
+        setAssets(data);
+        setIsLoading(false);
+      })
+      .catch((err: Error) => {
+        console.error('Failed to load assets', err);
+        setError('Failed to load assets');
+        setIsLoading(false);
+      });
+  }, []);
 
   const tabs = ['All', '3D Models', 'Images', 'Videos', 'Documents', 'Templates'];
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case '3D Model': return Box;
+      case 'Document': return FileText;
+      case 'Image': return ImageIcon;
+      case 'Video': return Video;
+      case 'Template': return FileBox;
+      default: return FileText;
+    }
+  };
+
+  const formatSize = (bytes: number) => {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  const filteredAssets = assets.filter(a => {
+    if (activeTab === 'All') return true;
+    if (activeTab === '3D Models') return a.type === '3D Model';
+    if (activeTab === 'Images') return a.type === 'Image';
+    if (activeTab === 'Videos') return a.type === 'Video';
+    if (activeTab === 'Documents') return a.type === 'Document';
+    if (activeTab === 'Templates') return a.type === 'Template';
+    return true;
+  });
 
   return (
     <div className="mx-auto max-w-7xl h-full flex flex-col space-y-6 animate-in fade-in duration-300">
@@ -91,7 +127,16 @@ export default function VaultAssetList() {
       </div>
 
       <div className="flex-1 overflow-auto">
-        {viewMode === 'list' ? (
+        {isLoading ? (
+          <div className="flex h-64 items-center justify-center text-slate-400">Loading assets...</div>
+        ) : error ? (
+          <div className="flex h-64 items-center justify-center text-red-500">{error}</div>
+        ) : filteredAssets.length === 0 ? (
+          <div className="flex h-64 items-center justify-center text-slate-400 flex-col">
+            <Box size={48} className="mb-4 opacity-50" />
+            <p>No assets found</p>
+          </div>
+        ) : viewMode === 'list' ? (
           <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
             <table className="w-full text-left text-sm text-slate-600">
               <thead className="bg-slate-50 text-xs uppercase text-slate-500 border-b border-slate-200">
@@ -108,70 +153,80 @@ export default function VaultAssetList() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {mockAssets.map((asset) => (
-                  <tr key={asset.id} className="hover:bg-slate-50 transition cursor-pointer" onClick={() => navigate(`/vault/assets/${asset.id}`)}>
-                    <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
-                      <input type="checkbox" className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
-                          <asset.icon size={20} />
+                {filteredAssets.map((asset) => {
+                  const Icon = getIcon(asset.type);
+                  return (
+                    <tr key={asset.id} className="hover:bg-slate-50 transition cursor-pointer" onClick={() => navigate(`/vault/assets/${asset.id}`)}>
+                      <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
+                        <input type="checkbox" className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                            <Icon size={20} />
+                          </div>
+                          <span className="font-bold text-slate-900">{asset.name}</span>
                         </div>
-                        <span className="font-bold text-slate-900">{asset.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">{asset.type}</td>
-                    <td className="px-6 py-4">{asset.size}</td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                        asset.status === 'Ready' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        {asset.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">{asset.updated}</td>
-                    <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
-                      <button className="text-slate-400 hover:text-slate-700 transition">
-                        <MoreHorizontal size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4">{asset.type}</td>
+                      <td className="px-6 py-4">{formatSize(asset.size_bytes)}</td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                          asset.status === 'Ready' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {asset.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">{new Date(asset.updated_at).toLocaleDateString()}</td>
+                      <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
+                        <button className="text-slate-400 hover:text-slate-700 transition">
+                          <MoreHorizontal size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {mockAssets.map((asset) => (
-              <div 
-                key={asset.id} 
-                onClick={() => navigate(`/vault/assets/${asset.id}`)}
-                className="group cursor-pointer rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-emerald-300 hover:shadow-md overflow-hidden flex flex-col"
-              >
-                <div className="flex h-48 w-full items-center justify-center bg-slate-100 text-slate-400 relative">
-                  <asset.icon size={64} className="opacity-20" />
-                  <div className="absolute top-3 right-3">
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                      asset.status === 'Ready' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                    }`}>
-                      {asset.status}
-                    </span>
+            {filteredAssets.map((asset) => {
+              const Icon = getIcon(asset.type);
+              return (
+                <div 
+                  key={asset.id} 
+                  onClick={() => navigate(`/vault/assets/${asset.id}`)}
+                  className="group cursor-pointer rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-emerald-300 hover:shadow-md overflow-hidden flex flex-col"
+                >
+                  <div className="flex h-48 w-full items-center justify-center bg-slate-100 text-slate-400 relative">
+                    {asset.type === 'Image' ? (
+                      <img src={asset.public_url} alt={asset.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <Icon size={64} className="opacity-20" />
+                    )}
+                    <div className="absolute top-3 right-3">
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        asset.status === 'Ready' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                      }`}>
+                        {asset.status}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-sm font-bold text-slate-900 truncate">{asset.name}</h3>
+                    <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
+                      <span>{asset.type}</span>
+                      <span>{formatSize(asset.size_bytes)}</span>
+                    </div>
+                    <div className="mt-4 flex gap-2">
+                      <button className="flex-1 rounded-lg border border-slate-200 py-1.5 text-xs font-semibold hover:bg-slate-50 text-slate-700">Preview</button>
+                      <button className="rounded-lg border border-slate-200 px-2 py-1.5 text-slate-500 hover:bg-slate-50" onClick={(e) => { e.stopPropagation(); }}><MoreHorizontal size={14} /></button>
+                    </div>
                   </div>
                 </div>
-                <div className="p-4">
-                  <h3 className="text-sm font-bold text-slate-900 truncate">{asset.name}</h3>
-                  <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
-                    <span>{asset.type}</span>
-                    <span>{asset.size}</span>
-                  </div>
-                  <div className="mt-4 flex gap-2">
-                    <button className="flex-1 rounded-lg border border-slate-200 py-1.5 text-xs font-semibold hover:bg-slate-50 text-slate-700">Preview</button>
-                    <button className="rounded-lg border border-slate-200 px-2 py-1.5 text-slate-500 hover:bg-slate-50"><MoreHorizontal size={14} /></button>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

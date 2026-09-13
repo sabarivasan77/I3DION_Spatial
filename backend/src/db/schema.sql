@@ -539,3 +539,75 @@ CREATE TABLE IF NOT EXISTS automation_rules (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- VAULT ASSET SCHEMA
+-- ─────────────────────────────────────────────────────────────────────────────
+DO $$ BEGIN
+  CREATE TYPE asset_status AS ENUM ('Processing', 'Ready', 'Warning', 'Failed');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE asset_visibility AS ENUM ('Private', 'Organization', 'Public');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+CREATE TABLE IF NOT EXISTS vault_collections (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  description text,
+  created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS vault_templates (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  description text,
+  schema jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS vault_assets (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  description text,
+  category text,
+  tags jsonb NOT NULL DEFAULT '[]'::jsonb,
+  type text NOT NULL,
+  original_name text NOT NULL,
+  storage_key text NOT NULL,
+  public_url text NOT NULL,
+  mime_type text NOT NULL,
+  size_bytes integer NOT NULL,
+  checksum_sha256 text,
+  status asset_status NOT NULL DEFAULT 'Processing',
+  visibility asset_visibility NOT NULL DEFAULT 'Organization',
+  thumbnail_url text,
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  collection_id uuid REFERENCES vault_collections(id) ON DELETE SET NULL,
+  template_id uuid REFERENCES vault_templates(id) ON DELETE SET NULL,
+  created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS vault_asset_versions (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  asset_id uuid NOT NULL REFERENCES vault_assets(id) ON DELETE CASCADE,
+  version_number integer NOT NULL,
+  original_name text NOT NULL,
+  storage_key text NOT NULL,
+  public_url text NOT NULL,
+  mime_type text NOT NULL,
+  size_bytes integer NOT NULL,
+  checksum_sha256 text,
+  change_description text,
+  created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+

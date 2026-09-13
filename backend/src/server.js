@@ -100,6 +100,7 @@ import organizationRouter from './routes/organization.js';
 import platformAdminRouter from './routes/platformAdmin.js';
 import publishingRouter from './routes/publishing.js';
 import notificationsRouter from './routes/notifications.js';
+import { vaultRouter } from './routes/vault.js';
 
 import { billingProvider } from './services/billing/billingProvider.js';
 
@@ -180,6 +181,7 @@ apiRouter.use('/organization', organizationRouter);
 apiRouter.use('/platform-admin', platformAdminRouter);
 apiRouter.use('/publishing', publishingRouter);
 apiRouter.use('/notifications', notificationsRouter);
+apiRouter.use('/vault', vaultRouter);
 apiRouter.use('/', resourcesRouter);
 
 app.use('/api', apiRouter);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -8,44 +8,52 @@ import {
   Box,
   CheckCircle2,
   MoreVertical,
-  History,
   Tag,
   FileBox,
   Activity
 } from 'lucide-react';
-import { useAuthStore } from '../../store/authStore';
+import { vaultApi, VaultAsset } from '../../api/vaultApi';
 
 export default function VaultAssetDetail() {
   const { assetId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('Overview');
+  const [asset, setAsset] = useState<VaultAsset | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const tabs = ['Overview', 'Metadata', 'Versions', 'Usage'];
 
-  // Mock Asset Data
-  const asset = {
-    id: assetId || '1',
-    name: 'Industrial Pump',
-    status: 'Ready',
-    category: 'Industrial',
-    fileFormat: 'GLB',
-    fileSize: '24.8 MB',
-    created: 'Sep 10, 2025',
-    uploadedBy: 'John Smith',
-    createdBy: 'John Smith',
-    description: 'High performance industrial centrifugal pump used in water treatment plants. Includes internal mechanical details and accurate scaling.',
-    tags: ['pump', 'industrial', 'water treatment'],
-    versions: [
-      { v: 'v3', date: 'Sep 13, 2025', size: '24.8 MB', current: true },
-      { v: 'v2', date: 'Sep 08, 2025', size: '22.1 MB', current: false },
-      { v: 'v1', date: 'Aug 20, 2025', size: '18.4 MB', current: false },
-    ],
-    connections: [
-      { app: 'I3DION Omni Studio', usage: 'Used in 3 catalogs' },
-      { app: 'I3DION Spatial Engine', usage: 'Used in 2 experiences' },
-      { app: 'I3DION Spatial Hub', usage: 'Published to public library' },
-    ]
+  useEffect(() => {
+    if (assetId) {
+      vaultApi.getAsset(assetId)
+        .then((data: VaultAsset) => {
+          setAsset(data);
+          setIsLoading(false);
+        })
+        .catch((err: Error) => {
+          console.error(err);
+          setError('Failed to load asset details');
+          setIsLoading(false);
+        });
+    }
+  }, [assetId]);
+
+  if (isLoading) {
+    return <div className="h-full flex items-center justify-center text-slate-400">Loading asset...</div>;
+  }
+
+  if (error || !asset) {
+    return <div className="h-full flex items-center justify-center text-red-500">{error || 'Asset not found'}</div>;
+  }
+
+  const formatSize = (bytes: number) => {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
   return (
@@ -64,8 +72,24 @@ export default function VaultAssetDetail() {
         {/* Left: 3D Viewer / Media Preview */}
         <div className="w-full lg:w-7/12 xl:w-2/3 h-96 lg:h-full flex-shrink-0 flex flex-col">
           <div className="flex-1 rounded-2xl border border-slate-200 bg-slate-100 flex items-center justify-center relative overflow-hidden shadow-sm">
-            {/* Placeholder for real 3D Viewer (like ModelViewer component) */}
-            <Box size={120} className="text-slate-300" />
+            {asset.type === '3D Model' ? (
+              <model-viewer
+                src={asset.public_url}
+                auto-rotate
+                camera-controls
+                ar
+                shadow-intensity="1"
+                style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9' }}
+              >
+                <div slot="poster" className="absolute inset-0 flex items-center justify-center">
+                   <Box size={48} className="text-slate-300 animate-pulse" />
+                </div>
+              </model-viewer>
+            ) : asset.type === 'Image' ? (
+              <img src={asset.public_url} alt={asset.name} className="max-w-full max-h-full object-contain" />
+            ) : (
+              <Box size={120} className="text-slate-300" />
+            )}
             <div className="absolute top-4 right-4 flex gap-2">
                <button className="h-8 w-8 rounded-lg bg-white/80 backdrop-blur-sm border border-slate-200 flex items-center justify-center shadow-xs text-slate-700 hover:bg-white transition"><Box size={14} /></button>
                <button className="h-8 w-8 rounded-lg bg-white/80 backdrop-blur-sm border border-slate-200 flex items-center justify-center shadow-xs text-slate-700 hover:bg-white transition"><Activity size={14} /></button>
@@ -108,33 +132,30 @@ export default function VaultAssetDetail() {
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-y-4 gap-x-4 text-sm">
                   <div className="text-slate-500 font-medium">Category</div>
-                  <div className="font-semibold text-slate-900">{asset.category}</div>
+                  <div className="font-semibold text-slate-900">{asset.category || 'Uncategorized'}</div>
                   
-                  <div className="text-slate-500 font-medium">File Format</div>
-                  <div className="font-semibold text-slate-900">{asset.fileFormat}</div>
+                  <div className="text-slate-500 font-medium">Type</div>
+                  <div className="font-semibold text-slate-900">{asset.type}</div>
                   
                   <div className="text-slate-500 font-medium">File Size</div>
-                  <div className="font-semibold text-slate-900">{asset.fileSize}</div>
+                  <div className="font-semibold text-slate-900">{formatSize(asset.size_bytes)}</div>
                   
                   <div className="text-slate-500 font-medium">Created</div>
-                  <div className="font-semibold text-slate-900">{asset.created}</div>
+                  <div className="font-semibold text-slate-900">{new Date(asset.created_at).toLocaleDateString()}</div>
                   
-                  <div className="text-slate-500 font-medium">Uploaded by</div>
-                  <div className="font-semibold text-slate-900">{asset.uploadedBy}</div>
-                  
-                  <div className="text-slate-500 font-medium">Created by</div>
-                  <div className="font-semibold text-slate-900">{asset.createdBy}</div>
+                  <div className="text-slate-500 font-medium">Visibility</div>
+                  <div className="font-semibold text-slate-900">{asset.visibility}</div>
                 </div>
 
                 <div>
                   <h3 className="text-sm font-medium text-slate-500 mb-2">Description</h3>
-                  <p className="text-sm text-slate-700 leading-relaxed">{asset.description}</p>
+                  <p className="text-sm text-slate-700 leading-relaxed">{asset.description || 'No description provided.'}</p>
                 </div>
 
                 <div>
                   <h3 className="text-sm font-medium text-slate-500 mb-2 flex items-center gap-2"><Tag size={14} /> Tags</h3>
                   <div className="flex flex-wrap gap-2">
-                    {asset.tags.map(tag => (
+                    {asset.tags?.map(tag => (
                       <span key={tag} className="inline-flex items-center rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                         {tag}
                       </span>
@@ -166,22 +187,22 @@ export default function VaultAssetDetail() {
                   <button className="text-xs font-semibold text-emerald-600 hover:text-emerald-700">Upload New Version</button>
                 </div>
                 <div className="space-y-3">
-                  {asset.versions.map((ver, idx) => (
+                  {asset.versions?.map((ver, idx) => (
                     <div key={idx} className="flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-white shadow-sm">
                       <div className="flex items-center gap-4">
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 font-bold text-slate-700">
-                          {ver.v}
+                          v{ver.version_number}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-slate-900">{ver.date}</span>
-                            {ver.current && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Current</span>}
+                            <span className="text-sm font-bold text-slate-900">{new Date(ver.created_at).toLocaleDateString()}</span>
+                            {idx === 0 && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Current</span>}
                           </div>
-                          <span className="text-xs text-slate-500">{ver.size}</span>
+                          <span className="text-xs text-slate-500">{formatSize(ver.size_bytes)}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {!ver.current && (
+                        {idx !== 0 && (
                           <button className="text-xs font-semibold text-emerald-600 hover:bg-emerald-50 px-3 py-1.5 rounded-lg transition">Restore</button>
                         )}
                         <button className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-50">
@@ -198,18 +219,17 @@ export default function VaultAssetDetail() {
                <div className="space-y-6">
                  <h3 className="text-sm font-bold text-slate-900">Connected Applications</h3>
                  <div className="space-y-3">
-                   {asset.connections.map((conn, idx) => (
-                     <div key={idx} className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-white shadow-sm">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-                          <FileBox size={20} />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-sm font-bold text-slate-900">{conn.app}</h4>
-                          <p className="text-xs text-slate-500">{conn.usage}</p>
-                        </div>
-                        <button className="text-xs font-semibold text-emerald-600">Open →</button>
-                     </div>
-                   ))}
+                   {/* Connections are mocked for now since they query other apps */}
+                   <div className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-white shadow-sm">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                        <FileBox size={20} />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-bold text-slate-900">I3DION Omni Studio</h4>
+                        <p className="text-xs text-slate-500">Used in 3 catalogs</p>
+                      </div>
+                      <button className="text-xs font-semibold text-emerald-600">Open →</button>
+                   </div>
                  </div>
                </div>
             )}

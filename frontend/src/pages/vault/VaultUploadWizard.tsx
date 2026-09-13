@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   UploadCloud,
-  File,
   CheckCircle2,
   X,
-  AlertCircle
+  AlertCircle,
+  Box
 } from 'lucide-react';
+
+import { vaultApi } from '../../api/vaultApi';
 
 type UploadStep = 'select' | 'metadata' | 'access' | 'review' | 'uploading' | 'success';
 
@@ -15,14 +17,25 @@ export default function VaultUploadWizard() {
   const navigate = useNavigate();
   const [step, setStep] = useState<UploadStep>('select');
   const [file, setFile] = useState<File | null>(null);
+  const [metadata, setMetadata] = useState<{name: string; description: string; category: string; type: string; visibility: 'Organization' | 'Private' | 'Public'}>({ name: '', description: '', category: 'Industrial Equipment', type: 'Document', visibility: 'Organization' });
+  const [uploadId, setUploadId] = useState<string | null>(null);
+  const [error, setError] = useState<string>('');
 
-  const handleNext = () => {
-    if (step === 'select') setStep('metadata');
+  const handleNext = async () => {
+    if (step === 'select' && file) setStep('metadata');
     else if (step === 'metadata') setStep('access');
     else if (step === 'access') setStep('review');
-    else if (step === 'review') {
+    else if (step === 'review' && file) {
       setStep('uploading');
-      setTimeout(() => setStep('success'), 3000); // Simulate upload and processing
+      try {
+        const result = await vaultApi.uploadAsset(file, metadata);
+        setUploadId(result.id);
+        setStep('success');
+      } catch (err) {
+        console.error(err);
+        setError('Upload failed');
+        setStep('review');
+      }
     }
   };
 
@@ -79,18 +92,34 @@ export default function VaultUploadWizard() {
         {/* STEP 1: SELECT */}
         {step === 'select' && (
           <div className="flex-1 flex flex-col items-center justify-center">
-            <div className="w-full max-w-xl rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/50 p-12 text-center hover:bg-emerald-50 transition cursor-pointer">
+            <label className="w-full max-w-xl rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/50 p-12 text-center hover:bg-emerald-50 transition cursor-pointer">
+              <input 
+                type="file" 
+                className="hidden" 
+                onChange={(e) => {
+                  if (e.target.files?.[0]) {
+                    const f = e.target.files[0];
+                    setFile(f);
+                    setMetadata({ ...metadata, name: f.name.split('.')[0] });
+                    // Basic type detection
+                    if (f.name.endsWith('.glb') || f.name.endsWith('.obj')) setMetadata(m => ({...m, type: '3D Model'}));
+                    else if (f.type.startsWith('image/')) setMetadata(m => ({...m, type: 'Image'}));
+                    else if (f.type.startsWith('video/')) setMetadata(m => ({...m, type: 'Video'}));
+                    else setMetadata(m => ({...m, type: 'Document'}));
+                  }
+                }} 
+              />
               <UploadCloud size={48} className="mx-auto text-emerald-500 mb-4" />
-              <h3 className="text-lg font-bold text-slate-900">Drag & drop your files here</h3>
-              <p className="text-sm text-slate-500 mt-2 mb-6">or</p>
-              <button className="rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 transition">
-                Browse Files
-              </button>
+              <h3 className="text-lg font-bold text-slate-900">{file ? file.name : 'Drag & drop your files here'}</h3>
+              {!file && <p className="text-sm text-slate-500 mt-2 mb-6">or</p>}
+              <div className="mt-4 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 transition inline-block">
+                {file ? 'Change File' : 'Browse Files'}
+              </div>
               <p className="text-[10px] text-slate-400 mt-6 font-semibold">
                 Supported: GLB, OBJ, FBX, STEP, STL, DXF, JPG, PNG, MP4, PDF and more<br/>
                 Max file size: 2 GB
               </p>
-            </div>
+            </label>
           </div>
         )}
 
@@ -100,17 +129,18 @@ export default function VaultUploadWizard() {
             <div className="space-y-6 flex-1">
               <div>
                 <label className="block text-sm font-bold text-slate-900 mb-2">Asset Name</label>
-                <input type="text" defaultValue="Compressor Assembly" className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                <input type="text" value={metadata.name} onChange={e => setMetadata({...metadata, name: e.target.value})} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-900 mb-2">Description</label>
-                <textarea rows={4} defaultValue="High performance industrial compressor used in manufacturing plants." className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 resize-none" />
+                <textarea rows={4} value={metadata.description} onChange={e => setMetadata({...metadata, description: e.target.value})} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 resize-none" />
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-900 mb-2">Category</label>
-                <select className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                <select value={metadata.category} onChange={e => setMetadata({...metadata, category: e.target.value})} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
                   <option>Industrial Equipment</option>
                   <option>Architecture</option>
+                  <option>Marketing</option>
                 </select>
               </div>
               <div>
@@ -136,15 +166,15 @@ export default function VaultUploadWizard() {
               <div>
                 <h3 className="text-sm font-bold text-slate-900 mb-4">Visibility</h3>
                 <div className="space-y-3">
-                  <label className="flex items-center gap-3 p-3 rounded-xl border border-emerald-200 bg-emerald-50 cursor-pointer">
-                    <input type="radio" name="vis" defaultChecked className="text-emerald-600 focus:ring-emerald-500" />
+                  <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition ${metadata.visibility === 'Organization' ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 hover:bg-slate-50'}`}>
+                    <input type="radio" name="vis" checked={metadata.visibility === 'Organization'} onChange={() => setMetadata({...metadata, visibility: 'Organization'})} className="text-emerald-600 focus:ring-emerald-500" />
                     <div>
                       <div className="text-sm font-bold text-emerald-900">Organization</div>
                       <div className="text-xs text-emerald-700">All organization members can view this asset</div>
                     </div>
                   </label>
-                  <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
-                    <input type="radio" name="vis" className="text-emerald-600 focus:ring-emerald-500" />
+                  <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition ${metadata.visibility === 'Private' ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 hover:bg-slate-50'}`}>
+                    <input type="radio" name="vis" checked={metadata.visibility === 'Private'} onChange={() => setMetadata({...metadata, visibility: 'Private'})} className="text-emerald-600 focus:ring-emerald-500" />
                     <div>
                       <div className="text-sm font-bold text-slate-900">Private</div>
                       <div className="text-xs text-slate-500">Only you and explicitly invited members</div>
@@ -183,17 +213,18 @@ export default function VaultUploadWizard() {
                    <Box size={24} />
                  </div>
                  <div>
-                   <h3 className="text-lg font-bold text-slate-900">Compressor Assembly</h3>
-                   <p className="text-sm text-slate-500">24.8 MB • GLB File</p>
+                   <h3 className="text-lg font-bold text-slate-900">{metadata.name}</h3>
+                   <p className="text-sm text-slate-500">{file?.name} • {metadata.type}</p>
                  </div>
               </div>
               <div className="grid grid-cols-2 gap-y-2 text-sm">
                  <div className="text-slate-500">Category</div>
-                 <div className="font-semibold text-slate-900">Industrial Equipment</div>
+                 <div className="font-semibold text-slate-900">{metadata.category}</div>
                  
                  <div className="text-slate-500">Visibility</div>
-                 <div className="font-semibold text-slate-900">Organization</div>
+                 <div className="font-semibold text-slate-900">{metadata.visibility}</div>
               </div>
+              {error && <div className="text-red-500 text-sm font-bold mt-2">{error}</div>}
               <div className="pt-4 flex items-start gap-2 text-xs text-amber-700 bg-amber-50 p-3 rounded-xl border border-amber-200">
                  <AlertCircle size={16} className="shrink-0 mt-0.5" />
                  This asset will undergo validation and processing. It may take a few minutes before it is fully available in the 3D Viewer.
@@ -248,16 +279,20 @@ export default function VaultUploadWizard() {
               <CheckCircle2 size={40} />
             </div>
             <h3 className="text-2xl font-black text-slate-900 mb-2">Asset Uploaded Successfully!</h3>
-            <p className="text-sm text-slate-500 mb-8">Compressor Assembly is now available in your Vault.</p>
+            <p className="text-sm text-slate-500 mb-8">{metadata.name} is now available in your Vault.</p>
             <div className="flex gap-4">
               <button 
-                onClick={() => navigate('/vault/assets/1')}
+                onClick={() => navigate(`/vault/assets/${uploadId}`)}
                 className="rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 transition"
               >
                 View Asset
               </button>
               <button 
-                onClick={() => setStep('select')}
+                onClick={() => {
+                  setStep('select');
+                  setFile(null);
+                  setMetadata({ name: '', description: '', category: 'Industrial Equipment', type: 'Document', visibility: 'Organization' });
+                }}
                 className="rounded-xl border border-slate-200 bg-white px-6 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition"
               >
                 Upload Another

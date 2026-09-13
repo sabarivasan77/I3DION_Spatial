@@ -21,7 +21,7 @@ const APPS: AppDefinition[] = [
     key: 'vault',
     name: 'I3DION Spatial Vault',
     subtitle: 'Central Asset & Model Repository',
-    path: '/products',
+    path: '/vault',
     icon: Database,
     badge: 'Vault',
     color: 'text-amber-500',
