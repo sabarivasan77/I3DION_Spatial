@@ -172,6 +172,13 @@ export async function ensureMigrated() {
     `).catch(() => {});
 
     try {
+      const { patchIntelligenceSchema } = await import('./patch-intelligence-schema.js');
+      await patchIntelligenceSchema();
+    } catch (intelErr) {
+      console.warn('Non-blocking Intelligence schema patch note:', intelErr.message);
+    }
+
+    try {
       const { seedSpatialHubDatabase } = await import('./seed-spatial-hub.js');
       await seedSpatialHubDatabase();
     } catch (seedErr) {

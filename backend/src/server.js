@@ -166,12 +166,14 @@ apiRouter.post('/verify-payment', async (req, res) => {
 });
 
 import aiGatewayRouter from './routes/aiGateway.js';
+import { intelligenceRouter } from './routes/intelligence.js';
 
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/public', publicRouter);
 apiRouter.use('/analytics', analyticsRouter);
 apiRouter.use('/leads', leadsRouter);
 apiRouter.use('/hub', hubRouter);
+apiRouter.use('/intelligence', intelligenceRouter);
 apiRouter.use('/search', searchRouter);
 apiRouter.use('/ai', aiRouter);
 apiRouter.use('/ai/gateway', aiGatewayRouter);
