@@ -15,8 +15,7 @@ import {
   Edit2,
   Check,
   Zap,
-  ArrowLeft,
-  Plus
+  ArrowLeft
 } from 'lucide-react';
 
 export const EngineHeader: React.FC = () => {

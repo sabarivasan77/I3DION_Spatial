@@ -41,6 +41,7 @@ const SecurityDashboard = lazy(() => import('./pages/SecurityDashboard').then((m
 const BillingSettingsPage = lazy(() => import('./pages/settings/BillingSettingsPage').then((m) => ({ default: m.BillingSettingsPage })));
 const TeamManagementPage = lazy(() => import('./pages/settings/TeamManagementPage').then((m) => ({ default: m.TeamManagementPage })));
 const EnginePage = lazy(() => import('./features/engine/EnginePage').then((m) => ({ default: m.EnginePage })));
+const LensPage = lazy(() => import('./features/lens/LensPage').then((m) => ({ default: m.LensPage })));
 const BuildingManagementPage = lazy(() => import('./pages/BuildingManagementPage').then((m) => ({ default: m.BuildingManagementPage })));
 
 const VaultLayout = lazy(() => import('./layouts/VaultLayout'));
@@ -297,6 +298,32 @@ export default function App() {
         />
         <Route path="studio" element={<Navigate to="/omni-studio" replace />} />
         <Route path="studio/*" element={<Navigate to="/omni-studio" replace />} />
+
+        {/* 5. DEDICATED STANDALONE I3DION SPATIAL LENS */}
+        <Route
+          path="lens"
+          element={
+            <ProtectedRoute>
+              <ApplicationErrorBoundary appName="I3DION Spatial Lens">
+                <EntitlementGuard appKey="lens">
+                  <LensPage />
+                </EntitlementGuard>
+              </ApplicationErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="lens/*"
+          element={
+            <ProtectedRoute>
+              <ApplicationErrorBoundary appName="I3DION Spatial Lens">
+                <EntitlementGuard appKey="lens">
+                  <LensPage />
+                </EntitlementGuard>
+              </ApplicationErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

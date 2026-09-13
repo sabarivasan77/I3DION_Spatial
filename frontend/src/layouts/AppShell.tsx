@@ -7,6 +7,7 @@ import {
   BookOpen,
   Box,
   Building2,
+  Cpu,
   CreditCard,
   Headphones,
   HelpCircle,
@@ -17,7 +18,6 @@ import {
   Users,
   Globe,
   X,
-  Sparkles,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';

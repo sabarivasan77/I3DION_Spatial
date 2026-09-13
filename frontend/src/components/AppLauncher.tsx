@@ -51,11 +51,11 @@ const APPS: AppDefinition[] = [
     key: 'lens',
     name: 'I3DION Spatial Lens',
     subtitle: 'Analytics & BI Dashboard Builder',
-    path: '/analytics',
+    path: '/lens',
     icon: BarChart3,
     badge: 'Lens',
-    color: 'text-emerald-500',
-    bgLight: 'bg-emerald-50 hover:bg-emerald-100 border-emerald-200',
+    color: 'text-amber-500',
+    bgLight: 'bg-amber-50 hover:bg-amber-100 border-amber-200',
   },
 ];
 
