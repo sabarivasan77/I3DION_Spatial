@@ -7,18 +7,19 @@ import {
   Search,
   Box,
   MessageSquare,
-  ArrowUpRight,
-  Eye,
-  Bookmark,
+  Layers
 } from 'lucide-react';
 import ThreeProduct from '../../components/ThreeProduct';
 import { SPATIAL_HUB_MODELS } from '../../data/spatialHubModels';
+import { HubContextMenu } from '../../components/hub/HubContextMenu';
+import { hubIntelligenceApi } from '../../services/hubIntelligenceApi';
 
 export function HubExplore() {
   const navigate = useNavigate();
   const [likedIds, setLikedIds] = useState<string[]>(() => {
     return JSON.parse(localStorage.getItem('i3dion_liked_items') || '[]');
   });
+  const [previewModes, setPreviewModes] = useState<Record<string, boolean>>({});
 
   const toggleLike = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
@@ -31,95 +32,63 @@ export function HubExplore() {
     }
     setLikedIds(updated);
     localStorage.setItem('i3dion_liked_items', JSON.stringify(updated));
+    hubIntelligenceApi.trackEvent({
+      eventType: likedIds.includes(id) ? 'product_unliked' : 'product_liked',
+      entityType: 'product',
+      entityId: id,
+      productId: id
+    });
   };
 
-  // Reference 1 Featured Cards
-  const featuredCards = [
-    {
-      id: 'vortek_lounge_chair',
-      name: 'Vortek Lounge Chair',
-      subtitle: 'Modern seating for inspiring spaces',
-      categoryBadge: '3D Product',
-      badgeColor: 'bg-blue-100 text-blue-700',
-      orgAvatar: 'A',
-      orgName: 'Armoni Design',
-      modelUrl: '/models/gearbox_assembly.glb',
-    },
-    {
-      id: 'centrifugal_pump_x1',
-      name: 'Centrifugal Pump X1',
-      subtitle: 'Explore the internal structure',
-      categoryBadge: 'Interactive 3D',
-      badgeColor: 'bg-emerald-100 text-emerald-700',
-      orgAvatar: 'I3',
-      orgName: 'I3DION Industrial',
-      modelUrl: '/models/industrial_pump.glb',
-    },
-    {
-      id: 'modular_office_building',
-      name: 'Modular Office Building',
-      subtitle: 'Experience in your space',
-      categoryBadge: 'AR Experience',
-      badgeColor: 'bg-purple-100 text-purple-700',
-      orgAvatar: 'V',
-      orgName: 'Vertex Buildings',
-      modelUrl: '/models/electric_motor.glb',
-    },
-    {
-      id: 'eclipse_ev_concept',
-      name: 'Eclipse EV Concept',
-      subtitle: 'Next generation mobility',
-      categoryBadge: '3D Product',
-      badgeColor: 'bg-blue-100 text-blue-700',
-      orgAvatar: 'N',
-      orgName: 'Nova Motors',
-      modelUrl: '/models/gearbox_assembly.glb',
-    },
-  ];
+  const handleCardClick = (id: string) => {
+    hubIntelligenceApi.trackEvent({
+      eventType: 'product_viewed',
+      entityType: 'product',
+      entityId: id,
+      productId: id
+    });
+    navigate(`/hub/product/${id}`);
+  };
+
+  // Curated Featured Cards from Master Models Dataset
+  const featuredCards = SPATIAL_HUB_MODELS.slice(0, 4).map((m, idx) => ({
+    id: m.id,
+    slug: m.slug,
+    name: m.name,
+    subtitle: m.shortDescription,
+    categoryBadge: m.category,
+    badgeColor: idx % 2 === 0 ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700',
+    orgAvatar: m.source.author.slice(0, 2).toUpperCase(),
+    orgName: m.source.author,
+    thumbnail: m.thumbnail,
+    modelUrl: m.modelUrl,
+  }));
 
   // Recently Viewed Items
-  const recentlyViewed = [
-    { id: 'industrial_valve', name: 'Industrial Valve', time: 'Viewed 2 hours ago', modelUrl: '/models/industrial_pump.glb' },
-    { id: 'conference_room', name: 'Conference Room', time: 'Viewed 5 hours ago', modelUrl: '/models/electric_motor.glb' },
-    { id: 'solar_panel_system', name: 'Solar Panel System', time: 'Viewed 1 day ago', modelUrl: '/models/gearbox_assembly.glb' },
-  ];
+  const recentlyViewed = SPATIAL_HUB_MODELS.slice(4, 7).map((m) => ({
+    id: m.id,
+    slug: m.slug,
+    name: m.name,
+    time: 'Viewed recently',
+    thumbnail: m.thumbnail,
+    modelUrl: m.modelUrl
+  }));
 
   // Trending Items
-  const trendingItems = [
-    {
-      id: 'smart_manufacturing',
-      name: 'Smart Manufacturing Line',
-      categoryBadge: 'Interactive 3D',
-      badgeColor: 'bg-emerald-100 text-emerald-700',
-      modelUrl: '/models/industrial_pump.glb',
-    },
-    {
-      id: 'sustainable_arch',
-      name: 'Sustainable Architecture',
-      categoryBadge: '3D Product',
-      badgeColor: 'bg-blue-100 text-blue-700',
-      modelUrl: '/models/electric_motor.glb',
-    },
-    {
-      id: 'warehouse_sol',
-      name: 'Warehouse Solution',
-      categoryBadge: 'AR Experience',
-      badgeColor: 'bg-purple-100 text-purple-700',
-      modelUrl: '/models/gearbox_assembly.glb',
-    },
-    {
-      id: 'energy_storage',
-      name: 'Energy Storage Unit',
-      categoryBadge: '3D Product',
-      badgeColor: 'bg-blue-100 text-blue-700',
-      modelUrl: '/models/industrial_pump.glb',
-    },
-  ];
+  const trendingItems = SPATIAL_HUB_MODELS.slice(7, 11).map((m, idx) => ({
+    id: m.id,
+    slug: m.slug,
+    name: m.name,
+    categoryBadge: m.category,
+    badgeColor: idx % 2 === 0 ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700',
+    thumbnail: m.thumbnail,
+    modelUrl: m.modelUrl,
+  }));
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-16 pt-6 px-4 md:px-8 space-y-8 select-none">
       <div className="mx-auto max-w-7xl space-y-8">
-        {/* ─── HERO BANNER MATCHING SCREEN 1 OF UI REFERENCE ────────────────── */}
+        {/* ─── HERO BANNER MATCHING APPROVED HUB IDENTITY ────────────────── */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#0F172A] p-8 md:p-12 text-white shadow-xl">
           <div className="absolute right-0 top-0 h-full w-1/2 opacity-20 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-400 via-sky-200 to-transparent pointer-events-none" />
           
@@ -157,38 +126,66 @@ export function HubExplore() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {featuredCards.map((card) => {
               const isLiked = likedIds.includes(card.id);
+              const isPreview3d = !!previewModes[card.id];
+
               return (
                 <div
                   key={card.id}
-                  onClick={() => navigate(`/hub/product/${card.id}`)}
+                  onClick={() => handleCardClick(card.id)}
                   className="group relative flex flex-col rounded-2xl border border-slate-200/80 bg-white shadow-2xs hover:shadow-md transition duration-200 cursor-pointer overflow-hidden"
                 >
-                  <div className="relative h-44 w-full bg-[#0F172A] overflow-hidden">
-                    <ThreeProduct modelUrl={card.modelUrl} renderMode="solid" autoRotate={true} interactive={false} className="h-full w-full" />
+                  <div className="relative h-44 w-full bg-[#0F172A] overflow-hidden flex items-center justify-center p-4">
+                    {isPreview3d ? (
+                      <ThreeProduct modelUrl={card.modelUrl} renderMode="solid" autoRotate={true} className="h-full w-full" />
+                    ) : (
+                      <img
+                        src={card.thumbnail}
+                        alt={card.name}
+                        className="max-h-full max-w-full object-contain filter drop-shadow-md group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/models/thumbnails/thumb_1.svg';
+                        }}
+                      />
+                    )}
                     
-                    <span className={`absolute top-3 left-3 px-2.5 py-1 rounded-md text-[10px] font-bold ${card.badgeColor}`}>
+                    <span className={`absolute top-3 left-3 px-2.5 py-1 rounded-md text-[10px] font-bold z-10 ${card.badgeColor}`}>
                       {card.categoryBadge}
                     </span>
 
-                    <button
-                      onClick={(e) => toggleLike(e, card.id)}
-                      className={`absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md transition ${
-                        isLiked ? 'bg-rose-500 text-white' : 'bg-slate-900/60 text-slate-300 hover:bg-slate-900 hover:text-white'
-                      }`}
-                    >
-                      <Heart size={14} fill={isLiked ? 'currentColor' : 'none'} />
-                    </button>
+                    <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+                      <button
+                        onClick={(e) => toggleLike(e, card.id)}
+                        className={`flex h-7 w-7 items-center justify-center rounded-full backdrop-blur-md transition ${
+                          isLiked ? 'bg-rose-500 text-white' : 'bg-slate-900/60 text-slate-300 hover:bg-slate-900 hover:text-white'
+                        }`}
+                      >
+                        <Heart size={13} fill={isLiked ? 'currentColor' : 'none'} />
+                      </button>
+                      <HubContextMenu itemId={card.id} itemTitle={card.name} itemSlug={card.slug} />
+                    </div>
                   </div>
 
                   <div className="flex flex-1 flex-col p-4">
-                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition">{card.name}</h3>
+                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition line-clamp-1">{card.name}</h3>
                     <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{card.subtitle}</p>
 
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-[10px] font-bold text-white">
-                        {card.orgAvatar}
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-[10px] font-bold text-white">
+                          {card.orgAvatar}
+                        </div>
+                        <span className="text-[11px] font-semibold text-slate-600 truncate">{card.orgName}</span>
                       </div>
-                      <span className="text-[11px] font-semibold text-slate-600">{card.orgName}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewModes((p) => ({ ...p, [card.id]: !p[card.id] }));
+                        }}
+                        className="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1"
+                      >
+                        <Layers size={11} />
+                        {isPreview3d ? 'Image' : '3D'}
+                      </button>
                     </div>
                   </div>
                 </div>
