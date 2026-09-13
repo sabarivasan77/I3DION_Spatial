@@ -44,6 +44,18 @@ const TeamManagementPage = lazy(() => import('./pages/settings/TeamManagementPag
 const OmniStudioPage = lazy(() => import('./features/studio/OmniStudioPage').then((m) => ({ default: m.OmniStudioPage })));
 const BuildingManagementPage = lazy(() => import('./pages/BuildingManagementPage').then((m) => ({ default: m.BuildingManagementPage })));
 
+const VaultLayout = lazy(() => import('./layouts/VaultLayout'));
+const VaultDashboard = lazy(() => import('./pages/vault/VaultDashboard'));
+const VaultAssetList = lazy(() => import('./pages/vault/VaultAssetList'));
+const VaultAssetDetail = lazy(() => import('./pages/vault/VaultAssetDetail'));
+const VaultUploadWizard = lazy(() => import('./pages/vault/VaultUploadWizard'));
+const VaultSecondary = lazy(() => import('./pages/vault/VaultSecondaryViews').then((m) => ({ default: m.VaultCollections })));
+const VaultTemplates = lazy(() => import('./pages/vault/VaultSecondaryViews').then((m) => ({ default: m.VaultTemplates })));
+const VaultProcessing = lazy(() => import('./pages/vault/VaultSecondaryViews').then((m) => ({ default: m.VaultProcessing })));
+const VaultTrash = lazy(() => import('./pages/vault/VaultSecondaryViews').then((m) => ({ default: m.VaultTrash })));
+const VaultShared = lazy(() => import('./pages/vault/VaultSecondaryViews').then((m) => ({ default: m.VaultShared })));
+const VaultSettings = lazy(() => import('./pages/vault/VaultSecondaryViews').then((m) => ({ default: m.VaultSettings })));
+
 export default function App() {
   const initialize = useAuthStore((state) => state.initialize);
   const initialized = useAuthStore((state) => state.initialized);
@@ -95,6 +107,31 @@ export default function App() {
           <Route path="settings" element={<ProfilePage />} />
           <Route path="support" element={<SupportDashboardPage />} />
           <Route path="support/kb" element={<HelpCenterPage />} />
+        </Route>
+
+        {/* 2. I3DION SPATIAL VAULT — DEDICATED NEW APPLICATION SHELL */}
+        <Route
+          path="vault"
+          element={
+            <ProtectedRoute>
+              <ApplicationErrorBoundary appName="I3DION Spatial Vault">
+                <EntitlementGuard appKey="vault">
+                  <VaultLayout />
+                </EntitlementGuard>
+              </ApplicationErrorBoundary>
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<VaultDashboard />} />
+          <Route path="assets" element={<VaultAssetList />} />
+          <Route path="assets/:assetId" element={<VaultAssetDetail />} />
+          <Route path="upload" element={<VaultUploadWizard />} />
+          <Route path="collections" element={<VaultSecondary />} />
+          <Route path="templates" element={<VaultTemplates />} />
+          <Route path="processing" element={<VaultProcessing />} />
+          <Route path="trash" element={<VaultTrash />} />
+          <Route path="shared" element={<VaultShared />} />
+          <Route path="settings" element={<VaultSettings />} />
         </Route>
 
         {/* INTERNAL ORGANIZATION APPLICATIONS SHELL */}
