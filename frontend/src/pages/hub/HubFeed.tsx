@@ -1,10 +1,11 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Box, Sparkles, Filter, CheckCircle2, QrCode, Share2, Layers } from 'lucide-react';
-import { SPATIAL_HUB_MODELS, SpatialHubModel, searchSpatialHubModels } from '../../data/spatialHubModels';
+import { Search, Box, Sparkles, Filter, CheckCircle2, QrCode, Share2, Layers, ChevronDown } from 'lucide-react';
+import { SPATIAL_HUB_MODELS, SpatialHubModel } from '../../data/spatialHubModels';
 import ThreeProduct, { RenderMode } from '../../components/ThreeProduct';
 import { useToast } from '../../components/Toast';
 import { hubApi } from '../../services/hubApi';
+import { HubContextMenu } from '../../components/hub/HubContextMenu';
 
 export function HubFeed() {
   const { success, info } = useToast();
@@ -13,6 +14,7 @@ export function HubFeed() {
   const [selectedMode, setSelectedMode] = useState('All');
   const [sortBy, setSortBy] = useState<'popular' | 'newest' | 'alphabetical'>('popular');
   const [dbModels, setDbModels] = useState<SpatialHubModel[]>([]);
+  const [displayLimit, setDisplayLimit] = useState(12);
   
   // Quick Preview State in Grid
   const [previewModes, setPreviewModes] = useState<Record<string, RenderMode>>({});
@@ -295,121 +297,138 @@ export function HubFeed() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {filteredModels.map(model => {
-              const currentPreviewMode = previewModes[model.id] || 'solid';
-              const isInteractive3d = previewModes[model.id] !== undefined;
+          <div className="space-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+              {filteredModels.slice(0, displayLimit).map((model) => {
+                const currentPreviewMode = previewModes[model.id] || 'solid';
+                const isInteractive3d = previewModes[model.id] !== undefined;
 
-              return (
-                <div
-                  key={model.id}
-                  className="group bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col"
-                >
-                  {/* Thumbnail / 3D Preview Canvas */}
-                  <div className="relative aspect-[4/3] bg-slate-50 border-b border-slate-100 overflow-hidden flex items-center justify-center p-6">
-                    {isInteractive3d ? (
-                      <ThreeProduct
-                        modelUrl={model.modelUrl}
-                        productName={model.name}
-                        renderMode={currentPreviewMode}
-                        autoRotate={false}
-                      />
-                    ) : (
-                      <Link to={`/hub/product/${model.slug}`} className="w-full h-full flex items-center justify-center">
-                        <img
-                          src={model.thumbnail}
-                          alt={model.name}
-                          className="max-h-full max-w-full object-contain filter drop-shadow-md group-hover:scale-105 transition-transform duration-300"
-                          onError={(e) => {
-                            // Fallback if SVG fails
-                            (e.target as HTMLImageElement).src = '/models/thumbnails/thumb_1.svg';
-                          }}
+                return (
+                  <div
+                    key={model.id}
+                    className="group bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col"
+                  >
+                    {/* Thumbnail / 3D Preview Canvas */}
+                    <div className="relative aspect-[4/3] bg-slate-50 border-b border-slate-100 overflow-hidden flex items-center justify-center p-6">
+                      {isInteractive3d ? (
+                        <ThreeProduct
+                          modelUrl={model.modelUrl}
+                          productName={model.name}
+                          renderMode={currentPreviewMode}
+                          autoRotate={false}
                         />
-                      </Link>
-                    )}
-
-                    {/* Mode Selector / 3D Toggle Overlay */}
-                    <div className="absolute top-3 left-3 z-20">
-                      <button
-                        onClick={(e) => togglePreviewMode(model.id, e)}
-                        className="bg-white/90 backdrop-blur text-[11px] font-bold text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200/80 shadow-sm hover:bg-white flex items-center gap-1.5 transition-colors"
-                        title="Toggle 3D Live View / Mode"
-                      >
-                        <Layers className="w-3.5 h-3.5 text-blue-600" />
-                        <span className="uppercase tracking-wider">{isInteractive3d ? currentPreviewMode : '3D PREVIEW'}</span>
-                      </button>
-                    </div>
-
-                    {/* AR Ready Badge */}
-                    {model.arEnabled && (
-                      <div className="absolute top-3 right-3 z-20 bg-blue-600 text-white text-[10px] font-extrabold px-2 py-1 rounded-md shadow-sm uppercase tracking-wider flex items-center gap-1">
-                        <Box className="w-3 h-3" /> AR Ready
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Card Content */}
-                  <div className="p-5 flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between text-xs font-bold text-blue-600 mb-1.5">
-                        <span className="truncate">{model.category}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">3D / AR</span>
-                      </div>
-                      
-                      <Link to={`/hub/product/${model.slug}`} className="block group-hover:text-blue-600 transition-colors">
-                        <h3 className="font-bold text-slate-900 text-base leading-snug line-clamp-1 mb-1.5">
-                          {model.name}
-                        </h3>
-                      </Link>
-
-                      <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-4">
-                        {model.shortDescription}
-                      </p>
-                    </div>
-
-                    <div>
-                      {/* Features Checkmarks */}
-                      <div className="space-y-1 mb-4">
-                        <div className="flex items-center text-[11px] text-slate-600 font-medium">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-500 mr-1.5 flex-shrink-0" />
-                          <span className="truncate">Solid • Wireframe • X-Ray</span>
-                        </div>
-                        <div className="flex items-center text-[11px] text-slate-600 font-medium">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-500 mr-1.5 flex-shrink-0" />
-                          <span className="truncate">Factual CAD Geometry</span>
-                        </div>
-                      </div>
-
-                      {/* Card Action Buttons */}
-                      <div className="flex items-center space-x-2 pt-3 border-t border-slate-100">
-                        <Link
-                          to={`/hub/product/${model.slug}`}
-                          className="flex-1 bg-slate-900 hover:bg-blue-600 text-white text-center py-2.5 px-3 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm"
-                        >
-                          <span>Explore 3D</span>
+                      ) : (
+                        <Link to={`/hub/product/${model.slug}`} className="w-full h-full flex items-center justify-center">
+                          <img
+                            src={model.thumbnail}
+                            alt={model.name}
+                            className="max-h-full max-w-full object-contain filter drop-shadow-md group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/models/thumbnails/thumb_1.svg';
+                            }}
+                          />
                         </Link>
-                        
-                        <button
-                          onClick={(e) => handleArClick(model, e)}
-                          className="bg-blue-50 hover:bg-blue-100 text-blue-600 p-2.5 rounded-xl transition-colors font-bold text-xs"
-                          title="View AR QR Code"
-                        >
-                          <QrCode className="w-4 h-4" />
-                        </button>
+                      )}
 
+                      {/* Mode Selector / 3D Toggle Overlay */}
+                      <div className="absolute top-3 left-3 z-20">
                         <button
-                          onClick={(e) => handleShare(model, e)}
-                          className="bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 p-2.5 rounded-xl transition-colors font-bold text-xs"
-                          title="Share Link"
+                          onClick={(e) => togglePreviewMode(model.id, e)}
+                          className="bg-white/90 backdrop-blur text-[11px] font-bold text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200/80 shadow-sm hover:bg-white flex items-center gap-1.5 transition-colors"
+                          title="Toggle 3D Live View / Mode"
                         >
-                          <Share2 className="w-4 h-4" />
+                          <Layers className="w-3.5 h-3.5 text-blue-600" />
+                          <span className="uppercase tracking-wider">{isInteractive3d ? currentPreviewMode : '3D PREVIEW'}</span>
                         </button>
+                      </div>
+
+                      {/* Top Right Context Actions */}
+                      <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+                        {model.arEnabled && (
+                          <div className="bg-blue-600 text-white text-[10px] font-extrabold px-2 py-1 rounded-md shadow-sm uppercase tracking-wider flex items-center gap-1">
+                            <Box className="w-3 h-3" /> AR
+                          </div>
+                        )}
+                        <HubContextMenu itemId={model.id} itemTitle={model.name} itemSlug={model.slug} />
+                      </div>
+                    </div>
+
+                    {/* Card Content */}
+                    <div className="p-5 flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between text-xs font-bold text-blue-600 mb-1.5">
+                          <span className="truncate">{model.category}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">3D / AR</span>
+                        </div>
+                        
+                        <Link to={`/hub/product/${model.slug}`} className="block group-hover:text-blue-600 transition-colors">
+                          <h3 className="font-bold text-slate-900 text-base leading-snug line-clamp-1 mb-1.5">
+                            {model.name}
+                          </h3>
+                        </Link>
+
+                        <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-4">
+                          {model.shortDescription}
+                        </p>
+                      </div>
+
+                      <div>
+                        {/* Features Checkmarks */}
+                        <div className="space-y-1 mb-4">
+                          <div className="flex items-center text-[11px] text-slate-600 font-medium">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-500 mr-1.5 flex-shrink-0" />
+                            <span className="truncate">Solid • Wireframe • X-Ray</span>
+                          </div>
+                          <div className="flex items-center text-[11px] text-slate-600 font-medium">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-500 mr-1.5 flex-shrink-0" />
+                            <span className="truncate">Factual CAD Geometry</span>
+                          </div>
+                        </div>
+
+                        {/* Card Action Buttons */}
+                        <div className="flex items-center space-x-2 pt-3 border-t border-slate-100">
+                          <Link
+                            to={`/hub/product/${model.slug}`}
+                            className="flex-1 bg-slate-900 hover:bg-blue-600 text-white text-center py-2.5 px-3 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                          >
+                            <span>Explore 3D</span>
+                          </Link>
+                          
+                          <button
+                            onClick={(e) => handleArClick(model, e)}
+                            className="bg-blue-50 hover:bg-blue-100 text-blue-600 p-2.5 rounded-xl transition-colors font-bold text-xs"
+                            title="View AR QR Code"
+                          >
+                            <QrCode className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            onClick={(e) => handleShare(model, e)}
+                            className="bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 p-2.5 rounded-xl transition-colors font-bold text-xs"
+                            title="Share Link"
+                          >
+                            <Share2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+
+            {/* Progressive Pagination Load More Button */}
+            {displayLimit < filteredModels.length && (
+              <div className="flex flex-col items-center justify-center pt-4 pb-2">
+                <button
+                  onClick={() => setDisplayLimit((prev) => prev + 12)}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-white border border-slate-200 px-6 py-3 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition"
+                >
+                  <ChevronDown size={16} className="text-blue-600" />
+                  Load More Industrial Models ({filteredModels.length - displayLimit} remaining)
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

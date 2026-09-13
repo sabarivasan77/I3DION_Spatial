@@ -112,11 +112,13 @@ export default function App() {
           <Route path="hub/search" element={<HubSearchPage />} />
           <Route path="hub/product/:id" element={<HubProductDetailPage />} />
           <Route path="hub/creator/:id" element={<CreatorProfilePage />} />
+          <Route path="hub/profile/:id" element={<CreatorProfilePage />} />
           <Route path="hub/saved" element={<HubSavedPage />} />
           <Route path="hub/liked" element={<HubLikedPage />} />
           <Route path="hub/enquiries" element={<HubEnquiriesPage />} />
           <Route path="hub/organization" element={<HubOrganizationPage />} />
           <Route path="hub/organization/:tab" element={<HubOrganizationPage />} />
+          <Route path="hub/company/:id" element={<HubOrganizationPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<ProfilePage />} />
           <Route path="support" element={<SupportDashboardPage />} />

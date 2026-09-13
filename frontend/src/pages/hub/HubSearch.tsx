@@ -1,22 +1,41 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Search, Heart, Filter, ArrowUpRight, Box, QrCode, Sparkles } from 'lucide-react';
-import { SPATIAL_HUB_MODELS, SpatialHubModel } from '../../data/spatialHubModels';
+import { Search, Heart, Filter, ArrowUpRight, Box, ChevronDown } from 'lucide-react';
+import { SPATIAL_HUB_MODELS } from '../../data/spatialHubModels';
 import ThreeProduct from '../../components/ThreeProduct';
+import { HubContextMenu } from '../../components/hub/HubContextMenu';
+import { hubIntelligenceApi } from '../../services/hubIntelligenceApi';
 
 export function HubSearch() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
+  
+  const [rawQuery, setRawQuery] = useState(initialQuery);
   const [query, setQuery] = useState(initialQuery);
+  const [displayLimit, setDisplayLimit] = useState(12);
 
   const [selectedContentTypes, setSelectedContentTypes] = useState<string[]>([]);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
-  const [selectedFileTypes, setSelectedFileTypes] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<'relevant' | 'newest'>('relevant');
+  const [activePreviewId, setActivePreviewId] = useState<string | null>(null);
 
   const [likedIds, setLikedIds] = useState<string[]>(() => {
     return JSON.parse(localStorage.getItem('i3dion_liked_items') || '[]');
   });
+
+  // Debounce search input to keep UI fast and avoid continuous re-filtering
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setQuery(rawQuery);
+      if (rawQuery.trim()) {
+        hubIntelligenceApi.trackEvent({
+          event_type: 'search_performed',
+          metadata: { query: rawQuery.trim() }
+        });
+      }
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [rawQuery]);
 
   const toggleLike = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
@@ -68,8 +87,8 @@ export function HubSearch() {
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              value={rawQuery}
+              onChange={(e) => setRawQuery(e.target.value)}
               placeholder="Search products, experiences, or organizations..."
               className="w-full rounded-2xl border border-slate-200 bg-[#F8FAFC] py-3 pl-11 pr-4 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
@@ -89,7 +108,7 @@ export function HubSearch() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6">
-          {/* ─── LEFT FILTER SIDEBAR MATCHING SCREEN 2 OF UI REFERENCE ──────────── */}
+          {/* LEFT FILTER SIDEBAR */}
           <div className="rounded-3xl border border-slate-200/80 bg-white p-5 space-y-6 h-fit shadow-2xs">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <span className="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
@@ -114,7 +133,7 @@ export function HubSearch() {
               <div className="space-y-1.5 text-xs font-medium text-slate-700">
                 <label className="flex items-center gap-2 cursor-pointer hover:text-slate-900">
                   <input type="checkbox" checked={selectedContentTypes.includes('3D Products')} onChange={() => handleContentTypeToggle('3D Products')} className="rounded text-blue-600" />
-                  <span>3D Products (12)</span>
+                  <span>3D Products ({filteredResults.length})</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer hover:text-slate-900">
                   <input type="checkbox" checked={selectedContentTypes.includes('Experiences')} onChange={() => handleContentTypeToggle('Experiences')} className="rounded text-blue-600" />
@@ -165,7 +184,7 @@ export function HubSearch() {
             </div>
           </div>
 
-          {/* ─── MAIN SEARCH RESULTS GRID MATCHING SCREEN 2 OF UI REFERENCE ────── */}
+          {/* MAIN SEARCH RESULTS GRID */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-slate-800">
@@ -180,47 +199,85 @@ export function HubSearch() {
                 <p className="text-xs text-slate-500 mt-1">Try adjusting your search query or filters.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {filteredResults.map((item) => {
-                  const isLiked = likedIds.includes(item.id);
-                  return (
-                    <div
-                      key={item.id}
-                      className="group flex flex-col rounded-2xl border border-slate-200/80 bg-white shadow-2xs hover:shadow-md transition overflow-hidden"
-                    >
-                      <div className="relative h-44 w-full bg-[#0F172A] overflow-hidden">
-                        <ThreeProduct modelUrl={item.modelUrl} renderMode="solid" autoRotate={true} interactive={false} className="h-full w-full" />
-                        
-                        <button
-                          onClick={(e) => toggleLike(e, item.id)}
-                          className={`absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md transition ${
-                            isLiked ? 'bg-rose-500 text-white' : 'bg-slate-900/60 text-slate-300 hover:bg-slate-900 hover:text-white'
-                          }`}
-                        >
-                          <Heart size={14} fill={isLiked ? 'currentColor' : 'none'} />
-                        </button>
-                      </div>
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {filteredResults.slice(0, displayLimit).map((item) => {
+                    const isLiked = likedIds.includes(item.id);
+                    const isPreviewing3d = activePreviewId === item.id;
 
-                      <div className="flex flex-1 flex-col p-4">
-                        <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">
-                          {item.category}
-                        </span>
-                        <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition">{item.name}</h3>
-                        <p className="text-xs text-slate-500 line-clamp-2 mt-1">{item.shortDescription}</p>
-
-                        <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-100">
-                          <span className="text-[11px] font-medium text-slate-500">{item.viewsCount} views</span>
-                          <Link
-                            to={`/hub/product/${item.id}`}
-                            className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700"
+                    return (
+                      <div
+                        key={item.id}
+                        className="group flex flex-col rounded-2xl border border-slate-200/80 bg-white shadow-2xs hover:shadow-md transition overflow-hidden"
+                      >
+                        <div className="relative h-44 w-full bg-[#0F172A] overflow-hidden flex items-center justify-center p-4">
+                          {isPreviewing3d ? (
+                            <ThreeProduct modelUrl={item.modelUrl} renderMode="solid" autoRotate={true} className="h-full w-full" />
+                          ) : (
+                            <Link to={`/hub/product/${item.slug}`} className="w-full h-full flex items-center justify-center">
+                              <img
+                                src={item.thumbnail}
+                                alt={item.name}
+                                className="max-h-full max-w-full object-contain filter drop-shadow-md group-hover:scale-105 transition duration-300"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = '/models/thumbnails/thumb_1.svg';
+                                }}
+                              />
+                            </Link>
+                          )}
+                          
+                          {/* Like Button */}
+                          <button
+                            onClick={(e) => toggleLike(e, item.id)}
+                            className={`absolute top-3 left-3 z-20 flex h-7 w-7 items-center justify-center rounded-full backdrop-blur-md transition ${
+                              isLiked ? 'bg-rose-500 text-white' : 'bg-slate-900/60 text-slate-300 hover:bg-slate-900 hover:text-white'
+                            }`}
                           >
-                            Explore <ArrowUpRight size={14} />
+                            <Heart size={13} fill={isLiked ? 'currentColor' : 'none'} />
+                          </button>
+
+                          {/* Context Menu Overlay */}
+                          <div className="absolute top-3 right-3 z-20">
+                            <HubContextMenu itemId={item.id} itemTitle={item.name} itemSlug={item.slug} />
+                          </div>
+                        </div>
+
+                        <div className="flex flex-1 flex-col p-4">
+                          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">
+                            {item.category}
+                          </span>
+                          <Link to={`/hub/product/${item.slug}`} className="group-hover:text-blue-600 transition">
+                            <h3 className="text-sm font-bold text-slate-900">{item.name}</h3>
                           </Link>
+                          <p className="text-xs text-slate-500 line-clamp-2 mt-1">{item.shortDescription}</p>
+
+                          <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-100">
+                            <span className="text-[11px] font-medium text-slate-500">{item.viewsCount} views</span>
+                            <Link
+                              to={`/hub/product/${item.slug}`}
+                              className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700"
+                            >
+                              Explore <ArrowUpRight size={14} />
+                            </Link>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+
+                {/* Progressive Pagination Load More Button */}
+                {displayLimit < filteredResults.length && (
+                  <div className="flex flex-col items-center justify-center pt-2">
+                    <button
+                      onClick={() => setDisplayLimit((prev) => prev + 12)}
+                      className="inline-flex items-center gap-2 rounded-2xl bg-white border border-slate-200 px-6 py-3 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition"
+                    >
+                      <ChevronDown size={16} className="text-blue-600" />
+                      Load More Search Results ({filteredResults.length - displayLimit} remaining)
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -7,7 +7,7 @@ import ThreeProduct from '../../components/ThreeProduct';
 
 export function HubOrganizationPage() {
   const user = useAuthStore((s) => s.user);
-  const { tab } = useParams<{ tab?: string }>();
+  const { tab, id } = useParams<{ tab?: string; id?: string }>();
   const navigate = useNavigate();
 
   const activeTab = tab || 'products';
@@ -15,8 +15,9 @@ export function HubOrganizationPage() {
   const [orgFormName, setOrgFormName] = useState('');
   const [createdSuccess, setCreatedSuccess] = useState(false);
 
-  const hasOrg = !!(user?.companyId || createdSuccess);
-  const companyName = hasOrg ? (orgFormName || 'Vertex Buildings') : 'Organization Workspace';
+  // If companyId is passed via URL or user belongs to company, show organization workspace
+  const hasOrg = !!(id || user?.companyId || createdSuccess);
+  const companyName = hasOrg ? (id ? (id.replace(/_/g, ' ').toUpperCase()) : (orgFormName || 'Vertex Spatial Industrial')) : 'Organization Workspace';
 
   const publishedProducts = SPATIAL_HUB_MODELS.slice(0, 4);
 
