@@ -5,7 +5,7 @@ import PublicLayout from './layouts/PublicLayout';
 import SpatialHubLayout from './layouts/SpatialHubLayout';
 import { ApplicationErrorBoundary } from './components/ApplicationErrorBoundary';
 import { EntitlementGuard } from './components/EntitlementGuard';
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import RouteTracker from './components/RouteTracker';
 import { useAuthStore } from './store/authStore';
 import { lazyWithRetry } from './utils/lazyWithRetry';
