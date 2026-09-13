@@ -49,6 +49,8 @@ const VaultDashboard = lazy(() => import('./pages/vault/VaultDashboard'));
 const VaultAssetList = lazy(() => import('./pages/vault/VaultAssetList'));
 const VaultAssetDetail = lazy(() => import('./pages/vault/VaultAssetDetail'));
 const VaultUploadWizard = lazy(() => import('./pages/vault/VaultUploadWizard'));
+const VaultDataWorkspace = lazy(() => import('./pages/vault/VaultDataWorkspace'));
+const VaultAuditTrail = lazy(() => import('./pages/vault/VaultAuditTrail'));
 const VaultSecondary = lazy(() => import('./pages/vault/VaultSecondaryViews').then((m) => ({ default: m.VaultCollections })));
 const VaultTemplates = lazy(() => import('./pages/vault/VaultSecondaryViews').then((m) => ({ default: m.VaultTemplates })));
 const VaultProcessing = lazy(() => import('./pages/vault/VaultSecondaryViews').then((m) => ({ default: m.VaultProcessing })));
@@ -125,11 +127,13 @@ export default function App() {
           <Route index element={<VaultDashboard />} />
           <Route path="assets" element={<VaultAssetList />} />
           <Route path="assets/:assetId" element={<VaultAssetDetail />} />
+          <Route path="workspace/:sourceId" element={<VaultDataWorkspace />} />
           <Route path="upload" element={<VaultUploadWizard />} />
           <Route path="collections" element={<VaultSecondary />} />
           <Route path="templates" element={<VaultTemplates />} />
           <Route path="processing" element={<VaultProcessing />} />
           <Route path="trash" element={<VaultTrash />} />
+          <Route path="audit" element={<VaultAuditTrail />} />
           <Route path="shared" element={<VaultShared />} />
           <Route path="settings" element={<VaultSettings />} />
         </Route>

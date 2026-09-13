@@ -142,6 +142,19 @@ export default function VaultLayout() {
             <Trash2 size={18} />
             <span>Trash</span>
           </NavLink>
+
+          <NavLink
+            to="/vault/audit"
+            onClick={() => setMobileSidebarOpen(false)}
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
+                isActive ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'
+              }`
+            }
+          >
+            <Cpu size={18} />
+            <span>Audit Trail</span>
+          </NavLink>
         </nav>
 
         <div className="mt-4 space-y-1.5 border-t border-slate-700/50 pt-4">

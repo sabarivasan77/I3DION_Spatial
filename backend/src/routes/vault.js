@@ -1,6 +1,5 @@
 import express from 'express';
 import multer from 'multer';
-import crypto from 'crypto';
 import path from 'path';
 import { pool } from '../db/pool.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -23,23 +22,199 @@ const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 * 1024 } })
 // Apply auth middleware to all vault routes
 vaultRouter.use(requireAuth);
 
+// Helper for RBAC checks
+function requireMinRole(allowedRoles) {
+  return (req, res, next) => {
+    const userRole = req.user?.role || 'Viewer';
+    if (!allowedRoles.includes(userRole)) {
+      return res.status(403).json({ error: 'Permission denied: insufficient role privileges' });
+    }
+    next();
+  };
+}
+
+// Helper for audit logging
+async function logActivity(orgId, userId, userName, action, targetType, targetId, targetName, details = {}) {
+  try {
+    await pool.query(
+      `INSERT INTO vault_audit_logs (organization_id, user_id, user_name, action, target_type, target_id, target_name, details)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [orgId, userId, userName || 'User', action, targetType, targetId || null, targetName || '', JSON.stringify(details)]
+    );
+  } catch (err) {
+    console.warn('Vault audit log error:', err.message);
+  }
+}
+
 // ---------------------------------------------------------
-// ASSETS
+// DATASETS SUMMARY & MULTI-TABLE AGGREGATION
+// ---------------------------------------------------------
+
+// GET /api/vault/datasets/summary (Live statistics across real tables)
+vaultRouter.get('/datasets/summary', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+
+    const [assetsCount, modelsCount, productsCount, catalogsCount, templatesCount, collectionsCount, storageSum] = await Promise.all([
+      pool.query(`SELECT COUNT(*) FROM vault_assets WHERE organization_id = $1 AND is_deleted = false`, [organization_id]),
+      pool.query(`SELECT COUNT(*) FROM vault_assets WHERE organization_id = $1 AND type = '3D Model' AND is_deleted = false`, [organization_id]),
+      pool.query(`SELECT COUNT(*) FROM products WHERE organization_id = $1`, [organization_id]),
+      pool.query(`SELECT COUNT(*) FROM catalogs WHERE organization_id = $1`, [organization_id]),
+      pool.query(`SELECT COUNT(*) FROM vault_templates WHERE organization_id = $1`, [organization_id]),
+      pool.query(`SELECT COUNT(*) FROM vault_collections WHERE organization_id = $1 AND is_deleted = false`, [organization_id]),
+      pool.query(`SELECT SUM(size_bytes) as total_size FROM vault_assets WHERE organization_id = $1 AND is_deleted = false`, [organization_id])
+    ]);
+
+    const totalAssets = parseInt(assetsCount.rows[0].count, 10) || 0;
+    const total3DModels = (parseInt(modelsCount.rows[0].count, 10) || 0) + (parseInt(productsCount.rows[0].count, 10) || 0);
+    const totalProducts = parseInt(productsCount.rows[0].count, 10) || 0;
+    const totalCatalogs = parseInt(catalogsCount.rows[0].count, 10) || 0;
+    const totalTemplates = parseInt(templatesCount.rows[0].count, 10) || 0;
+    const totalCollections = parseInt(collectionsCount.rows[0].count, 10) || 0;
+    const totalStorageBytes = parseInt(storageSum.rows[0].total_size, 10) || 0;
+
+    res.json({
+      total_assets: totalAssets,
+      total_3d_models: total3DModels,
+      total_products: totalProducts,
+      total_catalogs: totalCatalogs,
+      total_templates: totalTemplates,
+      total_collections: totalCollections,
+      total_storage_bytes: totalStorageBytes,
+      storage_quota_bytes: 107374182400 // 100 GB default enterprise quota
+    });
+  } catch (error) {
+    console.error('Vault Datasets Summary Error:', error);
+    res.status(500).json({ error: 'Failed to fetch datasets summary' });
+  }
+});
+
+// GET /api/vault/datasets/products (Products as a structured Vault dataset)
+vaultRouter.get('/datasets/products', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const result = await pool.query(
+      `SELECT id, name, category, description, status, is_public, specs, dimensions, created_at, updated_at
+       FROM products
+       WHERE organization_id = $1
+       ORDER BY created_at DESC`,
+      [organization_id]
+    );
+
+    res.json({
+      dataset_name: 'Product Master Dataset',
+      description: 'Centralized product and 3D model specification records',
+      schema_fields: [
+        { key: 'category', name: 'Category', type: 'Text', required: true },
+        { key: 'description', name: 'Description', type: 'Text', required: false },
+        { key: 'status', name: 'Publish Status', type: 'Status', required: true },
+        { key: 'is_public', name: 'Public Availability', type: 'Boolean', required: false }
+      ],
+      records: result.rows.map(p => ({
+        id: p.id,
+        collection_id: 'system_products',
+        name: p.name,
+        status: p.status,
+        data: {
+          category: p.category,
+          description: p.description || '',
+          is_public: p.is_public ? 'True' : 'False',
+          specs: p.specs,
+          dimensions: p.dimensions
+        },
+        created_at: p.created_at,
+        updated_at: p.updated_at
+      }))
+    });
+  } catch (error) {
+    console.error('Vault GET Product Dataset Error:', error);
+    res.status(500).json({ error: 'Failed to fetch product dataset' });
+  }
+});
+
+// GET /api/vault/datasets/catalogs (Catalogs as a structured Vault dataset)
+vaultRouter.get('/datasets/catalogs', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const result = await pool.query(
+      `SELECT id, name, description, status, slug, created_at, updated_at
+       FROM catalogs
+       WHERE organization_id = $1
+       ORDER BY created_at DESC`,
+      [organization_id]
+    );
+
+    res.json({
+      dataset_name: 'Catalog Master Dataset',
+      description: 'Published product catalog experience collections',
+      schema_fields: [
+        { key: 'description', name: 'Description', type: 'Text', required: false },
+        { key: 'status', name: 'Status', type: 'Status', required: true },
+        { key: 'slug', name: 'Access Slug', type: 'Text', required: false }
+      ],
+      records: result.rows.map(c => ({
+        id: c.id,
+        collection_id: 'system_catalogs',
+        name: c.name,
+        status: c.status,
+        data: {
+          description: c.description || '',
+          slug: c.slug || ''
+        },
+        created_at: c.created_at,
+        updated_at: c.updated_at
+      }))
+    });
+  } catch (error) {
+    console.error('Vault GET Catalog Dataset Error:', error);
+    res.status(500).json({ error: 'Failed to fetch catalog dataset' });
+  }
+});
+
+// ---------------------------------------------------------
+// ASSETS CRUD & VERSIONING
 // ---------------------------------------------------------
 
 // GET /api/vault/assets
 vaultRouter.get('/assets', async (req, res) => {
   try {
     const { organization_id } = req.user;
-    
-    // Simplistic fetching without advanced pagination for MVP
-    const result = await pool.query(
-      `SELECT * FROM vault_assets 
-       WHERE organization_id = $1 
-       ORDER BY created_at DESC`,
-      [organization_id]
-    );
-    
+    const { search, type, status, collection_id, is_deleted = 'false', sort = 'newest' } = req.query;
+
+    let queryStr = `SELECT * FROM vault_assets WHERE organization_id = $1 AND is_deleted = $2`;
+    const params = [organization_id, is_deleted === 'true'];
+
+    if (search) {
+      params.push(`%${search}%`);
+      queryStr += ` AND (name ILIKE $${params.length} OR description ILIKE $${params.length} OR category ILIKE $${params.length})`;
+    }
+
+    if (type && type !== 'All') {
+      params.push(type);
+      queryStr += ` AND type = $${params.length}`;
+    }
+
+    if (status) {
+      params.push(status);
+      queryStr += ` AND status = $${params.length}`;
+    }
+
+    if (collection_id) {
+      params.push(collection_id);
+      queryStr += ` AND collection_id = $${params.length}`;
+    }
+
+    if (sort === 'oldest') {
+      queryStr += ` ORDER BY created_at ASC`;
+    } else if (sort === 'name') {
+      queryStr += ` ORDER BY name ASC`;
+    } else if (sort === 'size') {
+      queryStr += ` ORDER BY size_bytes DESC`;
+    } else {
+      queryStr += ` ORDER BY created_at DESC`;
+    }
+
+    const result = await pool.query(queryStr, params);
     res.json(result.rows);
   } catch (error) {
     console.error('Vault GET Assets Error:', error);
@@ -52,28 +227,29 @@ vaultRouter.get('/assets/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { organization_id } = req.user;
-    
+
     const result = await pool.query(
-      `SELECT * FROM vault_assets 
-       WHERE id = $1 AND organization_id = $2`,
+      `SELECT * FROM vault_assets WHERE id = $1 AND organization_id = $2`,
       [id, organization_id]
     );
-    
+
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Asset not found' });
     }
-    
-    // Also fetch versions
+
+    const asset = result.rows[0];
+
+    // Versions
     const versions = await pool.query(
-      `SELECT * FROM vault_asset_versions 
-       WHERE asset_id = $1 
-       ORDER BY version_number DESC`,
+      `SELECT * FROM vault_asset_versions WHERE asset_id = $1 ORDER BY version_number DESC`,
       [id]
     );
-    
-    const asset = result.rows[0];
     asset.versions = versions.rows;
-    
+
+    if (!asset.connected_apps || asset.connected_apps.length === 0) {
+      asset.connected_apps = ['Spatial Hub', 'Omni Studio'];
+    }
+
     res.json(asset);
   } catch (error) {
     console.error('Vault GET Asset Error:', error);
@@ -82,64 +258,78 @@ vaultRouter.get('/assets/:id', async (req, res) => {
 });
 
 // POST /api/vault/assets/upload
-vaultRouter.post('/assets/upload', upload.single('file'), async (req, res) => {
+vaultRouter.post('/assets/upload', requireMinRole(['Admin', 'Manager', 'Sales User']), upload.single('file'), async (req, res) => {
   try {
-    const { organization_id, id: userId } = req.user;
+    const { organization_id, id: userId, name: userName } = req.user;
     const file = req.file;
-    
+
     if (!file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
-    
+
     const {
       name,
       description,
       category,
-      type, // '3D Model', 'Image', 'Video', 'Document'
-      visibility = 'Organization'
+      type = 'Document',
+      visibility = 'Organization',
+      collection_id,
+      tags
     } = req.body;
-    
-    // Determine public URL based on host/config
+
+    const parsedTags = typeof tags === 'string' ? JSON.parse(tags) : (tags || []);
     const publicUrl = `/${config.uploadDir}/${file.filename}`;
-    
+
     const result = await pool.query(
       `INSERT INTO vault_assets (
          organization_id, name, description, category, type, 
          original_name, storage_key, public_url, mime_type, 
-         size_bytes, visibility, created_by
+         size_bytes, visibility, status, tags, collection_id, created_by
        ) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) 
        RETURNING *`,
       [
-        organization_id, 
-        name || file.originalname, 
-        description || '', 
-        category || '', 
-        type || 'Document',
+        organization_id,
+        name || file.originalname,
+        description || '',
+        category || '',
+        type,
         file.originalname,
         file.filename,
         publicUrl,
         file.mimetype,
         file.size,
         visibility,
+        'Ready',
+        JSON.stringify(parsedTags),
+        collection_id || null,
         userId
       ]
     );
-    
+
     const newAsset = result.rows[0];
-    
-    // Also create initial version
+
+    // Create v1 in vault_asset_versions
     await pool.query(
       `INSERT INTO vault_asset_versions (
          asset_id, version_number, original_name, storage_key, 
          public_url, mime_type, size_bytes, change_description, created_by
        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-       [
-         newAsset.id, 1, file.originalname, file.filename,
-         publicUrl, file.mimetype, file.size, 'Initial upload', userId
-       ]
+      [
+        newAsset.id, 1, file.originalname, file.filename,
+        publicUrl, file.mimetype, file.size, 'Initial upload', userId
+      ]
     );
-    
+
+    // Track completed processing job
+    await pool.query(
+      `INSERT INTO vault_processing_jobs (organization_id, job_type, asset_name, status, progress_pct)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [organization_id, 'Asset Upload & Validation', newAsset.name, 'Completed', 100]
+    );
+
+    await logActivity(organization_id, userId, userName, 'Uploaded Asset', 'Asset', newAsset.id, newAsset.name);
+
     res.status(201).json(newAsset);
   } catch (error) {
     console.error('Vault Upload Error:', error);
@@ -147,49 +337,636 @@ vaultRouter.post('/assets/upload', upload.single('file'), async (req, res) => {
   }
 });
 
-// PATCH /api/vault/assets/:id
-vaultRouter.patch('/assets/:id', async (req, res) => {
+// POST /api/vault/assets/:id/versions (Upload New Version)
+vaultRouter.post('/assets/:id/versions', requireMinRole(['Admin', 'Manager', 'Sales User']), upload.single('file'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { organization_id } = req.user;
-    const { name, description, category, tags, metadata, visibility } = req.body;
-    
-    // Basic verification of ownership
-    const check = await pool.query(`SELECT id FROM vault_assets WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
+    const { organization_id, id: userId, name: userName } = req.user;
+    const file = req.file;
+
+    if (!file) return res.status(400).json({ error: 'No file provided' });
+
+    const check = await pool.query(`SELECT * FROM vault_assets WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
     if (check.rows.length === 0) return res.status(404).json({ error: 'Asset not found' });
-    
-    // Dynamic update building
+
+    const currentAsset = check.rows[0];
+    const versions = await pool.query(`SELECT MAX(version_number) as max_v FROM vault_asset_versions WHERE asset_id = $1`, [id]);
+    const nextVersion = (versions.rows[0].max_v || 1) + 1;
+
+    const publicUrl = `/${config.uploadDir}/${file.filename}`;
+    const changeDescription = req.body.change_description || `Updated to version ${nextVersion}`;
+
+    // Add version record
+    await pool.query(
+      `INSERT INTO vault_asset_versions (
+         asset_id, version_number, original_name, storage_key, 
+         public_url, mime_type, size_bytes, change_description, created_by
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [id, nextVersion, file.originalname, file.filename, publicUrl, file.mimetype, file.size, changeDescription, userId]
+    );
+
+    // Update current asset references
+    const updated = await pool.query(
+      `UPDATE vault_assets 
+       SET storage_key = $1, public_url = $2, mime_type = $3, size_bytes = $4, original_name = $5, updated_at = now()
+       WHERE id = $6 AND organization_id = $7 RETURNING *`,
+      [file.filename, publicUrl, file.mimetype, file.size, file.originalname, id, organization_id]
+    );
+
+    await logActivity(organization_id, userId, userName, `Uploaded Version v${nextVersion}`, 'Asset', id, currentAsset.name);
+
+    res.json(updated.rows[0]);
+  } catch (error) {
+    console.error('Vault New Version Error:', error);
+    res.status(500).json({ error: 'Failed to upload new version' });
+  }
+});
+
+// PATCH /api/vault/assets/:id
+vaultRouter.patch('/assets/:id', requireMinRole(['Admin', 'Manager', 'Sales User']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id, id: userId, name: userName } = req.user;
+    const { name, description, category, tags, metadata, custom_fields, visibility, status, connected_apps } = req.body;
+
+    const check = await pool.query(`SELECT * FROM vault_assets WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
+    if (check.rows.length === 0) return res.status(404).json({ error: 'Asset not found' });
+
     const updates = [];
     const values = [];
     let count = 1;
-    
+
     if (name !== undefined) { updates.push(`name = $${count++}`); values.push(name); }
     if (description !== undefined) { updates.push(`description = $${count++}`); values.push(description); }
     if (category !== undefined) { updates.push(`category = $${count++}`); values.push(category); }
-    if (tags !== undefined) { updates.push(`tags = $${count++}`); values.push(tags); }
-    if (metadata !== undefined) { updates.push(`metadata = $${count++}`); values.push(metadata); }
+    if (tags !== undefined) { updates.push(`tags = $${count++}`); values.push(JSON.stringify(tags)); }
+    if (metadata !== undefined) { updates.push(`metadata = $${count++}`); values.push(JSON.stringify(metadata)); }
+    if (custom_fields !== undefined) { updates.push(`custom_fields = $${count++}`); values.push(JSON.stringify(custom_fields)); }
+    if (connected_apps !== undefined) { updates.push(`connected_apps = $${count++}`); values.push(JSON.stringify(connected_apps)); }
     if (visibility !== undefined) { updates.push(`visibility = $${count++}`); values.push(visibility); }
-    
+    if (status !== undefined) { updates.push(`status = $${count++}`); values.push(status); }
+
     if (updates.length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
     }
-    
+
     updates.push(`updated_at = $${count++}`);
     values.push(new Date());
     values.push(id);
     values.push(organization_id);
-    
+
     const result = await pool.query(
       `UPDATE vault_assets SET ${updates.join(', ')} 
-       WHERE id = $${count-2} AND organization_id = $${count-1} 
+       WHERE id = $${count - 2} AND organization_id = $${count - 1} 
        RETURNING *`,
       values
     );
-    
+
+    await logActivity(organization_id, userId, userName, 'Updated Asset Metadata', 'Asset', id, result.rows[0].name);
+
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Vault Update Asset Error:', error);
     res.status(500).json({ error: 'Failed to update asset' });
+  }
+});
+
+// DELETE /api/vault/assets/:id (Soft Delete -> Trash)
+vaultRouter.delete('/assets/:id', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id, id: userId, name: userName } = req.user;
+
+    const check = await pool.query(`SELECT name FROM vault_assets WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
+    if (check.rows.length === 0) return res.status(404).json({ error: 'Asset not found' });
+
+    await pool.query(
+      `UPDATE vault_assets SET is_deleted = true, deleted_at = now() WHERE id = $1 AND organization_id = $2`,
+      [id, organization_id]
+    );
+
+    await logActivity(organization_id, userId, userName, 'Moved Asset to Trash', 'Asset', id, check.rows[0].name);
+
+    res.json({ message: 'Asset moved to trash' });
+  } catch (error) {
+    console.error('Vault Delete Asset Error:', error);
+    res.status(500).json({ error: 'Failed to delete asset' });
+  }
+});
+
+// POST /api/vault/assets/:id/restore (Restore from Trash)
+vaultRouter.post('/assets/:id/restore', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id, id: userId, name: userName } = req.user;
+
+    const check = await pool.query(`SELECT name FROM vault_assets WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
+    if (check.rows.length === 0) return res.status(404).json({ error: 'Asset not found' });
+
+    await pool.query(
+      `UPDATE vault_assets SET is_deleted = false, deleted_at = NULL WHERE id = $1 AND organization_id = $2`,
+      [id, organization_id]
+    );
+
+    await logActivity(organization_id, userId, userName, 'Restored Asset from Trash', 'Asset', id, check.rows[0].name);
+
+    res.json({ message: 'Asset restored successfully' });
+  } catch (error) {
+    console.error('Vault Restore Asset Error:', error);
+    res.status(500).json({ error: 'Failed to restore asset' });
+  }
+});
+
+// DELETE /api/vault/assets/:id/permanent (Permanent Purge)
+vaultRouter.delete('/assets/:id/permanent', requireMinRole(['Admin']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id, id: userId, name: userName } = req.user;
+
+    const check = await pool.query(`SELECT name FROM vault_assets WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
+    if (check.rows.length === 0) return res.status(404).json({ error: 'Asset not found' });
+
+    await pool.query(`DELETE FROM vault_assets WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
+    await logActivity(organization_id, userId, userName, 'Permanently Deleted Asset', 'Asset', id, check.rows[0].name);
+
+    res.json({ message: 'Asset permanently deleted' });
+  } catch (error) {
+    console.error('Vault Permanent Delete Error:', error);
+    res.status(500).json({ error: 'Failed to permanently delete asset' });
+  }
+});
+
+// POST /api/vault/assets/bulk-delete
+vaultRouter.post('/assets/bulk-delete', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { ids } = req.body;
+    const { organization_id, id: userId, name: userName } = req.user;
+
+    if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: 'No asset IDs provided' });
+
+    await pool.query(
+      `UPDATE vault_assets SET is_deleted = true, deleted_at = now() WHERE id = ANY($1::uuid[]) AND organization_id = $2`,
+      [ids, organization_id]
+    );
+
+    await logActivity(organization_id, userId, userName, `Bulk Moved ${ids.length} Assets to Trash`, 'Asset', null, '');
+
+    res.json({ message: `${ids.length} assets moved to trash` });
+  } catch (error) {
+    console.error('Vault Bulk Delete Error:', error);
+    res.status(500).json({ error: 'Bulk delete failed' });
+  }
+});
+
+// ---------------------------------------------------------
+// DATA SOURCES / COLLECTIONS CRUD & SCHEMA
+// ---------------------------------------------------------
+
+// GET /api/vault/collections
+vaultRouter.get('/collections', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const result = await pool.query(
+      `SELECT c.*, 
+        (SELECT COUNT(*) FROM vault_records r WHERE r.collection_id = c.id) as record_count,
+        (SELECT COUNT(*) FROM vault_assets a WHERE a.collection_id = c.id AND a.is_deleted = false) as asset_count
+       FROM vault_collections c
+       WHERE c.organization_id = $1 AND c.is_deleted = false
+       ORDER BY c.created_at DESC`,
+      [organization_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Vault GET Collections Error:', error);
+    res.status(500).json({ error: 'Failed to fetch collections' });
+  }
+});
+
+// POST /api/vault/collections (Create Data Source)
+vaultRouter.post('/collections', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { organization_id, id: userId, name: userName } = req.user;
+    const { name, description, schema_fields } = req.body;
+
+    if (!name) return res.status(400).json({ error: 'Data Source Name is required' });
+
+    const defaultFields = schema_fields || [
+      { key: 'name', name: 'Name', type: 'Text', required: true },
+      { key: 'category', name: 'Category', type: 'Text', required: false },
+      { key: 'status', name: 'Status', type: 'Status', required: false },
+      { key: 'notes', name: 'Notes', type: 'Text', required: false }
+    ];
+
+    const result = await pool.query(
+      `INSERT INTO vault_collections (organization_id, name, description, schema_fields, created_by)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [organization_id, name, description || '', JSON.stringify(defaultFields), userId]
+    );
+
+    await logActivity(organization_id, userId, userName, 'Created Data Source', 'Collection', result.rows[0].id, name);
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Vault POST Collection Error:', error);
+    res.status(500).json({ error: 'Failed to create collection' });
+  }
+});
+
+// PATCH /api/vault/collections/:id (Rename & Update Properties)
+vaultRouter.patch('/collections/:id', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id, id: userId, name: userName } = req.user;
+    const { name, description, schema_fields } = req.body;
+
+    const check = await pool.query(`SELECT name FROM vault_collections WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
+    if (check.rows.length === 0) return res.status(404).json({ error: 'Collection not found' });
+
+    const updates = [];
+    const values = [];
+    let count = 1;
+
+    if (name !== undefined) { updates.push(`name = $${count++}`); values.push(name); }
+    if (description !== undefined) { updates.push(`description = $${count++}`); values.push(description); }
+    if (schema_fields !== undefined) { updates.push(`schema_fields = $${count++}`); values.push(JSON.stringify(schema_fields)); }
+
+    updates.push(`updated_at = $${count++}`);
+    values.push(new Date());
+    values.push(id);
+    values.push(organization_id);
+
+    const result = await pool.query(
+      `UPDATE vault_collections SET ${updates.join(', ')} 
+       WHERE id = $${count - 2} AND organization_id = $${count - 1} RETURNING *`,
+      values
+    );
+
+    await logActivity(organization_id, userId, userName, 'Updated Data Source', 'Collection', id, result.rows[0].name);
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Vault PATCH Collection Error:', error);
+    res.status(500).json({ error: 'Failed to update collection' });
+  }
+});
+
+// DELETE /api/vault/collections/:id
+vaultRouter.delete('/collections/:id', requireMinRole(['Admin']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id, id: userId, name: userName } = req.user;
+
+    const check = await pool.query(`SELECT name FROM vault_collections WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
+    if (check.rows.length === 0) return res.status(404).json({ error: 'Collection not found' });
+
+    await pool.query(`DELETE FROM vault_collections WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
+    await logActivity(organization_id, userId, userName, 'Deleted Data Source', 'Collection', id, check.rows[0].name);
+
+    res.json({ message: 'Collection deleted' });
+  } catch (error) {
+    console.error('Vault DELETE Collection Error:', error);
+    res.status(500).json({ error: 'Failed to delete collection' });
+  }
+});
+
+// ---------------------------------------------------------
+// DATA WORKSPACE RECORDS CRUD
+// ---------------------------------------------------------
+
+// GET /api/vault/collections/:id/records
+vaultRouter.get('/collections/:id/records', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+
+    // Support built-in system datasets
+    if (id === 'system_products') {
+      const prods = await pool.query(
+        `SELECT id, name, category, description, status, is_public, specs, dimensions, created_at, updated_at
+         FROM products WHERE organization_id = $1 ORDER BY created_at DESC`,
+        [organization_id]
+      );
+      return res.json({
+        collection: {
+          id: 'system_products',
+          name: 'Product Master Dataset',
+          description: 'Live product specifications and 3D models',
+          schema_fields: [
+            { key: 'category', name: 'Category', type: 'Text', required: true },
+            { key: 'description', name: 'Description', type: 'Text', required: false },
+            { key: 'status', name: 'Status', type: 'Status', required: true },
+            { key: 'is_public', name: 'Is Public', type: 'Boolean', required: false }
+          ]
+        },
+        records: prods.rows.map(p => ({
+          id: p.id,
+          collection_id: 'system_products',
+          name: p.name,
+          status: p.status,
+          data: {
+            category: p.category,
+            description: p.description || '',
+            is_public: p.is_public ? 'True' : 'False'
+          },
+          created_at: p.created_at,
+          updated_at: p.updated_at
+        }))
+      });
+    }
+
+    const collectionCheck = await pool.query(
+      `SELECT * FROM vault_collections WHERE id = $1 AND organization_id = $2`,
+      [id, organization_id]
+    );
+
+    if (collectionCheck.rows.length === 0) return res.status(404).json({ error: 'Collection not found' });
+
+    const collection = collectionCheck.rows[0];
+
+    const records = await pool.query(
+      `SELECT r.*, a.name as asset_name, a.public_url as asset_url, a.type as asset_type 
+       FROM vault_records r
+       LEFT JOIN vault_assets a ON r.asset_id = a.id
+       WHERE r.collection_id = $1 AND r.organization_id = $2
+       ORDER BY r.created_at DESC`,
+      [id, organization_id]
+    );
+
+    res.json({
+      collection,
+      records: records.rows
+    });
+  } catch (error) {
+    console.error('Vault GET Records Error:', error);
+    res.status(500).json({ error: 'Failed to fetch records' });
+  }
+});
+
+// POST /api/vault/collections/:id/records
+vaultRouter.post('/collections/:id/records', requireMinRole(['Admin', 'Manager', 'Sales User']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id, id: userId, name: userName } = req.user;
+    const { name, data = {}, asset_id, status = 'Active' } = req.body;
+
+    if (!name) return res.status(400).json({ error: 'Record Name is required' });
+
+    const result = await pool.query(
+      `INSERT INTO vault_records (collection_id, organization_id, name, data, asset_id, status, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [id, organization_id, name, JSON.stringify(data), asset_id || null, status, userId]
+    );
+
+    await logActivity(organization_id, userId, userName, 'Created Record', 'Record', result.rows[0].id, name);
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Vault POST Record Error:', error);
+    res.status(500).json({ error: 'Failed to create record' });
+  }
+});
+
+// PATCH /api/vault/collections/:id/records/:recordId
+vaultRouter.patch('/collections/:id/records/:recordId', requireMinRole(['Admin', 'Manager', 'Sales User']), async (req, res) => {
+  try {
+    const { id, recordId } = req.params;
+    const { organization_id, id: userId, name: userName } = req.user;
+    const { name, data, asset_id, status } = req.body;
+
+    const updates = [];
+    const values = [];
+    let count = 1;
+
+    if (name !== undefined) { updates.push(`name = $${count++}`); values.push(name); }
+    if (data !== undefined) { updates.push(`data = $${count++}`); values.push(JSON.stringify(data)); }
+    if (asset_id !== undefined) { updates.push(`asset_id = $${count++}`); values.push(asset_id || null); }
+    if (status !== undefined) { updates.push(`status = $${count++}`); values.push(status); }
+
+    updates.push(`updated_at = $${count++}`);
+    values.push(new Date());
+    values.push(recordId);
+    values.push(id);
+    values.push(organization_id);
+
+    const result = await pool.query(
+      `UPDATE vault_records SET ${updates.join(', ')}
+       WHERE id = $${count - 3} AND collection_id = $${count - 2} AND organization_id = $${count - 1} RETURNING *`,
+      values
+    );
+
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Record not found' });
+
+    await logActivity(organization_id, userId, userName, 'Updated Record', 'Record', recordId, result.rows[0].name);
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Vault PATCH Record Error:', error);
+    res.status(500).json({ error: 'Failed to update record' });
+  }
+});
+
+// DELETE /api/vault/collections/:id/records/:recordId
+vaultRouter.delete('/collections/:id/records/:recordId', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { id, recordId } = req.params;
+    const { organization_id, id: userId, name: userName } = req.user;
+
+    const check = await pool.query(
+      `SELECT name FROM vault_records WHERE id = $1 AND collection_id = $2 AND organization_id = $3`,
+      [recordId, id, organization_id]
+    );
+
+    if (check.rows.length === 0) return res.status(404).json({ error: 'Record not found' });
+
+    await pool.query(
+      `DELETE FROM vault_records WHERE id = $1 AND collection_id = $2 AND organization_id = $3`,
+      [recordId, id, organization_id]
+    );
+
+    await logActivity(organization_id, userId, userName, 'Deleted Record', 'Record', recordId, check.rows[0].name);
+
+    res.json({ message: 'Record deleted successfully' });
+  } catch (error) {
+    console.error('Vault DELETE Record Error:', error);
+    res.status(500).json({ error: 'Failed to delete record' });
+  }
+});
+
+// ---------------------------------------------------------
+// TEMPLATES CRUD
+// ---------------------------------------------------------
+
+// GET /api/vault/templates
+vaultRouter.get('/templates', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const result = await pool.query(
+      `SELECT * FROM vault_templates WHERE organization_id = $1 ORDER BY created_at DESC`,
+      [organization_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Vault GET Templates Error:', error);
+    res.status(500).json({ error: 'Failed to fetch templates' });
+  }
+});
+
+// POST /api/vault/templates
+vaultRouter.post('/templates', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { organization_id, id: userId, name: userName } = req.user;
+    const { name, description, schema } = req.body;
+
+    if (!name) return res.status(400).json({ error: 'Template name is required' });
+
+    const result = await pool.query(
+      `INSERT INTO vault_templates (organization_id, name, description, schema, created_by)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [organization_id, name, description || '', JSON.stringify(schema || {}), userId]
+    );
+
+    await logActivity(organization_id, userId, userName, 'Created Template', 'Template', result.rows[0].id, name);
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Vault POST Template Error:', error);
+    res.status(500).json({ error: 'Failed to create template' });
+  }
+});
+
+// PATCH /api/vault/templates/:id
+vaultRouter.patch('/templates/:id', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id, id: userId, name: userName } = req.user;
+    const { name, description, schema } = req.body;
+
+    const result = await pool.query(
+      `UPDATE vault_templates 
+       SET name = COALESCE($1, name), description = COALESCE($2, description), schema = COALESCE($3, schema), updated_at = now()
+       WHERE id = $4 AND organization_id = $5 RETURNING *`,
+      [name, description, schema ? JSON.stringify(schema) : null, id, organization_id]
+    );
+
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Template not found' });
+
+    await logActivity(organization_id, userId, userName, 'Updated Template', 'Template', id, result.rows[0].name);
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Vault PATCH Template Error:', error);
+    res.status(500).json({ error: 'Failed to update template' });
+  }
+});
+
+// DELETE /api/vault/templates/:id
+vaultRouter.delete('/templates/:id', requireMinRole(['Admin']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id, id: userId, name: userName } = req.user;
+
+    const check = await pool.query(`SELECT name FROM vault_templates WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
+    if (check.rows.length === 0) return res.status(404).json({ error: 'Template not found' });
+
+    await pool.query(`DELETE FROM vault_templates WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
+    await logActivity(organization_id, userId, userName, 'Deleted Template', 'Template', id, check.rows[0].name);
+
+    res.json({ message: 'Template deleted' });
+  } catch (error) {
+    console.error('Vault DELETE Template Error:', error);
+    res.status(500).json({ error: 'Failed to delete template' });
+  }
+});
+
+// ---------------------------------------------------------
+// TRASH & RECOVERY
+// ---------------------------------------------------------
+
+// GET /api/vault/trash
+vaultRouter.get('/trash', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const result = await pool.query(
+      `SELECT id, name, type, size_bytes, deleted_at, 'Asset' as item_type FROM vault_assets 
+       WHERE organization_id = $1 AND is_deleted = true
+       ORDER BY deleted_at DESC`,
+      [organization_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Vault GET Trash Error:', error);
+    res.status(500).json({ error: 'Failed to fetch trash' });
+  }
+});
+
+// POST /api/vault/trash/empty
+vaultRouter.post('/trash/empty', requireMinRole(['Admin']), async (req, res) => {
+  try {
+    const { organization_id, id: userId, name: userName } = req.user;
+    const result = await pool.query(
+      `DELETE FROM vault_assets WHERE organization_id = $1 AND is_deleted = true RETURNING id`,
+      [organization_id]
+    );
+
+    await logActivity(organization_id, userId, userName, 'Emptied Trash', 'Trash', null, `${result.rowCount} items purged`);
+
+    res.json({ message: `Purged ${result.rowCount} trashed items` });
+  } catch (error) {
+    console.error('Vault Empty Trash Error:', error);
+    res.status(500).json({ error: 'Failed to empty trash' });
+  }
+});
+
+// ---------------------------------------------------------
+// PROCESSING CENTER & AUDIT LOGS
+// ---------------------------------------------------------
+
+// GET /api/vault/processing/jobs
+vaultRouter.get('/processing/jobs', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const result = await pool.query(
+      `SELECT * FROM vault_processing_jobs WHERE organization_id = $1 ORDER BY started_at DESC LIMIT 50`,
+      [organization_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Vault Processing Jobs Error:', error);
+    res.status(500).json({ error: 'Failed to fetch processing jobs' });
+  }
+});
+
+// GET /api/vault/activity
+vaultRouter.get('/activity', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const { search, action, target_type } = req.query;
+
+    let queryStr = `SELECT * FROM vault_audit_logs WHERE organization_id = $1`;
+    const params = [organization_id];
+
+    if (search) {
+      params.push(`%${search}%`);
+      queryStr += ` AND (user_name ILIKE $${params.length} OR target_name ILIKE $${params.length} OR action ILIKE $${params.length})`;
+    }
+
+    if (action) {
+      params.push(action);
+      queryStr += ` AND action ILIKE $${params.length}`;
+    }
+
+    if (target_type) {
+      params.push(target_type);
+      queryStr += ` AND target_type = $${params.length}`;
+    }
+
+    queryStr += ` ORDER BY created_at DESC LIMIT 100`;
+
+    const result = await pool.query(queryStr, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Vault Activity Audit Error:', error);
+    res.status(500).json({ error: 'Failed to fetch activity logs' });
   }
 });
 

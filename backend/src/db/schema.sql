@@ -555,6 +555,9 @@ CREATE TABLE IF NOT EXISTS vault_collections (
   organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   name text NOT NULL,
   description text,
+  schema_fields jsonb NOT NULL DEFAULT '[]'::jsonb,
+  is_deleted boolean NOT NULL DEFAULT false,
+  deleted_at timestamptz,
   created_by uuid REFERENCES users(id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
@@ -589,6 +592,10 @@ CREATE TABLE IF NOT EXISTS vault_assets (
   visibility asset_visibility NOT NULL DEFAULT 'Organization',
   thumbnail_url text,
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  custom_fields jsonb NOT NULL DEFAULT '{}'::jsonb,
+  connected_apps jsonb NOT NULL DEFAULT '["Spatial Hub", "Omni Studio"]'::jsonb,
+  is_deleted boolean NOT NULL DEFAULT false,
+  deleted_at timestamptz,
   collection_id uuid REFERENCES vault_collections(id) ON DELETE SET NULL,
   template_id uuid REFERENCES vault_templates(id) ON DELETE SET NULL,
   created_by uuid REFERENCES users(id) ON DELETE SET NULL,
@@ -610,4 +617,43 @@ CREATE TABLE IF NOT EXISTS vault_asset_versions (
   created_by uuid REFERENCES users(id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS vault_records (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  collection_id uuid NOT NULL REFERENCES vault_collections(id) ON DELETE CASCADE,
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  data jsonb NOT NULL DEFAULT '{}'::jsonb,
+  asset_id uuid REFERENCES vault_assets(id) ON DELETE SET NULL,
+  status text NOT NULL DEFAULT 'Active',
+  created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS vault_audit_logs (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  user_name text,
+  action text NOT NULL,
+  target_type text NOT NULL,
+  target_id uuid,
+  target_name text,
+  details jsonb DEFAULT '{}'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS vault_processing_jobs (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  job_type text NOT NULL,
+  asset_name text NOT NULL,
+  status text NOT NULL DEFAULT 'Completed',
+  progress_pct integer NOT NULL DEFAULT 100,
+  started_at timestamptz NOT NULL DEFAULT now(),
+  completed_at timestamptz DEFAULT now(),
+  error_message text
+);
+
 
