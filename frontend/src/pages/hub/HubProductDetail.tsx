@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Heart, Bookmark, Share2, MessageSquare, ChevronRight, Box, ShieldCheck } from 'lucide-react';
+import { Heart, Bookmark, Share2, MessageSquare, ChevronRight, ShieldCheck } from 'lucide-react';
 import ThreeProduct, { RenderMode } from '../../components/ThreeProduct';
 import { SPATIAL_HUB_MODELS } from '../../data/spatialHubModels';
 import { ViewInARButton } from '../../components/ViewInARButton';

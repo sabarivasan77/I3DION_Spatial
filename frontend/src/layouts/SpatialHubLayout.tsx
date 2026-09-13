@@ -12,7 +12,6 @@ import {
   ChevronDown,
   ChevronRight,
   Settings,
-  HelpCircle,
   LogOut,
   Bell,
   Menu,
