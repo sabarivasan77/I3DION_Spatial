@@ -49,7 +49,7 @@ export const StudioDrafts: React.FC = () => {
           {drafts.map(d => (
             <div
               key={d.id}
-              onClick={() => navigate(`/studio/builder/${d.id}`)}
+              onClick={() => navigate(`/omni-studio/builder/${d.id}`)}
               className="p-4 bg-white rounded-xl border border-slate-200 hover:border-indigo-400 transition cursor-pointer flex items-center justify-between shadow-xs"
             >
               <div>

@@ -61,7 +61,7 @@ export const StudioOverview: React.FC = () => {
         name: 'Industrial Pump Catalog',
         description: 'Visual catalog presentation workspace',
       });
-      navigate(`/studio/builder/${newProj.id}`);
+      navigate(`/omni-studio/builder/${newProj.id}`);
     } catch (err) {
       console.error('Failed to create new project:', err);
     }

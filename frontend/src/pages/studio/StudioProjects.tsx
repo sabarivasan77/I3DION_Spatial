@@ -63,7 +63,7 @@ export const StudioProjects: React.FC = () => {
       setShowCreateModal(false);
       setNewProjectName('');
       setNewProjectDesc('');
-      navigate(`/studio/builder/${newProj.id}`);
+      navigate(`/omni-studio/builder/${newProj.id}`);
     } catch (err) {
       console.error('Failed to create project:', err);
     } finally {
@@ -243,7 +243,7 @@ export const StudioProjects: React.FC = () => {
                     {activeMenuId === proj.id && (
                       <div className="absolute right-0 top-7 w-44 bg-white border border-slate-200 rounded-xl shadow-xl z-20 py-1 text-xs text-slate-700">
                         <button
-                          onClick={() => navigate(`/studio/builder/${proj.id}`)}
+                          onClick={() => navigate(`/omni-studio/builder/${proj.id}`)}
                           className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2 font-medium"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
@@ -278,7 +278,7 @@ export const StudioProjects: React.FC = () => {
 
                 <div>
                   <h3
-                    onClick={() => navigate(`/studio/builder/${proj.id}`)}
+                    onClick={() => navigate(`/omni-studio/builder/${proj.id}`)}
                     className="font-bold text-slate-900 text-base group-hover:text-indigo-600 transition cursor-pointer"
                   >
                     {proj.name}
@@ -297,7 +297,7 @@ export const StudioProjects: React.FC = () => {
                   <span>v{proj.version}</span>
                 </div>
                 <button
-                  onClick={() => navigate(`/studio/builder/${proj.id}`)}
+                  onClick={() => navigate(`/omni-studio/builder/${proj.id}`)}
                   className="text-indigo-600 font-bold hover:underline flex items-center gap-1"
                 >
                   Edit
@@ -320,7 +320,7 @@ export const StudioProjects: React.FC = () => {
                 </div>
                 <div>
                   <h4
-                    onClick={() => navigate(`/studio/builder/${proj.id}`)}
+                    onClick={() => navigate(`/omni-studio/builder/${proj.id}`)}
                     className="font-bold text-slate-900 text-sm hover:text-indigo-600 cursor-pointer"
                   >
                     {proj.name}
@@ -343,7 +343,7 @@ export const StudioProjects: React.FC = () => {
                 <span>Updated {new Date(proj.updated_at).toLocaleDateString()}</span>
 
                 <button
-                  onClick={() => navigate(`/studio/builder/${proj.id}`)}
+                  onClick={() => navigate(`/omni-studio/builder/${proj.id}`)}
                   className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition"
                 >
                   Edit in Builder

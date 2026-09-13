@@ -31,7 +31,7 @@ export const StudioTemplates: React.FC = () => {
         description: template.description,
         templateId: template.id,
       });
-      navigate(`/studio/builder/${newProj.id}`);
+      navigate(`/omni-studio/builder/${newProj.id}`);
     } catch (err) {
       console.error('Failed to apply template:', err);
     }

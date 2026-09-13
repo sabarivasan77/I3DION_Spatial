@@ -227,13 +227,18 @@ const DEFAULT_STUDIO_TEMPLATES: StudioTemplate[] = [
   }
 ];
 
+const getAuthToken = () => localStorage.getItem('i3dion_token') || undefined;
+
 export const studioApi = {
   // --- Projects CRUD ---
   getProjects: async (): Promise<StudioProject[]> => {
-    try {
-      const res = await apiRequest<StudioProject[]>('/api/studio/projects', { method: 'GET' });
-      if (Array.isArray(res)) return res;
-    } catch (err) {}
+    const token = getAuthToken();
+    if (token && !token.startsWith('mock-') && !token.startsWith('offline-')) {
+      try {
+        const res = await apiRequest<StudioProject[]>('/api/studio/projects', { method: 'GET', token });
+        if (Array.isArray(res)) return res;
+      } catch (err) {}
+    }
     const stored = localStorage.getItem('i3dion.studio_projects');
     if (stored) {
       try {
@@ -246,10 +251,13 @@ export const studioApi = {
   },
 
   getProject: async (id: string): Promise<StudioProject | null> => {
-    try {
-      const res = await apiRequest<StudioProject>(`/api/studio/projects/${id}`, { method: 'GET' });
-      if (res && res.id) return res;
-    } catch (err) {}
+    const token = getAuthToken();
+    if (token && !token.startsWith('mock-') && !token.startsWith('offline-')) {
+      try {
+        const res = await apiRequest<StudioProject>(`/api/studio/projects/${id}`, { method: 'GET', token });
+        if (res && res.id) return res;
+      } catch (err) {}
+    }
     const projects = await studioApi.getProjects();
     return projects.find((p) => p.id === id) || projects[0] || null;
   },
@@ -297,12 +305,16 @@ export const studioApi = {
     const updated = [newProject, ...projects];
     localStorage.setItem('i3dion.studio_projects', JSON.stringify(updated));
 
-    try {
-      await apiRequest('/api/studio/projects', {
-        method: 'POST',
-        body: JSON.stringify(newProject)
-      }).catch(() => null);
-    } catch (err) {}
+    const token = getAuthToken();
+    if (token && !token.startsWith('mock-') && !token.startsWith('offline-')) {
+      try {
+        await apiRequest('/api/studio/projects', {
+          method: 'POST',
+          body: JSON.stringify(newProject),
+          token
+        }).catch(() => null);
+      } catch (err) {}
+    }
 
     return newProject;
   },
@@ -321,12 +333,16 @@ export const studioApi = {
     projects[idx] = updatedProject;
     localStorage.setItem('i3dion.studio_projects', JSON.stringify(projects));
 
-    try {
-      await apiRequest(`/api/studio/projects/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(updates)
-      }).catch(() => null);
-    } catch (err) {}
+    const token = getAuthToken();
+    if (token && !token.startsWith('mock-') && !token.startsWith('offline-')) {
+      try {
+        await apiRequest(`/api/studio/projects/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(updates),
+          token
+        }).catch(() => null);
+      } catch (err) {}
+    }
 
     return updatedProject;
   },
@@ -336,9 +352,12 @@ export const studioApi = {
     const filtered = projects.filter((p) => p.id !== id);
     localStorage.setItem('i3dion.studio_projects', JSON.stringify(filtered));
 
-    try {
-      await apiRequest(`/api/studio/projects/${id}`, { method: 'DELETE' }).catch(() => null);
-    } catch (err) {}
+    const token = getAuthToken();
+    if (token && !token.startsWith('mock-') && !token.startsWith('offline-')) {
+      try {
+        await apiRequest(`/api/studio/projects/${id}`, { method: 'DELETE', token }).catch(() => null);
+      } catch (err) {}
+    }
   },
 
   duplicateProject: async (id: string): Promise<StudioProject> => {

@@ -132,7 +132,7 @@ export const StudioPublished: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => navigate(`/studio/builder/${proj.id}`)}
+                    onClick={() => navigate(`/omni-studio/builder/${proj.id}`)}
                     className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-xs"
                   >
                     Edit Draft
