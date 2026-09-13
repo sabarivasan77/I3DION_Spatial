@@ -14,14 +14,12 @@ import {
   Cloud,
   RefreshCw,
   Send,
-  Maximize2,
   Workflow,
   Box,
   Film,
   Play,
   Bell,
   MessageSquare,
-  HelpCircle,
 } from 'lucide-react';
 
 export interface StudioHeaderProps {
@@ -42,6 +40,7 @@ export const StudioHeader: React.FC<StudioHeaderProps> = ({
     isTimelineOpen,
     toggleTimeline,
     setCanvasViewport,
+    isPreview,
     setPreview,
     zoomIn,
     zoomOut,
