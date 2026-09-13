@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import { Box, Globe, Heart, Building2, ShieldCheck, UserCheck, UserPlus } from 'lucide-react';
 import { hubApi, HubProduct } from '../../services/hubApi';
 import { apiRequest } from '../../services/api';
-import { Card, SectionTitle, Button } from '../../components/ui';
 import { useAuthStore } from '../../store/authStore';
 import { SPATIAL_HUB_MODELS } from '../../data/spatialHubModels';
 import { HubContextMenu } from '../../components/hub/HubContextMenu';

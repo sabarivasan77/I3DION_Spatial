@@ -1,13 +1,13 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Search, Heart, Filter, ArrowUpRight, Box, ChevronDown } from 'lucide-react';
+import { Search, Heart, Filter, ArrowUpRight, ChevronDown } from 'lucide-react';
 import { SPATIAL_HUB_MODELS } from '../../data/spatialHubModels';
 import ThreeProduct from '../../components/ThreeProduct';
 import { HubContextMenu } from '../../components/hub/HubContextMenu';
 import { hubIntelligenceApi } from '../../services/hubIntelligenceApi';
 
 export function HubSearch() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
   
   const [rawQuery, setRawQuery] = useState(initialQuery);
@@ -17,7 +17,7 @@ export function HubSearch() {
   const [selectedContentTypes, setSelectedContentTypes] = useState<string[]>([]);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<'relevant' | 'newest'>('relevant');
-  const [activePreviewId, setActivePreviewId] = useState<string | null>(null);
+  const [activePreviewId] = useState<string | null>(null);
 
   const [likedIds, setLikedIds] = useState<string[]>(() => {
     return JSON.parse(localStorage.getItem('i3dion_liked_items') || '[]');
@@ -29,7 +29,7 @@ export function HubSearch() {
       setQuery(rawQuery);
       if (rawQuery.trim()) {
         hubIntelligenceApi.trackEvent({
-          event_type: 'search_performed',
+          eventType: 'search_performed',
           metadata: { query: rawQuery.trim() }
         });
       }

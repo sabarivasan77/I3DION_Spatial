@@ -29,9 +29,10 @@ export function HubProductDetail() {
     setLikesCount(product.likesCount || 12);
     // Track activity event for recommendation & lead intelligence foundation
     hubIntelligenceApi.trackEvent({
-      event_type: 'product_viewed',
-      object_type: 'product',
-      object_id: product.id,
+      eventType: 'product_viewed',
+      entityType: 'product',
+      entityId: product.id,
+      productId: product.id,
       metadata: { name: product.name, category: product.category }
     });
   }, [product.id, product.name, product.category, product.likesCount]);
@@ -49,9 +50,10 @@ export function HubProductDetail() {
       }
     }
     hubIntelligenceApi.trackEvent({
-      event_type: nextState ? 'product_liked' : 'product_unliked',
-      object_type: 'product',
-      object_id: product.id
+      eventType: nextState ? 'product_liked' : 'product_unliked',
+      entityType: 'product',
+      entityId: product.id,
+      productId: product.id
     });
   };
 
@@ -64,9 +66,10 @@ export function HubProductDetail() {
       info('Product Removed', `Removed ${product.name} from Saved Library.`);
     }
     hubIntelligenceApi.trackEvent({
-      event_type: nextState ? 'product_saved' : 'product_unsaved',
-      object_type: 'product',
-      object_id: product.id
+      eventType: nextState ? 'product_saved' : 'product_unsaved',
+      entityType: 'product',
+      entityId: product.id,
+      productId: product.id
     });
   };
 
@@ -87,9 +90,10 @@ export function HubProductDetail() {
     navigator.clipboard.writeText(window.location.href);
     success('Link Copied', 'Product details link copied to clipboard.');
     hubIntelligenceApi.trackEvent({
-      event_type: 'product_shared',
-      object_type: 'product',
-      object_id: product.id
+      eventType: 'product_shared',
+      entityType: 'product',
+      entityId: product.id,
+      productId: product.id
     });
   };
 
