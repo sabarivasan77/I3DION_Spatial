@@ -268,18 +268,6 @@ export default function SpatialHubLayout() {
             <span>Settings</span>
           </NavLink>
 
-          <NavLink
-            to="/support"
-            onClick={() => setMobileSidebarOpen(false)}
-            className={({ isActive }) =>
-              `flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-bold transition ${
-                isActive ? 'bg-[#2563EB] text-white' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
-              }`
-            }
-          >
-            <HelpCircle size={17} />
-            <span>Support</span>
-          </NavLink>
         </div>
 
         {/* Sidebar Footer Badge */}
@@ -369,14 +357,7 @@ export default function SpatialHubLayout() {
                     <Settings size={15} />
                     Profile & Settings
                   </NavLink>
-                  <NavLink
-                    to="/support"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2 rounded-xl p-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                  >
-                    <HelpCircle size={15} />
-                    Support
-                  </NavLink>
+
                   <button
                     onClick={handleLogout}
                     className="flex w-full items-center gap-2 rounded-xl p-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
