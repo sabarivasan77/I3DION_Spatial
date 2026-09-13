@@ -40,12 +40,12 @@ const APPS: AppDefinition[] = [
   {
     key: 'engine',
     name: 'I3DION Spatial Engine',
-    subtitle: 'Interactive 3D Logic & iScript',
-    path: '/studio',
+    subtitle: 'Interactive 3D Logic & Verge3D Puzzles',
+    path: '/engine',
     icon: Cpu,
     badge: 'Engine',
-    color: 'text-cyan-500',
-    bgLight: 'bg-cyan-50 hover:bg-cyan-100 border-cyan-200',
+    color: 'text-rose-500',
+    bgLight: 'bg-rose-50 hover:bg-rose-100 border-rose-200',
   },
   {
     key: 'lens',
