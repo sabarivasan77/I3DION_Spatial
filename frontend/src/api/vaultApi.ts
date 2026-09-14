@@ -37,11 +37,25 @@ export interface VaultAsset {
 }
 
 export interface VaultSchemaField {
-  key: string;
+  key?: string;
+  id?: string;
+  schema_id?: string;
+  organization_id?: string;
   name: string;
-  type: 'Text' | 'Number' | 'Boolean' | 'Date' | 'File' | '3D Model' | 'Status' | 'Reference' | 'Tags';
+  internal_name?: string;
+  type?: 'Text' | 'Number' | 'Boolean' | 'Date' | 'File' | '3D Model' | 'Status' | 'Reference' | 'Tags';
+  field_type?: string;
+  description?: string;
   required?: boolean;
+  unique_constraint?: boolean;
   defaultValue?: any;
+  default_value?: string;
+  validation_rules?: Record<string, any>;
+  display_order?: number;
+  visibility?: 'PUBLIC' | 'INTERNAL' | 'ADMIN_ONLY' | 'SYSTEM_ONLY';
+  editable?: boolean;
+  system_field?: boolean;
+  created_at?: string;
 }
 
 export interface VaultCollection {
@@ -520,24 +534,6 @@ export interface VaultSchema {
   updated_at: string;
 }
 
-export interface VaultSchemaField {
-  id: string;
-  schema_id: string;
-  organization_id: string;
-  name: string;
-  internal_name: string;
-  field_type: string;
-  description?: string;
-  required: boolean;
-  unique_constraint: boolean;
-  default_value?: string;
-  validation_rules?: Record<string, any>;
-  display_order: number;
-  visibility: 'PUBLIC' | 'INTERNAL' | 'ADMIN_ONLY' | 'SYSTEM_ONLY';
-  editable: boolean;
-  system_field: boolean;
-  created_at: string;
-}
 
 export interface VaultEnquiry {
   id: string;
