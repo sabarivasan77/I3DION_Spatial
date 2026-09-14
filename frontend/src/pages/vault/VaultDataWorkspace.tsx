@@ -58,6 +58,40 @@ export default function VaultDataWorkspace() {
   const [newRecordName, setNewRecordName] = useState('');
   const [newRecordData, setNewRecordData] = useState<Record<string, any>>({});
 
+  // Edit Record state
+  const [isEditingRecord, setIsEditingRecord] = useState(false);
+  const [editRecordName, setEditRecordName] = useState('');
+  const [editRecordStatus, setEditRecordStatus] = useState('Active');
+  const [editRecordData, setEditRecordData] = useState<Record<string, any>>({});
+
+  const handleStartEditRecord = (rec: VaultRecord) => {
+    setActiveRecord(rec);
+    setEditRecordName(rec.name);
+    setEditRecordStatus(rec.status || 'Active');
+    setEditRecordData(rec.data || {});
+    setIsEditingRecord(true);
+  };
+
+  const handleSaveEditRecord = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!collection || !activeRecord) return;
+
+    try {
+      const updated = await vaultApi.updateRecord(collection.id, activeRecord.id, {
+        name: editRecordName,
+        status: editRecordStatus,
+        data: editRecordData
+      });
+
+      setRecords((records || []).map(r => r.id === activeRecord.id ? updated : r));
+      setActiveRecord(updated);
+      setIsEditingRecord(false);
+    } catch (err) {
+      console.error('Failed to update record', err);
+    }
+  };
+
+
   useEffect(() => {
     if (sourceId) {
       loadWorkspaceData(sourceId);
@@ -559,45 +593,100 @@ export default function VaultDataWorkspace() {
       {activeRecord && (
         <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white border-l border-slate-200 shadow-2xl p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-            <h2 className="text-lg font-bold text-slate-900 truncate">{activeRecord.name}</h2>
-            <button onClick={() => setActiveRecord(null)} className="text-slate-400 hover:text-slate-700"><X size={18} /></button>
+            <h2 className="text-lg font-bold text-slate-900 truncate">{isEditingRecord ? 'Edit Record' : activeRecord.name}</h2>
+            <button onClick={() => { setActiveRecord(null); setIsEditingRecord(false); }} className="text-slate-400 hover:text-slate-700"><X size={18} /></button>
           </div>
 
-          <div className="space-y-6 text-xs">
-            <div>
-              <span className="text-slate-400 font-bold uppercase block mb-1">Status</span>
-              <span className="inline-flex rounded-full bg-emerald-100 px-3 py-1 font-bold text-emerald-700">{activeRecord.status}</span>
-            </div>
+          {isEditingRecord ? (
+            <form onSubmit={handleSaveEditRecord} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Record Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editRecordName}
+                  onChange={(e) => setEditRecordName(e.target.value)}
+                  className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs font-semibold outline-none focus:border-emerald-500"
+                />
+              </div>
 
-            <div>
-              <span className="text-slate-400 font-bold uppercase block mb-2">Record Attributes</span>
-              <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <div>
+                <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Status</label>
+                <select
+                  value={editRecordStatus}
+                  onChange={(e) => setEditRecordStatus(e.target.value)}
+                  className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-700 outline-none focus:border-emerald-500"
+                >
+                  <option value="Active">Active</option>
+                  <option value="In Review">In Review</option>
+                  <option value="Archived">Archived</option>
+                </select>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <span className="text-slate-400 font-bold uppercase block mb-1">Attributes</span>
                 {fields.map(f => (
-                  <div key={f.key} className="flex justify-between border-b border-slate-200/60 pb-2 last:border-0 last:pb-0">
-                    <span className="font-bold text-slate-500">{f.name}:</span>
-                    <span className="font-semibold text-slate-800">{String(activeRecord.data?.[f.key] ?? '—')}</span>
+                  <div key={f.key}>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">{f.name}</label>
+                    <input
+                      type={f.type === 'Number' ? 'number' : f.type === 'Date' ? 'date' : 'text'}
+                      value={editRecordData[f.key] || ''}
+                      onChange={(e) => setEditRecordData({ ...editRecordData, [f.key]: e.target.value })}
+                      className="h-9 w-full rounded-xl border border-slate-200 px-3 text-xs font-medium outline-none focus:border-emerald-500"
+                    />
                   </div>
                 ))}
               </div>
-            </div>
 
-            <div>
-              <span className="text-slate-400 font-bold uppercase block mb-1">System Audit</span>
-              <p className="text-slate-500">Created: {new Date(activeRecord.created_at).toLocaleString()}</p>
-              <p className="text-slate-500">Last Modified: {new Date(activeRecord.updated_at).toLocaleString()}</p>
-            </div>
+              <div className="pt-4 border-t border-slate-100 flex gap-2 justify-end">
+                <button type="button" onClick={() => setIsEditingRecord(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Cancel</button>
+                <button type="submit" className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs">Save Changes</button>
+              </div>
+            </form>
+          ) : (
+            <div className="space-y-6 text-xs">
+              <div>
+                <span className="text-slate-400 font-bold uppercase block mb-1">Status</span>
+                <span className="inline-flex rounded-full bg-emerald-100 px-3 py-1 font-bold text-emerald-700">{activeRecord.status}</span>
+              </div>
 
-            <div className="pt-6 border-t border-slate-100 flex gap-3">
-              <button
-                onClick={() => handleDeleteRecord(activeRecord.id)}
-                className="flex-1 py-2.5 rounded-xl border border-red-200 bg-red-50 text-red-700 font-bold text-xs hover:bg-red-100 transition"
-              >
-                Delete Record
-              </button>
+              <div>
+                <span className="text-slate-400 font-bold uppercase block mb-2">Record Attributes</span>
+                <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                  {fields.map(f => (
+                    <div key={f.key} className="flex justify-between border-b border-slate-200/60 pb-2 last:border-0 last:pb-0">
+                      <span className="font-bold text-slate-500">{f.name}:</span>
+                      <span className="font-semibold text-slate-800">{String(activeRecord.data?.[f.key] ?? '—')}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <span className="text-slate-400 font-bold uppercase block mb-1">System Audit</span>
+                <p className="text-slate-500">Created: {new Date(activeRecord.created_at).toLocaleString()}</p>
+                <p className="text-slate-500">Last Modified: {new Date(activeRecord.updated_at).toLocaleString()}</p>
+              </div>
+
+              <div className="pt-6 border-t border-slate-100 flex gap-3">
+                <button
+                  onClick={() => handleStartEditRecord(activeRecord)}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 font-bold text-xs hover:bg-slate-100 transition"
+                >
+                  Edit Attributes
+                </button>
+                <button
+                  onClick={() => handleDeleteRecord(activeRecord.id)}
+                  className="flex-1 py-2.5 rounded-xl border border-red-200 bg-red-50 text-red-700 font-bold text-xs hover:bg-red-100 transition"
+                >
+                  Delete Record
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
+
 
       {/* MODALS */}
       {collection && (
