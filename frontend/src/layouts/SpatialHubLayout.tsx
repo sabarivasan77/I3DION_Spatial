@@ -7,7 +7,6 @@ import {
   Activity,
   Bookmark,
   Heart,
-  MessageSquare,
   Package,
   Building2,
   ChevronDown,
@@ -270,13 +269,6 @@ export default function SpatialHubLayout() {
 
         </div>
 
-        {/* Sidebar Footer Badge */}
-        <div className="mt-4 border-t border-slate-800/80 pt-3 px-2 flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600/20 text-blue-400 text-[10px] font-black">
-            I3
-          </div>
-          <span className="text-[10px] font-medium text-slate-400">Built for a More Visual World.</span>
-        </div>
       </aside>
 
       {/* Mobile Sidebar Backdrop Overlay */}

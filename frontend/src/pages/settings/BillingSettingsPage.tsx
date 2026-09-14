@@ -40,6 +40,8 @@ declare global {
 
 export const BillingSettingsPage: React.FC = () => {
   const { token, user } = useAuthStore();
+  const currentTier = useLicenseStore((s) => s.currentTier);
+  const setLicenseTier = useLicenseStore((s) => s.setLicenseTier);
   const [plans, setPlans] = useState<SaaSPlan[]>([]);
   const [usageData, setUsageData] = useState<SaaSUsageAndPlan | null>(null);
   const [billingInfo, setBillingInfo] = useState<OrganizationBillingInfo>({
@@ -253,7 +255,7 @@ export const BillingSettingsPage: React.FC = () => {
               Ecosystem License Tier
             </span>
             <h2 className="text-2xl font-extrabold text-slate-900">
-              Active Tier: {useLicenseStore((s) => s.currentTier)}
+              Active Tier: {currentTier}
             </h2>
             <p className="text-xs text-slate-600 mt-1 max-w-2xl">
               Application access across <b>Spatial Hub</b>, <b>Spatial Vault</b>, <b>Omni Studio</b>, <b>Spatial Engine</b>, and <b>Spatial Lens</b> is governed by your organization license tier.
@@ -262,13 +264,12 @@ export const BillingSettingsPage: React.FC = () => {
 
           <div className="flex flex-wrap gap-3">
             {(['Basic', 'Professional', 'Enterprise'] as LicenseTier[]).map((tier) => {
-              const currentTier = useLicenseStore.getState().currentTier;
               const isSelected = currentTier === tier;
               return (
                 <button
                   key={tier}
                   onClick={() => {
-                    useLicenseStore.getState().setLicenseTier(tier);
+                    setLicenseTier(tier);
                     setMessage({ type: 'success', text: `Switched organization to ${tier} License Tier.` });
                   }}
                   className={`px-5 py-2.5 rounded-2xl text-xs font-extrabold transition-all border shadow-xs ${
