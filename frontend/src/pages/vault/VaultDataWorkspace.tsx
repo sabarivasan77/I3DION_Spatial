@@ -214,7 +214,10 @@ export default function VaultDataWorkspace() {
   const handleBulkDelete = async () => {
     if (!collection || selectedRecordIds.length === 0) return;
     try {
-      await Promise.all(selectedRecordIds.map(id => vaultApi.deleteRecord(collection.id, id)));
+      await vaultApi.bulkDatasetOperation(collection.id, {
+        action: 'delete',
+        record_ids: selectedRecordIds
+      });
       setRecords((records || []).filter(r => !selectedRecordIds.includes(r.id)));
       setSelectedRecordIds([]);
     } catch (err) {
@@ -225,10 +228,8 @@ export default function VaultDataWorkspace() {
   const handleImportRecords = async (importedList: any[]) => {
     if (!collection) return;
     try {
-      const createdRecords = await Promise.all(
-        importedList.map(rec => vaultApi.createRecord(collection.id, rec))
-      );
-      setRecords([...createdRecords, ...(records || [])]);
+      await vaultApi.importDatasetRecords(collection.id, importedList);
+      loadWorkspaceData(collection.id);
     } catch (err) {
       console.error('Batch import failed', err);
     }

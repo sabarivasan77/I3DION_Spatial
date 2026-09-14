@@ -229,6 +229,61 @@ export async function ensureMigrated() {
         display_order integer NOT NULL DEFAULT 0,
         UNIQUE (catalog_id, product_id)
       );
+
+      CREATE TABLE IF NOT EXISTS product_assets_map (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        product_id uuid NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        asset_id uuid NOT NULL REFERENCES vault_assets(id) ON DELETE CASCADE,
+        asset_role text NOT NULL DEFAULT 'GALLERY_IMAGE',
+        display_order integer NOT NULL DEFAULT 0,
+        metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        UNIQUE (product_id, asset_id, asset_role)
+      );
+
+      CREATE TABLE IF NOT EXISTS product_relationships (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        source_product_id uuid NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        target_product_id uuid NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        relationship_type text NOT NULL DEFAULT 'compatible',
+        notes text,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        UNIQUE (source_product_id, target_product_id, relationship_type)
+      );
+
+      CREATE TABLE IF NOT EXISTS vault_schemas (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        name text NOT NULL,
+        description text,
+        version text NOT NULL DEFAULT '1.0',
+        is_active boolean NOT NULL DEFAULT true,
+        created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      CREATE TABLE IF NOT EXISTS vault_schema_fields (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        schema_id uuid NOT NULL REFERENCES vault_schemas(id) ON DELETE CASCADE,
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        name text NOT NULL,
+        internal_name text NOT NULL,
+        field_type text NOT NULL DEFAULT 'text',
+        description text,
+        required boolean NOT NULL DEFAULT false,
+        unique_constraint boolean NOT NULL DEFAULT false,
+        default_value text,
+        validation_rules jsonb NOT NULL DEFAULT '{}'::jsonb,
+        display_order integer NOT NULL DEFAULT 0,
+        visibility text NOT NULL DEFAULT 'INTERNAL',
+        editable boolean NOT NULL DEFAULT true,
+        system_field boolean NOT NULL DEFAULT false,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        UNIQUE (schema_id, internal_name)
+      );
     `);
 
     

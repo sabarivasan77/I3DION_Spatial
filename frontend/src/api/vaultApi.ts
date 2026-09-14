@@ -408,8 +408,136 @@ export const vaultApi = {
     apiRequest<{ message: string; count: number }>(`/api/vault/catalogs/${catalogId}/reorder`, {
       method: 'POST',
       body: JSON.stringify({ product_ids: productIds })
-    })
+    }),
+
+  // --- Phase 2 Product Relationships ---
+  getProductRelationships: (id: string) =>
+    apiRequest<ProductFullRelationships>(`/api/vault/products/${id}/relationships`, { method: 'GET' }),
+
+  attachProductAsset: (id: string, data: { asset_id: string; asset_role: string; display_order?: number }) =>
+    apiRequest<AttachedAssetMap>(`/api/vault/products/${id}/assets`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  detachProductAsset: (id: string, mapId: string) =>
+    apiRequest<{ message: string }>(`/api/vault/products/${id}/assets/${mapId}`, { method: 'DELETE' }),
+
+  addProductRelationship: (id: string, data: { target_product_id: string; relationship_type: string; notes?: string }) =>
+    apiRequest<ProductRelationshipItem>(`/api/vault/products/${id}/related`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  removeProductRelationship: (id: string, relId: string) =>
+    apiRequest<{ message: string }>(`/api/vault/products/${id}/related/${relId}`, { method: 'DELETE' }),
+
+  // --- Phase 2 Dynamic Schemas & Field Governance ---
+  getSchemas: () =>
+    apiRequest<VaultSchema[]>('/api/vault/schemas', { method: 'GET' })
+      .then(res => (Array.isArray(res) ? res : []))
+      .catch(() => []),
+
+  createSchema: (data: { name: string; description?: string; version?: string }) =>
+    apiRequest<VaultSchema>('/api/vault/schemas', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  getSchemaFields: (schemaId: string) =>
+    apiRequest<VaultSchemaField[]>(`/api/vault/schemas/${schemaId}/fields`, { method: 'GET' })
+      .then(res => (Array.isArray(res) ? res : []))
+      .catch(() => []),
+
+  createSchemaField: (schemaId: string, data: Partial<VaultSchemaField>) =>
+    apiRequest<VaultSchemaField>(`/api/vault/schemas/${schemaId}/fields`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  // --- Phase 2 Bulk Operations & Import/Export ---
+  bulkDatasetOperation: (collectionId: string, data: { action: 'delete' | 'update_status' | 'bulk_edit'; record_ids: string[]; data_payload?: any }) =>
+    apiRequest<{ message: string; count: number }>(`/api/vault/datasets/${collectionId}/bulk`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  importDatasetRecords: (collectionId: string, records: any[]) =>
+    apiRequest<{ message: string; count: number }>(`/api/vault/datasets/${collectionId}/import`, {
+      method: 'POST',
+      body: JSON.stringify({ records })
+    }),
+
+  exportDatasetRecords: (collectionId: string) =>
+    apiRequest<any[]>(`/api/vault/datasets/${collectionId}/export`, { method: 'GET' })
+      .then(res => (Array.isArray(res) ? res : []))
+      .catch(() => [])
 };
+
+export interface AttachedAssetMap {
+  map_id: string;
+  asset_id: string;
+  asset_role: string;
+  display_order: number;
+  attached_at: string;
+  name: string;
+  type: string;
+  mime_type: string;
+  size_bytes: number;
+  public_url: string;
+  thumbnail_url?: string;
+  status: string;
+}
+
+export interface ProductRelationshipItem {
+  rel_id: string;
+  relationship_type: 'accessory' | 'replacement' | 'alternative' | 'variant' | 'parent' | 'child' | 'compatible' | 'recommended';
+  notes?: string;
+  created_at: string;
+  target_product_id: string;
+  target_product_name: string;
+  category: string;
+  status: string;
+  image_url?: string;
+}
+
+export interface ProductFullRelationships {
+  attached_assets: AttachedAssetMap[];
+  related_products: ProductRelationshipItem[];
+  catalogs: { id: string; name: string; status: string; slug: string; display_order: number }[];
+  enquiries: VaultEnquiry[];
+}
+
+export interface VaultSchema {
+  id: string;
+  organization_id: string;
+  name: string;
+  description?: string;
+  version: string;
+  is_active: boolean;
+  field_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VaultSchemaField {
+  id: string;
+  schema_id: string;
+  organization_id: string;
+  name: string;
+  internal_name: string;
+  field_type: string;
+  description?: string;
+  required: boolean;
+  unique_constraint: boolean;
+  default_value?: string;
+  validation_rules?: Record<string, any>;
+  display_order: number;
+  visibility: 'PUBLIC' | 'INTERNAL' | 'ADMIN_ONLY' | 'SYSTEM_ONLY';
+  editable: boolean;
+  system_field: boolean;
+  created_at: string;
+}
 
 export interface VaultEnquiry {
   id: string;

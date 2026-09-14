@@ -1522,12 +1522,407 @@ vaultRouter.post('/catalogs/:id/reorder', async (req, res) => {
       );
     }
 
-    await logActivity(organization_id, req.user.id, req.user.name, 'REORDER_CATALOG_PRODUCTS', 'Catalog', id, 'Catalog Product Order');
-
     res.json({ message: 'Product order saved successfully', count: product_ids.length });
   } catch (error) {
     console.error('Vault Reorder Catalog Error:', error);
     res.status(500).json({ error: 'Failed to reorder catalog products' });
+  }
+});
+
+// ---------------------------------------------------------
+// PHASE 2: PRODUCT RELATIONSHIP ENGINE APIs
+// ---------------------------------------------------------
+
+// GET /api/vault/products/:id/relationships
+vaultRouter.get('/products/:id/relationships', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+
+    // 1. Attached assets by role
+    const assetsRes = await pool.query(
+      `SELECT m.id as map_id, m.asset_role, m.display_order, m.created_at as attached_at,
+              a.id as asset_id, a.name, a.type, a.mime_type, a.size_bytes, a.public_url, a.thumbnail_url, a.status
+       FROM product_assets_map m
+       JOIN vault_assets a ON m.asset_id = a.id
+       WHERE m.product_id = $1 AND m.organization_id = $2 AND a.is_deleted = false
+       ORDER BY m.display_order ASC, m.created_at DESC`,
+      [id, organization_id]
+    );
+
+    // 2. Inter-product relationships
+    const relatedRes = await pool.query(
+      `SELECT r.id as rel_id, r.relationship_type, r.notes, r.created_at,
+              p.id as target_product_id, p.name as target_product_name, p.category, p.status, p.image_url
+       FROM product_relationships r
+       JOIN products p ON r.target_product_id = p.id
+       WHERE r.source_product_id = $1 AND r.organization_id = $2
+       UNION ALL
+       SELECT r.id as rel_id, r.relationship_type, r.notes, r.created_at,
+              p.id as target_product_id, p.name as target_product_name, p.category, p.status, p.image_url
+       FROM product_relationships r
+       JOIN products p ON r.source_product_id = p.id
+       WHERE r.target_product_id = $1 AND r.organization_id = $2`,
+      [id, organization_id]
+    );
+
+    // 3. Catalog memberships
+    const catalogsRes = await pool.query(
+      `SELECT c.id, c.name, c.status, c.slug, COALESCE(o.display_order, 0) as display_order
+       FROM catalogs c
+       LEFT JOIN catalog_products_ordering o ON c.id = o.catalog_id AND o.product_id = $1
+       WHERE c.organization_id = $2 AND (c.id IN (SELECT catalog_id FROM catalog_products_ordering WHERE product_id = $1) OR c.id = (SELECT catalog_id FROM products WHERE id = $1))`,
+      [id, organization_id]
+    );
+
+    // 4. Linked customer enquiries
+    const enquiriesRes = await pool.query(
+      `SELECT id, customer_name, company, email, phone, message, status, priority, created_at
+       FROM vault_enquiries
+       WHERE product_id = $1 AND organization_id = $2
+       ORDER BY created_at DESC`,
+      [id, organization_id]
+    );
+
+    res.json({
+      attached_assets: assetsRes.rows,
+      related_products: relatedRes.rows,
+      catalogs: catalogsRes.rows,
+      enquiries: enquiriesRes.rows
+    });
+  } catch (error) {
+    console.error('Vault GET Product Relationships Error:', error);
+    res.status(500).json({ error: 'Failed to fetch product relationships' });
+  }
+});
+
+// POST /api/vault/products/:id/assets (Attach asset to product)
+vaultRouter.post('/products/:id/assets', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const { asset_id, asset_role, display_order } = req.body;
+
+    if (!asset_id) return res.status(400).json({ error: 'asset_id is required' });
+
+    const role = asset_role || 'GALLERY_IMAGE';
+
+    const result = await pool.query(
+      `INSERT INTO product_assets_map (organization_id, product_id, asset_id, asset_role, display_order)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (product_id, asset_id, asset_role)
+       DO UPDATE SET display_order = EXCLUDED.display_order
+       RETURNING *`,
+      [organization_id, id, asset_id, role, display_order || 0]
+    );
+
+    // Synchronize primary model/thumbnail on product table if requested
+    if (role === 'PRIMARY_MODEL') {
+      const assetInfo = await pool.query(`SELECT public_url FROM vault_assets WHERE id = $1`, [asset_id]);
+      if (assetInfo.rows.length > 0) {
+        await pool.query(`UPDATE products SET model_url = $1, model_asset_id = $2 WHERE id = $3 AND organization_id = $4`, [assetInfo.rows[0].public_url, asset_id, id, organization_id]);
+      }
+    } else if (role === 'THUMBNAIL') {
+      const assetInfo = await pool.query(`SELECT public_url FROM vault_assets WHERE id = $1`, [asset_id]);
+      if (assetInfo.rows.length > 0) {
+        await pool.query(`UPDATE products SET image_url = $1, thumbnail_asset_id = $2 WHERE id = $3 AND organization_id = $4`, [assetInfo.rows[0].public_url, asset_id, id, organization_id]);
+      }
+    }
+
+    await logActivity(organization_id, req.user.id, req.user.name, 'ATTACH_PRODUCT_ASSET', 'Product', id, `Attached asset ${asset_id} as ${role}`);
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Vault Attach Product Asset Error:', error);
+    res.status(500).json({ error: 'Failed to attach asset to product' });
+  }
+});
+
+// DELETE /api/vault/products/:id/assets/:mapId (Detach asset from product)
+vaultRouter.delete('/products/:id/assets/:mapId', async (req, res) => {
+  try {
+    const { id, mapId } = req.params;
+    const { organization_id } = req.user;
+
+    await pool.query(
+      `DELETE FROM product_assets_map WHERE id = $1 AND product_id = $2 AND organization_id = $3`,
+      [mapId, id, organization_id]
+    );
+
+    await logActivity(organization_id, req.user.id, req.user.name, 'DETACH_PRODUCT_ASSET', 'Product', id, `Detached asset mapping ${mapId}`);
+
+    res.json({ message: 'Asset detached successfully' });
+  } catch (error) {
+    console.error('Vault Detach Product Asset Error:', error);
+    res.status(500).json({ error: 'Failed to detach asset' });
+  }
+});
+
+// POST /api/vault/products/:id/related (Add inter-product relationship)
+vaultRouter.post('/products/:id/related', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const { target_product_id, relationship_type, notes } = req.body;
+
+    if (!target_product_id) return res.status(400).json({ error: 'target_product_id is required' });
+
+    const relType = relationship_type || 'compatible';
+
+    const result = await pool.query(
+      `INSERT INTO product_relationships (organization_id, source_product_id, target_product_id, relationship_type, notes)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (source_product_id, target_product_id, relationship_type)
+       DO UPDATE SET notes = EXCLUDED.notes
+       RETURNING *`,
+      [organization_id, id, target_product_id, relType, notes || '']
+    );
+
+    await logActivity(organization_id, req.user.id, req.user.name, 'ADD_PRODUCT_RELATIONSHIP', 'Product', id, `Linked to product ${target_product_id} (${relType})`);
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Vault Add Product Relationship Error:', error);
+    res.status(500).json({ error: 'Failed to add product relationship' });
+  }
+});
+
+// DELETE /api/vault/products/:id/related/:relId (Remove inter-product relationship)
+vaultRouter.delete('/products/:id/related/:relId', async (req, res) => {
+  try {
+    const { id, relId } = req.params;
+    const { organization_id } = req.user;
+
+    await pool.query(
+      `DELETE FROM product_relationships WHERE id = $1 AND (source_product_id = $2 OR target_product_id = $2) AND organization_id = $3`,
+      [relId, id, organization_id]
+    );
+
+    await logActivity(organization_id, req.user.id, req.user.name, 'REMOVE_PRODUCT_RELATIONSHIP', 'Product', id, `Removed product relationship ${relId}`);
+
+    res.json({ message: 'Relationship removed successfully' });
+  } catch (error) {
+    console.error('Vault Remove Product Relationship Error:', error);
+    res.status(500).json({ error: 'Failed to remove product relationship' });
+  }
+});
+
+// ---------------------------------------------------------
+// PHASE 2: DYNAMIC SCHEMA & FIELD GOVERNANCE APIs
+// ---------------------------------------------------------
+
+// GET /api/vault/schemas
+vaultRouter.get('/schemas', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const result = await pool.query(
+      `SELECT s.*, 
+        (SELECT COUNT(*) FROM vault_schema_fields f WHERE f.schema_id = s.id) as field_count
+       FROM vault_schemas s
+       WHERE s.organization_id = $1 AND s.is_active = true
+       ORDER BY s.name ASC`,
+      [organization_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Vault GET Schemas Error:', error);
+    res.status(500).json({ error: 'Failed to fetch schemas' });
+  }
+});
+
+// POST /api/vault/schemas
+vaultRouter.post('/schemas', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { organization_id, id: userId } = req.user;
+    const { name, description, version } = req.body;
+
+    if (!name) return res.status(400).json({ error: 'Schema name is required' });
+
+    const result = await pool.query(
+      `INSERT INTO vault_schemas (organization_id, name, description, version, created_by)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [organization_id, name, description || '', version || '1.0', userId]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Vault POST Schema Error:', error);
+    res.status(500).json({ error: 'Failed to create schema' });
+  }
+});
+
+// GET /api/vault/schemas/:schemaId/fields
+vaultRouter.get('/schemas/:schemaId/fields', async (req, res) => {
+  try {
+    const { schemaId } = req.params;
+    const { organization_id, role } = req.user;
+
+    const fieldsRes = await pool.query(
+      `SELECT * FROM vault_schema_fields
+       WHERE schema_id = $1 AND organization_id = $2
+       ORDER BY display_order ASC, name ASC`,
+      [schemaId, organization_id]
+    );
+
+    // Apply Field-Level Visibility Governance
+    const filteredFields = fieldsRes.rows.filter(f => {
+      if (f.visibility === 'SYSTEM_ONLY' && role !== 'Admin' && role !== 'Super Admin') return false;
+      if (f.visibility === 'ADMIN_ONLY' && role !== 'Admin' && role !== 'Super Admin' && role !== 'Company Admin') return false;
+      return true;
+    });
+
+    res.json(filteredFields);
+  } catch (error) {
+    console.error('Vault GET Schema Fields Error:', error);
+    res.status(500).json({ error: 'Failed to fetch schema fields' });
+  }
+});
+
+// POST /api/vault/schemas/:schemaId/fields
+vaultRouter.post('/schemas/:schemaId/fields', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { schemaId } = req.params;
+    const { organization_id } = req.user;
+    const { name, internal_name, field_type, description, required, unique_constraint, default_value, visibility, editable, system_field } = req.body;
+
+    if (!name || !internal_name) return res.status(400).json({ error: 'Field name and internal_name are required' });
+
+    // Protect system field flags
+    const isSystem = system_field === true && req.user.role === 'Admin';
+
+    const result = await pool.query(
+      `INSERT INTO vault_schema_fields (schema_id, organization_id, name, internal_name, field_type, description, required, unique_constraint, default_value, visibility, editable, system_field)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       RETURNING *`,
+      [
+        schemaId,
+        organization_id,
+        name,
+        internal_name.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
+        field_type || 'text',
+        description || '',
+        required || false,
+        unique_constraint || false,
+        default_value || null,
+        visibility || 'INTERNAL',
+        editable !== undefined ? editable : true,
+        isSystem
+      ]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Vault POST Schema Field Error:', error);
+    res.status(500).json({ error: 'Failed to create schema field' });
+  }
+});
+
+// ---------------------------------------------------------
+// PHASE 2: BULK DATA & IMPORT/EXPORT APIs
+// ---------------------------------------------------------
+
+// POST /api/vault/datasets/:collectionId/bulk
+vaultRouter.post('/datasets/:collectionId/bulk', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { collectionId } = req.params;
+    const { organization_id, id: userId, name: userName } = req.user;
+    const { action, record_ids, data_payload } = req.body;
+
+    if (!Array.isArray(record_ids) || record_ids.length === 0) {
+      return res.status(400).json({ error: 'record_ids must be a non-empty array' });
+    }
+
+    await client.query('BEGIN');
+
+    if (action === 'delete') {
+      await client.query(
+        `DELETE FROM vault_records WHERE id = ANY($1::uuid[]) AND collection_id = $2 AND organization_id = $3`,
+        [record_ids, collectionId, organization_id]
+      );
+    } else if (action === 'update_status') {
+      await client.query(
+        `UPDATE vault_records SET status = $1, updated_at = now() WHERE id = ANY($2::uuid[]) AND collection_id = $3 AND organization_id = $4`,
+        [data_payload?.status || 'Active', record_ids, collectionId, organization_id]
+      );
+    } else if (action === 'bulk_edit') {
+      for (const recId of record_ids) {
+        await client.query(
+          `UPDATE vault_records SET data = data || $1::jsonb, updated_at = now() WHERE id = $2 AND collection_id = $3 AND organization_id = $4`,
+          [JSON.stringify(data_payload || {}), recId, collectionId, organization_id]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+
+    await logActivity(organization_id, userId, userName, `BULK_${action.toUpperCase()}`, 'DatasetRecord', collectionId, `Processed ${record_ids.length} records`);
+
+    res.json({ message: `Bulk ${action} executed successfully`, count: record_ids.length });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Vault Bulk Operation Error:', error);
+    res.status(500).json({ error: 'Bulk dataset operation failed' });
+  } finally {
+    client.release();
+  }
+});
+
+// POST /api/vault/datasets/:collectionId/import
+vaultRouter.post('/datasets/:collectionId/import', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { collectionId } = req.params;
+    const { organization_id, id: userId } = req.user;
+    const { records } = req.body; // Array of json objects matching fields
+
+    if (!Array.isArray(records) || records.length === 0) {
+      return res.status(400).json({ error: 'records array is required for import' });
+    }
+
+    await client.query('BEGIN');
+
+    let importedCount = 0;
+    for (const rec of records) {
+      const name = rec.name || rec.title || `Imported Record ${importedCount + 1}`;
+      await client.query(
+        `INSERT INTO vault_records (collection_id, organization_id, name, data, created_by)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [collectionId, organization_id, name, JSON.stringify(rec), userId]
+      );
+      importedCount++;
+    }
+
+    await client.query('COMMIT');
+
+    res.json({ message: 'Dataset import completed successfully', count: importedCount });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Vault Import Dataset Error:', error);
+    res.status(500).json({ error: 'Dataset import failed' });
+  } finally {
+    client.release();
+  }
+});
+
+// GET /api/vault/datasets/:collectionId/export
+vaultRouter.get('/datasets/:collectionId/export', async (req, res) => {
+  try {
+    const { collectionId } = req.params;
+    const { organization_id } = req.user;
+
+    const result = await pool.query(
+      `SELECT r.id, r.name, r.data, r.status, r.created_at, r.updated_at
+       FROM vault_records r
+       WHERE r.collection_id = $1 AND r.organization_id = $2
+       ORDER BY r.created_at DESC`,
+      [collectionId, organization_id]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Vault Export Dataset Error:', error);
+    res.status(500).json({ error: 'Failed to export dataset' });
   }
 });
 
