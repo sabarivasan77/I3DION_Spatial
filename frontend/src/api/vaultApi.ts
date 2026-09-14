@@ -298,5 +298,53 @@ export const vaultApi = {
     return apiRequest<VaultAuditLog[]>(`/api/vault/activity?${query.toString()}`, { method: 'GET' })
       .then(res => (Array.isArray(res) ? res : []))
       .catch(() => []);
-  }
+  },
+
+  // --- Saved Views ---
+  getSavedViews: (collectionId?: string) => {
+    const query = collectionId ? `?collection_id=${collectionId}` : '';
+    return apiRequest<any[]>(`/api/vault/views${query}`, { method: 'GET' })
+      .then(res => (Array.isArray(res) ? res : []))
+      .catch(() => []);
+  },
+
+  createSavedView: (data: { collection_id?: string; name: string; columns_config?: any[]; filters_config?: any[]; sort_config?: any; is_shared?: boolean }) =>
+    apiRequest<any>('/api/vault/views', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  deleteSavedView: (id: string) =>
+    apiRequest<{ message: string }>(`/api/vault/views/${id}`, { method: 'DELETE' }),
+
+  // --- Resource Sharing ---
+  getShares: (resourceType?: string, resourceId?: string) => {
+    const query = new URLSearchParams();
+    if (resourceType) query.set('resource_type', resourceType);
+    if (resourceId) query.set('resource_id', resourceId);
+    return apiRequest<any[]>(`/api/vault/shares?${query.toString()}`, { method: 'GET' })
+      .then(res => (Array.isArray(res) ? res : []))
+      .catch(() => []);
+  },
+
+  createShare: (data: { resource_type: string; resource_id: string; shared_with_user_id: string; permission_level?: string }) =>
+    apiRequest<any>('/api/vault/shares', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  deleteShare: (id: string) =>
+    apiRequest<{ message: string }>(`/api/vault/shares/${id}`, { method: 'DELETE' }),
+
+  // --- Approval Lifecycle & Restore ---
+  updateApprovalStatus: (assetId: string, approval_status: string, review_notes?: string) =>
+    apiRequest<VaultAsset>(`/api/vault/assets/${assetId}/approval`, {
+      method: 'POST',
+      body: JSON.stringify({ approval_status, review_notes })
+    }),
+
+  restoreVersion: (assetId: string, versionId: string) =>
+    apiRequest<VaultAsset>(`/api/vault/assets/${assetId}/versions/${versionId}/restore`, {
+      method: 'POST'
+    })
 };

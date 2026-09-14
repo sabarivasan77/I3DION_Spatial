@@ -14,11 +14,15 @@ import {
   X,
   CheckCircle2,
   Database,
-  FileText
+  FileText,
+  Share2,
+  Bookmark,
+  AlertCircle
 } from 'lucide-react';
 import { vaultApi, VaultCollection, VaultRecord, VaultSchemaField } from '../../api/vaultApi';
 import VaultSchemaModal from '../../components/vault/VaultSchemaModal';
 import { VaultImportModal, VaultExportModal } from '../../components/vault/VaultImportExportModal';
+import { VaultShareModal } from '../../components/vault/VaultShareModal';
 
 export default function VaultDataWorkspace() {
   const { sourceId } = useParams();
@@ -26,6 +30,8 @@ export default function VaultDataWorkspace() {
 
   const [collection, setCollection] = useState<VaultCollection | null>(null);
   const [records, setRecords] = useState<VaultRecord[]>([]);
+  const [savedViews, setSavedViews] = useState<any[]>([]);
+  const [activeViewId, setActiveViewId] = useState<string>('default');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -38,9 +44,15 @@ export default function VaultDataWorkspace() {
   const [isSchemaModalOpen, setIsSchemaModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isAddRecordOpen, setIsAddRecordOpen] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleName, setTitleName] = useState('');
+
+  // Saved View Modal
+  const [isSaveViewOpen, setIsSaveViewOpen] = useState(false);
+  const [newViewName, setNewViewName] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   // New Record form
   const [newRecordName, setNewRecordName] = useState('');
@@ -49,6 +61,7 @@ export default function VaultDataWorkspace() {
   useEffect(() => {
     if (sourceId) {
       loadWorkspaceData(sourceId);
+      loadSavedViews(sourceId);
     }
   }, [sourceId]);
 
@@ -69,6 +82,15 @@ export default function VaultDataWorkspace() {
     }
   };
 
+  const loadSavedViews = async (id: string) => {
+    try {
+      const views = await vaultApi.getSavedViews(id);
+      setSavedViews(views);
+    } catch {
+      // silent
+    }
+  };
+
   const handleRenameCollection = async () => {
     if (!collection || !titleName.trim()) return;
     try {
@@ -80,9 +102,34 @@ export default function VaultDataWorkspace() {
     }
   };
 
+  const validateRecordInput = (): boolean => {
+    if (!newRecordName.trim()) {
+      setValidationError('Record Name is required');
+      return false;
+    }
+
+    const fields: VaultSchemaField[] = collection?.schema_fields || [];
+    for (const f of fields) {
+      if (f.required && !newRecordData[f.key]) {
+        setValidationError(`Field "${f.name}" is required.`);
+        return false;
+      }
+      if (f.type === 'Number' && newRecordData[f.key] !== undefined && newRecordData[f.key] !== '') {
+        if (isNaN(Number(newRecordData[f.key]))) {
+          setValidationError(`Field "${f.name}" must be a valid number.`);
+          return false;
+        }
+      }
+    }
+
+    setValidationError(null);
+    return true;
+  };
+
   const handleCreateRecord = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!collection || !newRecordName.trim()) return;
+    if (!collection) return;
+    if (!validateRecordInput()) return;
 
     try {
       const created = await vaultApi.createRecord(collection.id, {
@@ -93,9 +140,30 @@ export default function VaultDataWorkspace() {
       setRecords([created, ...(records || [])]);
       setNewRecordName('');
       setNewRecordData({});
+      setValidationError(null);
       setIsAddRecordOpen(false);
-    } catch (err) {
-      console.error('Failed to create record', err);
+    } catch (err: any) {
+      setValidationError(err.message || 'Failed to create record');
+    }
+  };
+
+  const handleSaveView = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!collection || !newViewName.trim()) return;
+
+    try {
+      const createdView = await vaultApi.createSavedView({
+        collection_id: collection.id,
+        name: newViewName.trim(),
+        is_shared: true,
+        columns_config: collection.schema_fields || []
+      });
+      setSavedViews([createdView, ...savedViews]);
+      setActiveViewId(createdView.id);
+      setNewViewName('');
+      setIsSaveViewOpen(false);
+    } catch {
+      // silent
     }
   };
 
@@ -143,19 +211,19 @@ export default function VaultDataWorkspace() {
   });
 
   if (isLoading) {
-    return <div className="h-full flex items-center justify-center text-slate-400">Loading Data Workspace...</div>;
+    return <div className="h-full flex items-center justify-center text-slate-400 font-bold">Loading Data Workspace...</div>;
   }
 
   if (error || !collection) {
-    return <div className="h-full flex items-center justify-center text-red-500">{error || 'Data Workspace not found'}</div>;
+    return <div className="h-full flex items-center justify-center text-red-500 font-bold">{error || 'Data Workspace not found'}</div>;
   }
 
   const fields: VaultSchemaField[] = collection.schema_fields || [];
 
   return (
-    <div className="mx-auto max-w-7xl h-full flex flex-col space-y-6 animate-in fade-in duration-300">
+    <div className="mx-auto max-w-7xl h-full flex flex-col space-y-6 animate-in fade-in duration-300 select-none">
       {/* ─── HEADER BAR ───────── */}
-      <div className="flex flex-col gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <div className="flex flex-col gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
         <div className="flex items-center justify-between">
           <button
             onClick={() => navigate('/vault/collections')}
@@ -164,6 +232,12 @@ export default function VaultDataWorkspace() {
             <ArrowLeft size={14} /> Back to Collections
           </button>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsShareModalOpen(true)}
+              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
+            >
+              <Share2 size={14} /> Share Access
+            </button>
             <button
               onClick={() => setIsExportModalOpen(true)}
               className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
@@ -215,12 +289,33 @@ export default function VaultDataWorkspace() {
             <p className="text-xs text-slate-500 mt-1 ml-13">{collection.description || 'Enterprise spatial data source repository.'}</p>
           </div>
 
-          <div className="flex items-center gap-6 text-xs font-semibold text-slate-600 bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200">
-            <div>Records: <span className="font-bold text-slate-900">{records.length}</span></div>
-            <div className="h-4 w-px bg-slate-200"></div>
-            <div>Fields: <span className="font-bold text-slate-900">{fields.length}</span></div>
-            <div className="h-4 w-px bg-slate-200"></div>
-            <div>Status: <span className="inline-flex items-center gap-1 text-emerald-700 font-bold"><CheckCircle2 size={12} /> Active</span></div>
+          <div className="flex items-center gap-4">
+            {/* Saved View Selector */}
+            <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+              <Bookmark size={14} className="text-emerald-600" />
+              <select
+                value={activeViewId}
+                onChange={(e) => setActiveViewId(e.target.value)}
+                className="bg-transparent text-xs font-bold text-slate-700 outline-none cursor-pointer"
+              >
+                <option value="default">Default View</option>
+                {savedViews.map((v) => (
+                  <option key={v.id} value={v.id}>{v.name}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => setIsSaveViewOpen(true)}
+                className="text-[10px] font-extrabold text-emerald-600 hover:underline pl-1"
+              >
+                + Save View
+              </button>
+            </div>
+
+            <div className="flex items-center gap-4 text-xs font-semibold text-slate-600 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
+              <div>Records: <span className="font-bold text-slate-900">{records.length}</span></div>
+              <div className="h-4 w-px bg-slate-200"></div>
+              <div>Fields: <span className="font-bold text-slate-900">{fields.length}</span></div>
+            </div>
           </div>
         </div>
       </div>
@@ -253,21 +348,21 @@ export default function VaultDataWorkspace() {
           <div className="flex items-center gap-1 rounded-lg border border-slate-200 p-1 bg-slate-50">
             <button
               onClick={() => setViewMode('table')}
-              className={`p-1.5 rounded-md ${viewMode === 'table' ? 'bg-white shadow-xs text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`p-1.5 rounded-md ${viewMode === 'table' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
             >
               <List size={16} />
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-xs text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`p-1.5 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
             >
               <Grid size={16} />
             </button>
           </div>
 
           <button
-            onClick={() => setIsAddRecordOpen(true)}
-            className="flex h-10 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700"
+            onClick={() => { setValidationError(null); setIsAddRecordOpen(true); }}
+            className="flex h-10 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-700"
           >
             <Plus size={16} /> Add Record
           </button>
@@ -283,7 +378,7 @@ export default function VaultDataWorkspace() {
             <button onClick={() => setIsAddRecordOpen(true)} className="mt-3 text-xs font-bold text-emerald-600 hover:underline">+ Add First Record</button>
           </div>
         ) : viewMode === 'table' ? (
-          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xs">
             <table className="w-full text-left text-xs text-slate-600">
               <thead className="bg-slate-50 text-[11px] uppercase font-bold text-slate-500 border-b border-slate-200">
                 <tr>
@@ -357,7 +452,7 @@ export default function VaultDataWorkspace() {
               <div
                 key={rec.id}
                 onClick={() => setActiveRecord(rec)}
-                className="cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-emerald-300 hover:shadow-md transition flex flex-col justify-between"
+                className="cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs hover:border-emerald-300 hover:shadow-md transition flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
@@ -394,6 +489,13 @@ export default function VaultDataWorkspace() {
               <button onClick={() => setIsAddRecordOpen(false)} className="text-slate-400 hover:text-slate-700"><X size={18} /></button>
             </div>
             <form onSubmit={handleCreateRecord} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              {validationError && (
+                <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-bold text-rose-800 border border-rose-200">
+                  <AlertCircle size={16} />
+                  <span>{validationError}</span>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Record Name *</label>
                 <input
@@ -401,7 +503,7 @@ export default function VaultDataWorkspace() {
                   required
                   value={newRecordName}
                   onChange={(e) => setNewRecordName(e.target.value)}
-                  placeholder="e.g. Pump Assembly A-10"
+                  placeholder="e.g. Compressor Specification Record #1"
                   className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs font-semibold outline-none focus:border-emerald-500"
                 />
               </div>
@@ -423,6 +525,30 @@ export default function VaultDataWorkspace() {
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button type="button" onClick={() => setIsAddRecordOpen(false)} className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
                 <button type="submit" className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs">Save Record</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── SAVE VIEW MODAL ───────── */}
+      {isSaveViewOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white shadow-2xl p-6">
+            <h3 className="text-sm font-bold text-slate-900 mb-2">Save Custom View</h3>
+            <p className="text-xs text-slate-500 mb-4">Save your current columns and layout filters for easy team reuse.</p>
+            <form onSubmit={handleSaveView} className="space-y-4">
+              <input
+                type="text"
+                required
+                value={newViewName}
+                onChange={(e) => setNewViewName(e.target.value)}
+                placeholder="View Name (e.g. Approved Specs)"
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium focus:border-emerald-500 outline-none"
+              />
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => setIsSaveViewOpen(false)} className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                <button type="submit" className="px-4 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs">Save</button>
               </div>
             </form>
           </div>
@@ -493,6 +619,13 @@ export default function VaultDataWorkspace() {
             records={filteredRecords}
             isOpen={isExportModalOpen}
             onClose={() => setIsExportModalOpen(false)}
+          />
+          <VaultShareModal
+            isOpen={isShareModalOpen}
+            onClose={() => setIsShareModalOpen(false)}
+            resourceType="dataset"
+            resourceId={collection.id}
+            resourceName={collection.name}
           />
         </>
       )}

@@ -970,4 +970,218 @@ vaultRouter.get('/activity', async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------
+// SAVED VIEWS API
+// ---------------------------------------------------------
+
+// GET /api/vault/views
+vaultRouter.get('/views', async (req, res) => {
+  try {
+    const { organization_id, id: userId } = req.user;
+    const { collection_id } = req.query;
+
+    let queryStr = `SELECT * FROM vault_saved_views WHERE organization_id = $1 AND (user_id = $2 OR is_shared = true)`;
+    const params = [organization_id, userId];
+
+    if (collection_id) {
+      params.push(collection_id);
+      queryStr += ` AND collection_id = $${params.length}`;
+    }
+
+    queryStr += ` ORDER BY created_at DESC`;
+
+    const result = await pool.query(queryStr, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Vault GET Views Error:', error);
+    res.status(500).json({ error: 'Failed to fetch saved views' });
+  }
+});
+
+// POST /api/vault/views
+vaultRouter.post('/views', async (req, res) => {
+  try {
+    const { organization_id, id: userId, name: userName } = req.user;
+    const { collection_id = 'default', name, columns_config = [], filters_config = [], sort_config = {}, is_shared = false } = req.body;
+
+    if (!name) return res.status(400).json({ error: 'View name is required' });
+
+    const result = await pool.query(
+      `INSERT INTO vault_saved_views (organization_id, user_id, collection_id, name, columns_config, filters_config, sort_config, is_shared)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [organization_id, userId, collection_id, name, JSON.stringify(columns_config), JSON.stringify(filters_config), JSON.stringify(sort_config), is_shared]
+    );
+
+    await logActivity(organization_id, userId, userName, 'Saved Custom View', 'View', result.rows[0].id, name);
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Vault POST View Error:', error);
+    res.status(500).json({ error: 'Failed to create saved view' });
+  }
+});
+
+// DELETE /api/vault/views/:id
+vaultRouter.delete('/views/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id, id: userId } = req.user;
+
+    await pool.query(
+      `DELETE FROM vault_saved_views WHERE id = $1 AND organization_id = $2 AND (user_id = $3 OR $4 = 'Admin')`,
+      [id, organization_id, userId, req.user.role]
+    );
+
+    res.json({ message: 'Saved view deleted' });
+  } catch (error) {
+    console.error('Vault DELETE View Error:', error);
+    res.status(500).json({ error: 'Failed to delete saved view' });
+  }
+});
+
+// ---------------------------------------------------------
+// RESOURCE SHARING API
+// ---------------------------------------------------------
+
+// GET /api/vault/shares
+vaultRouter.get('/shares', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const { resource_type, resource_id } = req.query;
+
+    let queryStr = `SELECT s.*, u.name as shared_with_name, u.email as shared_with_email 
+                    FROM vault_shares s
+                    LEFT JOIN users u ON s.shared_with_user_id = u.id
+                    WHERE s.organization_id = $1`;
+    const params = [organization_id];
+
+    if (resource_type && resource_id) {
+      params.push(resource_type, resource_id);
+      queryStr += ` AND s.resource_type = $2 AND s.resource_id = $3`;
+    }
+
+    const result = await pool.query(queryStr, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Vault GET Shares Error:', error);
+    res.status(500).json({ error: 'Failed to fetch shares' });
+  }
+});
+
+// POST /api/vault/shares
+vaultRouter.post('/shares', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { organization_id, id: userId, name: userName } = req.user;
+    const { resource_type, resource_id, shared_with_user_id, permission_level = 'view' } = req.body;
+
+    if (!resource_type || !resource_id || !shared_with_user_id) {
+      return res.status(400).json({ error: 'Resource type, resource ID, and user ID are required' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO vault_shares (organization_id, resource_type, resource_id, shared_with_user_id, permission_level, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [organization_id, resource_type, resource_id, shared_with_user_id, permission_level, userId]
+    );
+
+    await logActivity(organization_id, userId, userName, `Shared ${resource_type} (${permission_level})`, 'Share', result.rows[0].id, resource_id);
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Vault POST Share Error:', error);
+    res.status(500).json({ error: 'Failed to share resource' });
+  }
+});
+
+// DELETE /api/vault/shares/:id
+vaultRouter.delete('/shares/:id', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+
+    await pool.query(`DELETE FROM vault_shares WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
+    res.json({ message: 'Resource share revoked' });
+  } catch (error) {
+    console.error('Vault DELETE Share Error:', error);
+    res.status(500).json({ error: 'Failed to revoke share' });
+  }
+});
+
+// ---------------------------------------------------------
+// APPROVAL WORKFLOWS & VERSION RESTORE
+// ---------------------------------------------------------
+
+// POST /api/vault/assets/:id/approval
+vaultRouter.post('/assets/:id/approval', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id, id: userId, name: userName } = req.user;
+    const { approval_status = 'Approved', review_notes = '' } = req.body;
+
+    const check = await pool.query(`SELECT name FROM vault_assets WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
+    if (check.rows.length === 0) return res.status(404).json({ error: 'Asset not found' });
+
+    const updated = await pool.query(
+      `UPDATE vault_assets SET approval_status = $1, updated_at = now() WHERE id = $2 AND organization_id = $3 RETURNING *`,
+      [approval_status, id, organization_id]
+    );
+
+    await pool.query(
+      `INSERT INTO vault_approval_workflows (organization_id, resource_type, resource_id, approval_status, requested_by, reviewed_by, review_notes, reviewed_at)
+       VALUES ($1, 'asset', $2, $3, $4, $4, $5, now())`,
+      [organization_id, id, approval_status, userId, review_notes]
+    );
+
+    await logActivity(organization_id, userId, userName, `Updated Approval Status to ${approval_status}`, 'Asset', id, check.rows[0].name);
+
+    res.json(updated.rows[0]);
+  } catch (error) {
+    console.error('Vault Approval Error:', error);
+    res.status(500).json({ error: 'Failed to update approval status' });
+  }
+});
+
+// POST /api/vault/assets/:id/versions/:versionId/restore
+vaultRouter.post('/assets/:id/versions/:versionId/restore', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { id, versionId } = req.params;
+    const { organization_id, id: userId, name: userName } = req.user;
+
+    const versionCheck = await pool.query(`SELECT * FROM vault_asset_versions WHERE id = $1 AND asset_id = $2`, [versionId, id]);
+    if (versionCheck.rows.length === 0) return res.status(404).json({ error: 'Asset version not found' });
+
+    const targetVer = versionCheck.rows[0];
+
+    const currentVersions = await pool.query(`SELECT MAX(version_number) as max_v FROM vault_asset_versions WHERE asset_id = $1`, [id]);
+    const nextVersionNum = (currentVersions.rows[0].max_v || 1) + 1;
+
+    // Create a new version representing the restored state
+    await pool.query(
+      `INSERT INTO vault_asset_versions (
+         asset_id, version_number, original_name, storage_key, 
+         public_url, mime_type, size_bytes, change_description, created_by
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        id, nextVersionNum, targetVer.original_name, targetVer.storage_key,
+        targetVer.public_url, targetVer.mime_type, targetVer.size_bytes,
+        `Restored from version v${targetVer.version_number}`, userId
+      ]
+    );
+
+    const updated = await pool.query(
+      `UPDATE vault_assets 
+       SET storage_key = $1, public_url = $2, mime_type = $3, size_bytes = $4, original_name = $5, updated_at = now()
+       WHERE id = $6 AND organization_id = $7 RETURNING *`,
+      [targetVer.storage_key, targetVer.public_url, targetVer.mime_type, targetVer.size_bytes, targetVer.original_name, id, organization_id]
+    );
+
+    await logActivity(organization_id, userId, userName, `Restored Version v${targetVer.version_number} to v${nextVersionNum}`, 'Asset', id, updated.rows[0].name);
+
+    res.json(updated.rows[0]);
+  } catch (error) {
+    console.error('Vault Version Restore Error:', error);
+    res.status(500).json({ error: 'Failed to restore asset version' });
+  }
+});
+
 export { vaultRouter };

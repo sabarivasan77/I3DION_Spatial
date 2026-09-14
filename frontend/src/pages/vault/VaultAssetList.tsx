@@ -11,13 +11,17 @@ import {
   Grid,
   List,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  ShieldCheck,
+  Share2
 } from 'lucide-react';
 import { vaultApi, VaultAsset } from '../../api/vaultApi';
+import { VaultShareModal } from '../../components/vault/VaultShareModal';
 
 export default function VaultAssetList() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [assets, setAssets] = useState<VaultAsset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,15 +29,19 @@ export default function VaultAssetList() {
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  // Share Modal state
+  const [sharingAsset, setSharingAsset] = useState<VaultAsset | null>(null);
+
   useEffect(() => {
     loadAssets();
-  }, [search, activeTab]);
+  }, [search, activeTab, statusFilter]);
 
   const loadAssets = async () => {
     setIsLoading(true);
     try {
       const typeFilter = activeTab === 'All' ? undefined : activeTab.endsWith('s') ? activeTab.slice(0, -1) : activeTab;
-      const data = await vaultApi.getAssets({ search, type: typeFilter });
+      const statusParam = statusFilter === 'All' ? undefined : statusFilter;
+      const data = await vaultApi.getAssets({ search, type: typeFilter, status: statusParam });
       setAssets(Array.isArray(data) ? data : []);
       setError('');
     } catch (err: any) {
@@ -87,11 +95,11 @@ export default function VaultAssetList() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl h-full flex flex-col space-y-6 animate-in fade-in duration-300">
+    <div className="mx-auto max-w-7xl h-full flex flex-col space-y-6 animate-in fade-in duration-300 select-none">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Enterprise Asset Repository</h1>
-          <p className="text-xs text-slate-500 mt-0.5">3D Models, spatial media, and binary assets.</p>
+          <p className="text-xs text-slate-500 mt-0.5">3D Models, spatial media, and binary assets with version control.</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -104,6 +112,17 @@ export default function VaultAssetList() {
               className="h-10 w-64 rounded-xl border border-slate-200 pl-9 pr-4 text-xs font-semibold outline-none focus:border-emerald-500"
             />
           </div>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 focus:outline-none focus:border-emerald-500"
+          >
+            <option value="All">All Statuses</option>
+            <option value="Ready">Ready</option>
+            <option value="Processing">Processing</option>
+            <option value="Warning">Warning</option>
+          </select>
 
           {selectedIds.length > 0 && (
             <button
@@ -124,7 +143,7 @@ export default function VaultAssetList() {
 
           <button
             onClick={() => navigate('/vault/upload')}
-            className="flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700"
+            className="flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-700"
           >
             <UploadCloud size={16} />
             <span className="hidden sm:inline">Upload Asset</span>
@@ -151,13 +170,13 @@ export default function VaultAssetList() {
         <div className="hidden sm:flex items-center gap-1 rounded-lg border border-slate-200 p-1 bg-slate-50 mb-2">
           <button
             onClick={() => setViewMode('list')}
-            className={`p-1.5 rounded-md ${viewMode === 'list' ? 'bg-white shadow-xs text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`p-1.5 rounded-md ${viewMode === 'list' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
           >
             <List size={16} />
           </button>
           <button
             onClick={() => setViewMode('grid')}
-            className={`p-1.5 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-xs text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`p-1.5 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
           >
             <Grid size={16} />
           </button>
@@ -166,9 +185,9 @@ export default function VaultAssetList() {
 
       <div className="flex-1 overflow-auto">
         {isLoading ? (
-          <div className="flex h-64 items-center justify-center text-slate-400">Loading assets...</div>
+          <div className="flex h-64 items-center justify-center text-slate-400 font-bold">Loading assets...</div>
         ) : error ? (
-          <div className="flex h-64 items-center justify-center text-red-500">{error}</div>
+          <div className="flex h-64 items-center justify-center text-red-500 font-bold">{error}</div>
         ) : (!assets || assets.length === 0) ? (
           <div className="flex h-64 items-center justify-center text-slate-400 flex-col rounded-2xl border border-slate-200 bg-white">
             <Box size={48} className="mb-4 opacity-40 text-emerald-600" />
@@ -176,7 +195,7 @@ export default function VaultAssetList() {
             <button onClick={() => navigate('/vault/upload')} className="mt-3 text-xs font-bold text-emerald-600 hover:underline">+ Upload Asset</button>
           </div>
         ) : viewMode === 'list' ? (
-          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xs">
             <table className="w-full text-left text-xs text-slate-600">
               <thead className="bg-slate-50 text-[11px] uppercase font-bold text-slate-500 border-b border-slate-200">
                 <tr>
@@ -195,6 +214,7 @@ export default function VaultAssetList() {
                   <th className="px-6 py-4 font-bold">Type</th>
                   <th className="px-6 py-4 font-bold">Size</th>
                   <th className="px-6 py-4 font-bold">Status</th>
+                  <th className="px-6 py-4 font-bold">Approval</th>
                   <th className="px-6 py-4 font-bold">Updated</th>
                   <th className="px-6 py-4 font-bold text-right">Actions</th>
                 </tr>
@@ -232,15 +252,29 @@ export default function VaultAssetList() {
                           {asset.status}
                         </span>
                       </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-100">
+                          <ShieldCheck size={10} /> Approved
+                        </span>
+                      </td>
                       <td className="px-6 py-4 text-slate-400">{new Date(asset.updated_at).toLocaleDateString()}</td>
                       <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
-                        <button
-                          onClick={() => handleDeleteSingle(asset.id)}
-                          className="text-slate-400 hover:text-red-600 transition p-1"
-                          title="Move to Trash"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => setSharingAsset(asset)}
+                            className="text-slate-400 hover:text-blue-600 transition p-1.5 rounded-lg hover:bg-slate-100"
+                            title="Share Permissions"
+                          >
+                            <Share2 size={15} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSingle(asset.id)}
+                            className="text-slate-400 hover:text-red-600 transition p-1.5 rounded-lg hover:bg-red-50"
+                            title="Move to Trash"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -256,7 +290,7 @@ export default function VaultAssetList() {
                 <div
                   key={asset.id}
                   onClick={() => navigate(`/vault/assets/${asset.id}`)}
-                  className="group cursor-pointer rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-emerald-300 hover:shadow-md overflow-hidden flex flex-col justify-between"
+                  className="group cursor-pointer rounded-2xl border border-slate-200 bg-white shadow-2xs transition hover:border-emerald-300 hover:shadow-md overflow-hidden flex flex-col justify-between"
                 >
                   <div className="flex h-44 w-full items-center justify-center bg-slate-100 text-slate-400 relative">
                     {asset.type === 'Image' ? (
@@ -264,7 +298,7 @@ export default function VaultAssetList() {
                     ) : (
                       <Icon size={56} className="opacity-20 text-slate-600" />
                     )}
-                    <div className="absolute top-3 right-3">
+                    <div className="absolute top-3 right-3 flex gap-1">
                       <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${
                         asset.status === 'Ready' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
                       }`}>
@@ -281,8 +315,16 @@ export default function VaultAssetList() {
                     <div className="mt-4 flex gap-2">
                       <button className="flex-1 rounded-xl border border-slate-200 py-1.5 text-xs font-bold hover:bg-slate-50 text-slate-700">Open Detail</button>
                       <button
+                        onClick={(e) => { e.stopPropagation(); setSharingAsset(asset); }}
+                        className="rounded-xl border border-slate-200 p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                        title="Share"
+                      >
+                        <Share2 size={14} />
+                      </button>
+                      <button
                         onClick={(e) => { e.stopPropagation(); handleDeleteSingle(asset.id); }}
                         className="rounded-xl border border-slate-200 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                        title="Trash"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -294,6 +336,16 @@ export default function VaultAssetList() {
           </div>
         )}
       </div>
+
+      {sharingAsset && (
+        <VaultShareModal
+          isOpen={!!sharingAsset}
+          onClose={() => setSharingAsset(null)}
+          resourceType="asset"
+          resourceId={sharingAsset.id}
+          resourceName={sharingAsset.name}
+        />
+      )}
     </div>
   );
 }

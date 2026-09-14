@@ -163,12 +163,54 @@ export async function ensureMigrated() {
         ('Lead Propensity Scorer', 'v2.1', 'Active', '{"accuracy": 0.92, "f1_score": 0.89}'::jsonb),
         ('Spatial Recommender Engine', 'v1.4', 'Active', '{"precision": 0.88, "recall": 0.85}'::jsonb)
       ON CONFLICT DO NOTHING;
+
+      CREATE TABLE IF NOT EXISTS vault_saved_views (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+        collection_id text NOT NULL,
+        name text NOT NULL,
+        is_shared boolean NOT NULL DEFAULT false,
+        columns_config jsonb NOT NULL DEFAULT '[]'::jsonb,
+        filters_config jsonb NOT NULL DEFAULT '[]'::jsonb,
+        sort_config jsonb NOT NULL DEFAULT '{}'::jsonb,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      CREATE TABLE IF NOT EXISTS vault_shares (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        resource_type text NOT NULL CHECK (resource_type IN ('asset', 'collection', 'dataset')),
+        resource_id uuid NOT NULL,
+        shared_with_user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+        permission_level text NOT NULL DEFAULT 'view' CHECK (permission_level IN ('view', 'comment', 'edit', 'admin')),
+        created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+        created_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      CREATE TABLE IF NOT EXISTS vault_approval_workflows (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        resource_type text NOT NULL CHECK (resource_type IN ('asset', 'record')),
+        resource_id uuid NOT NULL,
+        version_id uuid,
+        approval_status text NOT NULL DEFAULT 'Draft' CHECK (approval_status IN ('Draft', 'Submitted', 'Under Review', 'Approved', 'Rejected')),
+        requested_by uuid REFERENCES users(id) ON DELETE SET NULL,
+        reviewed_by uuid REFERENCES users(id) ON DELETE SET NULL,
+        review_notes text,
+        submitted_at timestamptz NOT NULL DEFAULT now(),
+        reviewed_at timestamptz
+      );
     `);
     
     // Non-blocking schema enhancements & Spatial Hub Seeding
     await pool.query(`
       ALTER TABLE products ADD COLUMN IF NOT EXISTS visibility text DEFAULT 'PUBLIC';
       ALTER TABLE products ADD COLUMN IF NOT EXISTS approval_status text DEFAULT 'PUBLISHED';
+      ALTER TABLE vault_assets ADD COLUMN IF NOT EXISTS approval_status text DEFAULT 'Approved';
+      ALTER TABLE vault_assets ADD COLUMN IF NOT EXISTS major_version integer DEFAULT 1;
+      ALTER TABLE vault_assets ADD COLUMN IF NOT EXISTS minor_version integer DEFAULT 0;
     `).catch(() => {});
 
     try {
