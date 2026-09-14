@@ -35,6 +35,7 @@ const CreatorProfilePage = lazyWithRetry(() => import('./pages/hub/CreatorProfil
 const HubSavedPage = lazyWithRetry(() => import('./pages/hub/HubSavedPage').then((m) => ({ default: m.HubSavedPage })));
 const HubLikedPage = lazyWithRetry(() => import('./pages/hub/HubLikedPage').then((m) => ({ default: m.HubLikedPage })));
 const HubSubscriptionsPage = lazyWithRetry(() => import('./pages/hub/HubSubscriptionsPage').then((m) => ({ default: m.HubSubscriptionsPage })));
+const HubNotificationsPage = lazyWithRetry(() => import('./pages/hub/HubNotificationsPage').then((m) => ({ default: m.HubNotificationsPage })));
 const HubOrganizationPage = lazyWithRetry(() => import('./pages/hub/HubOrganizationPage').then((m) => ({ default: m.HubOrganizationPage })));
 
 const ProfilePage = lazyWithRetry(() => import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
@@ -117,6 +118,7 @@ export default function App() {
           <Route path="hub/saved" element={<HubSavedPage />} />
           <Route path="hub/liked" element={<HubLikedPage />} />
           <Route path="hub/subscriptions" element={<HubSubscriptionsPage />} />
+          <Route path="hub/notifications" element={<HubNotificationsPage />} />
           <Route path="hub/organization" element={<HubOrganizationPage />} />
           <Route path="hub/organization/:tab" element={<HubOrganizationPage />} />
           <Route path="hub/company/:id" element={<HubOrganizationPage />} />

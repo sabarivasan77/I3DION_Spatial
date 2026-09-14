@@ -148,6 +148,19 @@ export default function SpatialHubLayout() {
             <span>Subscriptions</span>
           </NavLink>
 
+          <NavLink
+            to="/hub/notifications"
+            onClick={() => setMobileSidebarOpen(false)}
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-bold transition ${
+                isActive ? 'bg-[#2563EB] text-white shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+              }`
+            }
+          >
+            <Bell size={17} />
+            <span>Notifications</span>
+          </NavLink>
+
           {/* Organization Navigation Section */}
           {isOrgUser ? (
             <div className="pt-3">
@@ -308,15 +321,6 @@ export default function SpatialHubLayout() {
           <div className="flex items-center gap-3">
             {/* App Launcher */}
             <AppLauncher />
-
-            {/* Notification Bell */}
-            <button
-              title="Notifications"
-              className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50 transition"
-            >
-              <Bell size={17} />
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-blue-600 ring-2 ring-white" />
-            </button>
 
             {/* User Profile Menu */}
             <div className="relative">
