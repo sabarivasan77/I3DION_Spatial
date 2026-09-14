@@ -1248,5 +1248,289 @@ vaultRouter.get('/search', async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------
+// ECOSYSTEM ENQUIRIES / LEAD INGESTION & MANAGEMENT APIs
+// ---------------------------------------------------------
+
+// GET /api/vault/enquiries
+vaultRouter.get('/enquiries', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const { search, source_application, status, priority } = req.query;
+
+    let queryStr = `SELECT e.*, p.name as product_name, c.name as catalog_name
+                    FROM vault_enquiries e
+                    LEFT JOIN products p ON e.product_id = p.id
+                    LEFT JOIN catalogs c ON e.catalog_id = c.id
+                    WHERE e.organization_id = $1`;
+    const params = [organization_id];
+
+    if (search) {
+      params.push(`%${search}%`);
+      queryStr += ` AND (e.customer_name ILIKE $${params.length} OR e.email ILIKE $${params.length} OR e.company ILIKE $${params.length} OR e.message ILIKE $${params.length})`;
+    }
+
+    if (source_application && source_application !== 'All') {
+      params.push(source_application);
+      queryStr += ` AND e.source_application = $${params.length}`;
+    }
+
+    if (status && status !== 'All') {
+      params.push(status);
+      queryStr += ` AND e.status = $${params.length}`;
+    }
+
+    if (priority && priority !== 'All') {
+      params.push(priority);
+      queryStr += ` AND e.priority = $${params.length}`;
+    }
+
+    queryStr += ` ORDER BY e.created_at DESC`;
+
+    const result = await pool.query(queryStr, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Vault GET Enquiries Error:', error);
+    res.status(500).json({ error: 'Failed to fetch enquiries' });
+  }
+});
+
+// POST /api/vault/enquiries (Create/Ingest Enquiry in Vault)
+vaultRouter.post('/enquiries', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const {
+      source_application = 'Spatial Hub',
+      product_id,
+      catalog_id,
+      customer_name,
+      company = '',
+      email,
+      phone = '',
+      message = '',
+      priority = 'Medium',
+      metadata = {}
+    } = req.body;
+
+    if (!customer_name || !email) {
+      return res.status(400).json({ error: 'customer_name and email are required' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO vault_enquiries (
+         organization_id, source_application, product_id, catalog_id,
+         customer_name, company, email, phone, message, priority, metadata
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING *`,
+      [
+        organization_id, source_application, product_id || null, catalog_id || null,
+        customer_name, company, email, phone, message, priority, JSON.stringify(metadata)
+      ]
+    );
+
+    await logActivity(organization_id, req.user.id, req.user.name, 'INGEST_ENQUIRY', 'Enquiry', result.rows[0].id, customer_name, { source_application, email });
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Vault Create Enquiry Error:', error);
+    res.status(500).json({ error: 'Failed to create enquiry' });
+  }
+});
+
+// PATCH /api/vault/enquiries/:id
+vaultRouter.patch('/enquiries/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const { status, priority, assigned_to, notes } = req.body;
+
+    const updates = [];
+    const params = [id, organization_id];
+
+    if (status) {
+      params.push(status);
+      updates.push(`status = $${params.length}`);
+    }
+    if (priority) {
+      params.push(priority);
+      updates.push(`priority = $${params.length}`);
+    }
+    if (assigned_to !== undefined) {
+      params.push(assigned_to || null);
+      updates.push(`assigned_to = $${params.length}`);
+    }
+    updates.push(`updated_at = NOW()`);
+
+    const result = await pool.query(
+      `UPDATE vault_enquiries SET ${updates.join(', ')} WHERE id = $1 AND organization_id = $2 RETURNING *`,
+      params
+    );
+
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Enquiry not found' });
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Vault Update Enquiry Error:', error);
+    res.status(500).json({ error: 'Failed to update enquiry' });
+  }
+});
+
+// ---------------------------------------------------------
+// PRODUCT DETAIL & EXPANDED MANAGEMENT APIs
+// ---------------------------------------------------------
+
+// GET /api/vault/products/:id
+vaultRouter.get('/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+
+    const prodRes = await pool.query(
+      `SELECT p.*, c.name as catalog_name
+       FROM products p
+       LEFT JOIN catalogs c ON p.catalog_id = c.id
+       WHERE p.id = $1 AND p.organization_id = $2`,
+      [id, organization_id]
+    );
+
+    if (prodRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    const product = prodRes.rows[0];
+
+    // Fetch related assets (3D models, images, documents)
+    const assetsRes = await pool.query(
+      `SELECT id, name, type, category, status, public_url, size_bytes, created_at
+       FROM vault_assets
+       WHERE organization_id = $1 AND is_deleted = false AND (
+         category ILIKE $2 OR name ILIKE $2 OR description ILIKE $2
+       )`,
+      [organization_id, `%${product.name}%`]
+    );
+
+    product.associated_assets = assetsRes.rows;
+
+    res.json(product);
+  } catch (error) {
+    console.error('Vault GET Product Detail Error:', error);
+    res.status(500).json({ error: 'Failed to fetch product details' });
+  }
+});
+
+// PATCH /api/vault/products/:id
+vaultRouter.patch('/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const { name, category, description, status, is_public, specs, dimensions } = req.body;
+
+    const updates = [];
+    const params = [id, organization_id];
+
+    if (name) {
+      params.push(name);
+      updates.push(`name = $${params.length}`);
+    }
+    if (category) {
+      params.push(category);
+      updates.push(`category = $${params.length}`);
+    }
+    if (description !== undefined) {
+      params.push(description);
+      updates.push(`description = $${params.length}`);
+    }
+    if (status) {
+      params.push(status);
+      updates.push(`status = $${params.length}`);
+    }
+    if (is_public !== undefined) {
+      params.push(is_public);
+      updates.push(`is_public = $${params.length}`);
+    }
+    if (specs) {
+      params.push(JSON.stringify(specs));
+      updates.push(`specs = $${params.length}`);
+    }
+    if (dimensions) {
+      params.push(JSON.stringify(dimensions));
+      updates.push(`dimensions = $${params.length}`);
+    }
+    updates.push(`updated_at = NOW()`);
+
+    const result = await pool.query(
+      `UPDATE products SET ${updates.join(', ')} WHERE id = $1 AND organization_id = $2 RETURNING *`,
+      params
+    );
+
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+
+    await logActivity(organization_id, req.user.id, req.user.name, 'UPDATE_PRODUCT', 'Product', id, result.rows[0].name);
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Vault PATCH Product Error:', error);
+    res.status(500).json({ error: 'Failed to update product' });
+  }
+});
+
+// ---------------------------------------------------------
+// CATALOG PRODUCT REORDERING APIs
+// ---------------------------------------------------------
+
+// GET /api/vault/catalogs/:id/products
+vaultRouter.get('/catalogs/:id/products', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+
+    const result = await pool.query(
+      `SELECT p.*, COALESCE(o.display_order, 0) as display_order
+       FROM products p
+       LEFT JOIN catalog_products_ordering o ON p.id = o.product_id AND o.catalog_id = $1
+       WHERE p.organization_id = $2 AND p.catalog_id = $1
+       ORDER BY display_order ASC, p.created_at DESC`,
+      [id, organization_id]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Vault GET Catalog Products Error:', error);
+    res.status(500).json({ error: 'Failed to fetch catalog products' });
+  }
+});
+
+// POST /api/vault/catalogs/:id/reorder
+vaultRouter.post('/catalogs/:id/reorder', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const { product_ids } = req.body; // Array of product UUIDs in desired order
+
+    if (!Array.isArray(product_ids)) {
+      return res.status(400).json({ error: 'product_ids must be an array' });
+    }
+
+    for (let index = 0; index < product_ids.length; index++) {
+      const prodId = product_ids[index];
+      await pool.query(
+        `INSERT INTO catalog_products_ordering (catalog_id, product_id, display_order)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (catalog_id, product_id)
+         DO UPDATE SET display_order = EXCLUDED.display_order`,
+        [id, prodId, index]
+      );
+    }
+
+    await logActivity(organization_id, req.user.id, req.user.name, 'REORDER_CATALOG_PRODUCTS', 'Catalog', id, 'Catalog Product Order');
+
+    res.json({ message: 'Product order saved successfully', count: product_ids.length });
+  } catch (error) {
+    console.error('Vault Reorder Catalog Error:', error);
+    res.status(500).json({ error: 'Failed to reorder catalog products' });
+  }
+});
+
 export { vaultRouter };
+
 

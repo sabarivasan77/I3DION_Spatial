@@ -12,7 +12,6 @@ import {
   Trash2,
   Edit3,
   X,
-  CheckCircle2,
   Database,
   FileText,
   Share2,

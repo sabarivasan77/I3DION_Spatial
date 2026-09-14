@@ -15,7 +15,10 @@ import {
   UploadCloud,
   Search,
   Database,
-  ArrowRight
+  ArrowRight,
+  Package,
+  ListOrdered,
+  Inbox
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { AppLauncher } from '../components/AppLauncher';
@@ -118,6 +121,45 @@ export default function VaultLayout() {
           >
             <Box size={18} />
             <span>Assets</span>
+          </NavLink>
+
+          <NavLink
+            to="/vault/products"
+            onClick={() => setMobileSidebarOpen(false)}
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
+                isActive ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'
+              }`
+            }
+          >
+            <Package size={18} />
+            <span>Products</span>
+          </NavLink>
+
+          <NavLink
+            to="/vault/catalogs"
+            onClick={() => setMobileSidebarOpen(false)}
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
+                isActive ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'
+              }`
+            }
+          >
+            <ListOrdered size={18} />
+            <span>Catalogs</span>
+          </NavLink>
+
+          <NavLink
+            to="/vault/enquiries"
+            onClick={() => setMobileSidebarOpen(false)}
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
+                isActive ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-slate-800 hover:text-white'
+              }`
+            }
+          >
+            <Inbox size={18} />
+            <span>Enquiries</span>
           </NavLink>
 
           <NavLink

@@ -59,6 +59,10 @@ const VaultProcessing = lazyWithRetry(() => import('./pages/vault/VaultSecondary
 const VaultTrash = lazyWithRetry(() => import('./pages/vault/VaultSecondaryViews').then((m) => ({ default: m.VaultTrash })));
 const VaultShared = lazyWithRetry(() => import('./pages/vault/VaultSecondaryViews').then((m) => ({ default: m.VaultShared })));
 const VaultSettings = lazyWithRetry(() => import('./pages/vault/VaultSecondaryViews').then((m) => ({ default: m.VaultSettings })));
+const VaultProducts = lazyWithRetry(() => import('./pages/vault/VaultProducts'));
+const VaultProductDetail = lazyWithRetry(() => import('./pages/vault/VaultProductDetail'));
+const VaultCatalogs = lazyWithRetry(() => import('./pages/vault/VaultCatalogs'));
+const VaultEnquiries = lazyWithRetry(() => import('./pages/vault/VaultEnquiries'));
 
 // Omni Studio Pages
 const StudioLayout = lazyWithRetry(() => import('./layouts/StudioLayout'));
@@ -152,6 +156,10 @@ export default function App() {
           <Route path="trash" element={<VaultTrash />} />
           <Route path="audit" element={<VaultAuditTrail />} />
           <Route path="shared" element={<VaultShared />} />
+          <Route path="products" element={<VaultProducts />} />
+          <Route path="products/:productId" element={<VaultProductDetail />} />
+          <Route path="catalogs" element={<VaultCatalogs />} />
+          <Route path="enquiries" element={<VaultEnquiries />} />
           <Route path="settings" element={<VaultSettings />} />
         </Route>
 

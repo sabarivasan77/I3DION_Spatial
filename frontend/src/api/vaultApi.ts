@@ -361,5 +361,92 @@ export const vaultApi = {
   restoreVersion: (assetId: string, versionId: string) =>
     apiRequest<VaultAsset>(`/api/vault/assets/${assetId}/versions/${versionId}/restore`, {
       method: 'POST'
+    }),
+
+  // --- Ecosystem Enquiries ---
+  getEnquiries: (params?: { search?: string; source_application?: string; status?: string; priority?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.search) query.set('search', params.search);
+    if (params?.source_application) query.set('source_application', params.source_application);
+    if (params?.status) query.set('status', params.status);
+    if (params?.priority) query.set('priority', params.priority);
+
+    return apiRequest<VaultEnquiry[]>(`/api/vault/enquiries?${query.toString()}`, { method: 'GET' })
+      .then(res => (Array.isArray(res) ? res : []))
+      .catch(() => []);
+  },
+
+  createEnquiry: (data: Partial<VaultEnquiry>) =>
+    apiRequest<VaultEnquiry>('/api/vault/enquiries', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  updateEnquiry: (id: string, data: Partial<VaultEnquiry>) =>
+    apiRequest<VaultEnquiry>(`/api/vault/enquiries/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    }),
+
+  // --- Product Detail & Update ---
+  getProductDetail: (id: string) =>
+    apiRequest<VaultProductDetail>(`/api/vault/products/${id}`, { method: 'GET' }),
+
+  updateProduct: (id: string, data: Partial<VaultProductDetail>) =>
+    apiRequest<VaultProductDetail>(`/api/vault/products/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    }),
+
+  // --- Catalog Product Reordering ---
+  getCatalogProducts: (catalogId: string) =>
+    apiRequest<any[]>(`/api/vault/catalogs/${catalogId}/products`, { method: 'GET' })
+      .then(res => (Array.isArray(res) ? res : []))
+      .catch(() => []),
+
+  reorderCatalogProducts: (catalogId: string, productIds: string[]) =>
+    apiRequest<{ message: string; count: number }>(`/api/vault/catalogs/${catalogId}/reorder`, {
+      method: 'POST',
+      body: JSON.stringify({ product_ids: productIds })
     })
 };
+
+export interface VaultEnquiry {
+  id: string;
+  organization_id: string;
+  source_application: string;
+  product_id?: string;
+  product_name?: string;
+  catalog_id?: string;
+  catalog_name?: string;
+  customer_name: string;
+  company?: string;
+  email: string;
+  phone?: string;
+  message?: string;
+  status: 'New' | 'In Progress' | 'Contacted' | 'Qualified' | 'Closed';
+  priority: 'Low' | 'Medium' | 'High' | 'Urgent';
+  assigned_to?: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VaultProductDetail {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  status: string;
+  is_public: boolean;
+  visibility?: string;
+  approval_status?: string;
+  specs?: Record<string, any>;
+  dimensions?: Record<string, any>;
+  catalog_id?: string;
+  catalog_name?: string;
+  associated_assets?: VaultAsset[];
+  created_at: string;
+  updated_at: string;
+}
+

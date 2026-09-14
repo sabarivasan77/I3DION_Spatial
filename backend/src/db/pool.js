@@ -202,7 +202,35 @@ export async function ensureMigrated() {
         submitted_at timestamptz NOT NULL DEFAULT now(),
         reviewed_at timestamptz
       );
+
+      CREATE TABLE IF NOT EXISTS vault_enquiries (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        source_application text NOT NULL DEFAULT 'Spatial Hub',
+        product_id uuid REFERENCES products(id) ON DELETE SET NULL,
+        catalog_id uuid REFERENCES catalogs(id) ON DELETE SET NULL,
+        customer_name text NOT NULL,
+        company text,
+        email text NOT NULL,
+        phone text,
+        message text,
+        status text NOT NULL DEFAULT 'New',
+        priority text NOT NULL DEFAULT 'Medium',
+        assigned_to uuid REFERENCES users(id) ON DELETE SET NULL,
+        metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      CREATE TABLE IF NOT EXISTS catalog_products_ordering (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        catalog_id uuid NOT NULL REFERENCES catalogs(id) ON DELETE CASCADE,
+        product_id uuid NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        display_order integer NOT NULL DEFAULT 0,
+        UNIQUE (catalog_id, product_id)
+      );
     `);
+
     
     // Non-blocking schema enhancements & Spatial Hub Seeding
     await pool.query(`
