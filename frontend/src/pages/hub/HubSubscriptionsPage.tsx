@@ -1,12 +1,10 @@
 import { useEffect } from 'react';
-import { Package, CheckCircle2, AlertCircle, Calendar, CreditCard, ExternalLink, Zap } from 'lucide-react';
+import { Package, CheckCircle2, AlertCircle, Calendar, CreditCard, ExternalLink, Zap, Building2 } from 'lucide-react';
 import { useHubPersonalStore } from '../../store/hubPersonalStore';
-import { useAuthStore } from '../../store/authStore';
 import { Link } from 'react-router-dom';
 
 export function HubSubscriptionsPage() {
   const { subscription, fetchPersonalData, isLoading } = useHubPersonalStore();
-  const { user } = useAuthStore();
 
   useEffect(() => {
     fetchPersonalData();

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import api from '../services/api';
+import { apiRequest } from '../services/api';
 
 interface SavedItem {
   id: string;
@@ -50,18 +50,18 @@ export const useHubPersonalStore = create<HubPersonalState>((set, get) => ({
     set({ isLoading: true });
     try {
       const [savedRes, likedRes, subRes] = await Promise.all([
-        api.get('/hub/personal/saved'),
-        api.get('/hub/personal/liked'),
-        api.get('/hub/personal/subscriptions')
+        apiRequest('/hub/personal/saved'),
+        apiRequest('/hub/personal/liked'),
+        apiRequest('/hub/personal/subscriptions')
       ]);
 
-      const savedIds = new Set<string>(savedRes.data.map((item: SavedItem) => item.content_id));
-      const likedIds = new Set<string>(likedRes.data.map((item: LikedItem) => item.content_id));
+      const savedIds = new Set<string>(savedRes.map((item: SavedItem) => item.content_id));
+      const likedIds = new Set<string>(likedRes.map((item: LikedItem) => item.content_id));
 
       set({
         savedIds,
         likedIds,
-        subscription: subRes.data.subscription || null,
+        subscription: subRes.subscription || null,
         isLoading: false
       });
     } catch (error) {
@@ -85,9 +85,9 @@ export const useHubPersonalStore = create<HubPersonalState>((set, get) => ({
 
     try {
       if (isCurrentlySaved) {
-        await api.delete(`/hub/personal/saved/${contentId}`);
+        await apiRequest(`/hub/personal/saved/${contentId}`, { method: 'DELETE' });
       } else {
-        await api.post('/hub/personal/saved', { contentId, contentType });
+        await apiRequest('/hub/personal/saved', { method: 'POST', body: JSON.stringify({ contentId, contentType }) });
       }
     } catch (error) {
       // Rollback on error
@@ -111,9 +111,9 @@ export const useHubPersonalStore = create<HubPersonalState>((set, get) => ({
 
     try {
       if (isCurrentlyLiked) {
-        await api.delete(`/hub/personal/liked/${contentId}`);
+        await apiRequest(`/hub/personal/liked/${contentId}`, { method: 'DELETE' });
       } else {
-        await api.post('/hub/personal/liked', { contentId, contentType });
+        await apiRequest('/hub/personal/liked', { method: 'POST', body: JSON.stringify({ contentId, contentType }) });
       }
     } catch (error) {
       // Rollback on error
