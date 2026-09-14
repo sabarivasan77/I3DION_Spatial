@@ -1,8 +1,7 @@
-import { studioApi } from '../../api/studioApi';
-
 export interface ActionDefinition {
   type: string;
   target_id?: string;
+  target_name?: string;
   payload?: any;
   next_actions?: ActionDefinition[];
 }

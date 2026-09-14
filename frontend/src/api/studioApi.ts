@@ -42,6 +42,7 @@ export interface StudioLowCodeComponent {
   action?: {
     type: 'navigate' | 'open_modal' | 'update_variable' | 'submit_enquiry' | 'play_3d_anim' | 'change_camera' | 'launch_ar' | 'open_url';
     target_id?: string;
+    target_name?: string;
     payload?: any;
   };
   is_locked?: boolean;
@@ -81,6 +82,7 @@ export interface StudioProject {
   description: string;
   owner: string;
   organization_id?: string;
+  project_type?: string;
   status: 'Draft' | 'In Review' | 'Ready to Publish' | 'Published' | 'Archived';
   created_at: string;
   updated_at: string;
@@ -120,6 +122,55 @@ export interface StudioVersion {
   change_summary: string;
   published_at: string;
   catalog_data: StudioCatalogData;
+}
+
+// --- Phase 4 Enterprise Data Platform Interfaces ---
+export interface StudioFieldSchema {
+  field_name: string;
+  display_name: string;
+  field_type: 'Text' | 'Long Text' | 'Number' | 'Decimal' | 'Currency' | 'Boolean' | 'Date' | 'DateTime' | 'Choice' | 'MultiChoice' | 'User' | 'URL' | 'Email' | 'File' | 'Image' | 'Reference' | 'Formula' | 'JSON' | 'Status';
+  is_required?: boolean;
+  is_readonly?: boolean;
+  default_value?: any;
+  options?: string[];
+  placeholder?: string;
+}
+
+export interface StudioDatasetSchema {
+  dataset_key: string;
+  name: string;
+  table_name: string;
+  fields: StudioFieldSchema[];
+}
+
+export interface StudioQueryFilter {
+  field: string;
+  operator: 'Equals' | 'Not Equals' | 'Contains' | 'Starts With' | 'Ends With' | 'Greater Than' | 'Less Than' | 'Greater or Equal' | 'Less or Equal' | 'Is Empty' | 'Is Not Empty';
+  value?: any;
+}
+
+export interface StudioQuerySort {
+  field: string;
+  direction?: 'ASC' | 'DESC';
+}
+
+export interface StudioQueryPayload {
+  dataset_key: string;
+  filters?: StudioQueryFilter[];
+  sort?: StudioQuerySort[];
+  search?: string;
+  pagination?: { page?: number; limit?: number };
+}
+
+export interface StudioQueryResult {
+  dataset_key: string;
+  records: any[];
+  pagination: {
+    page: number;
+    limit: number;
+    total_records: number;
+    total_pages: number;
+  };
 }
 
 // Initial Default Seed Data for Offline / Vercel SPA mode
@@ -572,5 +623,146 @@ export const studioApi = {
       product_ids: data.product_ids || [],
       vault_asset_ids: data.vault_asset_ids || []
     });
+  },
+
+  // --- Phase 3 Runtime APIs ---
+  trackRuntimeAnalytics: async (data: { project_id: string; event_type: string; target_id?: string; target_name?: string; metadata?: any }): Promise<any> => {
+    const token = getAuthToken();
+    if (token && !token.startsWith('mock-') && !token.startsWith('offline-')) {
+      try {
+        return await apiRequest('/api/studio/analytics/track', {
+          method: 'POST',
+          body: JSON.stringify(data),
+          token
+        });
+      } catch (err) {}
+    }
+    return null;
+  },
+
+  executeAction: async (actionPayload: { type: string; payload?: any }): Promise<any> => {
+    const token = getAuthToken();
+    if (token && !token.startsWith('mock-') && !token.startsWith('offline-')) {
+      try {
+        return await apiRequest('/api/studio/actions/execute', {
+          method: 'POST',
+          body: JSON.stringify(actionPayload),
+          token
+        });
+      } catch (err) {}
+    }
+    return null;
+  },
+
+  // --- Phase 4 Enterprise Data Platform APIs ---
+  getDataSources: async (): Promise<any> => {
+    const token = getAuthToken();
+    if (token && !token.startsWith('mock-') && !token.startsWith('offline-')) {
+      try {
+        return await apiRequest('/api/studio/data-sources', { method: 'GET', token });
+      } catch (err) {}
+    }
+    return {
+      connector: { id: 'connector-spatial-vault', name: 'Spatial Vault Connector', status: 'Connected', type: 'spatial_vault', version: '2.0', last_sync: new Date().toISOString() },
+      datasets: [
+        { id: 'ds-vault-products', name: 'Products & Equipment', dataset_key: 'vault_products', source_type: 'spatial_vault', category: 'Catalog & Engineering', permissions: { read: true, create: true, update: true, delete: true } },
+        { id: 'ds-vault-assets', name: 'Digital Assets & Media', dataset_key: 'vault_assets', source_type: 'spatial_vault', category: 'DAM & Storage', permissions: { read: true, create: true, update: true, delete: true } },
+        { id: 'ds-vault-enquiries', name: 'Leads & Product Enquiries', dataset_key: 'vault_enquiries', source_type: 'spatial_vault', category: 'CRM & Engagement', permissions: { read: true, create: true, update: true, delete: true } }
+      ]
+    };
+  },
+
+  getDatasetSchema: async (datasetId: string): Promise<StudioDatasetSchema> => {
+    const token = getAuthToken();
+    if (token && !token.startsWith('mock-') && !token.startsWith('offline-')) {
+      try {
+        return await apiRequest<StudioDatasetSchema>(`/api/studio/datasets/${datasetId}/schema`, { method: 'GET', token });
+      } catch (err) {}
+    }
+    return {
+      dataset_key: datasetId,
+      name: datasetId === 'vault_enquiries' ? 'Leads & Product Enquiries' : 'Products & Equipment',
+      table_name: datasetId === 'vault_enquiries' ? 'vault_enquiries' : 'products',
+      fields: [
+        { field_name: 'id', display_name: 'ID', field_type: 'Text', is_required: true, is_readonly: true },
+        { field_name: 'name', display_name: 'Name', field_type: 'Text', is_required: true },
+        { field_name: 'category', display_name: 'Category', field_type: 'Choice', options: ['Industrial Machinery', 'Power Tools', 'Mobile Equipment'] },
+        { field_name: 'description', display_name: 'Description', field_type: 'Long Text' },
+        { field_name: 'status', display_name: 'Status', field_type: 'Status', options: ['Draft', 'Published'] }
+      ]
+    };
+  },
+
+  executeQuery: async (payload: StudioQueryPayload): Promise<StudioQueryResult> => {
+    const token = getAuthToken();
+    if (token && !token.startsWith('mock-') && !token.startsWith('offline-')) {
+      try {
+        return await apiRequest<StudioQueryResult>('/api/studio/query', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+          token
+        });
+      } catch (err) {}
+    }
+    return {
+      dataset_key: payload.dataset_key,
+      records: [],
+      pagination: { page: 1, limit: 25, total_records: 0, total_pages: 1 }
+    };
+  },
+
+  createRecord: async (datasetKey: string, payload: any): Promise<any> => {
+    const token = getAuthToken();
+    if (token && !token.startsWith('mock-') && !token.startsWith('offline-')) {
+      try {
+        return await apiRequest('/api/studio/records', {
+          method: 'POST',
+          body: JSON.stringify({ dataset_key: datasetKey, payload }),
+          token
+        });
+      } catch (err) {}
+    }
+    return { id: `rec-${Date.now()}`, ...payload };
+  },
+
+  updateRecord: async (datasetKey: string, id: string, updates: any): Promise<any> => {
+    const token = getAuthToken();
+    if (token && !token.startsWith('mock-') && !token.startsWith('offline-')) {
+      try {
+        return await apiRequest(`/api/studio/records/${datasetKey}/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify(updates),
+          token
+        });
+      } catch (err) {}
+    }
+    return { id, ...updates };
+  },
+
+  deleteRecord: async (datasetKey: string, id: string): Promise<any> => {
+    const token = getAuthToken();
+    if (token && !token.startsWith('mock-') && !token.startsWith('offline-')) {
+      try {
+        return await apiRequest(`/api/studio/records/${datasetKey}/${id}`, {
+          method: 'DELETE',
+          token
+        });
+      } catch (err) {}
+    }
+    return { success: true };
+  },
+
+  generateForm: async (datasetKey: string, options?: any): Promise<any> => {
+    const token = getAuthToken();
+    if (token && !token.startsWith('mock-') && !token.startsWith('offline-')) {
+      try {
+        return await apiRequest('/api/studio/forms/generate', {
+          method: 'POST',
+          body: JSON.stringify({ dataset_key: datasetKey, ...options }),
+          token
+        });
+      } catch (err) {}
+    }
+    return { dataset_key: datasetKey, fields: [] };
   }
 };

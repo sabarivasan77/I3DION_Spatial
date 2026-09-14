@@ -4,14 +4,7 @@ import {
   ArrowLeft,
   Plus,
   Play,
-  Share2,
-  Save,
-  RotateCcw,
-  RotateCw,
   Eye,
-  EyeOff,
-  Lock,
-  Unlock,
   Trash2,
   Copy,
   Grid,
@@ -22,22 +15,15 @@ import {
   Package,
   Cpu,
   Monitor,
-  Smartphone,
-  Tablet,
-  Maximize2,
   CheckCircle2,
   Database,
   Link2,
   Sliders,
-  Settings,
   HelpCircle,
   X,
   BookOpen,
   AlertTriangle,
-  Download,
-  Upload,
-  Printer,
-  Code
+  Download
 } from 'lucide-react';
 import {
   studioApi,
@@ -45,11 +31,11 @@ import {
   StudioLowCodeComponent,
   StudioLowCodeScreen
 } from '../../api/studioApi';
-import { vaultApi, VaultAsset, VaultProduct } from '../../api/vaultApi';
+import { vaultApi, VaultAsset } from '../../api/vaultApi';
 import { StudioScreenPanel } from '../../components/studio/StudioScreenPanel';
 import { EBookReaderModal } from '../../components/studio/ebookEngine';
+import { StudioDataWorkspace } from '../../components/studio/StudioDataWorkspace';
 import { validatorEngine, ValidationError } from '../../components/studio/validatorEngine';
-import { printCatalogEngine } from '../../components/studio/printCatalogEngine';
 
 // Comprehensive Component Palette Definitions (9 Categories)
 const COMPONENT_PALETTE = [
@@ -150,7 +136,7 @@ export function StudioEditor() {
   const [project, setProject] = useState<StudioProject | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTabLeft, setActiveTabLeft] = useState<'insert' | 'tree' | 'screens'>('insert');
-  const [activeTabInspector, setActiveTabInspector] = useState<'layout' | 'content' | 'data' | 'action'>('layout');
+  const [activeTabInspector, setActiveTabInspector] = useState<'layout' | 'content' | 'style' | 'behavior' | 'data' | 'events' | 'a11y' | 'advanced' | 'action'>('layout');
   const [projectType, setProjectType] = useState<string>('Standard Application');
 
   // Low-Code State
@@ -166,15 +152,9 @@ export function StudioEditor() {
 
   // Modals & Panels State
   const [showEBookReader, setShowEBookReader] = useState(false);
+  const [showDataWorkspace, setShowDataWorkspace] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[] | null>(null);
 
-  // Vault Sources
-  const [vaultProducts, setVaultProducts] = useState<VaultProduct[]>([]);
-  const [vaultAssets, setVaultAssets] = useState<VaultAsset[]>([]);
-
-  // Canvas Drag / Resize state
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -184,16 +164,9 @@ export function StudioEditor() {
   const loadProject = async () => {
     setIsLoading(true);
     try {
-      const [projData, prods, assets] = await Promise.all([
-        studioApi.getProject(projectId!),
-        vaultApi.getProducts().catch(() => []),
-        vaultApi.getAssets().catch(() => [])
-      ]);
-
+      const projData = await studioApi.getProject(projectId!);
       if (projData) {
         setProject(projData);
-        setVaultProducts(prods);
-        setVaultAssets(assets);
 
         if (projData.project_type) {
           setProjectType(projData.project_type);
@@ -356,7 +329,11 @@ export function StudioEditor() {
       project_document: {
         screens,
         components,
-        theme: { primary_color: '#4F46E5' }
+        component_tree: project.project_document?.component_tree || [],
+        variables: project.project_document?.variables || [],
+        logic: project.project_document?.logic || [],
+        theme: project.project_document?.theme || { primary_color: '#4F46E5' },
+        settings: project.project_document?.settings || {}
       }
     };
     const errs = validatorEngine.validateProject(fullProj);
@@ -486,6 +463,13 @@ export function StudioEditor() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-indigo-400 transition"
           >
             <Cpu size={14} /> Visual Logic & iScript
+          </button>
+
+          <button
+            onClick={() => setShowDataWorkspace(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 text-xs font-bold transition"
+          >
+            <Database size={14} /> Data Workspace
           </button>
 
           {projectType === 'E-Book' && (
@@ -928,7 +912,11 @@ export function StudioEditor() {
             project_document: {
               screens,
               components,
-              theme: { primary_color: '#4F46E5' }
+              component_tree: project.project_document?.component_tree || [],
+              variables: project.project_document?.variables || [],
+              logic: project.project_document?.logic || [],
+              theme: project.project_document?.theme || { primary_color: '#4F46E5' },
+              settings: project.project_document?.settings || {}
             }
           }}
           onClose={() => setShowEBookReader(false)}
@@ -978,6 +966,10 @@ export function StudioEditor() {
             )}
           </div>
         </div>
+      )}
+
+      {showDataWorkspace && (
+        <StudioDataWorkspace onClose={() => setShowDataWorkspace(false)} />
       )}
     </div>
   );

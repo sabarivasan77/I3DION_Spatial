@@ -73,6 +73,7 @@ const StudioLogicWorkspace = lazyWithRetry(() => import('./pages/studio/StudioLo
 const StudioPreview = lazyWithRetry(() => import('./pages/studio/StudioPreview').then((m) => ({ default: m.StudioPreview })));
 const StudioTemplates = lazyWithRetry(() => import('./pages/studio/StudioTemplates').then((m) => ({ default: m.StudioTemplates })));
 const StudioPublished = lazyWithRetry(() => import('./pages/studio/StudioPublished').then((m) => ({ default: m.StudioPublished })));
+const StudioPublishedExperience = lazyWithRetry(() => import('./pages/studio/StudioPublishedExperience').then((m) => ({ default: m.StudioPublishedExperience })));
 const StudioDrafts = lazyWithRetry(() => import('./pages/studio/StudioSecondaryViews').then((m) => ({ default: m.StudioDrafts })));
 const StudioVersions = lazyWithRetry(() => import('./pages/studio/StudioSecondaryViews').then((m) => ({ default: m.StudioVersions })));
 const StudioSettings = lazyWithRetry(() => import('./pages/studio/StudioSecondaryViews').then((m) => ({ default: m.StudioSettings })));
@@ -187,6 +188,7 @@ export default function App() {
           <Route path="editor/:id" element={<StudioEditor />} />
           <Route path="logic/:id" element={<StudioLogicWorkspace />} />
           <Route path="preview/:id" element={<StudioPreview />} />
+          <Route path="experience/:projectId" element={<StudioPublishedExperience />} />
           <Route path="templates" element={<StudioTemplates />} />
           <Route path="published" element={<StudioPublished />} />
           <Route path="drafts" element={<StudioDrafts />} />

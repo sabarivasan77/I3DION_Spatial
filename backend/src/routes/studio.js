@@ -8,6 +8,11 @@ import { actionService } from '../services/studio/actionService.js';
 import { versionService } from '../services/studio/versionService.js';
 import { compilerService } from '../services/studio/compilerService.js';
 import { analyticsService } from '../services/studio/analyticsService.js';
+import { dataSourceService } from '../services/studio/dataSourceService.js';
+import { schemaService } from '../services/studio/schemaService.js';
+import { queryService } from '../services/studio/queryService.js';
+import { recordService } from '../services/studio/recordService.js';
+import { formService } from '../services/studio/formService.js';
 
 export const studioRouter = Router();
 
@@ -396,5 +401,178 @@ studioRouter.post('/projects/import', async (req, res) => {
     res.status(500).json({ error: 'Failed to import project package' });
   }
 });
+
+// ---------------------------------------------------------
+// 17. POST /api/studio/projects/:id/compile (Compile project runtime)
+// ---------------------------------------------------------
+studioRouter.post('/projects/:id/compile', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+
+    const proj = await projectService.getProject(id, organization_id);
+    if (!proj) return res.status(404).json({ error: 'Project not found' });
+
+    const runtimeDefinition = compilerService.compileProject(proj);
+    res.json({ runtime_definition: runtimeDefinition });
+  } catch (error) {
+    console.error('Studio Compile Project Error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// ---------------------------------------------------------
+// 18. GET /api/studio/published/experience/:id (Published experience runtime)
+// ---------------------------------------------------------
+studioRouter.get('/published/experience/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+
+    const proj = await projectService.getProject(id, organization_id);
+    if (!proj) return res.status(404).json({ error: 'Published experience not found' });
+
+    const runtimeDefinition = compilerService.compileProject(proj);
+    res.json({ runtime_definition: runtimeDefinition, project: proj });
+  } catch (error) {
+    console.error('Studio Published Experience Error:', error);
+    res.status(500).json({ error: 'Failed to load published experience' });
+  }
+});
+
+// ---------------------------------------------------------
+// 19. POST /api/studio/analytics/track (Track runtime analytics event)
+// ---------------------------------------------------------
+studioRouter.post('/analytics/track', async (req, res) => {
+  try {
+    const { organization_id, id: userId } = req.user;
+    const { project_id, event_type, target_id, target_name, metadata } = req.body;
+
+    const auditLog = await analyticsService.trackEvent({
+      project_id,
+      organization_id,
+      user_id: userId,
+      event_type,
+      target_id,
+      target_name,
+      metadata
+    });
+
+    res.json({ success: true, event_logged: !!auditLog });
+  } catch (error) {
+    console.error('Studio Track Analytics Error:', error);
+    res.status(500).json({ error: 'Failed to track event' });
+  }
+});
+
+// ---------------------------------------------------------
+// 20. GET /api/studio/data-sources (List data sources & datasets)
+// ---------------------------------------------------------
+studioRouter.get('/data-sources', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const dataSources = await dataSourceService.getAvailableDataSources(organization_id);
+    res.json(dataSources);
+  } catch (error) {
+    console.error('Studio GET Data Sources Error:', error);
+    res.status(500).json({ error: 'Failed to fetch data sources' });
+  }
+});
+
+// ---------------------------------------------------------
+// 21. GET /api/studio/datasets/:datasetId/schema (Fetch field metadata schema)
+// ---------------------------------------------------------
+studioRouter.get('/datasets/:datasetId/schema', async (req, res) => {
+  try {
+    const { datasetId } = req.params;
+    const { organization_id } = req.user;
+    const schema = await schemaService.getDatasetSchema(datasetId, organization_id);
+    res.json(schema);
+  } catch (error) {
+    console.error('Studio GET Dataset Schema Error:', error);
+    res.status(500).json({ error: 'Failed to fetch dataset schema' });
+  }
+});
+
+// ---------------------------------------------------------
+// 22. POST /api/studio/query (Execute structured dataset query)
+// ---------------------------------------------------------
+studioRouter.post('/query', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const result = await queryService.executeQuery(req.body, organization_id);
+    res.json(result);
+  } catch (error) {
+    console.error('Studio Execute Query Error:', error);
+    res.status(500).json({ error: 'Failed to execute dataset query' });
+  }
+});
+
+// ---------------------------------------------------------
+// 23. POST /api/studio/records (Create new dataset record)
+// ---------------------------------------------------------
+studioRouter.post('/records', async (req, res) => {
+  try {
+    const { organization_id, id: userId } = req.user;
+    const { dataset_key, payload } = req.body;
+    if (!dataset_key || !payload) return res.status(400).json({ error: 'dataset_key and payload are required' });
+
+    const newRecord = await recordService.createRecord(dataset_key, payload, organization_id, userId);
+    res.status(201).json(newRecord);
+  } catch (error) {
+    console.error('Studio Create Record Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to create dataset record' });
+  }
+});
+
+// ---------------------------------------------------------
+// 24. PUT /api/studio/records/:datasetId/:id (Update dataset record)
+// ---------------------------------------------------------
+studioRouter.put('/records/:datasetId/:id', async (req, res) => {
+  try {
+    const { datasetId, id } = req.params;
+    const { organization_id, id: userId } = req.user;
+
+    const updated = await recordService.updateRecord(datasetId, id, req.body, organization_id, userId);
+    res.json(updated);
+  } catch (error) {
+    console.error('Studio Update Record Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to update dataset record' });
+  }
+});
+
+// ---------------------------------------------------------
+// 25. DELETE /api/studio/records/:datasetId/:id (Delete/archive record)
+// ---------------------------------------------------------
+studioRouter.delete('/records/:datasetId/:id', async (req, res) => {
+  try {
+    const { datasetId, id } = req.params;
+    const { organization_id, id: userId } = req.user;
+
+    const result = await recordService.deleteRecord(datasetId, id, organization_id, userId);
+    res.json(result);
+  } catch (error) {
+    console.error('Studio Delete Record Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to delete dataset record' });
+  }
+});
+
+// ---------------------------------------------------------
+// 26. POST /api/studio/forms/generate (Auto-generate form layout config)
+// ---------------------------------------------------------
+studioRouter.post('/forms/generate', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const { dataset_key, title, description, layout } = req.body;
+    if (!dataset_key) return res.status(400).json({ error: 'dataset_key is required' });
+
+    const formConfig = await formService.generateFormConfig(dataset_key, organization_id, { title, description, layout });
+    res.json(formConfig);
+  } catch (error) {
+    console.error('Studio Generate Form Error:', error);
+    res.status(500).json({ error: 'Failed to generate form configuration' });
+  }
+});
+
 
 

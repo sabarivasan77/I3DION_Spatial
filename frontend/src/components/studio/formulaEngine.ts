@@ -3,6 +3,8 @@ export interface FormulaContext {
   component?: Record<string, any>;
   vault?: Record<string, any>;
   user?: Record<string, any>;
+  project?: any;
+  item?: any;
 }
 
 export const formulaEngine = {
@@ -66,6 +68,27 @@ export const formulaEngine = {
       // TODAY() / NOW()
       if (formula.toUpperCase() === 'TODAY()') return new Date().toISOString().split('T')[0];
       if (formula.toUpperCase() === 'NOW()') return new Date().toISOString();
+
+      // COUNT(collection)
+      if (formula.toUpperCase().startsWith('COUNT(') && formula.endsWith(')')) {
+        const inner = formula.slice(6, -1);
+        const resolved = formulaEngine.resolve(inner, context);
+        return Array.isArray(resolved) ? resolved.length : (resolved?.count ? resolved.count() : 0);
+      }
+
+      // FIRST(collection)
+      if (formula.toUpperCase().startsWith('FIRST(') && formula.endsWith(')')) {
+        const inner = formula.slice(6, -1);
+        const resolved = formulaEngine.resolve(inner, context);
+        return Array.isArray(resolved) ? resolved[0] || null : (resolved?.first ? resolved.first() : null);
+      }
+
+      // LAST(collection)
+      if (formula.toUpperCase().startsWith('LAST(') && formula.endsWith(')')) {
+        const inner = formula.slice(5, -1);
+        const resolved = formulaEngine.resolve(inner, context);
+        return Array.isArray(resolved) ? resolved[resolved.length - 1] || null : null;
+      }
 
       return formulaEngine.resolve(formula, context);
     } catch (err: any) {
