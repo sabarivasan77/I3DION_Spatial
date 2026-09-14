@@ -657,3 +657,38 @@ CREATE TABLE IF NOT EXISTS vault_processing_jobs (
 );
 
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SPATIAL HUB PERSONAL CONTENT SCHEMA
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS saved_items (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content_id uuid NOT NULL,
+  content_type text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(user_id, content_id)
+);
+
+CREATE TABLE IF NOT EXISTS liked_items (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content_id uuid NOT NULL,
+  content_type text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(user_id, content_id)
+);
+
+CREATE TABLE IF NOT EXISTS hub_subscriptions (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  plan text NOT NULL,
+  status text NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Canceled', 'Past_Due', 'Trialing')),
+  start_date timestamptz NOT NULL DEFAULT now(),
+  renewal_date timestamptz,
+  enterprise_access boolean NOT NULL DEFAULT false,
+  features jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(organization_id)
+);

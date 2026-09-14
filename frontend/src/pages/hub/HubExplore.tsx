@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Heart,
@@ -12,27 +12,28 @@ import ThreeProduct from '../../components/ThreeProduct';
 import { SPATIAL_HUB_MODELS } from '../../data/spatialHubModels';
 import { HubContextMenu } from '../../components/hub/HubContextMenu';
 import { hubIntelligenceApi } from '../../services/hubIntelligenceApi';
+import { useHubPersonalStore } from '../../store/hubPersonalStore';
+import { useToast } from '../../components/Toast';
 
 export function HubExplore() {
   const navigate = useNavigate();
-  const [likedIds, setLikedIds] = useState<string[]>(() => {
-    return JSON.parse(localStorage.getItem('i3dion_liked_items') || '[]');
-  });
+  const { likedIds, savedIds, toggleLiked, toggleSaved, fetchPersonalData } = useHubPersonalStore();
   const [previewModes, setPreviewModes] = useState<Record<string, boolean>>({});
+  const { success, info } = useToast();
 
-  const toggleLike = (e: React.MouseEvent, id: string) => {
+  useEffect(() => {
+    fetchPersonalData();
+  }, [fetchPersonalData]);
+
+  const toggleLike = async (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
-    let updated: string[];
-    if (likedIds.includes(id)) {
-      updated = likedIds.filter((item) => item !== id);
-    } else {
-      updated = [...likedIds, id];
-    }
-    setLikedIds(updated);
-    localStorage.setItem('i3dion_liked_items', JSON.stringify(updated));
+    
+    const isCurrentlyLiked = likedIds.has(id);
+    await toggleLiked(id, 'product');
+    
     hubIntelligenceApi.trackEvent({
-      eventType: likedIds.includes(id) ? 'product_unliked' : 'product_liked',
+      eventType: isCurrentlyLiked ? 'product_unliked' : 'product_liked',
       entityType: 'product',
       entityId: id,
       productId: id
@@ -124,7 +125,8 @@ export function HubExplore() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {featuredCards.map((card) => {
-              const isLiked = likedIds.includes(card.id);
+              const isLiked = likedIds.has(card.id);
+              const isSaved = savedIds.has(card.id);
               const isPreview3d = !!previewModes[card.id];
 
               return (
@@ -160,7 +162,26 @@ export function HubExplore() {
                       >
                         <Heart size={13} fill={isLiked ? 'currentColor' : 'none'} />
                       </button>
-                      <HubContextMenu itemId={card.id} itemTitle={card.name} itemSlug={card.slug} />
+                      <HubContextMenu 
+                        itemId={card.id} 
+                        itemTitle={card.name} 
+                        itemSlug={card.slug} 
+                        isSaved={isSaved}
+                        onSaveToggle={() => {
+                          toggleSaved(card.id, 'product');
+                          if (!isSaved) {
+                            success('Product Saved', `Added ${card.name} to your Saved Library.`);
+                          } else {
+                            info('Product Removed', `Removed ${card.name} from Saved Library.`);
+                          }
+                          hubIntelligenceApi.trackEvent({
+                            eventType: !isSaved ? 'product_saved' : 'product_unsaved',
+                            entityType: 'product',
+                            entityId: card.id,
+                            productId: card.id
+                          });
+                        }}
+                      />
                     </div>
                   </div>
 

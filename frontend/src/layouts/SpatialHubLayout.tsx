@@ -8,6 +8,7 @@ import {
   Bookmark,
   Heart,
   MessageSquare,
+  Package,
   Building2,
   ChevronDown,
   ChevronRight,
@@ -136,7 +137,7 @@ export default function SpatialHubLayout() {
           </NavLink>
 
           <NavLink
-            to="/hub/enquiries"
+            to="/hub/subscriptions"
             onClick={() => setMobileSidebarOpen(false)}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-bold transition ${
@@ -144,8 +145,8 @@ export default function SpatialHubLayout() {
               }`
             }
           >
-            <MessageSquare size={17} />
-            <span>Enquiries</span>
+            <Package size={17} />
+            <span>Subscriptions</span>
           </NavLink>
 
           {/* Organization Navigation Section */}

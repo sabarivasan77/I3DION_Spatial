@@ -1,19 +1,23 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Sparkles, ArrowRight } from 'lucide-react';
+import { Heart, Sparkles, ArrowRight, Trash2 } from 'lucide-react';
 import { SPATIAL_HUB_MODELS } from '../../data/spatialHubModels';
 import ThreeProduct from '../../components/ThreeProduct';
+import { useHubPersonalStore } from '../../store/hubPersonalStore';
 
 export function HubLikedPage() {
-  const [likedIds, setLikedIds] = useState<string[]>([]);
+  const { likedIds, fetchPersonalData, toggleLiked } = useHubPersonalStore();
   const [activeFilter, setActiveFilter] = useState<'All' | 'Products' | 'Experiences' | 'AR' | 'Catalogs'>('All');
 
   useEffect(() => {
-    const loaded = JSON.parse(localStorage.getItem('i3dion_liked_items') || '[]');
-    setLikedIds(loaded);
-  }, []);
+    fetchPersonalData();
+  }, [fetchPersonalData]);
 
-  const likedModels = SPATIAL_HUB_MODELS.filter((m) => likedIds.includes(m.id));
+  const likedModels = SPATIAL_HUB_MODELS.filter((m) => likedIds.has(m.id));
+
+  const handleRemove = (id: string) => {
+    toggleLiked(id, 'product');
+  };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-16 pt-6 px-4 md:px-8 select-none">
@@ -65,9 +69,12 @@ export function HubLikedPage() {
               >
                 <div className="relative h-44 w-full bg-[#0F172A]">
                   <ThreeProduct modelUrl={item.modelUrl} renderMode="solid" autoRotate={true} interactive={false} className="h-full w-full" />
-                  <div className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-rose-600 text-white shadow-sm">
+                  <button
+                    onClick={() => handleRemove(item.id)}
+                    className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-rose-600 text-white shadow-sm hover:bg-rose-700 transition"
+                  >
                     <Heart size={14} fill="currentColor" />
-                  </div>
+                  </button>
                 </div>
                 <div className="flex flex-1 flex-col p-4">
                   <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">{item.category}</span>

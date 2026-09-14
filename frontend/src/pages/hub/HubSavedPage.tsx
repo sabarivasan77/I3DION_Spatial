@@ -3,22 +3,20 @@ import { Link } from 'react-router-dom';
 import { Bookmark, Sparkles, ArrowRight, Trash2 } from 'lucide-react';
 import { SPATIAL_HUB_MODELS } from '../../data/spatialHubModels';
 import ThreeProduct from '../../components/ThreeProduct';
+import { useHubPersonalStore } from '../../store/hubPersonalStore';
 
 export function HubSavedPage() {
-  const [savedIds, setSavedIds] = useState<string[]>([]);
+  const { savedIds, fetchPersonalData, toggleSaved } = useHubPersonalStore();
   const [activeFilter, setActiveFilter] = useState<'All' | 'Products' | 'Experiences' | 'AR' | 'Catalogs'>('All');
 
   useEffect(() => {
-    const loaded = JSON.parse(localStorage.getItem('i3dion_saved_items') || '[]');
-    setSavedIds(loaded);
-  }, []);
+    fetchPersonalData();
+  }, [fetchPersonalData]);
 
-  const savedModels = SPATIAL_HUB_MODELS.filter((m) => savedIds.includes(m.id));
+  const savedModels = SPATIAL_HUB_MODELS.filter((m) => savedIds.has(m.id));
 
   const handleRemove = (id: string) => {
-    const updated = savedIds.filter((itemId) => itemId !== id);
-    setSavedIds(updated);
-    localStorage.setItem('i3dion_saved_items', JSON.stringify(updated));
+    toggleSaved(id, 'product');
   };
 
   return (

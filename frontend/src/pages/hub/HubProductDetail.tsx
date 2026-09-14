@@ -10,15 +10,18 @@ import { hubIntelligenceApi } from '../../services/hubIntelligenceApi';
 import { useAuthStore } from '../../store/authStore';
 import { hubApi } from '../../services/hubApi';
 import { useToast } from '../../components/Toast';
+import { useHubPersonalStore } from '../../store/hubPersonalStore';
 
 export function HubProductDetail() {
   const { id } = useParams<{ id: string }>();
   const [renderMode, setRenderMode] = useState<RenderMode>('solid');
   const [activeTab, setActiveTab] = useState<'Overview' | 'Specifications' | 'Comments' | 'Related'>('Overview');
-  const [isLiked, setIsLiked] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
+
+  const { isSaved, isLiked, toggleSaved, toggleLiked } = useHubPersonalStore();
+  const isProductSaved = id ? isSaved(id) : false;
+  const isProductLiked = id ? isLiked(id) : false;
 
   const token = useAuthStore((s) => s.token);
   const { success, info } = useToast();
@@ -38,17 +41,14 @@ export function HubProductDetail() {
   }, [product.id, product.name, product.category, product.likesCount]);
 
   const handleLikeToggle = async () => {
-    const nextState = !isLiked;
-    setIsLiked(nextState);
+    const nextState = !isProductLiked;
+    
+    // Optimistic UI for likes count
     setLikesCount((c) => (nextState ? c + 1 : Math.max(0, c - 1)));
+    
+    // Use the global store
+    await toggleLiked(product.id, 'product');
 
-    if (token) {
-      try {
-        await hubApi.toggleLike(token, 'product', product.id);
-      } catch {
-        // Handled silently
-      }
-    }
     hubIntelligenceApi.trackEvent({
       eventType: nextState ? 'product_liked' : 'product_unliked',
       entityType: 'product',
@@ -58,8 +58,11 @@ export function HubProductDetail() {
   };
 
   const handleSaveToggle = () => {
-    const nextState = !isSaved;
-    setIsSaved(nextState);
+    const nextState = !isProductSaved;
+    
+    // Use the global store
+    toggleSaved(product.id, 'product');
+
     if (nextState) {
       success('Product Saved', `Added ${product.name} to your Saved Library.`);
     } else {
@@ -112,7 +115,7 @@ export function HubProductDetail() {
             itemTitle={product.name}
             itemSlug={product.slug}
             entityType="product"
-            isSaved={isSaved}
+            isSaved={isProductSaved}
             onSaveToggle={handleSaveToggle}
           />
         </div>
@@ -218,20 +221,20 @@ export function HubProductDetail() {
               <button
                 onClick={handleLikeToggle}
                 className={`flex flex-col items-center justify-center rounded-2xl p-2.5 transition border ${
-                  isLiked ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  isProductLiked ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                 }`}
               >
-                <Heart size={18} fill={isLiked ? 'currentColor' : 'none'} />
+                <Heart size={18} fill={isProductLiked ? 'currentColor' : 'none'} />
                 <span className="text-[10px] font-bold mt-1">Like ({likesCount})</span>
               </button>
 
               <button
                 onClick={handleSaveToggle}
                 className={`flex flex-col items-center justify-center rounded-2xl p-2.5 transition border ${
-                  isSaved ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  isProductSaved ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                 }`}
               >
-                <Bookmark size={18} fill={isSaved ? 'currentColor' : 'none'} />
+                <Bookmark size={18} fill={isProductSaved ? 'currentColor' : 'none'} />
                 <span className="text-[10px] font-bold mt-1">Save</span>
               </button>
 
