@@ -212,28 +212,6 @@ export default function SpatialHubLayout() {
                     Catalogs
                   </NavLink>
                   <NavLink
-                    to="/hub/organization/experiences"
-                    onClick={() => setMobileSidebarOpen(false)}
-                    className={({ isActive }) =>
-                      `block rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                        isActive ? 'text-blue-400 font-bold bg-slate-800/60' : 'text-slate-400 hover:text-white'
-                      }`
-                    }
-                  >
-                    Experiences
-                  </NavLink>
-                  <NavLink
-                    to="/hub/organization/ar"
-                    onClick={() => setMobileSidebarOpen(false)}
-                    className={({ isActive }) =>
-                      `block rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                        isActive ? 'text-blue-400 font-bold bg-slate-800/60' : 'text-slate-400 hover:text-white'
-                      }`
-                    }
-                  >
-                    AR Experiences
-                  </NavLink>
-                  <NavLink
                     to="/hub/organization/dashboards"
                     onClick={() => setMobileSidebarOpen(false)}
                     className={({ isActive }) =>

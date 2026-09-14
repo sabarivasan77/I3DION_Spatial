@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Box, BookOpen, Sparkles, QrCode, BarChart3, ShieldCheck, ArrowRight, Eye, CheckCircle2, Building2, Check, Plus } from 'lucide-react';
+import { Box, BookOpen, BarChart3, ShieldCheck, ArrowRight, Eye, CheckCircle2, Building2, Check, Plus } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { SPATIAL_HUB_MODELS } from '../../data/spatialHubModels';
 import ThreeProduct from '../../components/ThreeProduct';
@@ -199,24 +199,6 @@ export function HubOrganizationPage() {
               Catalogs (4)
             </button>
             <button
-              onClick={() => navigate('/hub/organization/experiences')}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
-                activeTab === 'experiences' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              <Sparkles size={15} />
-              Experiences (6)
-            </button>
-            <button
-              onClick={() => navigate('/hub/organization/ar')}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
-                activeTab === 'ar' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              <QrCode size={15} />
-              AR (3)
-            </button>
-            <button
               onClick={() => navigate('/hub/organization/dashboards')}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
                 activeTab === 'dashboards' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -271,58 +253,6 @@ export function HubOrganizationPage() {
               >
                 <Eye size={14} />
                 View Catalog Experience
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'experiences' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-3 bg-cyan-50 text-cyan-600 rounded-xl">
-                  <Sparkles size={20} />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">Full Compressor Assembly Interactive Tour</h3>
-                  <p className="text-xs text-slate-500">Published Spatial Engine Interactive Experience</p>
-                </div>
-              </div>
-              <p className="text-xs text-slate-600 mb-4">
-                Guided interactive tour powered by iScript logic nodes. Allows hotspot clicks, state transitions, and real-time telemetry tracking.
-              </p>
-              <Link
-                to="/hub/product/compressor_industrial_v1"
-                className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 text-xs font-bold text-white hover:bg-cyan-700 shadow-xs"
-              >
-                <Sparkles size={14} />
-                Launch Interactive Tour
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'ar' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                  <QrCode size={20} />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">WebXR / Mobile AR Placement Anchor</h3>
-                  <p className="text-xs text-slate-500">Published AR Experience</p>
-                </div>
-              </div>
-              <p className="text-xs text-slate-600 mb-4">
-                Scan QR code or click from mobile web to project true-to-scale 1:1 industrial machinery in real physical floor environments.
-              </p>
-              <Link
-                to="/hub/product/compressor_industrial_v1"
-                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 shadow-xs"
-              >
-                <QrCode size={14} />
-                Open AR Experience
               </Link>
             </div>
           </div>
