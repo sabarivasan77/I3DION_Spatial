@@ -1184,4 +1184,69 @@ vaultRouter.post('/assets/:id/versions/:versionId/restore', requireMinRole(['Adm
   }
 });
 
+// GET /api/vault/search (Global multi-target search across permitted organization resources)
+vaultRouter.get('/search', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const { q = '' } = req.query;
+
+    if (!q || !q.trim()) {
+      return res.json({ assets: [], products: [], catalogs: [], collections: [], templates: [] });
+    }
+
+    const searchTerm = `%${q.trim()}%`;
+
+    const [assets, products, catalogs, collections, templates] = await Promise.all([
+      pool.query(
+        `SELECT id, name, description, type, category, status, public_url, created_at
+         FROM vault_assets
+         WHERE organization_id = $1 AND is_deleted = false AND (name ILIKE $2 OR description ILIKE $2 OR category ILIKE $2)
+         LIMIT 10`,
+        [organization_id, searchTerm]
+      ),
+      pool.query(
+        `SELECT id, name, category, description, status, created_at
+         FROM products
+         WHERE organization_id = $1 AND (name ILIKE $2 OR description ILIKE $2 OR category ILIKE $2)
+         LIMIT 10`,
+        [organization_id, searchTerm]
+      ),
+      pool.query(
+        `SELECT id, name, description, status, slug, created_at
+         FROM catalogs
+         WHERE organization_id = $1 AND (name ILIKE $2 OR description ILIKE $2)
+         LIMIT 10`,
+        [organization_id, searchTerm]
+      ),
+      pool.query(
+        `SELECT id, name, description, created_at
+         FROM vault_collections
+         WHERE organization_id = $1 AND is_deleted = false AND (name ILIKE $2 OR description ILIKE $2)
+         LIMIT 10`,
+        [organization_id, searchTerm]
+      ),
+      pool.query(
+        `SELECT id, name, description, created_at
+         FROM vault_templates
+         WHERE organization_id = $1 AND (name ILIKE $2 OR description ILIKE $2)
+         LIMIT 10`,
+        [organization_id, searchTerm]
+      )
+    ]);
+
+    res.json({
+      query: q,
+      assets: assets.rows,
+      products: products.rows,
+      catalogs: catalogs.rows,
+      collections: collections.rows,
+      templates: templates.rows
+    });
+  } catch (error) {
+    console.error('Vault Global Search Error:', error);
+    res.status(500).json({ error: 'Failed to perform search' });
+  }
+});
+
 export { vaultRouter };
+

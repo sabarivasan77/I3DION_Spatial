@@ -499,43 +499,185 @@ export function VaultShared() {
 // 6. VAULT SETTINGS
 // ---------------------------------------------------------
 export function VaultSettings() {
+  const [retentionDays, setRetentionDays] = useState('30');
+  const [autoPurgeEnabled, setAutoPurgeEnabled] = useState(true);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const handleSavePolicies = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3000);
+  };
+
   return (
-    <div className="mx-auto max-w-7xl h-full flex flex-col space-y-6 animate-in fade-in duration-300">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Vault Enterprise Settings</h1>
-        <p className="text-xs text-slate-500 mt-1">Configure Vault storage limits, metadata rules, and access control policies.</p>
+    <div className="mx-auto max-w-7xl h-full flex flex-col space-y-6 animate-in fade-in duration-300 pb-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Vault Enterprise Administration</h1>
+          <p className="text-xs text-slate-500 mt-1">Configure Vault tenant policies, storage quotas, RBAC roles, and security retention.</p>
+        </div>
+        {saveSuccess && (
+          <span className="flex items-center gap-1.5 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-700 animate-in fade-in">
+            <CheckCircle2 size={14} /> Security Policies Saved
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* STORAGE & CAPACITY METERS */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
               <HardDrive size={20} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-900">Storage & Quotas</h3>
-              <p className="text-xs text-slate-500">256 GB used of 1 TB allocated space.</p>
+              <h3 className="text-sm font-bold text-slate-900">Tenant Storage Quota</h3>
+              <p className="text-xs text-slate-500">25.6 GB used of 100 GB enterprise quota (25.6%)</p>
             </div>
           </div>
-          <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-            <div className="h-full bg-emerald-500 w-1/4"></div>
+          <div className="h-3 w-full rounded-full bg-slate-100 overflow-hidden">
+            <div className="h-full bg-emerald-500 w-1/4 rounded-full"></div>
           </div>
-          <button className="text-xs font-bold text-emerald-600 hover:underline">Request Expansion →</button>
+          <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>3D Asset Files: 18.2 GB</span>
+            <span>Documents & Data: 7.4 GB</span>
+          </div>
         </div>
 
+        {/* ECOSYSTEM CONNECTIVITY */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+              <Cpu size={20} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">Connected Applications</h3>
+              <p className="text-xs text-slate-500">Ecosystem integrations consuming Vault data</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
+              <span className="font-semibold text-slate-800">Spatial Hub</span>
+              <span className="text-[10px] font-bold text-emerald-600">Active</span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
+              <span className="font-semibold text-slate-800">OmniStudio</span>
+              <span className="text-[10px] font-bold text-emerald-600">Active</span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
+              <span className="font-semibold text-slate-800">Spatial Engine</span>
+              <span className="text-[10px] font-bold text-emerald-600">Active</span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
+              <span className="font-semibold text-slate-800">Spatial Lens</span>
+              <span className="text-[10px] font-bold text-emerald-600">Active</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* RBAC ROLES & PERMISSIONS MATRIX */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
               <ShieldCheck size={20} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-900">Access Control & RBAC</h3>
-              <p className="text-xs text-slate-500">Enforce role-based access for Vault dataset creators.</p>
+              <h3 className="text-sm font-bold text-slate-900">Role-Based Access Control (RBAC) Matrix</h3>
+              <p className="text-xs text-slate-500">Tenant user role capabilities across Vault datasets & assets</p>
             </div>
           </div>
-          <button className="text-xs font-bold text-indigo-600 hover:underline">Configure Permissions →</button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-slate-600">
+            <thead className="bg-slate-50 text-[11px] uppercase font-bold text-slate-500 border-b border-slate-200">
+              <tr>
+                <th className="px-4 py-3">Role</th>
+                <th className="px-4 py-3">View Content</th>
+                <th className="px-4 py-3">Inline Grid Edit</th>
+                <th className="px-4 py-3">Schema & Templates</th>
+                <th className="px-4 py-3">Workflow Approvals</th>
+                <th className="px-4 py-3">Trash Purge</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              <tr>
+                <td className="px-4 py-3 font-bold text-slate-900">Owner / Vault Admin</td>
+                <td className="px-4 py-3 text-emerald-600 font-bold">Yes</td>
+                <td className="px-4 py-3 text-emerald-600 font-bold">Yes</td>
+                <td className="px-4 py-3 text-emerald-600 font-bold">Yes</td>
+                <td className="px-4 py-3 text-emerald-600 font-bold">Yes</td>
+                <td className="px-4 py-3 text-emerald-600 font-bold">Yes</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 font-bold text-slate-900">Co-Owner</td>
+                <td className="px-4 py-3 text-emerald-600 font-bold">Yes</td>
+                <td className="px-4 py-3 text-emerald-600 font-bold">Yes</td>
+                <td className="px-4 py-3 text-emerald-600 font-bold">Yes</td>
+                <td className="px-4 py-3 text-emerald-600 font-bold">Yes</td>
+                <td className="px-4 py-3 text-slate-400">No</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 font-bold text-slate-900">Editor</td>
+                <td className="px-4 py-3 text-emerald-600 font-bold">Yes</td>
+                <td className="px-4 py-3 text-emerald-600 font-bold">Yes</td>
+                <td className="px-4 py-3 text-slate-400">No</td>
+                <td className="px-4 py-3 text-slate-400">No</td>
+                <td className="px-4 py-3 text-slate-400">No</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 font-bold text-slate-900">Commenter / Viewer</td>
+                <td className="px-4 py-3 text-emerald-600 font-bold">Yes</td>
+                <td className="px-4 py-3 text-slate-400">No</td>
+                <td className="px-4 py-3 text-slate-400">No</td>
+                <td className="px-4 py-3 text-slate-400">No</td>
+                <td className="px-4 py-3 text-slate-400">No</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
+
+      {/* SECURITY RETENTION POLICIES */}
+      <form onSubmit={handleSavePolicies} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <h3 className="text-sm font-bold text-slate-900">Soft-Delete & Retention Policies</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Trash Auto-Purge Period</label>
+            <select
+              value={retentionDays}
+              onChange={(e) => setRetentionDays(e.target.value)}
+              className="h-10 w-full rounded-xl border border-slate-200 px-3 font-semibold outline-none focus:border-emerald-500"
+            >
+              <option value="15">15 Days</option>
+              <option value="30">30 Days (Recommended)</option>
+              <option value="60">60 Days</option>
+              <option value="90">90 Days</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-3 pt-5">
+            <input
+              type="checkbox"
+              id="purgeToggle"
+              checked={autoPurgeEnabled}
+              onChange={(e) => setAutoPurgeEnabled(e.target.checked)}
+              className="h-4 w-4 rounded-xs border-slate-300 text-emerald-600 focus:ring-emerald-500"
+            />
+            <label htmlFor="purgeToggle" className="font-semibold text-slate-700">
+              Automatically purge expired Trash items permanently
+            </label>
+          </div>
+        </div>
+
+        <div className="pt-2 border-t border-slate-100 flex justify-end">
+          <button type="submit" className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition shadow-xs">
+            Save Security Policies
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
+

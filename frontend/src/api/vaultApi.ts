@@ -114,10 +114,25 @@ export interface VaultDatasetSummary {
   storage_quota_bytes: number;
 }
 
+export interface VaultSearchResult {
+  query: string;
+  assets: VaultAsset[];
+  products: any[];
+  catalogs: any[];
+  collections: VaultCollection[];
+  templates: VaultTemplate[];
+}
+
 export const vaultApi = {
+  // --- Global Multi-Target Search ---
+  searchGlobal: (query: string) =>
+    apiRequest<VaultSearchResult>(`/api/vault/search?q=${encodeURIComponent(query)}`, { method: 'GET' })
+      .catch(() => ({ query, assets: [], products: [], catalogs: [], collections: [], templates: [] })),
+
   // --- Datasets & Multi-Source Summary ---
   getDatasetsSummary: () => apiRequest<VaultDatasetSummary>('/api/vault/datasets/summary', { method: 'GET' })
     .catch(() => ({ total_assets: 0, total_3d_models: 0, total_products: 0, total_catalogs: 0, total_templates: 0, total_collections: 0, total_storage_bytes: 0, storage_quota_bytes: 107374182400 })),
+
   
   getProductDataset: () => apiRequest<{ collection: VaultCollection; records: VaultRecord[] }>('/api/vault/datasets/products', { method: 'GET' })
     .then(res => ({

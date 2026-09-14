@@ -16,7 +16,7 @@
                                                       v
                                   +---------------------------------------+
                                   |      I3DION VAULT REST API LAYER      |
-                                  |         (Express.js + Auth)           |
+                                  |    (Express.js + Global Search + Auth)|
                                   +-------------------+-------------------+
                                                       |
                                       +---------------+---------------+
@@ -58,7 +58,7 @@ Vault enforces granular permission checks (`requireMinRole` middleware):
 * **Vault Administrator / Organization Owner**: Full schema management, workflow approvals, access control configuration, permanent trash purging.
 * **Asset Manager / Data Administrator**: Asset upload, dataset schema creation, version publication, approval management.
 * **Editor / Contributor**: Datasheet grid record creation, inline row editing, CSV/XLSX import/export.
-* **Viewer**: Read-only dataset navigation, view selection, 3D asset previewing, document downloads.
+* **Viewer / Commenter**: Read-only dataset navigation, view selection, 3D asset previewing, document downloads.
 
 ### 2.3 Explicit Resource Sharing (`vault_shares`)
 Granular object-level sharing allows explicit sharing of specific assets or datasets with internal team members or external collaborators with defined access levels:
@@ -69,13 +69,17 @@ Granular object-level sharing allows explicit sharing of specific assets or data
 
 ---
 
-## 3. Storage & Versioning Architecture
+## 3. Storage, Search & Versioning Architecture
 
-### 3.1 Binary Storage Abstraction
+### 3.1 Backend Global Multi-Target Search (`GET /api/vault/search`)
+* Backend-driven indexed search across `vault_assets`, `products`, `catalogs`, `vault_collections`, and `vault_templates`.
+* All queries strictly enforce `organization_id` tenant filters.
+
+### 3.2 Binary Storage Abstraction
 * Binary files (GLB, GLTF, OBJ, FBX, PDF, XLSX, images) are stored with unique, non-guessable storage identifiers on the physical filesystem / object store.
 * Logical metadata, file attributes, version history, and processing status are maintained in `vault_assets` and `vault_asset_versions`.
 
-### 3.2 Major / Minor Immutable Versioning
+### 3.3 Major / Minor Immutable Versioning
 * Version records are stored in `vault_asset_versions`.
 * **Minor versions** (e.g. `1.1`, `1.2`) represent draft updates and work in progress.
 * **Major versions** (e.g. `2.0`) represent published milestones following formal review.
@@ -112,7 +116,7 @@ Content states transition through controlled approval lifecycle stages:
 
 ### 5.3 Audit & Soft-Delete Recovery
 * **Audit Trail (`vault_audit_logs`)**: Records user ID, action type (`CREATE`, `UPDATE`, `DELETE`, `VERSION_RESTORE`, `APPROVE`, `SHARE`), timestamp, IP context, and change delta.
-* **Soft Delete & Trash (`is_deleted`)**: Deleted assets and records move to Vault Trash, retaining original path location and deletion metadata for 30-day recovery before permanent purge.
+* **Soft Delete & Trash (`is_deleted`)**: Deleted assets and records move to Vault Trash, retaining original path location and deletion metadata for configurable 15-90 day retention periods before permanent purge.
 
 ---
 
@@ -121,9 +125,9 @@ Content states transition through controlled approval lifecycle stages:
 | Verification Area | Status | Execution Summary |
 |---|---|---|
 | **TypeScript Typecheck** | **PASSED** | Executed `npx tsc --noEmit` cleanly with zero type errors. |
-| **Backend API Endpoints** | **PASSED** | Implemented endpoints for Assets, Datasets, Views, Shares, Approvals, Versions, Processing, Audit, & Trash. |
+| **Backend API Endpoints** | **PASSED** | Implemented endpoints for Assets, Datasets, Views, Shares, Approvals, Versions, Processing, Audit, Search, & Trash. |
 | **Tenant Security Isolation** | **PASSED** | Verified mandatory `organization_id` filters across all backend SQL queries. |
-| **UI Integration** | **PASSED** | Enterprise dark-mode graphite styling, responsive grid tables, modal dialogs, and clean zero-mock data views. |
+| **UI Integration** | **PASSED** | Enterprise dark-mode graphite styling, responsive grid tables, modal dialogs, global search header, and clean zero-mock data views. |
 
 ---
 
