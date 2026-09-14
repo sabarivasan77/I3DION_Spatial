@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { aiGatewayService } from '../services/aiGatewayService.js';
-import { authenticate } from '../middleware/auth.js';
+import { requireAuth as authenticate } from '../middleware/auth.js';
 
 const router = Router();
 

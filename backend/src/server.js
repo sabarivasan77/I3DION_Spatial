@@ -186,8 +186,10 @@ apiRouter.use('/billing', billingRouter);
 apiRouter.use('/webhooks', webhooksRouter);
 apiRouter.use('/organization', organizationRouter);
 apiRouter.use('/platform-admin', platformAdminRouter);
-apiRouter.use('/publishing', publishingRouter);
-apiRouter.use('/notifications', notificationsRouter);
+import { studioRouter } from './routes/studio.js';
+
+apiRouter.use('/studio', studioRouter);
+apiRouter.use('/omni-studio', studioRouter);
 apiRouter.use('/vault', vaultRouter);
 apiRouter.use('/', resourcesRouter);
 

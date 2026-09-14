@@ -284,6 +284,37 @@ export async function ensureMigrated() {
         created_at timestamptz NOT NULL DEFAULT now(),
         UNIQUE (schema_id, internal_name)
       );
+
+      CREATE TABLE IF NOT EXISTS studio_projects (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        owner_id uuid REFERENCES users(id) ON DELETE SET NULL,
+        name text NOT NULL,
+        description text,
+        project_type text NOT NULL DEFAULT 'Application',
+        status text NOT NULL DEFAULT 'Draft',
+        thumbnail text,
+        version integer NOT NULL DEFAULT 1,
+        last_published_version integer,
+        visibility text NOT NULL DEFAULT 'Organization',
+        product_ids jsonb NOT NULL DEFAULT '[]'::jsonb,
+        vault_asset_ids jsonb NOT NULL DEFAULT '[]'::jsonb,
+        project_document jsonb NOT NULL DEFAULT '{"screens": [], "components": [], "component_tree": [], "variables": [], "data_sources": [], "bindings": [], "actions": [], "logic": [], "theme": {}, "settings": {}}'::jsonb,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now(),
+        published_at timestamptz
+      );
+
+      CREATE TABLE IF NOT EXISTS studio_project_versions (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        project_id uuid NOT NULL REFERENCES studio_projects(id) ON DELETE CASCADE,
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        version_number integer NOT NULL,
+        author_id uuid REFERENCES users(id) ON DELETE SET NULL,
+        change_summary text,
+        project_document jsonb NOT NULL,
+        published_at timestamptz NOT NULL DEFAULT now()
+      );
     `);
 
     

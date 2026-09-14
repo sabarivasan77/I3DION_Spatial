@@ -64,17 +64,21 @@ const VaultProductDetail = lazyWithRetry(() => import('./pages/vault/VaultProduc
 const VaultCatalogs = lazyWithRetry(() => import('./pages/vault/VaultCatalogs'));
 const VaultEnquiries = lazyWithRetry(() => import('./pages/vault/VaultEnquiries'));
 
-// Omni Studio Pages
 const StudioLayout = lazyWithRetry(() => import('./layouts/StudioLayout'));
 const StudioOverview = lazyWithRetry(() => import('./pages/studio/StudioOverview').then((m) => ({ default: m.StudioOverview })));
 const StudioProjects = lazyWithRetry(() => import('./pages/studio/StudioProjects').then((m) => ({ default: m.StudioProjects })));
 const StudioCatalogBuilder = lazyWithRetry(() => import('./pages/studio/StudioCatalogBuilder').then((m) => ({ default: m.StudioCatalogBuilder })));
+const StudioEditor = lazyWithRetry(() => import('./pages/studio/StudioEditor').then((m) => ({ default: m.StudioEditor })));
+const StudioLogicWorkspace = lazyWithRetry(() => import('./pages/studio/StudioLogicWorkspace').then((m) => ({ default: m.StudioLogicWorkspace })));
+const StudioPreview = lazyWithRetry(() => import('./pages/studio/StudioPreview').then((m) => ({ default: m.StudioPreview })));
 const StudioTemplates = lazyWithRetry(() => import('./pages/studio/StudioTemplates').then((m) => ({ default: m.StudioTemplates })));
 const StudioPublished = lazyWithRetry(() => import('./pages/studio/StudioPublished').then((m) => ({ default: m.StudioPublished })));
 const StudioDrafts = lazyWithRetry(() => import('./pages/studio/StudioSecondaryViews').then((m) => ({ default: m.StudioDrafts })));
 const StudioVersions = lazyWithRetry(() => import('./pages/studio/StudioSecondaryViews').then((m) => ({ default: m.StudioVersions })));
 const StudioSettings = lazyWithRetry(() => import('./pages/studio/StudioSecondaryViews').then((m) => ({ default: m.StudioSettings })));
 const StudioSupport = lazyWithRetry(() => import('./pages/studio/StudioSecondaryViews').then((m) => ({ default: m.StudioSupport })));
+const StudioShared = lazyWithRetry(() => import('./pages/studio/StudioSecondaryViews').then((m) => ({ default: m.StudioShared })));
+const StudioTrash = lazyWithRetry(() => import('./pages/studio/StudioSecondaryViews').then((m) => ({ default: m.StudioTrash })));
 
 export default function App() {
   const initialize = useAuthStore((state) => state.initialize);
@@ -180,10 +184,15 @@ export default function App() {
           <Route path="overview" element={<StudioOverview />} />
           <Route path="projects" element={<StudioProjects />} />
           <Route path="builder/:id" element={<StudioCatalogBuilder />} />
+          <Route path="editor/:id" element={<StudioEditor />} />
+          <Route path="logic/:id" element={<StudioLogicWorkspace />} />
+          <Route path="preview/:id" element={<StudioPreview />} />
           <Route path="templates" element={<StudioTemplates />} />
           <Route path="published" element={<StudioPublished />} />
           <Route path="drafts" element={<StudioDrafts />} />
           <Route path="versions" element={<StudioVersions />} />
+          <Route path="shared" element={<StudioShared />} />
+          <Route path="trash" element={<StudioTrash />} />
           <Route path="settings" element={<StudioSettings />} />
           <Route path="support" element={<StudioSupport />} />
         </Route>

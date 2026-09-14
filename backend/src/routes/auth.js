@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { query } from '../db/pool.js';
 import { config } from '../config.js';
 import { ApiError } from '../utils/errors.js';
+import { OAuth2Client } from 'google-auth-library';
 
 export const authRouter = Router();
 
@@ -287,7 +288,7 @@ authRouter.post('/reset-password', async (req, res, next) => {
     if (!token || !password) throw new ApiError(400, 'Token and new password are required');
     if (password.length < 6) throw new ApiError(400, 'Password must be at least 6 characters long');
 
-    let decoded: any;
+    let decoded;
     try {
       decoded = jwt.verify(token, JWT_SECRET);
     } catch {

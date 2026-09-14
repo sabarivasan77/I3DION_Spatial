@@ -22,6 +22,59 @@ export interface StudioCatalogData {
   sections: StudioSection[];
 }
 
+export interface StudioLowCodeComponent {
+  id: string;
+  type: string;
+  name: string;
+  category: 'BASIC' | 'INPUT' | 'DISPLAY' | 'NAVIGATION' | 'MEDIA' | 'PRODUCT' | '3D_AR' | 'DATA' | 'ADVANCED';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  parent_id?: string;
+  style?: Record<string, any>;
+  props?: Record<string, any>;
+  data_binding?: {
+    source: 'vault_products' | 'vault_assets' | 'vault_records' | 'variable';
+    dataset_id?: string;
+    field_key?: string;
+  };
+  action?: {
+    type: 'navigate' | 'open_modal' | 'update_variable' | 'submit_enquiry' | 'play_3d_anim' | 'change_camera' | 'launch_ar' | 'open_url';
+    target_id?: string;
+    payload?: any;
+  };
+  is_locked?: boolean;
+  is_hidden?: boolean;
+}
+
+export interface StudioLowCodeScreen {
+  id: string;
+  name: string;
+  background_color: string;
+  padding: number;
+  is_initial?: boolean;
+}
+
+export interface StudioLowCodeVariable {
+  id: string;
+  name: string;
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+  value: any;
+  scope: 'app' | 'screen';
+}
+
+export interface StudioLowCodeLogicNode {
+  id: string;
+  type: 'trigger' | 'action' | 'condition';
+  name: string;
+  trigger_event?: string;
+  action_type?: string;
+  target_id?: string;
+  config?: Record<string, any>;
+  next_nodes?: string[];
+}
+
 export interface StudioProject {
   id: string;
   name: string;
@@ -37,6 +90,15 @@ export interface StudioProject {
   product_ids: string[];
   vault_asset_ids?: string[];
   catalog_data: StudioCatalogData;
+  project_document?: {
+    screens: StudioLowCodeScreen[];
+    components: StudioLowCodeComponent[];
+    component_tree: any[];
+    variables: StudioLowCodeVariable[];
+    logic: StudioLowCodeLogicNode[];
+    theme: Record<string, any>;
+    settings: Record<string, any>;
+  };
 }
 
 export interface StudioTemplate {

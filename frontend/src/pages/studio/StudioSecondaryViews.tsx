@@ -155,36 +155,125 @@ export const StudioSettings: React.FC = () => {
   );
 };
 
+export const StudioShared: React.FC = () => {
+  const navigate = useNavigate();
+  const [sharedProjects, setSharedProjects] = useState<StudioProject[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadShared();
+  }, []);
+
+  const loadShared = async () => {
+    setLoading(true);
+    try {
+      const data = await studioApi.getProjects();
+      setSharedProjects(data.filter(p => p.visibility === 'Organization' || p.visibility === 'Public'));
+    } catch (err) {
+      console.error('Failed to load shared projects:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="p-8 max-w-7xl mx-auto space-y-6 text-slate-900">
+      <div className="border-b border-slate-200 pb-4">
+        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <Database className="w-6 h-6 text-indigo-600" />
+          Shared Experiences & Workspace Projects ({sharedProjects.length})
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">Experiences shared across your organization workspace.</p>
+      </div>
+
+      {loading ? (
+        <div className="space-y-3">
+          {[1, 2].map(i => (
+            <div key={i} className="h-20 bg-slate-200/60 rounded-xl animate-pulse" />
+          ))}
+        </div>
+      ) : sharedProjects.length === 0 ? (
+        <div className="p-8 text-center bg-white rounded-xl border border-slate-200 text-slate-500 text-xs shadow-xs">
+          No shared projects.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {sharedProjects.map(p => (
+            <div
+              key={p.id}
+              onClick={() => navigate(`/omni-studio/builder/${p.id}`)}
+              className="p-4 bg-white rounded-xl border border-slate-200 hover:border-indigo-400 transition cursor-pointer flex items-center justify-between shadow-xs"
+            >
+              <div>
+                <h4 className="font-bold text-slate-900 text-sm">{p.name}</h4>
+                <p className="text-xs text-slate-500 line-clamp-1">{p.description || 'Organization Experience'}</p>
+                <div className="text-[11px] text-slate-400 mt-1">Visibility: {p.visibility} • Version {p.version}</div>
+              </div>
+              <button className="px-3.5 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition shadow-xs">
+                Open Experience
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const StudioTrash: React.FC = () => {
+  return (
+    <div className="p-8 max-w-4xl mx-auto space-y-6 text-slate-900">
+      <div className="border-b border-slate-200 pb-4">
+        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <FileText className="w-6 h-6 text-slate-400" />
+          Trash / Archived Projects
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">Archived applications and draft projects.</p>
+      </div>
+
+      <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 space-y-3 shadow-xs">
+        <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
+          <FileText className="w-6 h-6" />
+        </div>
+        <div className="text-sm font-semibold text-slate-700">Trash is empty</div>
+        <p className="text-xs text-slate-400 max-w-sm mx-auto">
+          Deleted or archived projects will appear here before permanent purging.
+        </p>
+      </div>
+    </div>
+  );
+};
+
 export const StudioSupport: React.FC = () => {
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-8 text-slate-900">
       <div className="border-b border-slate-200 pb-4">
         <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
           <HelpCircle className="w-6 h-6 text-indigo-600" />
-          Omni Studio Help & Guide
+          Omni Studio Help & Documentation
         </h1>
-        <p className="text-sm text-slate-500 mt-1">Documentation for creating visual spatial catalogs.</p>
+        <p className="text-sm text-slate-500 mt-1">Guide for creating enterprise digital experiences and product visualizers.</p>
       </div>
 
       <div className="space-y-4 text-sm text-slate-600">
         <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-2 shadow-xs">
-          <h3 className="font-bold text-slate-900">1. Select Assets from Vault</h3>
+          <h3 className="font-bold text-slate-900">1. Spatial Data Binding from Vault</h3>
           <p className="text-xs text-slate-500">
-            Open the Studio Catalog Builder and click the "Vault Assets" panel. Select verified 3D models and product items to populate your visual sections.
+            Omni Studio components bind dynamically to Spatial Vault datasets, 3D GLTF models, and engineering specification tables.
           </p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-2 shadow-xs">
-          <h3 className="font-bold text-slate-900">2. Arrange & Inspect Layouts</h3>
+          <h3 className="font-bold text-slate-900">2. Low-Code Canvas & Drag-and-Drop Editor</h3>
           <p className="text-xs text-slate-500">
-            Use the Center Canvas to reorder sections, adjust card grids, and configure custom CTA buttons or product descriptions using the Right Inspector.
+            Use the four-zone workspace to insert elements from 9 component categories, configure component tree hierarchy, and set custom property inspector styles.
           </p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-2 shadow-xs">
-          <h3 className="font-bold text-slate-900">3. Publish & Distribute</h3>
+          <h3 className="font-bold text-slate-900">3. Node Logic Builder & Immutable Versioning</h3>
           <p className="text-xs text-slate-500">
-            Preview on Desktop, Tablet, or Mobile devices. Run pre-publish validation and deploy to Spatial Hub with version tracking and QR access.
+            Design event workflows, 3D animation triggers, and state variables in the Logic Builder. Preview on Desktop, Tablet, and Mobile, and publish with version snapshots.
           </p>
         </div>
       </div>
