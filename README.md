@@ -13,16 +13,16 @@ I3DION Spatial operates under a **Unified Ecosystem** model:
 
 ---
 
-## 🔒 Enterprise Security & Zero Trust Model
+## 🔒 Security Architecture & Access Control
 
-The platform enforces a strict Zero Trust Security architecture designed for enterprise compliance (ISO 27001, SOC 2).
+The platform enforces robust security and authentication controls designed for multi-tenant B2B isolation:
 
-*   **Never Trust By Default:** Every request is strictly authenticated and validated.
+*   **Explicit Authentication:** Every request is authenticated using signed JWT tokens and verified against active user records.
 *   **Centralized Identity Service:** Built-in Google Single Sign-On (SSO) alongside secure Email/Password.
-*   **Multi-Factor Authentication (MFA):** Mandatory TOTP-based authentication for administrative and high-risk accounts.
-*   **Brute-Force Protection:** Intelligent 5-attempt lockouts and active session monitoring.
-*   **Security Dashboard:** Comprehensive admin dashboard to monitor live Active Sessions, view granular Audit Logs (tracking IP, device, and action), and instantly revoke compromised tokens globally.
-*   **Role-Based Access Control (RBAC):** Strict isolation of companies and explicit permission enforcement via dedicated middleware.
+*   **Multi-Factor Authentication (MFA):** TOTP-based authentication for administrative and high-risk account management.
+*   **Rate Limiting & Security Headers:** Integrated express-rate-limit and Helmet security protection.
+*   **Security Dashboard:** Comprehensive admin dashboard to monitor live Active Sessions, view granular Audit Logs (tracking IP, device, and action), and revoke sessions globally.
+*   **Role-Based Access Control (RBAC):** Strict multi-tenant organization isolation and explicit permission enforcement via dedicated auth middleware.
 *   **Mobile Secure Storage:** Secure native persistence of JWTs inside Android's encrypted Keychain using `expo-secure-store`.
 
 ---

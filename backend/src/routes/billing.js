@@ -19,14 +19,7 @@ router.use(requireTenant);
 router.get('/plans', async (req, res, next) => {
   try {
     const plans = await subscriptionService.getAllPlans();
-    // Safety filter: Ensure no public non-Enterprise plan exceeds ₹3,000/mo
-    const validatedPlans = plans.map((plan) => {
-      if (plan.id !== 'ENTERPRISE' && plan.price_monthly_inr > 3000) {
-        return { ...plan, price_monthly_inr: 3000, price_yearly_inr: 30000 };
-      }
-      return plan;
-    });
-    res.json({ plans: validatedPlans });
+    res.json({ plans });
   } catch (err) {
     next(err);
   }
@@ -224,14 +217,6 @@ router.post('/checkout', requirePermission('billing.manage'), async (req, res, n
 
     const plan = planRes.rows[0];
     const amountInr = billingCycle === 'yearly' ? plan.price_yearly_inr : plan.price_monthly_inr;
-
-    // Safety validation
-    if (amountInr > (billingCycle === 'yearly' ? 30000 : 3000)) {
-      return res.status(400).json({
-        error: 'PRICING_VIOLATION',
-        message: 'Public plans may not exceed ₹3,000/month.'
-      });
-    }
 
     if (amountInr === 0) {
       // Free plan switch directly

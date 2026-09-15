@@ -862,39 +862,7 @@ async function offlineFallback<T>(rawPath: string, options: RequestInit & { toke
     const amountInPaise = body.planId === 'PRO'
       ? (body.billingCycle === 'yearly' ? 2999000 : 299900)
       : (body.billingCycle === 'yearly' ? 9999000 : 999900);
-    const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_TaoxOjjvfv3Z3U';
-    const keySecret = '1jGpSYXhZ6o2ArH1B3G9mSVH';
-
-    try {
-      const authHeader = 'Basic ' + btoa(`${keyId}:${keySecret}`);
-      const res = await fetch('https://api.razorpay.com/v1/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': authHeader
-        },
-        body: JSON.stringify({
-          amount: amountInPaise,
-          currency: 'INR',
-          receipt: `rcpt_fallback_${Date.now()}`
-        })
-      });
-      if (res.ok) {
-        const orderData = await res.json();
-        return {
-          success: true,
-          order_id: orderData.id,
-          orderId: orderData.id,
-          id: orderData.id,
-          amount: orderData.amount,
-          currency: orderData.currency,
-          key_id: keyId,
-          keyId: keyId,
-        } as T;
-      }
-    } catch (err) {
-      console.warn('Fallback Razorpay order creation warning:', err);
-    }
+    const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID || '';
 
     return {
       success: true,
@@ -1391,8 +1359,8 @@ export async function apiRequest<T>(
   try {
     response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers, body, signal: controller.signal });
   } catch (error) {
-    if (!isAuthEndpoint || isApiUnavailable(error) || (error as Error)?.name === 'AbortError') {
-      console.warn(`[API Network Guard] Fetch for ${path} encountered network error/timeout. Serving fallback.`);
+    if (import.meta.env.VITE_OFFLINE_MODE === 'true' || isOfflineToken(options.token)) {
+      console.warn(`[API Network Guard] Offline mode enabled. Serving fallback for ${path}.`);
       return offlineFallback<T>(path, options);
     }
     throw error;
@@ -1403,10 +1371,6 @@ export async function apiRequest<T>(
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    if (!isAuthEndpoint && (response.status >= 400 || response.status === 404)) {
-      console.warn(`[API Status Guard] Server returned HTTP ${response.status} for ${path}. Serving fallback.`);
-      return offlineFallback<T>(path, options);
-    }
     throw new ApiClientError(response.status, data.message ?? 'API request failed', data.details);
   }
 

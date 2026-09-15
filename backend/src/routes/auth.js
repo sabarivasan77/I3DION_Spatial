@@ -5,10 +5,11 @@ import { query } from '../db/pool.js';
 import { config } from '../config.js';
 import { ApiError } from '../utils/errors.js';
 import { OAuth2Client } from 'google-auth-library';
+import { emailProvider, EmailService } from '../services/emailService.js';
 
 export const authRouter = Router();
 
-const JWT_SECRET = config.jwtSecret || 'dev_jwt_secret_do_not_use_in_prod';
+const getJwtSecret = () => config.jwtSecret;
 const JWT_EXPIRES_IN = '7d';
 
 // POST /api/auth/signup
@@ -133,7 +134,7 @@ authRouter.post('/login', async (req, res, next) => {
     // Generate JWT
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: JWT_EXPIRES_IN }
     );
 
@@ -234,7 +235,7 @@ authRouter.post('/google', async (req, res, next) => {
 
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: JWT_EXPIRES_IN }
     );
 
@@ -269,10 +270,25 @@ authRouter.post('/forgot-password', async (req, res, next) => {
     if (user) {
       const resetToken = jwt.sign(
         { userId: user.id, type: 'password_reset' },
-        JWT_SECRET,
+        getJwtSecret(),
         { expiresIn: '1h' }
       );
-      console.log(`Password reset link generated for ${user.email}: /reset-password?token=${resetToken}`);
+      const resetUrl = `${config.appUrl}/reset-password?token=${resetToken}`;
+      console.log(`Password reset link generated for ${user.email}: ${resetUrl}`);
+
+      // Dispatch password reset email via emailProvider
+      const emailService = new EmailService();
+      const emailHtml = emailService.renderTemplate(
+        'Password Reset Request',
+        `<p>Hello ${user.name || 'User'},</p><p>We received a request to reset your password for your I3DION Spatial account. Click the button below to set a new password:</p>`,
+        { label: 'Reset Password', url: resetUrl }
+      );
+      await emailProvider.send({
+        to: user.email,
+        subject: 'Reset Your I3DION Spatial Password',
+        html: emailHtml,
+        text: `Reset your I3DION Spatial password by visiting: ${resetUrl}`,
+      }).catch((err) => console.error('Failed to dispatch password reset email:', err.message));
     }
 
     res.json({ message: 'If an account exists for this email, password reset instructions have been generated.' });
@@ -290,7 +306,7 @@ authRouter.post('/reset-password', async (req, res, next) => {
 
     let decoded;
     try {
-      decoded = jwt.verify(token, JWT_SECRET);
+      decoded = jwt.verify(token, getJwtSecret());
     } catch {
       throw new ApiError(400, 'Invalid or expired password reset token');
     }

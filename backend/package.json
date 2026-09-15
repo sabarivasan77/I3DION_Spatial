@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node src/server.js",
     "start": "node src/server.js",
-    "migrate": "node src/migrate.js"
+    "migrate": "node src/migrate.js",
+    "test": "node test-tenant-auth.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.115.0",

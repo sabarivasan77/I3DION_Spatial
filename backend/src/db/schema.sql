@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS users (
   phone text,
   avatar_url text,
   password_hash text NOT NULL,
-  role user_role NOT NULL DEFAULT 'Admin',
+  role user_role NOT NULL DEFAULT 'Viewer',
   reset_token_hash text,
   reset_token_expires_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),

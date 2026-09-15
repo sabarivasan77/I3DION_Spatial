@@ -3,7 +3,7 @@ import { config } from '../config.js';
 import { ApiError } from '../utils/errors.js';
 import { query } from '../db/pool.js';
 
-const JWT_SECRET = config.jwtSecret || 'dev_jwt_secret_do_not_use_in_prod';
+const getJwtSecret = () => config.jwtSecret;
 
 const roleRank = {
   Viewer: 1,
@@ -31,7 +31,7 @@ export async function requireAuth(req, _res, next) {
     // Verify local JWT
     let payload;
     try {
-      payload = jwt.verify(token, JWT_SECRET);
+      payload = jwt.verify(token, getJwtSecret());
     } catch (err) {
       throw new ApiError(401, 'Invalid or expired session');
     }
@@ -49,19 +49,16 @@ export async function requireAuth(req, _res, next) {
 
     let orgId = user.organization_id;
     if (!orgId) {
-      try {
-        const orgRes = await query('SELECT id FROM organizations LIMIT 1');
-        if (orgRes.rows.length > 0) {
-          orgId = orgRes.rows[0].id;
-        } else {
-          const newOrg = await query(
-            "INSERT INTO organizations (name, plan) VALUES ('I3DION Enterprise', 'Enterprise') RETURNING id"
-          );
-          orgId = newOrg.rows[0].id;
-        }
+      // Check organization_members table explicitly for membership
+      const memRes = await query(
+        'SELECT organization_id, role FROM organization_members WHERE user_id = $1 ORDER BY joined_at DESC LIMIT 1',
+        [user.id]
+      );
+      if (memRes.rows[0]) {
+        orgId = memRes.rows[0].organization_id;
         await query('UPDATE users SET organization_id = $1 WHERE id = $2', [orgId, user.id]).catch(() => null);
-      } catch (e) {
-        orgId = 'default-org-id';
+      } else {
+        throw new ApiError(403, 'User does not belong to an organization');
       }
     }
 
@@ -69,7 +66,7 @@ export async function requireAuth(req, _res, next) {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role || 'Admin',
+      role: user.role || 'Viewer',
       organization_id: orgId,
       organizationId: orgId,
     };
@@ -77,7 +74,7 @@ export async function requireAuth(req, _res, next) {
     req.token = token;
     next();
   } catch (error) {
-    console.error('requireAuth error:', error);
+    console.error('requireAuth error:', error.message);
     next(error instanceof ApiError ? error : new ApiError(401, 'Invalid or expired token'));
   }
 }

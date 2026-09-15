@@ -118,7 +118,7 @@ export const BillingSettingsPage: React.FC = () => {
       }
 
       // Open Razorpay Modal
-      const razorpayKey = checkoutRes.keyId || checkoutRes.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_TaoxOjjvfv3Z3U';
+      const razorpayKey = checkoutRes.keyId || checkoutRes.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID;
       const orderId = checkoutRes.orderId || checkoutRes.order_id;
 
       const options: any = {

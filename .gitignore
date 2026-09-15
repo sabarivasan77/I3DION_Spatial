@@ -6,30 +6,32 @@ node_modules/
 # Testing
 /coverage
 
-# Next.js
-/.next/
-/out/
-
-# Production
+# Build & Dist Outputs
 /build
 /dist
+dist/
+frontend/dist/
 
-# Debug
+# Debug Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# User Uploads & Heavy 3D Models
+backend/uploads/*
+!backend/uploads/.gitkeep
+frontend/public/models/*.glb
+frontend/public/models/*.gltf
+*.glb
+*.gltf
+
 # Env
 .env*
 .env.local
 
-# OS
+# OS & Temp
 .DS_Store
 Thumbs.db
-
-# Custom
-arch_swiss_knife.py
-
 .vercel
-.env*
+arch_swiss_knife.py

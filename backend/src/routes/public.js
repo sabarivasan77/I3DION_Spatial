@@ -2,6 +2,7 @@ import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { query } from '../db/pool.js';
+import { config } from '../config.js';
 import { validate } from '../middleware/validate.js';
 import { getPublicProductDetailsBySlug, getProductBySlug } from '../services/productFlow.js';
 import { trackEvent } from '../services/trackingEngine.js';
@@ -65,7 +66,7 @@ publicRouter.get(
     const headerToken = req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : null;
     if (headerToken) {
       try {
-        const payload = jwt.verify(headerToken, process.env.JWT_SECRET || 'dev_jwt_secret_do_not_use_in_prod');
+        const payload = jwt.verify(headerToken, config.jwtSecret);
         const userRes = await query('SELECT id, name, email, organization_id, role FROM users WHERE id = $1', [payload.userId]);
         authenticatedUser = userRes.rows[0] || null;
       } catch (err) {

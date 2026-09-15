@@ -4,13 +4,21 @@ import { config } from '../../config.js';
 
 export class RazorpayBillingProvider {
   constructor() {
-    this.keyId = process.env.RAZORPAY_KEY_ID || 'rzp_live_TaoxOjjvfv3Z3U';
-    this.keySecret = process.env.RAZORPAY_KEY_SECRET || '1jGpSYXhZ6o2ArH1B3G9mSVH';
-    this.webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || 'dummy_webhook_secret';
+    this.keyId = process.env.RAZORPAY_KEY_ID || '';
+    this.keySecret = process.env.RAZORPAY_KEY_SECRET || '';
+    this.webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || '';
+
+    if (!this.keyId || !this.keySecret) {
+      if (process.env.NODE_ENV === 'production') {
+        console.error('CRITICAL: RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET must be set in production.');
+      } else {
+        console.warn('WARNING: RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET not set. Razorpay SDK operations will fail.');
+      }
+    }
 
     this.razorpay = new Razorpay({
-      key_id: this.keyId,
-      key_secret: this.keySecret
+      key_id: this.keyId || 'dummy_key_id',
+      key_secret: this.keySecret || 'dummy_key_secret'
     });
   }
 
