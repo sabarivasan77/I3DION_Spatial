@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -291,19 +292,32 @@ authRouter.post('/forgot-password', async (req, res, next) => {
     const user = userRes.rows[0];
 
     if (user) {
-      const resetToken = jwt.sign(
-        { userId: user.id, type: 'password_reset' },
-        getJwtSecret(),
-        { expiresIn: '1h' }
+      // Generate 256-bit random cryptographic token (Annex A9)
+      const rawToken = crypto.randomBytes(32).toString('base64url');
+      const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes expiry
+
+      // Invalidate any existing unused reset tokens for this user
+      await query(
+        `UPDATE password_reset_tokens SET used_at = now() WHERE user_id = $1 AND used_at IS NULL`,
+        [user.id]
+      ).catch(() => {});
+
+      // Insert single-use hashed token
+      await query(
+        `INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
+         VALUES ($1, $2, $3)`,
+        [user.id, tokenHash, expiresAt]
       );
-      const resetUrl = `${config.appUrl}/reset-password?token=${resetToken}`;
-      console.log(`Password reset link generated for ${user.email}: ${resetUrl}`);
+
+      const resetUrl = `${config.appUrl}/reset-password?token=${rawToken}`;
+      // Log hygiene: NEVER log reset tokens or URLs to console or logs (Finding H5 / Annex A9)
 
       // Dispatch password reset email via emailProvider
       const emailService = new EmailService();
       const emailHtml = emailService.renderTemplate(
         'Password Reset Request',
-        `<p>Hello ${user.name || 'User'},</p><p>We received a request to reset your password for your I3DION Spatial account. Click the button below to set a new password:</p>`,
+        `<p>Hello ${user.name || 'User'},</p><p>We received a request to reset your password for your I3DION Spatial account. Click the button below to set a new password (valid for 30 minutes):</p>`,
         { label: 'Reset Password', url: resetUrl }
       );
       await emailProvider.send({
@@ -325,28 +339,44 @@ authRouter.post('/reset-password', async (req, res, next) => {
   try {
     const { token, password } = req.body;
     if (!token || !password) throw new ApiError(400, 'Token and new password are required');
-    if (password.length < 6) throw new ApiError(400, 'Password must be at least 6 characters long');
+    if (typeof password !== 'string' || password.length < 8) {
+      throw new ApiError(400, 'Password must be at least 8 characters long');
+    }
 
-    let decoded;
-    try {
-      decoded = jwt.verify(token, getJwtSecret());
-    } catch {
+    // Hash incoming token with sha256 to lookup stored hash (Annex A9)
+    const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+
+    // Atomic single-use consumption: invalidate token on first use and ensure not expired
+    const tokenRes = await query(
+      `UPDATE password_reset_tokens
+       SET used_at = now()
+       WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()
+       RETURNING user_id`,
+      [tokenHash]
+    );
+
+    if (tokenRes.rows.length === 0) {
       throw new ApiError(400, 'Invalid or expired password reset token');
     }
 
-    if (!decoded.userId || decoded.type !== 'password_reset') {
-      throw new ApiError(400, 'Invalid reset token payload');
-    }
+    const userId = tokenRes.rows[0].user_id;
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    const updateRes = await query('UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING id, email', [passwordHash, decoded.userId]);
+    const updateRes = await query(
+      'UPDATE users SET password_hash = $1, updated_at = now() WHERE id = $2 RETURNING id, email',
+      [passwordHash, userId]
+    );
+
     if (updateRes.rows.length === 0) {
       throw new ApiError(404, 'User not found');
     }
 
-    res.json({ message: 'Password has been reset successfully. You can now log in with your new password.' });
+    res.json({
+      success: true,
+      message: 'Password has been reset successfully. You can now log in with your new password.'
+    });
   } catch (error) {
     next(error);
   }
