@@ -325,7 +325,176 @@ export async function ensureMigrated() {
       ALTER TABLE vault_assets ADD COLUMN IF NOT EXISTS approval_status text DEFAULT 'Approved';
       ALTER TABLE vault_assets ADD COLUMN IF NOT EXISTS major_version integer DEFAULT 1;
       ALTER TABLE vault_assets ADD COLUMN IF NOT EXISTS minor_version integer DEFAULT 0;
-    `).catch(() => {});
+      ALTER TYPE product_status ADD VALUE IF NOT EXISTS 'In Review';
+      ALTER TABLE catalogs ADD COLUMN IF NOT EXISTS layout_config jsonb NOT NULL DEFAULT '{"sections": []}'::jsonb;
+      ALTER TABLE catalogs ADD COLUMN IF NOT EXISTS branding jsonb NOT NULL DEFAULT '{}'::jsonb;
+      ALTER TABLE catalogs ADD COLUMN IF NOT EXISTS published_snapshot jsonb;
+      ALTER TABLE catalogs ADD COLUMN IF NOT EXISTS pdf_url text;
+      ALTER TABLE catalog_products ADD COLUMN IF NOT EXISTS pinned_version_number integer NOT NULL DEFAULT 1;
+      ALTER TABLE catalog_products ADD COLUMN IF NOT EXISTS pinned_asset_id uuid REFERENCES vault_assets(id) ON DELETE SET NULL;
+      ALTER TABLE catalog_products ADD COLUMN IF NOT EXISTS custom_spec_overrides jsonb NOT NULL DEFAULT '{}'::jsonb;
+
+      CREATE TABLE IF NOT EXISTS spatial_experiences (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        name text NOT NULL,
+        slug text NOT NULL UNIQUE,
+        description text,
+        status text NOT NULL DEFAULT 'Draft',
+        vault_asset_id uuid REFERENCES vault_assets(id) ON DELETE SET NULL,
+        pinned_version_number integer NOT NULL DEFAULT 1,
+        scene_config jsonb NOT NULL DEFAULT '{"camera": {"fov": 45, "position": [0, 1.5, 3], "target": [0, 0, 0]}, "environment": {"preset": "studio", "exposure": 1.0, "contactShadow": true, "reflection": 0.2}, "ground": {"showGrid": true, "shadowOpacity": 0.4}}'::jsonb,
+        hotspots jsonb NOT NULL DEFAULT '[]'::jsonb,
+        animation_config jsonb NOT NULL DEFAULT '{"activeClip": null, "playbackSpeed": 1.0, "explodedViewFactor": 0.0, "parts": []}'::jsonb,
+        blueprint_config jsonb NOT NULL DEFAULT '{"enabled": false, "dimensions": {"length": 0, "width": 0, "height": 0, "unit": "mm"}, "callouts": []}'::jsonb,
+        ar_config jsonb NOT NULL DEFAULT '{"scale": 1.0, "placement": "floor", "allowSnapshot": true, "ctaText": "Request Quote"}'::jsonb,
+        published_snapshot jsonb,
+        published_at timestamptz,
+        created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      ALTER TABLE organizations ADD COLUMN IF NOT EXISTS slug text;
+      ALTER TABLE leads ADD COLUMN IF NOT EXISTS consent_metadata jsonb NOT NULL DEFAULT '{}'::jsonb;
+      ALTER TABLE leads ADD COLUMN IF NOT EXISTS is_spam boolean NOT NULL DEFAULT false;
+      ALTER TABLE leads ADD COLUMN IF NOT EXISTS qr_attributed boolean NOT NULL DEFAULT false;
+      ALTER TABLE leads ADD COLUMN IF NOT EXISTS experience_id uuid REFERENCES spatial_experiences(id) ON DELETE SET NULL;
+      ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS dedupe_key text;
+      
+      -- Expand analytics_events event_type constraint to include standard taxonomy
+      ALTER TABLE analytics_events DROP CONSTRAINT IF EXISTS analytics_events_event_type_check;
+      ALTER TABLE analytics_events ADD CONSTRAINT analytics_events_event_type_check
+        CHECK (event_type IN (
+          'page_view', 'product_view', 'catalog_view', 'catalog_generated', 'catalog_downloaded',
+          'product_visit_from_catalog', 'qr_scan_from_catalog', 'qr_scan', 'qr_landing', 'qr_preview', 'qr_download',
+          '3d_interaction', 'hotspot_click', 'hotspot_view', 'animation_play', 'blueprint_toggle',
+          'ar_launch', 'ar_session', 'ar_launch_attempt', 'ar_session_success', 'ar_unsupported_fallback',
+          'cta_quote_click', 'lead_form_submitted', 'dwell_time_ping', 'session_duration', 'lead_created',
+          'user_register', 'user_login', 'brochure_download', 'quote_request', 'time_spent', 'button_click', 'model_rotation', 'search', 'exit_intent', 'contact_sales', 'model_download'
+        ));
+
+      CREATE INDEX IF NOT EXISTS idx_analytics_dedupe ON analytics_events(dedupe_key);
+      CREATE INDEX IF NOT EXISTS idx_analytics_event_type ON analytics_events(event_type);
+      CREATE INDEX IF NOT EXISTS idx_analytics_org_created ON analytics_events(organization_id, created_at);
+
+      -- Commercial & Billing Tables
+      CREATE TABLE IF NOT EXISTS usage_counters (
+        organization_id uuid PRIMARY KEY REFERENCES organizations(id) ON DELETE CASCADE,
+        products_count integer NOT NULL DEFAULT 0,
+        catalogs_count integer NOT NULL DEFAULT 0,
+        models_count integer NOT NULL DEFAULT 0,
+        storage_bytes_used bigint NOT NULL DEFAULT 0,
+        team_members_count integer NOT NULL DEFAULT 1,
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      CREATE TABLE IF NOT EXISTS billing_customers (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL UNIQUE REFERENCES organizations(id) ON DELETE CASCADE,
+        razorpay_customer_id text NOT NULL UNIQUE,
+        email text NOT NULL,
+        name text NOT NULL,
+        phone text,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      CREATE TABLE IF NOT EXISTS billing_events (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        provider text NOT NULL DEFAULT 'razorpay',
+        provider_event_id text NOT NULL,
+        event_type text NOT NULL,
+        payload jsonb NOT NULL,
+        processed_at timestamptz NOT NULL DEFAULT now(),
+        created_at timestamptz NOT NULL DEFAULT now(),
+        UNIQUE(provider, provider_event_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS payments (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        razorpay_payment_id text UNIQUE,
+        razorpay_order_id text,
+        amount_inr numeric(10, 2) NOT NULL DEFAULT 0,
+        currency text NOT NULL DEFAULT 'INR',
+        status text NOT NULL DEFAULT 'captured',
+        method text,
+        created_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      CREATE TABLE IF NOT EXISTS orders (
+        id text PRIMARY KEY,
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+        plan_id text NOT NULL,
+        billing_cycle text NOT NULL CHECK (billing_cycle IN ('monthly', 'yearly')),
+        amount_paise integer NOT NULL,
+        amount_inr numeric(10, 2) NOT NULL,
+        currency text NOT NULL DEFAULT 'INR',
+        status text NOT NULL DEFAULT 'created' CHECK (status IN ('created', 'paid', 'failed')),
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      CREATE TABLE IF NOT EXISTS invoices (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        invoice_number text NOT NULL UNIQUE,
+        plan_id text NOT NULL,
+        amount_inr numeric(10, 2) NOT NULL DEFAULT 0,
+        tax_inr numeric(10, 2) NOT NULL DEFAULT 0,
+        status text NOT NULL DEFAULT 'paid',
+        period_start timestamptz NOT NULL DEFAULT now(),
+        period_end timestamptz NOT NULL DEFAULT (now() + interval '30 days'),
+        pdf_url text,
+        created_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      CREATE TABLE IF NOT EXISTS organization_billing_info (
+        organization_id uuid PRIMARY KEY REFERENCES organizations(id) ON DELETE CASCADE,
+        billing_name text NOT NULL,
+        billing_email text NOT NULL,
+        phone text,
+        tax_id text,
+        address_line1 text,
+        address_line2 text,
+        city text,
+        state text,
+        postal_code text,
+        country text NOT NULL DEFAULT 'India',
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      CREATE TABLE IF NOT EXISTS enterprise_requests (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+        company_name text NOT NULL,
+        work_email text NOT NULL,
+        contact_name text NOT NULL,
+        phone text,
+        expected_product_count integer DEFAULT 100,
+        expected_catalog_usage integer DEFAULT 50,
+        team_size integer DEFAULT 10,
+        required_features jsonb DEFAULT '[]'::jsonb,
+        message text,
+        status text NOT NULL DEFAULT 'pending',
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS custom_price_inr integer;
+      ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS custom_max_products integer;
+      ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS custom_max_catalogs integer;
+      ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS custom_max_3d_models integer;
+      ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS custom_max_storage_bytes bigint;
+      ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS custom_max_team_members integer;
+      ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS custom_features jsonb;
+    `).catch((e) => {
+      console.warn('Non-blocking DDL notice in pool.js:', e.message);
+    });
 
     try {
       const { patchIntelligenceSchema } = await import('./patch-intelligence-schema.js');

@@ -190,7 +190,10 @@ CREATE TABLE IF NOT EXISTS leads (
   email text NOT NULL,
   phone text,
   organization text,
+  company text,
+  designation text,
   status lead_status NOT NULL DEFAULT 'New',
+  priority text NOT NULL DEFAULT 'Normal',
   source text NOT NULL DEFAULT 'Catalog',
   score integer NOT NULL DEFAULT 0,
   notes text,
@@ -210,11 +213,27 @@ CREATE TABLE IF NOT EXISTS analytics_events (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS visitor_sessions (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id uuid REFERENCES organizations(id) ON DELETE CASCADE,
+  visitor_id text NOT NULL,
+  lead_id uuid REFERENCES leads(id) ON DELETE SET NULL,
+  session_start timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
 ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS visitor_id text;
 
 ALTER TABLE analytics_events DROP CONSTRAINT IF EXISTS analytics_events_event_type_check;
 ALTER TABLE analytics_events ADD CONSTRAINT analytics_events_event_type_check
-  CHECK (event_type IN ('page_view', 'product_view', 'catalog_view', 'catalog_generated', 'catalog_downloaded', 'product_visit_from_catalog', 'qr_scan_from_catalog', 'qr_scan', 'qr_preview', 'qr_download', 'ar_launch', 'ar_session', 'session_duration', 'lead_created', 'hotspot_view', 'animation_play', 'user_register', 'user_login', 'brochure_download', 'quote_request', 'time_spent', 'button_click', 'model_rotation'));
+  CHECK (event_type IN (
+    'page_view', 'product_view', 'catalog_view', 'catalog_generated', 'catalog_downloaded',
+    'product_visit_from_catalog', 'qr_scan_from_catalog', 'qr_scan', 'qr_landing', 'qr_preview', 'qr_download',
+    '3d_interaction', 'hotspot_click', 'hotspot_view', 'animation_play', 'blueprint_toggle',
+    'ar_launch', 'ar_session', 'ar_launch_attempt', 'ar_session_success', 'ar_unsupported_fallback',
+    'cta_quote_click', 'lead_form_submitted', 'dwell_time_ping', 'session_duration', 'lead_created',
+    'user_register', 'user_login', 'brochure_download', 'quote_request', 'time_spent', 'button_click', 'model_rotation', 'search', 'exit_intent', 'contact_sales', 'model_download'
+  ));
 
 CREATE TABLE IF NOT EXISTS product_animations (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -692,3 +711,114 @@ CREATE TABLE IF NOT EXISTS hub_subscriptions (
   updated_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE(organization_id)
 );
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- COMMERCIAL READINESS & BILLING SCHEMA
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS usage_counters (
+  organization_id uuid PRIMARY KEY REFERENCES organizations(id) ON DELETE CASCADE,
+  products_count integer NOT NULL DEFAULT 0,
+  catalogs_count integer NOT NULL DEFAULT 0,
+  models_count integer NOT NULL DEFAULT 0,
+  storage_bytes_used bigint NOT NULL DEFAULT 0,
+  team_members_count integer NOT NULL DEFAULT 1,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS billing_customers (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id uuid NOT NULL UNIQUE REFERENCES organizations(id) ON DELETE CASCADE,
+  razorpay_customer_id text NOT NULL UNIQUE,
+  email text NOT NULL,
+  name text NOT NULL,
+  phone text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS billing_events (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  provider text NOT NULL DEFAULT 'razorpay',
+  provider_event_id text NOT NULL,
+  event_type text NOT NULL,
+  payload jsonb NOT NULL,
+  processed_at timestamptz NOT NULL DEFAULT now(),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(provider, provider_event_id)
+);
+
+CREATE TABLE IF NOT EXISTS payments (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  razorpay_payment_id text UNIQUE,
+  razorpay_order_id text,
+  amount_inr numeric(10, 2) NOT NULL DEFAULT 0,
+  currency text NOT NULL DEFAULT 'INR',
+  status text NOT NULL DEFAULT 'captured',
+  method text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+  id text PRIMARY KEY,
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  plan_id text NOT NULL,
+  billing_cycle text NOT NULL CHECK (billing_cycle IN ('monthly', 'yearly')),
+  amount_paise integer NOT NULL,
+  amount_inr numeric(10, 2) NOT NULL,
+  currency text NOT NULL DEFAULT 'INR',
+  status text NOT NULL DEFAULT 'created' CHECK (status IN ('created', 'paid', 'failed')),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS invoices (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  invoice_number text NOT NULL UNIQUE,
+  plan_id text NOT NULL,
+  amount_inr numeric(10, 2) NOT NULL DEFAULT 0,
+  tax_inr numeric(10, 2) NOT NULL DEFAULT 0,
+  status text NOT NULL DEFAULT 'paid',
+  period_start timestamptz NOT NULL DEFAULT now(),
+  period_end timestamptz NOT NULL DEFAULT (now() + interval '30 days'),
+  pdf_url text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS organization_billing_info (
+  organization_id uuid PRIMARY KEY REFERENCES organizations(id) ON DELETE CASCADE,
+  billing_name text NOT NULL,
+  billing_email text NOT NULL,
+  phone text,
+  tax_id text,
+  address_line1 text,
+  address_line2 text,
+  city text,
+  state text,
+  postal_code text,
+  country text NOT NULL DEFAULT 'India',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS enterprise_requests (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  company_name text NOT NULL,
+  work_email text NOT NULL,
+  contact_name text NOT NULL,
+  phone text,
+  expected_product_count integer DEFAULT 100,
+  expected_catalog_usage integer DEFAULT 50,
+  team_size integer DEFAULT 10,
+  required_features jsonb DEFAULT '[]'::jsonb,
+  message text,
+  status text NOT NULL DEFAULT 'pending',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
