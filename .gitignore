@@ -25,6 +25,8 @@ frontend/public/models/*.glb
 frontend/public/models/*.gltf
 *.glb
 *.gltf
+database/backups/*
+!database/backups/.gitkeep
 
 # Env
 .env*
