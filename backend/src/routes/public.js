@@ -7,6 +7,7 @@ import { validate } from '../middleware/validate.js';
 import { getPublicProductDetailsBySlug, getProductBySlug } from '../services/productFlow.js';
 import { trackEvent } from '../services/trackingEngine.js';
 import { ApiError, asyncHandler } from '../utils/errors.js';
+import { publicLeadsLimiter, publicEventsLimiter, enforcePayloadCap } from '../middleware/rateLimiters.js';
 
 export const publicRouter = Router();
 
@@ -83,73 +84,20 @@ publicRouter.get(
 // POST /api/public/leads - Anonymous Lead Capture from Public Product Page
 publicRouter.post(
   '/leads',
+  publicLeadsLimiter,
   validate(publicLeadSchema),
   asyncHandler(async (req, res) => {
-    const { slug, visitorId, name, email, phone, company, intent, message } = req.validated.body;
+    const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    const { capturePublicLead } = await import('../services/hub/hubService.js');
+    const result = await capturePublicLead({
+      ...req.validated.body,
+      consent: req.validated.body.consent || { 
+        consentGiven: true, 
+        consentText: 'I agree to be contacted regarding this industrial equipment inquiry.' 
+      }
+    }, clientIp);
 
-    const product = await getProductBySlug(slug);
-    if (!product) throw new ApiError(404, 'Product not found');
-
-    // Check if lead already exists for this email & organization
-    let leadId = null;
-    const existing = await query(
-      'SELECT id, name FROM leads WHERE email = $1 AND organization_id = $2 LIMIT 1',
-      [email, product.organization_id]
-    );
-
-    const sourceMap = {
-      quote: 'Public Quote Request',
-      demo: 'AR Experience Demo Request',
-      brochure: 'Public Brochure Download',
-      contact: 'Public Contact Sales'
-    };
-
-    if (existing.rows.length > 0) {
-      leadId = existing.rows[0].id;
-      await query(
-        `UPDATE leads SET 
-           name = COALESCE($1, name),
-           phone = COALESCE($2, phone),
-           organization = COALESCE($3, organization),
-           notes = CASE WHEN $4::text IS NOT NULL THEN COALESCE(notes || E'\n', '') || $4 ELSE notes END,
-           updated_at = now()
-         WHERE id = $5`,
-        [name, phone || null, company || null, message ? `[${intent.toUpperCase()}] ${message}` : null, leadId]
-      );
-    } else {
-      const inserted = await query(
-        `INSERT INTO leads (organization_id, product_id, name, email, phone, organization, status, source, notes)
-         VALUES ($1, $2, $3, $4, $5, $6, 'New', $7, $8)
-         RETURNING id`,
-        [
-          product.organization_id,
-          product.id,
-          name,
-          email,
-          phone || null,
-          company || null,
-          sourceMap[intent] || 'Public Product Page',
-          message ? `[${intent.toUpperCase()}] ${message}` : null
-        ]
-      );
-      leadId = inserted.rows[0].id;
-    }
-
-    // Track lead capture event
-    await trackEvent({
-      organizationId: product.organization_id,
-      productId: product.id,
-      visitorId,
-      leadId,
-      eventType: intent === 'quote' ? 'quote_request' : (intent === 'brochure' ? 'brochure_download' : 'lead_created'),
-      metadata: { name, email, phone, company, intent, message }
-    });
-
-    res.status(201).json({
-      success: true,
-      leadId,
-      message: 'Thank you! Your request has been sent to our team.'
-    });
+    res.status(201).json(result);
   })
 );
 
@@ -199,6 +147,8 @@ publicRouter.get(
 // POST /api/public/analytics/events
 publicRouter.post(
   '/analytics/events',
+  publicEventsLimiter,
+  enforcePayloadCap(4096),
   validate(publicEventSchema),
   asyncHandler(async (req, res) => {
     const { slug, eventType, metadata, durationSeconds, sessionId, visitorId } = req.validated.body;
@@ -208,25 +158,35 @@ publicRouter.post(
       product = await getProductBySlug(slug);
     }
 
-    const eventMetadata = {
-      ...metadata,
-      sessionId: sessionId ?? metadata.sessionId ?? null,
-      durationSeconds: durationSeconds ?? metadata.durationSeconds ?? null,
-      source: metadata.source ?? 'public',
-      userAgent: req.headers['user-agent'] ?? null,
-      referrer: req.headers.referer ?? req.headers.referrer ?? null,
-      path: req.originalUrl,
-    };
+    const { ingestTelemetryEvent } = await import('../services/lens/lensService.js');
+    const userAgent = req.headers['user-agent'] || null;
+    const referrer = req.headers.referer || req.headers.referrer || null;
+    const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    const clientIpSubnet = clientIp.includes(':')
+      ? clientIp.split(':').slice(0, 3).join(':') + '::xxxx'
+      : clientIp.split('.').slice(0, 3).join('.') + '.0';
 
-    const event = await trackEvent({
-      organizationId: product ? product.organization_id : (metadata.organizationId || null),
-      productId: product ? product.id : null,
-      visitorId: visitorId || metadata.visitorId || null,
-      eventType,
-      metadata: eventMetadata,
+    const orgId = product ? product.organization_id : (metadata.organizationId || null);
+
+    if (!orgId) {
+      return res.status(201).json({ success: true, note: 'unassociated_event_dropped' });
+    }
+
+    const event = await ingestTelemetryEvent({
+      type: eventType,
+      organizationId: orgId,
+      publishedRef: product ? { contentType: 'product_showcase', contentId: product.id, slug: product.slug } : null,
+      sessionId,
+      visitorId,
+      properties: { ...metadata, durationSeconds },
+      dwellDurationSeconds: durationSeconds
+    }, {
+      userAgent,
+      referrer,
+      clientIpSubnet
     });
 
-    res.status(201).json(event || { success: true });
+    res.status(201).json(event);
   }),
 );
 

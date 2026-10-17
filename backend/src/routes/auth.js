@@ -8,13 +8,15 @@ import { ApiError } from '../utils/errors.js';
 import { OAuth2Client } from 'google-auth-library';
 import { emailProvider, EmailService } from '../services/emailService.js';
 
+import { loginLimiter, signupLimiter, forgotPasswordLimiter, resetPasswordLimiter } from '../middleware/rateLimiters.js';
+
 export const authRouter = Router();
 
 const getJwtSecret = () => config.jwtSecret;
 const JWT_EXPIRES_IN = '7d';
 
 // POST /api/auth/signup
-authRouter.post('/signup', async (req, res, next) => {
+authRouter.post('/signup', signupLimiter, async (req, res, next) => {
   try {
     const { name, email, password, organizationName } = req.body;
 
@@ -106,7 +108,7 @@ authRouter.post('/signup', async (req, res, next) => {
 });
 
 // POST /api/auth/login
-authRouter.post('/login', async (req, res, next) => {
+authRouter.post('/login', loginLimiter, async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -282,7 +284,7 @@ authRouter.post('/google', async (req, res, next) => {
 });
 
 // POST /api/auth/forgot-password
-authRouter.post('/forgot-password', async (req, res, next) => {
+authRouter.post('/forgot-password', forgotPasswordLimiter, async (req, res, next) => {
   try {
     const { email } = req.body;
     if (!email) throw new ApiError(400, 'Email is required');
@@ -335,7 +337,7 @@ authRouter.post('/forgot-password', async (req, res, next) => {
 });
 
 // POST /api/auth/reset-password
-authRouter.post('/reset-password', async (req, res, next) => {
+authRouter.post('/reset-password', resetPasswordLimiter, async (req, res, next) => {
   try {
     const { token, password } = req.body;
     if (!token || !password) throw new ApiError(400, 'Token and new password are required');
