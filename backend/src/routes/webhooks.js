@@ -9,9 +9,13 @@ const router = express.Router();
  * POST /api/v1/webhooks/razorpay
  * Idempotent Razorpay Webhook Handler with raw HMAC verification
  */
-router.post('/razorpay', express.raw({ type: 'application/json' }), async (req, res) => {
+router.post('/razorpay', async (req, res) => {
   const signature = req.headers['x-razorpay-signature'];
-  const rawBody = req.body.toString();
+  const rawBody = req.rawBody
+    ? req.rawBody.toString('utf8')
+    : (Buffer.isBuffer(req.body)
+        ? req.body.toString('utf8')
+        : (typeof req.body === 'string' ? req.body : JSON.stringify(req.body)));
 
   // Verify HMAC signature
   const isValid = billingProvider.verifyWebhookSignature(rawBody, signature);

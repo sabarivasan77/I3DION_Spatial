@@ -30,6 +30,10 @@ import { vaultRouter } from './routes/vault.js';
 import aiGatewayRouter from './routes/aiGateway.js';
 import { intelligenceRouter } from './routes/intelligence.js';
 import { studioRouter } from './routes/studio.js';
+import { engineRouter } from './routes/engine.js';
+import { lensRouter } from './routes/lens.js';
+import { coreRouter } from './routes/core.js';
+import onboardingRouter from './routes/onboarding.js';
 import { errorHandler, notFound } from './utils/errors.js';
 
 export const app = express();
@@ -61,7 +65,12 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({
+  limit: '2mb',
+  verify: (req, _res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 app.use(cookieParser());
 app.use(morgan('dev'));
 app.use(rateLimit({ windowMs: 60_000, limit: 180 }));
@@ -124,7 +133,12 @@ apiRouter.use('/organization', organizationRouter);
 apiRouter.use('/platform-admin', platformAdminRouter);
 apiRouter.use('/studio', studioRouter);
 apiRouter.use('/omni-studio', studioRouter);
+apiRouter.use('/engine', engineRouter);
+apiRouter.use('/lens', lensRouter);
 apiRouter.use('/vault', vaultRouter);
+apiRouter.use('/core', coreRouter);
+apiRouter.use('/notifications', notificationsRouter);
+apiRouter.use('/onboarding', onboardingRouter);
 apiRouter.use('/', resourcesRouter);
 
 app.use('/api', apiRouter);
