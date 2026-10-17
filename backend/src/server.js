@@ -139,10 +139,7 @@ export function startServer(port = config.port) {
     });
   } catch (error) {
     console.error('\nI3DION Spatial API could not start.');
-    console.error('Unexpected server startup failure.');
-    console.error('\nExpected database URL:');
-    console.error(`  ${config.databaseUrl}\n`);
-    console.error(error);
+    console.error('Unexpected server startup failure:', error.message);
     process.exit(1);
   }
 }

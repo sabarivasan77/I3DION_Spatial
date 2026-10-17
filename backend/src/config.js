@@ -32,7 +32,9 @@ export const config = {
   appUrl: vercelUrl ?? process.env.APP_URL ?? 'http://localhost:5173',
   apiUrl: process.env.API_URL ?? (isProd ? vercelUrl : 'http://localhost:4000'),
   databaseUrl: process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/i3dion_spatial',
-  jwtSecret: process.env.JWT_SECRET || (isProd ? (() => { throw new Error('CRITICAL: JWT_SECRET environment variable is required in production.'); })() : 'dev_secret_local_only'),
+  jwtSecret: process.env.JWT_SECRET || (process.env.NODE_ENV === 'test' ? 'test_jwt_secret_only' : (() => {
+    throw new Error('FATAL: JWT_SECRET environment variable is required. Refusing to start with insecure fallbacks.');
+  })()),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
   uploadDir: process.env.UPLOAD_DIR ?? 'uploads',
   maxFileSize: Number(process.env.MAX_FILE_SIZE ?? 150 * 1024 * 1024),

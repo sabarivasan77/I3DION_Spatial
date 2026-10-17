@@ -56,12 +56,12 @@ resourcesRouter.get('/me', asyncHandler(async (req, res) => {
       organizationId = companyRes.rows[0].id;
     }
 
-    // 2. Insert the user
+    // 2. Insert the user with default least-privilege role ('Viewer')
     await query(
       `INSERT INTO users (id, organization_id, name, email, role, password_hash)
        VALUES ($1, $2, $3, $4, $5, 'supabase_managed')
        ON CONFLICT (id) DO NOTHING`,
-      [req.user.id, organizationId, req.user.name || 'User', req.user.email, 'Company Admin']
+      [req.user.id, organizationId, req.user.name || 'User', req.user.email, 'Viewer']
     );
 
     // 3. Fetch again

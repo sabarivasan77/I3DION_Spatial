@@ -1,6 +1,6 @@
 # I3DION Spatial - Enterprise Intelligence Platform
 
-I3DION Spatial is an advanced Industrial AR Catalog, Sales Visualization, and Customer Intelligence Platform. It seamlessly blends spatial visualization (AR), AI-powered analytics, and Zero Trust security to turn technical products into sales-ready catalogs and continuously generate intelligent business leads.
+I3DION Spatial is an Industrial 3D/AR Catalog, Sales Visualization, and Customer Intelligence Platform. It combines spatial 3D visualization, interactive catalogs, buyer engagement telemetry, and multi-tenant role-based access control to turn technical industrial equipment into sales-ready experiences and qualified business leads.
 
 ---
 

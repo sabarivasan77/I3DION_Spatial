@@ -64,7 +64,7 @@ authRouter.post('/signup', async (req, res, next) => {
     // Generate JWT
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: JWT_EXPIRES_IN }
     );
 

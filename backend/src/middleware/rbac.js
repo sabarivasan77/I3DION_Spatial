@@ -9,7 +9,7 @@ export function requireRole(roles) {
   return async (req, res, next) => {
     try {
       if (!req.user) {
-        throw new AppError(401, 'Authentication required');
+        throw new ApiError(401, 'Authentication required');
       }
 
       if (!roles.includes(req.user.role) && req.user.role !== 'Super Admin') {
@@ -48,7 +48,7 @@ export function requireCompanyAccess() {
   return async (req, res, next) => {
     try {
       if (!req.user) {
-        throw new AppError(401, 'Authentication required');
+        throw new ApiError(401, 'Authentication required');
       }
 
       const targetCompanyId = req.params.organizationId || req.body.organizationId || req.query.organizationId;

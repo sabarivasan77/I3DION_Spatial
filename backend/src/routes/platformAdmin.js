@@ -8,12 +8,23 @@ const router = express.Router();
 router.use(requireAuth);
 
 /**
- * Middleware: Ensure user is a Platform Admin (Super Admin)
+ * Middleware: Ensure user is an authorized Platform Staff member (Finding C1 / Annex A4)
+ * Deny-all on /platform-admin unless the authenticated user's ID is explicitly present
+ * in the PLATFORM_ADMIN_USER_IDS or PLATFORM_STAFF_ALLOWLIST environment variable.
+ * Tenant roles (Admin, Manager, Super Admin, etc.) do NOT grant access.
  */
 function requirePlatformAdmin(req, res, next) {
-  if (req.user?.role !== 'Super Admin' && req.user?.role !== 'Admin') {
+  if (!req.user || !req.user.id) {
+    return next(new ApiError(401, 'Authentication required.'));
+  }
+
+  const rawAllowlist = process.env.PLATFORM_ADMIN_USER_IDS || process.env.PLATFORM_STAFF_ALLOWLIST || '';
+  const allowlist = rawAllowlist.split(',').map((id) => id.trim()).filter(Boolean);
+
+  if (!allowlist.includes(req.user.id)) {
     return next(new ApiError(403, 'Platform Admin authorization required. Access denied.'));
   }
+
   next();
 }
 

@@ -36,8 +36,22 @@ const ROLE_PERMISSIONS = {
 
 export function requirePermission(permission) {
   return (req, res, next) => {
-    const userRole = req.user?.role || 'Viewer';
-    const permissions = ROLE_PERMISSIONS[userRole] || ROLE_PERMISSIONS['Viewer'];
+    if (!req.user) {
+      return res.status(401).json({
+        error: 'UNAUTHORIZED',
+        message: 'Authentication required before checking permissions.'
+      });
+    }
+
+    const userRole = req.user.role;
+    if (!userRole || !ROLE_PERMISSIONS[userRole]) {
+      return res.status(403).json({
+        error: 'FORBIDDEN_ROLE',
+        message: 'No valid role assigned to user account.'
+      });
+    }
+
+    const permissions = ROLE_PERMISSIONS[userRole];
 
     if (permissions.includes('*') || permissions.includes(permission)) {
       return next();

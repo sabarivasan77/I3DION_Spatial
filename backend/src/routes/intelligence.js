@@ -18,10 +18,14 @@ import { auditService } from '../services/intelligence/auditService.js';
 export const intelligenceRouter = Router();
 
 /**
- * Helper to resolve tenant organizationId from req.user or header/query.
+ * Helper to resolve tenant organizationId strictly from authenticated user context,
+ * falling back to verified body/query parameters only for unauthenticated public event collection.
  */
 function resolveOrganizationId(req) {
-  const orgId = req.user?.organizationId || req.user?.organization_id || req.query.organizationId || req.body?.organizationId || req.headers['x-organization-id'];
+  if (req.user?.organizationId || req.user?.organization_id) {
+    return req.user.organizationId || req.user.organization_id;
+  }
+  const orgId = req.query.organizationId || req.body?.organizationId || req.headers['x-organization-id'];
   if (!orgId) {
     throw new ApiError(400, 'organizationId is required for tenant isolation');
   }

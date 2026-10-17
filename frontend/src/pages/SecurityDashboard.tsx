@@ -22,14 +22,14 @@ export function SecurityDashboard() {
       fetch('/api/security/audit-logs', { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/security/alerts', { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : null).catch(() => null)
     ]).then(([statsData, sessionsData, logsData, alertsData]) => {
-      setStats(statsData || { activeUsers: 1, failedLogins: 0, activeAlerts: 0 });
-      setSessions(Array.isArray(sessionsData) ? sessionsData : [{ id: 'sess-1', email: 'admin@i3dion.local', device_info: 'Browser Session', ip_address: '127.0.0.1' }]);
-      setLogs(Array.isArray(logsData) ? logsData : [{ action: 'USER_LOGIN_SUCCESS', created_at: new Date().toISOString(), email: 'admin@i3dion.local', ip_address: '127.0.0.1' }]);
+      setStats(statsData || { activeUsers: 0, failedLogins: 0, activeAlerts: 0 });
+      setSessions(Array.isArray(sessionsData) ? sessionsData : []);
+      setLogs(Array.isArray(logsData) ? logsData : []);
       setAlerts(Array.isArray(alertsData) ? alertsData : []);
     }).catch(() => {
-      setStats({ activeUsers: 1, failedLogins: 0, activeAlerts: 0 });
-      setSessions([{ id: 'sess-1', email: 'admin@i3dion.local', device_info: 'Browser Session', ip_address: '127.0.0.1' }]);
-      setLogs([{ action: 'USER_LOGIN_SUCCESS', created_at: new Date().toISOString(), email: 'admin@i3dion.local', ip_address: '127.0.0.1' }]);
+      setStats({ activeUsers: 0, failedLogins: 0, activeAlerts: 0 });
+      setSessions([]);
+      setLogs([]);
     }).finally(() => {
       setLoading(false);
     });
