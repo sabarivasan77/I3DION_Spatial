@@ -1,0 +1,137 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "I3DION Spatial Vault REST API",
+    "version": "1.0.0",
+    "description": "Production-grade authoritative 3D & media asset repository API with strict versioning, background processing, and quota controls."
+  },
+  "servers": [
+    {
+      "url": "/api/vault",
+      "description": "Spatial Vault Platform API"
+    }
+  ],
+  "paths": {
+    "/assets": {
+      "get": {
+        "summary": "List vault assets with filtering and pagination",
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" }, "description": "Full-text search query" },
+          { "name": "type", "in": "query", "schema": { "type": "string" }, "description": "Asset type filter (3D Model, Document, Image, etc.)" },
+          { "name": "status", "in": "query", "schema": { "type": "string" }, "description": "Processing status (Processing, Ready, Warning, Failed)" },
+          { "name": "collection_id", "in": "query", "schema": { "type": "string", "format": "uuid" }, "description": "Filter by parent collection" },
+          { "name": "is_deleted", "in": "query", "schema": { "type": "boolean" }, "description": "Filter active vs trashed assets" },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["newest", "oldest", "name", "size"] } }
+        ],
+        "responses": {
+          "200": { "description": "List of assets matching filter criteria" }
+        }
+      }
+    },
+    "/assets/upload": {
+      "post": {
+        "summary": "Upload and ingest asset with quota check and background processing",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": { "type": "string", "format": "binary" },
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "category": { "type": "string" },
+                  "type": { "type": "string" },
+                  "visibility": { "type": "string", "enum": ["Organization", "Private", "Public"] },
+                  "collection_id": { "type": "string", "format": "uuid" },
+                  "tags": { "type": "array", "items": { "type": "string" } }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Asset created and queued for processing" },
+          "400": { "description": "Invalid file or parameters" },
+          "403": { "description": "Storage quota exceeded or insufficient permissions" }
+        }
+      }
+    },
+    "/assets/{id}": {
+      "get": {
+        "summary": "Retrieve asset details and full version history",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Asset details with versions array" },
+          "404": { "description": "Asset not found" }
+        }
+      },
+      "delete": {
+        "summary": "Soft-delete asset (move to trash)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Asset moved to trash" },
+          "404": { "description": "Asset not found" }
+        }
+      }
+    },
+    "/assets/{id}/versions/{versionNumber}/rollback": {
+      "post": {
+        "summary": "Rollback asset active pointer to a historic version",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "versionNumber", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Active asset reverted to specified version" },
+          "404": { "description": "Asset or version not found" }
+        }
+      }
+    },
+    "/trash": {
+      "get": {
+        "summary": "List all soft-deleted assets in trash bin",
+        "responses": {
+          "200": { "description": "Array of trashed assets with days remaining" }
+        }
+      }
+    },
+    "/assets/{id}/restore": {
+      "post": {
+        "summary": "Restore asset from trash bin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Asset restored to active collection" },
+          "404": { "description": "Asset not found" }
+        }
+      }
+    },
+    "/assets/{id}/permanent": {
+      "delete": {
+        "summary": "Permanently purge asset and release storage quota",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Asset permanently purged and storage freed" },
+          "404": { "description": "Asset not found" }
+        }
+      }
+    },
+    "/jobs": {
+      "get": {
+        "summary": "List background processing jobs and progress",
+        "responses": {
+          "200": { "description": "List of recent processing jobs with progress percentage" }
+        }
+      }
+    }
+  }
+}

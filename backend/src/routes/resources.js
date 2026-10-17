@@ -414,7 +414,7 @@ resourcesRouter.get(
   }),
 );
 
-resourcesRouter.post('/catalogs', requireRole('Manager'), validate(catalogSchema), saveCatalog('create'));
+resourcesRouter.post('/catalogs', requireRole('Manager'), enforceQuota('catalogs'), validate(catalogSchema), saveCatalog('create'));
 resourcesRouter.put('/catalogs/:id', requireRole('Manager'), validate(idParam.merge(catalogSchema)), saveCatalog('update'));
 resourcesRouter.delete('/catalogs/:id', requireRole('Manager'), validate(idParam), deleteOwned('catalogs'));
 

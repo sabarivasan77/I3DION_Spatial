@@ -4,6 +4,13 @@ import { query } from '../db/pool.js';
 import { ApiError, asyncHandler } from '../utils/errors.js';
 import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
+import { 
+  getOrganizationShowcase, 
+  getPublishedCatalog, 
+  getPublishedExperience, 
+  capturePublicLead, 
+  generateSocialMeta 
+} from '../services/hub/hubService.js';
 
 export const hubRouter = Router();
 
@@ -99,6 +106,83 @@ hubRouter.get(
       ORDER BY c.created_at DESC
     `, [entityType, id]);
     res.json(rows);
+  })
+);
+
+// ==========================================
+// 3.5 SPATIAL HUB PUBLIC DELIVERY & SHOWCASE
+// ==========================================
+
+// Public Organization Showcase
+hubRouter.get(
+  '/showcase/:identifier',
+  asyncHandler(async (req, res) => {
+    const showcase = await getOrganizationShowcase(req.params.identifier);
+    res.json(showcase);
+  })
+);
+
+// Public Published Catalog
+hubRouter.get(
+  '/catalogs/:slug',
+  asyncHandler(async (req, res) => {
+    const catalog = await getPublishedCatalog(req.params.slug);
+    res.json(catalog);
+  })
+);
+
+// Public Published 3D/AR Experience
+hubRouter.get(
+  '/experiences/:slug',
+  asyncHandler(async (req, res) => {
+    const experience = await getPublishedExperience(req.params.slug);
+    res.json(experience);
+  })
+);
+
+// Social Meta Previews (OpenGraph)
+hubRouter.get(
+  '/meta/:type/:slug',
+  asyncHandler(async (req, res) => {
+    const meta = await generateSocialMeta(req.params.type, req.params.slug);
+    res.json(meta);
+  })
+);
+
+// Public Lead Capture Form (with Consent & Honeypot Anti-Spam)
+const publicHubLeadSchema = z.object({
+  body: z.object({
+    name: z.string().min(1, 'Name is required'),
+    email: z.string().email('Valid email is required'),
+    phone: z.string().optional(),
+    company: z.string().optional(),
+    intent: z.enum(['quote', 'demo', 'technical_spec', 'contact_sales', 'brochure', 'contact']).default('quote'),
+    message: z.string().optional(),
+    source: z.string().optional().default('Spatial Hub'),
+    qrAttributed: z.boolean().optional().default(false),
+    slug: z.string().optional(),
+    catalogId: z.string().uuid().optional(),
+    productId: z.string().uuid().optional(),
+    experienceId: z.string().uuid().optional(),
+    organizationId: z.string().uuid().optional(),
+    visitorId: z.string().optional(),
+    consent: z.object({
+      consentGiven: z.boolean(),
+      consentText: z.string().optional(),
+      consentTimestamp: z.string().optional()
+    }),
+    hp_token: z.string().optional(),
+    website_trap: z.string().optional()
+  })
+});
+
+hubRouter.post(
+  '/leads',
+  validate(publicHubLeadSchema),
+  asyncHandler(async (req, res) => {
+    const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    const result = await capturePublicLead(req.validated.body, clientIp);
+    res.status(201).json(result);
   })
 );
 

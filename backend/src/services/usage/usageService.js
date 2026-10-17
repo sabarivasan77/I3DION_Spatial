@@ -11,9 +11,15 @@ export class UsageService {
          $1,
          (SELECT COUNT(*) FROM products WHERE organization_id = $1),
          (SELECT COUNT(*) FROM catalogs WHERE organization_id = $1),
-         (SELECT COUNT(*) FROM product_assets WHERE organization_id = $1 AND asset_type IN ('model', 'usdz_model')),
-         COALESCE((SELECT SUM(size_bytes) FROM product_assets WHERE organization_id = $1), 0),
-         (SELECT COUNT(*) FROM users WHERE organization_id = $1)
+         (
+           (SELECT COUNT(*) FROM vault_assets WHERE organization_id = $1 AND deleted_at IS NULL AND (mime_type IN ('model/gltf-binary', 'model/gltf+json', 'model/vnd.usdz+zip') OR original_name ILIKE '%.glb' OR original_name ILIKE '%.gltf' OR original_name ILIKE '%.usdz'))
+           + (SELECT COUNT(*) FROM product_assets WHERE organization_id = $1 AND asset_type IN ('model', 'usdz_model'))
+         ),
+         (
+           COALESCE((SELECT SUM(size_bytes) FROM vault_assets WHERE organization_id = $1 AND deleted_at IS NULL), 0)
+           + COALESCE((SELECT SUM(size_bytes) FROM product_assets WHERE organization_id = $1), 0)
+         ),
+         GREATEST(1, COALESCE((SELECT COUNT(*) FROM organization_members WHERE organization_id = $1), (SELECT COUNT(*) FROM users WHERE organization_id = $1), 1))
        )
        ON CONFLICT (organization_id) DO UPDATE SET
          products_count = EXCLUDED.products_count,

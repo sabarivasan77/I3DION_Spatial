@@ -25,6 +25,7 @@ const LeadsDashboardPage = lazyWithRetry(() => import('./pages/LeadManagement').
 const CompanySettingsPage = lazyWithRetry(() => import('./pages/CompanySettingsPage').then((m) => ({ default: m.CompanySettingsPage })));
 const SupportDashboardPage = lazyWithRetry(() => import('./pages/SupportDashboard').then((m) => ({ default: m.SupportDashboardPage })));
 const HelpCenterPage = lazyWithRetry(() => import('./pages/HelpCenter').then((m) => ({ default: m.HelpCenterPage })));
+const HomePage = lazyWithRetry(() => import('./pages/home/HomePage').then((m) => ({ default: m.HomePage })));
 
 // Spatial Hub Pages
 const HubExplorePage = lazyWithRetry(() => import('./pages/hub/HubExplore').then((m) => ({ default: m.HubExplore })));
@@ -203,8 +204,17 @@ export default function App() {
         <Route path="catalog-builder" element={<Navigate to="/omni-studio/projects" replace />} />
         <Route path="catalog-builder/*" element={<Navigate to="/omni-studio/projects" replace />} />
 
-        {/* INTERNAL ORGANIZATION APPLICATIONS SHELL */}
-        <Route path="dashboard" element={<Navigate to="/hub" replace />} />
+        {/* I3DION HOME — ECOSYSTEM FRONT DOOR */}
+        <Route
+          path="home"
+          element={
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="workspace" element={<Navigate to="/home" replace />} />
+        <Route path="dashboard" element={<Navigate to="/home" replace />} />
         <Route
           element={
             <ProtectedRoute>

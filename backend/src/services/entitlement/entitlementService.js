@@ -1,5 +1,6 @@
 import { pool } from '../../db/pool.js';
 import { config } from '../../config.js';
+import { usageService } from '../usage/usageService.js';
 
 export class EntitlementService {
   /**
@@ -57,7 +58,7 @@ export class EntitlementService {
       plan_id: 'FREE',
       plan_name: 'Free',
       max_products: 3,
-      max_catalogs: 3,
+      max_catalogs: 2,
       max_3d_models: 3,
       max_storage_bytes: 52428800,
       max_team_members: 1,
@@ -66,19 +67,22 @@ export class EntitlementService {
       org_created_at: new Date()
     };
 
-    // Apply Global 100-Day Launch Access or Standard 3-Day Trial
+    // Apply Global 100-Day Launch Access or Standard Trial if not strictly enforcing plan limits
     const now = new Date();
     const { productLaunchDate, launchWindowEndDate, standardTrialDays } = config.billing || {};
     let isLaunchAccess = false;
     let isTrialAccess = false;
+    const shouldEnforceStrict = process.env.ENFORCE_PLAN_LIMITS === 'true' || process.env.NODE_ENV === 'test_quota';
     
-    if (productLaunchDate && launchWindowEndDate && now >= productLaunchDate && now <= launchWindowEndDate) {
-      isLaunchAccess = true;
-    } else {
-      const trialEndDate = new Date(sub.org_created_at);
-      trialEndDate.setDate(trialEndDate.getDate() + (standardTrialDays || 3));
-      if (now < trialEndDate) {
-        isTrialAccess = true;
+    if (!shouldEnforceStrict) {
+      if (productLaunchDate && launchWindowEndDate && now >= productLaunchDate && now <= launchWindowEndDate) {
+        isLaunchAccess = true;
+      } else {
+        const trialEndDate = new Date(sub.org_created_at);
+        trialEndDate.setDate(trialEndDate.getDate() + (standardTrialDays || 14));
+        if (now < trialEndDate) {
+          isTrialAccess = true;
+        }
       }
     }
 
@@ -104,20 +108,7 @@ export class EntitlementService {
       }
     }
 
-    const usageRes = await pool.query(
-      `SELECT products_count, catalogs_count, models_count, storage_bytes_used, team_members_count
-       FROM usage_counters
-       WHERE organization_id = $1`,
-      [organizationId]
-    );
-
-    const usage = usageRes.rows[0] || {
-      products_count: 0,
-      catalogs_count: 0,
-      models_count: 0,
-      storage_bytes_used: 0,
-      team_members_count: 1
-    };
+    const usage = await usageService.syncOrganizationUsage(organizationId);
 
     return {
       plan: {

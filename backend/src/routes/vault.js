@@ -1,9 +1,17 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
+import fs from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { pool } from '../db/pool.js';
 import { requireAuth } from '../middleware/auth.js';
 import { config } from '../config.js';
+import { detectMimeType, extractAssetMetadata, runAssetProcessingJob } from '../services/vault/assetProcessor.js';
+import { entitlementService } from '../services/entitlement/entitlementService.js';
+import { usageService } from '../services/usage/usageService.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const vaultRouter = express.Router();
 
@@ -267,6 +275,53 @@ vaultRouter.post('/assets/upload', requireMinRole(['Admin', 'Manager', 'Sales Us
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
+    // 1. Storage Quota & Plan Limits Enforcement
+    const quotaRes = await pool.query(
+      `SELECT COALESCE(storage_quota_bytes, 107374182400) as quota FROM organizations WHERE id = $1`,
+      [organization_id]
+    );
+    const orgQuota = Number(quotaRes.rows[0]?.quota || 107374182400);
+
+    const usageRes = await pool.query(
+      `SELECT COALESCE(SUM(size_bytes), 0) as used FROM vault_assets WHERE organization_id = $1 AND is_deleted = false`,
+      [organization_id]
+    );
+    const currentUsed = Number(usageRes.rows[0]?.used || 0);
+
+    if (currentUsed + file.size > orgQuota) {
+      await fs.unlink(file.path).catch(() => {});
+      return res.status(403).json({
+        error: 'Storage quota exceeded. Please upgrade your license tier or clean up unused assets.'
+      });
+    }
+
+    const storageCheck = await entitlementService.checkQuota(organization_id, 'storage', file.size);
+    if (!storageCheck.allowed) {
+      await fs.unlink(file.path).catch(() => {});
+      return res.status(403).json({
+        error: storageCheck.reason,
+        resourceType: 'storage',
+        current: storageCheck.current,
+        limit: storageCheck.limit,
+        message: storageCheck.message
+      });
+    }
+
+    const is3DModel = req.body.type === '3D Model' || /\.(glb|gltf|obj|usdz|step|stl)$/i.test(file.originalname);
+    if (is3DModel) {
+      const modelCheck = await entitlementService.checkQuota(organization_id, '3d_models', 1);
+      if (!modelCheck.allowed) {
+        await fs.unlink(file.path).catch(() => {});
+        return res.status(403).json({
+          error: modelCheck.reason,
+          resourceType: '3d_models',
+          current: modelCheck.current,
+          limit: modelCheck.limit,
+          message: modelCheck.message
+        });
+      }
+    }
+
     const {
       name,
       description,
@@ -280,13 +335,17 @@ vaultRouter.post('/assets/upload', requireMinRole(['Admin', 'Manager', 'Sales Us
     const parsedTags = typeof tags === 'string' ? JSON.parse(tags) : (tags || []);
     const publicUrl = `/${config.uploadDir}/${file.filename}`;
 
+    // 2. Initial Metadata Extraction
+    const technicalMetadata = await extractAssetMetadata(file.path, file.originalname);
+
+    // 3. Create Asset Record
     const result = await pool.query(
       `INSERT INTO vault_assets (
          organization_id, name, description, category, type, 
          original_name, storage_key, public_url, mime_type, 
-         size_bytes, visibility, status, tags, collection_id, created_by
+         size_bytes, visibility, status, tags, metadata, collection_id, created_by
        ) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) 
        RETURNING *`,
       [
         organization_id,
@@ -297,11 +356,12 @@ vaultRouter.post('/assets/upload', requireMinRole(['Admin', 'Manager', 'Sales Us
         file.originalname,
         file.filename,
         publicUrl,
-        file.mimetype,
+        file.mimetype || technicalMetadata.mimeType,
         file.size,
         visibility,
-        'Ready',
+        'Processing',
         JSON.stringify(parsedTags),
+        JSON.stringify(technicalMetadata),
         collection_id || null,
         userId
       ]
@@ -309,7 +369,7 @@ vaultRouter.post('/assets/upload', requireMinRole(['Admin', 'Manager', 'Sales Us
 
     const newAsset = result.rows[0];
 
-    // Create v1 in vault_asset_versions
+    // 4. Create Immutable v1 in vault_asset_versions
     await pool.query(
       `INSERT INTO vault_asset_versions (
          asset_id, version_number, original_name, storage_key, 
@@ -317,20 +377,31 @@ vaultRouter.post('/assets/upload', requireMinRole(['Admin', 'Manager', 'Sales Us
        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [
         newAsset.id, 1, file.originalname, file.filename,
-        publicUrl, file.mimetype, file.size, 'Initial upload', userId
+        publicUrl, file.mimetype || technicalMetadata.mimeType, file.size, 'Initial upload', userId
       ]
     );
 
-    // Track completed processing job
-    await pool.query(
-      `INSERT INTO vault_processing_jobs (organization_id, job_type, asset_name, status, progress_pct)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [organization_id, 'Asset Upload & Validation', newAsset.name, 'Completed', 100]
+    // 5. Create Background Processing Job
+    const jobRes = await pool.query(
+      `INSERT INTO vault_processing_jobs (organization_id, asset_id, job_type, asset_name, status, progress_pct)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id`,
+      [organization_id, newAsset.id, 'Multi-Format Ingestion & Geometry Analysis', newAsset.name, 'queued', 0]
     );
+    const jobId = jobRes.rows[0].id;
+
+    // Asynchronously advance state machine
+    runAssetProcessingJob(jobId, newAsset.id, organization_id, file.path, file.originalname).catch(err => {
+      console.warn('Background processing job warning:', err.message);
+    });
 
     await logActivity(organization_id, userId, userName, 'Uploaded Asset', 'Asset', newAsset.id, newAsset.name);
+    usageService.syncOrganizationUsage(organization_id).catch(() => {});
 
-    res.status(201).json(newAsset);
+    res.status(201).json({
+      ...newAsset,
+      job_id: jobId
+    });
   } catch (error) {
     console.error('Vault Upload Error:', error);
     res.status(500).json({ error: 'Failed to upload asset' });
@@ -379,6 +450,64 @@ vaultRouter.post('/assets/:id/versions', requireMinRole(['Admin', 'Manager', 'Sa
   } catch (error) {
     console.error('Vault New Version Error:', error);
     res.status(500).json({ error: 'Failed to upload new version' });
+  }
+});
+
+// POST /api/vault/assets/:id/versions/:versionNumber/rollback
+vaultRouter.post('/assets/:id/versions/:versionNumber/rollback', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { id, versionNumber } = req.params;
+    const { organization_id, id: userId, name: userName } = req.user;
+
+    const check = await pool.query(
+      `SELECT * FROM vault_assets WHERE id = $1 AND organization_id = $2`,
+      [id, organization_id]
+    );
+    if (check.rows.length === 0) return res.status(404).json({ error: 'Asset not found' });
+    const asset = check.rows[0];
+
+    const vCheck = await pool.query(
+      `SELECT * FROM vault_asset_versions WHERE asset_id = $1 AND version_number = $2`,
+      [id, parseInt(versionNumber, 10)]
+    );
+    if (vCheck.rows.length === 0) return res.status(404).json({ error: `Version ${versionNumber} not found` });
+    const targetVersion = vCheck.rows[0];
+
+    // Revert active asset pointers to targeted historic version
+    const updated = await pool.query(
+      `UPDATE vault_assets
+       SET storage_key = $1, public_url = $2, mime_type = $3, size_bytes = $4, original_name = $5, updated_at = now()
+       WHERE id = $6 AND organization_id = $7
+       RETURNING *`,
+      [
+        targetVersion.storage_key,
+        targetVersion.public_url,
+        targetVersion.mime_type,
+        targetVersion.size_bytes,
+        targetVersion.original_name,
+        id,
+        organization_id
+      ]
+    );
+
+    await logActivity(
+      organization_id,
+      userId,
+      userName,
+      `Rolled back Asset to Version v${versionNumber}`,
+      'Asset',
+      id,
+      asset.name
+    );
+
+    res.json({
+      message: `Asset successfully rolled back to version ${versionNumber}`,
+      asset: updated.rows[0],
+      active_version: targetVersion.version_number
+    });
+  } catch (error) {
+    console.error('Vault Rollback Error:', error);
+    res.status(500).json({ error: 'Failed to rollback asset version' });
   }
 });
 
@@ -483,16 +612,90 @@ vaultRouter.delete('/assets/:id/permanent', requireMinRole(['Admin']), async (re
     const { id } = req.params;
     const { organization_id, id: userId, name: userName } = req.user;
 
-    const check = await pool.query(`SELECT name FROM vault_assets WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
+    const check = await pool.query(
+      `SELECT name, storage_key FROM vault_assets WHERE id = $1 AND organization_id = $2`,
+      [id, organization_id]
+    );
     if (check.rows.length === 0) return res.status(404).json({ error: 'Asset not found' });
+    const asset = check.rows[0];
 
+    // Clean up physical disk file if present
+    if (asset.storage_key) {
+      const diskPath = path.join(config.uploadDir, asset.storage_key);
+      await fs.unlink(diskPath).catch(() => {});
+    }
+
+    await pool.query(`DELETE FROM vault_asset_versions WHERE asset_id = $1`, [id]);
     await pool.query(`DELETE FROM vault_assets WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
-    await logActivity(organization_id, userId, userName, 'Permanently Deleted Asset', 'Asset', id, check.rows[0].name);
+    await logActivity(organization_id, userId, userName, 'Permanently Deleted Asset', 'Asset', id, asset.name);
 
-    res.json({ message: 'Asset permanently deleted' });
+    res.json({ message: 'Asset permanently purged and storage freed' });
   } catch (error) {
     console.error('Vault Permanent Delete Error:', error);
     res.status(500).json({ error: 'Failed to permanently delete asset' });
+  }
+});
+
+// GET /api/vault/trash (List soft-deleted assets in trash bin)
+vaultRouter.get('/trash', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const result = await pool.query(
+      `SELECT a.*,
+              GREATEST(0, 30 - EXTRACT(DAY FROM (now() - a.deleted_at)))::int as days_remaining
+       FROM vault_assets a
+       WHERE a.organization_id = $1 AND a.is_deleted = true
+       ORDER BY a.deleted_at DESC`,
+      [organization_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Vault GET Trash Error:', error);
+    res.status(500).json({ error: 'Failed to fetch trash bin' });
+  }
+});
+
+// GET /api/vault/jobs (List processing jobs for organization)
+vaultRouter.get('/jobs', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const result = await pool.query(
+      `SELECT * FROM vault_processing_jobs
+       WHERE organization_id = $1
+       ORDER BY started_at DESC
+       LIMIT 50`,
+      [organization_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Vault GET Jobs Error:', error);
+    res.status(500).json({ error: 'Failed to fetch processing jobs' });
+  }
+});
+
+// GET /api/vault/docs/openapi.json (OpenAPI 3.0 specification)
+vaultRouter.get('/docs/openapi.json', async (req, res) => {
+  try {
+    const candidatePaths = [
+      path.resolve(__dirname, '../../../packages/contracts/src/vault-openapi.json'),
+      path.resolve(process.cwd(), '../packages/contracts/src/vault-openapi.json'),
+      path.resolve(process.cwd(), 'packages/contracts/src/vault-openapi.json')
+    ];
+    let spec = null;
+    for (const p of candidatePaths) {
+      try {
+        spec = await fs.readFile(p, 'utf8');
+        break;
+      } catch (_) {}
+    }
+    if (!spec) {
+      return res.status(404).json({ error: 'OpenAPI specification file not found' });
+    }
+    res.setHeader('Content-Type', 'application/json');
+    res.send(spec);
+  } catch (error) {
+    console.error('Vault OpenAPI Spec Error:', error);
+    res.status(500).json({ error: 'Failed to load OpenAPI specification' });
   }
 });
 

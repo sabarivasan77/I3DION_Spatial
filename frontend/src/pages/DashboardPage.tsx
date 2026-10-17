@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import {
   Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
-import { Box, Calendar, Download, Plus, Sparkles, Users } from 'lucide-react';
+import { Box, Calendar, Download, Eye, Plus, Sparkles, Users } from 'lucide-react';
 import { Badge, Button, Card, KpiCard, PageHeader, SectionTitle } from '../components/ui';
 import { api } from '../services/api';
 import { useAuthStore } from '../store/authStore';
+import { CustomerOnboardingChecklist } from '../components/onboarding/CustomerOnboardingChecklist';
 import type { Product } from '../types';
 
 function mapProductRow(row: any): Product {
@@ -29,16 +30,6 @@ function mapProductRow(row: any): Product {
   } as any;
 }
 
-const SAMPLE_ANALYTICS = [
-  { name: 'Mon', views: 340, ar: 42, leads: 8 },
-  { name: 'Tue', views: 520, ar: 67, leads: 14 },
-  { name: 'Wed', views: 410, ar: 55, leads: 11 },
-  { name: 'Thu', views: 680, ar: 89, leads: 19 },
-  { name: 'Fri', views: 750, ar: 102, leads: 24 },
-  { name: 'Sat', views: 290, ar: 38, leads: 6 },
-  { name: 'Sun', views: 190, ar: 21, leads: 3 },
-];
-
 export function DashboardPage() {
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
@@ -56,7 +47,6 @@ export function DashboardPage() {
         name: new Date(item.date).toLocaleDateString(undefined, { weekday: 'short' }),
         views: item.visitors ?? 0,
         ar: item.sessions ?? 0,
-        leads: Math.floor((item.visitors ?? 0) * 0.05),
       })));
     }).catch(() => null);
     api.listProducts(token).then((rows: any) => setProducts((rows as any[]).map(mapProductRow))).catch(() => null);
@@ -87,69 +77,40 @@ export function DashboardPage() {
         }
       />
 
-      {/* Phase 16 Customer Onboarding Banner */}
-      <Card className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-indigo-900/50 p-6 text-white shadow-xl">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="bg-indigo-500/20 text-indigo-300 font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-indigo-500/30">
-                Core Customer Onboarding Journey
-              </span>
-            </div>
-            <h3 className="text-base font-bold text-white">Get Started with Your First 3D Spatial Experience</h3>
-            <p className="text-xs text-slate-300 max-w-2xl mt-0.5">
-              Create a product, design interactive 3D spatial experiences in OmniStudio, publish to web/AR, and capture customer leads.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2 shrink-0">
-            <button
-              onClick={() => navigate('/products/upload')}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold font-mono transition flex items-center gap-1 shadow-sm"
-            >
-              <span>1. Add Product</span>
-            </button>
-            <button
-              onClick={() => navigate('/studio')}
-              className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-semibold font-mono transition flex items-center gap-1 shadow-sm"
-            >
-              <Sparkles size={13} />
-              <span>2. Open OmniStudio</span>
-            </button>
-            <button
-              onClick={() => navigate('/leads')}
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold font-mono transition flex items-center gap-1 shadow-sm"
-            >
-              <Users size={13} />
-              <span>3. View Leads</span>
-            </button>
-          </div>
-        </div>
-      </Card>
+      {/* Canonical 5-Product Customer Onboarding Journey */}
+      <CustomerOnboardingChecklist />
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         {kpis.map((item) => <KpiCard key={item.label} item={item} />)}
       </div>
       <div className="grid gap-6 xl:grid-cols-[1.6fr_0.9fr]">
         <Card className="p-6">
           <SectionTitle title="Analytics Overview" meta="Views, AR sessions, and leads" />
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trends.length ? trends : SAMPLE_ANALYTICS}>
-                <defs>
-                  <linearGradient id="gViews" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="5%" stopColor="#2563EB" stopOpacity={0.34} />
-                    <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
-                <XAxis dataKey="name" stroke="#64748B" fontSize={12} />
-                <YAxis stroke="#64748B" fontSize={12} />
-                <Tooltip />
-                <Area dataKey="views" stroke="#2563EB" fill="url(#gViews)" strokeWidth={3} name="Views" />
-                <Area dataKey="ar" stroke="#10B981" fill="#10B98122" strokeWidth={2} name="AR Sessions" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          {trends.length > 0 ? (
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trends}>
+                  <defs>
+                    <linearGradient id="gViews" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="5%" stopColor="#2563EB" stopOpacity={0.34} />
+                      <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
+                  <XAxis dataKey="name" stroke="#64748B" fontSize={12} />
+                  <YAxis stroke="#64748B" fontSize={12} />
+                  <Tooltip />
+                  <Area dataKey="views" stroke="#2563EB" fill="url(#gViews)" strokeWidth={3} name="Views" />
+                  <Area dataKey="ar" stroke="#10B981" fill="#10B98122" strokeWidth={2} name="AR Sessions" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="h-72 flex flex-col items-center justify-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/50 text-center p-6">
+              <Eye className="w-8 h-8 text-slate-300 mb-2" />
+              <p className="text-sm font-semibold text-slate-700">No telemetry recorded yet</p>
+              <p className="text-xs text-slate-400 max-w-xs mt-1">Publish a catalog in Omni Studio or an experience in Spatial Engine to begin tracking real visitor views and AR sessions.</p>
+            </div>
+          )}
         </Card>
         <Card className="p-6">
           <SectionTitle title="Recent Products" />

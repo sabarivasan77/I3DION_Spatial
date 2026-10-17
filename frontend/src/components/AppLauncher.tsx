@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-import { Grid, Database, Sparkles, Cpu, BarChart3, Lock, ShieldCheck, LucideIcon } from 'lucide-react';
+import { Grid, Globe, Database, Sparkles, Cpu, BarChart3, Lock, ShieldCheck, LucideIcon } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useLicenseStore, AppKey } from '../store/licenseStore';
 import { canAccessApp } from '../utils/permissions';
@@ -17,6 +17,16 @@ interface AppDefinition {
 }
 
 const APPS: AppDefinition[] = [
+  {
+    key: 'hub',
+    name: 'I3DION Spatial Hub',
+    subtitle: 'Public Discovery & Showcases',
+    path: '/hub',
+    icon: Globe,
+    badge: 'Hub',
+    color: 'text-blue-500',
+    bgLight: 'bg-blue-50 hover:bg-blue-100 border-blue-200',
+  },
   {
     key: 'vault',
     name: 'I3DION Spatial Vault',
@@ -62,6 +72,8 @@ const APPS: AppDefinition[] = [
 const getAppUrl = (appKey: AppKey, fallbackPath: string): string => {
   const origin = window.location.origin;
   switch (appKey) {
+    case 'hub':
+      return import.meta.env.VITE_HUB_URL || `${origin}${fallbackPath}`;
     case 'vault':
       return import.meta.env.VITE_VAULT_URL || `${origin}${fallbackPath}`;
     case 'studio':

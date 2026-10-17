@@ -732,9 +732,9 @@ export async function seedSpatialHubDatabase() {
 
     // 4. Seed initial Vault Collections
     const defaultColls = [
-      { id: 'coll-machinery', name: 'Industrial Machinery & Compressors', description: 'Enterprise dataset repository for rotary screw compressors, turbines, and planetary speed reducers.' },
-      { id: 'coll-valves', name: 'Pneumatic Control Valves & Actuators', description: 'High-pressure solenoid valves, butterfly valves, and electrical linear actuators.' },
-      { id: 'coll-cad-models', name: 'Facility CAD & Spatial 3D Models', description: 'High-density 3D spatial models, USDZ QuickLook assets, and plant digital twin assemblies.' }
+      { id: 'c0000000-0000-0000-0000-000000000001', name: 'Industrial Machinery & Compressors', description: 'Enterprise dataset repository for rotary screw compressors, turbines, and planetary speed reducers.' },
+      { id: 'c0000000-0000-0000-0000-000000000002', name: 'Pneumatic Control Valves & Actuators', description: 'High-pressure solenoid valves, butterfly valves, and electrical linear actuators.' },
+      { id: 'c0000000-0000-0000-0000-000000000003', name: 'Facility CAD & Spatial 3D Models', description: 'High-density 3D spatial models, USDZ QuickLook assets, and plant digital twin assemblies.' }
     ];
     for (const c of defaultColls) {
       await client.query(`
@@ -749,24 +749,25 @@ export async function seedSpatialHubDatabase() {
 
     // 5. Seed initial Vault Assets
     const defaultAssets = [
-      { id: 'asset-3d-01', name: 'Heavy Duty Planetary Speed Reducer', category: 'Industrial Machinery', type: '3D Model', url: '/models/model_1.gltf', size: 44564480 },
-      { id: 'asset-3d-02', name: 'Reciprocating Saw Power Actuator', category: 'Power Tools & Actuators', type: '3D Model', url: '/models/model_2.gltf', size: 19084000 },
-      { id: 'asset-3d-03', name: 'Off-Road Industrial Transport Chassis', category: 'Mobile Equipment', type: '3D Model', url: '/models/model_3.gltf', size: 67200000 },
-      { id: 'asset-doc-01', name: 'Industrial Valve System 3000 Blueprint', category: 'Engineering Specifications', type: 'Document', url: '/docs/sample_spec.pdf', size: 4718592 }
+      { id: 'a0000000-0000-0000-0000-000000000001', name: 'Heavy Duty Planetary Speed Reducer', category: 'Industrial Machinery', type: '3D Model', url: '/models/model_1.gltf', size: 44564480 },
+      { id: 'a0000000-0000-0000-0000-000000000002', name: 'Reciprocating Saw Power Actuator', category: 'Power Tools & Actuators', type: '3D Model', url: '/models/model_2.gltf', size: 19084000 },
+      { id: 'a0000000-0000-0000-0000-000000000003', name: 'Off-Road Industrial Transport Chassis', category: 'Mobile Equipment', type: '3D Model', url: '/models/model_3.gltf', size: 67200000 },
+      { id: 'a0000000-0000-0000-0000-000000000004', name: 'Industrial Valve System 3000 Blueprint', category: 'Engineering Specifications', type: 'Document', url: '/docs/sample_spec.pdf', size: 4718592 }
     ];
     for (const a of defaultAssets) {
+      const mime = a.type === '3D Model' ? 'model/gltf+json' : 'application/pdf';
       await client.query(`
-        INSERT INTO vault_assets (id, organization_id, owner_id, name, category, type, public_url, size_bytes, status, visibility)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Ready', 'Organization')
+        INSERT INTO vault_assets (id, organization_id, created_by, name, original_name, storage_key, mime_type, category, type, public_url, size_bytes, status, visibility)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'Ready', 'Organization')
         ON CONFLICT (id) DO NOTHING
-      `, [a.id, orgId, userId, a.name, a.category, a.type, a.url, a.size]);
+      `, [a.id, orgId, userId, a.name, a.name, `seed/${a.id}`, mime, a.category, a.type, a.url, a.size]);
     }
 
     // 6. Seed initial Vault Templates
     await client.query(`
       INSERT INTO vault_templates (id, organization_id, name, description, schema)
       VALUES (
-        'tmpl-spec', $1, 'Industrial Equipment Spec Template',
+        'd0000000-0000-0000-0000-000000000001', $1, 'Industrial Equipment Spec Template',
         'Standard technical specification schema for heavy machinery and power tools.',
         $2
       )

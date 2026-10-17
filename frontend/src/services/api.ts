@@ -743,55 +743,55 @@ async function offlineFallback<T>(rawPath: string, options: RequestInit & { toke
       plans: [
         {
           id: 'FREE',
-          name: 'Free',
-          description: 'For individuals and small projects',
+          name: 'Free Tier',
+          description: 'Ideal for exploring spatial catalog features',
           price_monthly_inr: 0,
           price_yearly_inr: 0,
-          max_products: 5,
-          max_catalogs: 1,
-          max_3d_models: 5,
-          max_storage_bytes: 536870912,
+          max_products: 3,
+          max_catalogs: 2,
+          max_3d_models: 3,
+          max_storage_bytes: 52428800,
           max_team_members: 1,
-          features: { custom_domain: false, analytics: false, api_access: false },
+          features: { ar_views: true, qr_codes: true, advanced_analytics: false, custom_branding: false, custom_domain: false },
         },
         {
-          id: 'PRO',
-          name: 'Pro',
-          description: 'For growing businesses',
-          price_monthly_inr: 2999,
-          price_yearly_inr: 29990,
-          max_products: 100,
+          id: 'STARTER',
+          name: 'Starter Plan',
+          description: 'Essential tools for growing spatial catalogs',
+          price_monthly_inr: 1499,
+          price_yearly_inr: 14990,
+          max_products: 25,
           max_catalogs: 10,
-          max_3d_models: 100,
-          max_storage_bytes: 10737418240,
-          max_team_members: 5,
-          features: { custom_domain: true, analytics: true, api_access: false },
+          max_3d_models: 25,
+          max_storage_bytes: 1073741824,
+          max_team_members: 3,
+          features: { ar_views: true, qr_codes: true, advanced_analytics: true, custom_branding: false, custom_domain: false },
         },
         {
           id: 'BUSINESS',
-          name: 'Business',
-          description: 'For large teams and enterprises',
-          price_monthly_inr: 9999,
-          price_yearly_inr: 99990,
-          max_products: 1000,
+          name: 'Business Pro',
+          description: 'Complete suite for active sales & marketing teams',
+          price_monthly_inr: 4999,
+          price_yearly_inr: 49990,
+          max_products: 100,
           max_catalogs: 50,
-          max_3d_models: 1000,
-          max_storage_bytes: 107374182400,
-          max_team_members: 25,
-          features: { custom_domain: true, analytics: true, api_access: true },
+          max_3d_models: 100,
+          max_storage_bytes: 10737418240,
+          max_team_members: 10,
+          features: { ar_views: true, qr_codes: true, advanced_analytics: true, custom_branding: true, custom_domain: true },
         },
         {
-          id: 'ENTERPRISE',
-          name: 'Enterprise',
-          description: 'Custom solutions and limits',
-          price_monthly_inr: 0,
-          price_yearly_inr: 0,
+          id: 'UNLIMITED',
+          name: 'Enterprise Unlimited',
+          description: 'Unrestricted catalog scale and priority support',
+          price_monthly_inr: 14999,
+          price_yearly_inr: 149990,
           max_products: 999999,
           max_catalogs: 999999,
           max_3d_models: 999999,
-          max_storage_bytes: 1099511627776,
-          max_team_members: 999999,
-          features: { custom_domain: true, analytics: true, api_access: true, dedicated_support: true },
+          max_storage_bytes: 107374182400,
+          max_team_members: 50,
+          features: { ar_views: true, qr_codes: true, advanced_analytics: true, custom_branding: true, custom_domain: true, priority_support: true },
         }
       ]
     } as T;
@@ -800,12 +800,12 @@ async function offlineFallback<T>(rawPath: string, options: RequestInit & { toke
     return {
       plan: {
         id: 'FREE',
-        name: 'Free',
+        name: 'Free Tier',
         status: 'active',
-        limits: { maxProducts: 5, maxCatalogs: 1, max3dModels: 5, maxStorageBytes: 536870912, maxTeamMembers: 1 },
-        features: { custom_domain: false, analytics: false, api_access: false },
+        limits: { maxProducts: 3, maxCatalogs: 2, max3dModels: 3, maxStorageBytes: 52428800, maxTeamMembers: 1 },
+        features: { ar_views: true, qr_codes: true, advanced_analytics: false, custom_branding: false, custom_domain: false },
       },
-      usage: { productsCount: 2, catalogsCount: 0, modelsCount: 2, storageBytesUsed: 12582912, teamMembersCount: 1 }
+      usage: { productsCount: 1, catalogsCount: 1, modelsCount: 1, storageBytesUsed: 1928000, teamMembersCount: 1 }
     } as T;
   }
   if (path === '/billing/info' && method === 'PUT') {
@@ -859,9 +859,11 @@ async function offlineFallback<T>(rawPath: string, options: RequestInit & { toke
   }
   if (path === '/billing/checkout') {
     const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
-    const amountInPaise = body.planId === 'PRO'
-      ? (body.billingCycle === 'yearly' ? 2999000 : 299900)
-      : (body.billingCycle === 'yearly' ? 9999000 : 999900);
+    let amountInPaise = 0;
+    if (body.planId === 'STARTER') amountInPaise = body.billingCycle === 'yearly' ? 1499000 : 149900;
+    else if (body.planId === 'BUSINESS') amountInPaise = body.billingCycle === 'yearly' ? 4999000 : 499900;
+    else if (body.planId === 'UNLIMITED') amountInPaise = body.billingCycle === 'yearly' ? 14999000 : 1499900;
+
     const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID || '';
 
     return {
@@ -870,6 +872,7 @@ async function offlineFallback<T>(rawPath: string, options: RequestInit & { toke
       currency: 'INR',
       key_id: keyId,
       keyId: keyId,
+      order_id: `order_mock_${Date.now()}`
     } as T;
   }
   if (path === '/billing/verify') {
@@ -892,6 +895,25 @@ async function offlineFallback<T>(rawPath: string, options: RequestInit & { toke
       success: true,
       message: 'Enterprise inquiry submitted successfully.'
     } as T;
+  }
+  if (path === '/onboarding/status') {
+    return {
+      completedCount: 3,
+      totalCount: 5,
+      progressPercentage: 60,
+      isDismissed: false,
+      isAllCompleted: false,
+      steps: [
+        { id: 'vault_upload', title: 'Upload 3D CAD Asset to Spatial Vault', description: 'Upload industrial CAD models', product: 'Spatial Vault', isCompleted: true, href: '/vault' },
+        { id: 'studio_catalog', title: 'Compose a Branded Catalog in Omni Studio', description: 'Create an interactive digital catalog', product: 'Omni Studio', isCompleted: true, href: '/studio' },
+        { id: 'engine_experience', title: 'Configure 3D Digital Twin in Spatial Engine', description: 'Set up camera orbits and hotspots', product: 'Spatial Engine', isCompleted: true, href: '/engine' },
+        { id: 'hub_publish', title: 'Publish to Spatial Hub & Generate QR', description: 'Generate public showcase and QR', product: 'Spatial Hub', isCompleted: false, href: '/hub' },
+        { id: 'lens_telemetry', title: 'Observe Real-Time Telemetry in Spatial Lens', description: 'Monitor visitor dwell times and leads', product: 'Spatial Lens', isCompleted: false, href: '/lens' }
+      ]
+    } as T;
+  }
+  if (path === '/onboarding/dismiss') {
+    return { success: true, message: 'Onboarding dismissed' } as T;
   }
 
   // --- Spatial Vault Enterprise Datasets & Fallbacks ---
@@ -1491,6 +1513,21 @@ export const api = {
   getAnalyticsSearches: (token: string) => apiRequest('/analytics/charts/searches', { token }),
   getAnalyticsFunnel: (token: string) => apiRequest('/analytics/charts/funnel', { token }),
   getAnalyticsDownloads: (token: string) => apiRequest('/analytics/charts/downloads', { token }),
+
+  // Spatial Lens Intelligence
+  getLensOverview: (token: string) => apiRequest<any>('/lens/overview', { token }),
+  getLensFunnel: (token: string) => apiRequest<any[]>('/lens/funnel', { token }),
+  getLensQRAttribution: (token: string) => apiRequest<any[]>('/lens/qr-attribution', { token }),
+  getLensHotspots: (token: string) => apiRequest<any[]>('/lens/hotspots', { token }),
+  getLensDefinitions: () => apiRequest<any>('/lens/definitions', { method: 'GET' }),
+  getLensLeads: (token: string) => apiRequest<any[]>('/lens/leads', { token }),
+
+  // Spatial Hub Public Layer
+  getHubShowcase: (identifier: string) => apiRequest<any>(`/hub/showcase/${identifier}`, { method: 'GET' }),
+  getHubCatalog: (slug: string) => apiRequest<any>(`/hub/catalogs/${slug}`, { method: 'GET' }),
+  getHubExperience: (slug: string) => apiRequest<any>(`/hub/experiences/${slug}`, { method: 'GET' }),
+  getHubMeta: (type: string, slug: string) => apiRequest<any>(`/hub/meta/${type}/${slug}`, { method: 'GET' }),
+  submitHubLead: (data: any) => apiRequest<any>('/hub/leads', { method: 'POST', body: JSON.stringify(data) }),
   updateCompany: (token: string, payload: unknown) =>
     apiRequest('/company', { token, method: 'PUT', body: JSON.stringify(payload) }),
   getCompany: (token: string) => apiRequest('/company', { token }),

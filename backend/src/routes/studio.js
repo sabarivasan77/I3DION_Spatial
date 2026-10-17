@@ -13,6 +13,8 @@ import { schemaService } from '../services/studio/schemaService.js';
 import { queryService } from '../services/studio/queryService.js';
 import { recordService } from '../services/studio/recordService.js';
 import { formService } from '../services/studio/formService.js';
+import { catalogService } from '../services/studio/catalogService.js';
+import { enforceQuota } from '../middleware/entitlement.js';
 
 export const studioRouter = Router();
 
@@ -573,6 +575,233 @@ studioRouter.post('/forms/generate', async (req, res) => {
     res.status(500).json({ error: 'Failed to generate form configuration' });
   }
 });
+
+// ---------------------------------------------------------
+// OMNI STUDIO: CATALOG COMPOSER ENDPOINTS (PHASE 4)
+// ---------------------------------------------------------
+
+// GET /api/studio/catalogs (List catalogs with product counts)
+studioRouter.get('/catalogs', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const { status, search } = req.query;
+    const catalogs = await catalogService.listCatalogs(organization_id, { status, search });
+    res.json(catalogs);
+  } catch (error) {
+    console.error('Studio GET Catalogs Error:', error);
+    res.status(500).json({ error: 'Failed to list catalogs' });
+  }
+});
+
+// POST /api/studio/catalogs (Create new catalog)
+studioRouter.post('/catalogs', enforceQuota('catalogs'), async (req, res) => {
+  try {
+    const { organization_id, id: userId } = req.user;
+    const created = await catalogService.createCatalog(organization_id, userId, req.body);
+    res.status(201).json(created);
+  } catch (error) {
+    console.error('Studio Create Catalog Error:', error);
+    res.status(400).json({ error: error.message || 'Failed to create catalog' });
+  }
+});
+
+// GET /api/studio/catalogs/:id (Fetch single catalog detail with pinned products)
+studioRouter.get('/catalogs/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const catalog = await catalogService.getCatalog(id, organization_id);
+    if (!catalog) return res.status(404).json({ error: 'Catalog not found' });
+    res.json(catalog);
+  } catch (error) {
+    console.error('Studio GET Catalog Detail Error:', error);
+    res.status(500).json({ error: 'Failed to fetch catalog detail' });
+  }
+});
+
+// PATCH /api/studio/catalogs/:id (Update catalog metadata, layout, branding)
+studioRouter.patch('/catalogs/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const updated = await catalogService.updateCatalog(id, organization_id, req.body);
+    if (!updated) return res.status(404).json({ error: 'Catalog not found or no changes made' });
+    res.json(updated);
+  } catch (error) {
+    console.error('Studio Update Catalog Error:', error);
+    res.status(500).json({ error: 'Failed to update catalog' });
+  }
+});
+
+// POST /api/studio/catalogs/:id/duplicate (Clone catalog)
+studioRouter.post('/catalogs/:id/duplicate', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id, id: userId } = req.user;
+    const cloned = await catalogService.duplicateCatalog(id, organization_id, userId);
+    res.status(201).json(cloned);
+  } catch (error) {
+    console.error('Studio Duplicate Catalog Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to duplicate catalog' });
+  }
+});
+
+// DELETE /api/studio/catalogs/:id (Archive catalog)
+studioRouter.delete('/catalogs/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    await catalogService.updateCatalog(id, organization_id, { status: 'Archived' });
+    res.json({ message: 'Catalog archived successfully' });
+  } catch (error) {
+    console.error('Studio Delete Catalog Error:', error);
+    res.status(500).json({ error: 'Failed to archive catalog' });
+  }
+});
+
+// POST /api/studio/catalogs/:id/products (Pin product with version)
+studioRouter.post('/catalogs/:id/products', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const { productId, pinnedVersionNumber, pinnedAssetId, customSpecOverrides, sortOrder } = req.body;
+    if (!productId) return res.status(400).json({ error: 'productId is required' });
+
+    const result = await catalogService.pinProduct(id, organization_id, {
+      productId,
+      pinnedVersionNumber,
+      pinnedAssetId,
+      customSpecOverrides,
+      sortOrder
+    });
+    res.json(result);
+  } catch (error) {
+    console.error('Studio Pin Product Error:', error);
+    res.status(400).json({ error: error.message || 'Failed to pin product' });
+  }
+});
+
+// DELETE /api/studio/catalogs/:id/products/:productId (Unpin product)
+studioRouter.delete('/catalogs/:id/products/:productId', async (req, res) => {
+  try {
+    const { id, productId } = req.params;
+    const { organization_id } = req.user;
+    const result = await catalogService.unpinProduct(id, productId, organization_id);
+    res.json(result);
+  } catch (error) {
+    console.error('Studio Unpin Product Error:', error);
+    res.status(500).json({ error: 'Failed to unpin product' });
+  }
+});
+
+// GET /api/studio/catalogs/:id/sync-status (Detect if Vault has updated asset versions)
+studioRouter.get('/catalogs/:id/sync-status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const syncStatus = await catalogService.getSyncStatus(id, organization_id);
+    res.json(syncStatus);
+  } catch (error) {
+    console.error('Studio Get Sync Status Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to get sync status' });
+  }
+});
+
+// POST /api/studio/catalogs/:id/sync-assets (Explicitly sync catalog pins to latest Vault versions)
+studioRouter.post('/catalogs/:id/sync-assets', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const { productIds } = req.body || {};
+    const result = await catalogService.syncAssets(id, organization_id, productIds);
+    res.json(result);
+  } catch (error) {
+    console.error('Studio Sync Assets Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to sync assets' });
+  }
+});
+
+// GET /api/studio/catalogs/:id/preview (Responsive live preview payload)
+studioRouter.get('/catalogs/:id/preview', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const catalog = await catalogService.getCatalog(id, organization_id);
+    if (!catalog) return res.status(404).json({ error: 'Catalog not found' });
+
+    res.json({
+      catalogId: catalog.id,
+      title: catalog.name,
+      slug: catalog.slug,
+      description: catalog.description,
+      branding: catalog.branding,
+      sections: catalog.layout_config?.sections || [],
+      products: catalog.products,
+      previewTimestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Studio Get Preview Error:', error);
+    res.status(500).json({ error: 'Failed to load catalog preview' });
+  }
+});
+
+// POST /api/studio/catalogs/:id/publish (Universal Publishing Ceremony)
+studioRouter.post('/api/studio/catalogs/:id/publish', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id, id: userId } = req.user;
+    const published = await catalogService.publishCatalog(id, organization_id, userId);
+    res.json(published);
+  } catch (error) {
+    console.error('Studio Publish Catalog Error:', error);
+    res.status(400).json({ error: error.message || 'Failed to publish catalog' });
+  }
+});
+// Also support route without prefix inside studioRouter
+studioRouter.post('/catalogs/:id/publish', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id, id: userId } = req.user;
+    const published = await catalogService.publishCatalog(id, organization_id, userId);
+    res.json(published);
+  } catch (error) {
+    console.error('Studio Publish Catalog Error:', error);
+    res.status(400).json({ error: error.message || 'Failed to publish catalog' });
+  }
+});
+
+// GET /api/studio/catalogs/:id/qr (Generate vector/image QR Code)
+studioRouter.get('/catalogs/:id/qr', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const { format = 'svg' } = req.query;
+    const qrResult = await catalogService.generateQr(id, organization_id, { format });
+
+    res.setHeader('Content-Type', qrResult.contentType);
+    res.send(qrResult.content);
+  } catch (error) {
+    console.error('Studio Generate QR Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate QR code' });
+  }
+});
+
+// GET /api/studio/catalogs/:id/export/pdf (Branded specification export sheet - Decision D-07)
+studioRouter.get('/catalogs/:id/export/pdf', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const specSheet = await catalogService.generatePdfSpecSheet(id, organization_id);
+
+    res.setHeader('Content-Type', specSheet.contentType);
+    res.setHeader('Content-Disposition', `inline; filename="${specSheet.filename}"`);
+    res.send(specSheet.html);
+  } catch (error) {
+    console.error('Studio Export PDF Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to export specification document' });
+  }
+});
+
 
 
 

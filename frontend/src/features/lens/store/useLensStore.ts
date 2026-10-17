@@ -85,6 +85,15 @@ interface LensStoreState {
   vaultSyncStatus: 'connected' | 'syncing' | 'offline';
   lastSyncTime: string;
   syncNow: () => void;
+
+  // Live Backend Lens Intelligence
+  overview: any | null;
+  funnel: any[];
+  qrAttribution: any[];
+  hotspots: any[];
+  isLoadingLive: boolean;
+  liveError: string | null;
+  fetchLiveData: (token?: string) => Promise<void>;
 }
 
 const DEFAULT_FILTERS: LensFilterState = {
@@ -111,6 +120,78 @@ export const useLensStore = create<LensStoreState>((set, get) => ({
       filters: { ...state.filters, ...partial }
     })),
   resetFilters: () => set({ filters: DEFAULT_FILTERS }),
+
+  // Live Backend Lens Intelligence state
+  overview: null,
+  funnel: [],
+  qrAttribution: [],
+  hotspots: [],
+  isLoadingLive: false,
+  liveError: null,
+
+  fetchLiveData: async (token?: string) => {
+    const effectiveToken = token || localStorage.getItem('i3dion_token') || '';
+    if (!effectiveToken) return;
+
+    set({ isLoadingLive: true, liveError: null });
+    try {
+      const { api } = await import('../../../services/api');
+      const [overviewRes, funnelRes, qrRes, hotspotsRes, leadsRes] = await Promise.allSettled([
+        api.getLensOverview(effectiveToken),
+        api.getLensFunnel(effectiveToken),
+        api.getLensQRAttribution(effectiveToken),
+        api.getLensHotspots(effectiveToken),
+        api.getLensLeads(effectiveToken)
+      ]);
+
+      const updates: Partial<LensStoreState> = {
+        isLoadingLive: false,
+        lastSyncTime: new Date().toLocaleTimeString()
+      };
+
+      if (overviewRes.status === 'fulfilled' && overviewRes.value) {
+        updates.overview = overviewRes.value;
+      }
+      if (funnelRes.status === 'fulfilled' && Array.isArray(funnelRes.value)) {
+        updates.funnel = funnelRes.value;
+      }
+      if (qrRes.status === 'fulfilled' && Array.isArray(qrRes.value)) {
+        updates.qrAttribution = qrRes.value;
+      }
+      if (hotspotsRes.status === 'fulfilled' && Array.isArray(hotspotsRes.value)) {
+        updates.hotspots = hotspotsRes.value;
+      }
+      if (leadsRes.status === 'fulfilled' && Array.isArray(leadsRes.value)) {
+        const liveLeads: LensLead[] = leadsRes.value.map((l: any) => ({
+          id: l.id,
+          name: l.name,
+          email: l.email,
+          company: l.company || l.organization || 'Inbound Prospect',
+          role: l.designation || 'Buyer',
+          status: (l.status || 'NEW') as LeadStatus,
+          score: l.behavior_score || l.score || 0,
+          source: l.source || 'Spatial Hub',
+          assignedTo: l.assigned_to_name || 'Unassigned',
+          lastActivity: l.updated_at ? new Date(l.updated_at).toLocaleDateString() : 'Recent',
+          activityTimeline: [
+            {
+              id: `act_${l.id}`,
+              type: 'interaction',
+              description: `Lead submitted via ${l.source || 'Spatial Hub'} with intent ${l.notes || 'Quote'}`,
+              timestamp: l.created_at ? new Date(l.created_at).toLocaleString() : 'Recent'
+            }
+          ]
+        }));
+        if (liveLeads.length > 0) {
+          updates.leads = liveLeads;
+        }
+      }
+
+      set(updates);
+    } catch (err: any) {
+      set({ isLoadingLive: false, liveError: err?.message || 'Failed to fetch live analytics' });
+    }
+  },
 
   leads: INITIAL_LENS_LEADS,
   selectedLeadId: null,

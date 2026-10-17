@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLensStore } from '../store/useLensStore';
 import {
   Users,
@@ -11,7 +11,9 @@ import {
   ArrowUpRight,
   MoreVertical,
   Layers,
-  Sparkles
+  Sparkles,
+  QrCode,
+  RefreshCw
 } from 'lucide-react';
 
 export const LensHomeView: React.FC = () => {
@@ -21,19 +23,50 @@ export const LensHomeView: React.FC = () => {
     leads,
     projects,
     openLeadDrawer,
-    setActiveView
+    setActiveView,
+    overview,
+    isLoadingLive,
+    liveError,
+    fetchLiveData
   } = useLensStore();
+
+  useEffect(() => {
+    fetchLiveData();
+  }, [fetchLiveData]);
 
   const recentLeads = leads.slice(0, 5);
 
+  const kpis = overview?.kpis;
+  const totalLeads = kpis?.totalLeads ?? leads.length;
+  const activeLeads = kpis?.activeLeads ?? leads.filter(l => (l.status as any) !== 'LOST' && (l.status as any) !== 'SPAM').length;
+  const totalSessions = kpis?.totalSessions ?? 0;
+  const interactiveVisitors = kpis?.interactiveVisitors ?? 0;
+  const arLaunchAttempts = kpis?.arLaunchAttempts ?? 0;
+  const qrAttributedVisits = kpis?.qrAttributedVisits ?? 0;
+  const conversionRate = kpis?.leadConversionRate !== undefined ? `${kpis.leadConversionRate}%` : '0.0%';
+
   return (
     <div className="p-6 md:p-8 space-y-6 max-w-[1600px] mx-auto font-sans select-none">
+      {/* Live Error Notification if present */}
+      {liveError && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-2xl flex items-center justify-between text-xs">
+          <span>{liveError} — Showing cached session data.</span>
+          <button 
+            onClick={() => fetchLiveData()}
+            className="flex items-center gap-1 font-bold underline hover:text-amber-700"
+          >
+            <RefreshCw size={12} /> Retry
+          </button>
+        </div>
+      )}
+
       {/* 1. Hero Banner Inspired by Reference Image 1 */}
       <div className="relative overflow-hidden rounded-3xl bg-amber-500/10 border border-amber-200/80 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-2xs">
         <div className="space-y-3 z-10 max-w-2xl">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-white/90 border border-amber-200 px-3 py-1 text-xs font-bold text-[#D97706] shadow-2xs">
             <Sparkles size={13} className="text-[#F4B400]" />
             <span>I3DION Spatial Lens Intelligence</span>
+            {isLoadingLive && <span className="text-[10px] text-amber-600 animate-pulse ml-1">(Live Updating...)</span>}
           </div>
 
           <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight">
@@ -103,64 +136,64 @@ export const LensHomeView: React.FC = () => {
               <Users size={18} />
             </div>
             <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-              <ArrowUpRight size={12} /> 12%
+              <ArrowUpRight size={12} /> Live
             </span>
           </div>
           <div className="mt-3">
             <span className="block text-[11px] font-bold text-slate-400">Total Leads</span>
-            <span className="text-xl font-black text-slate-900 tracking-tight mt-0.5 block">1,248</span>
-            <span className="text-[10px] font-medium text-slate-400 mt-1 block">vs last 30 days</span>
+            <span className="text-xl font-black text-slate-900 tracking-tight mt-0.5 block">{totalLeads}</span>
+            <span className="text-[10px] font-medium text-slate-400 mt-1 block">Inbound inquiries</span>
           </div>
         </div>
 
-        {/* KPI 2: Qualified Leads */}
+        {/* KPI 2: Active Leads */}
         <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs hover:shadow-md transition">
           <div className="flex items-center justify-between">
             <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
               <TrendingUp size={18} />
             </div>
-            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-              <ArrowUpRight size={12} /> 8%
+            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded">
+              <ArrowUpRight size={12} /> Active
             </span>
           </div>
           <div className="mt-3">
-            <span className="block text-[11px] font-bold text-slate-400">Qualified Leads</span>
-            <span className="text-xl font-black text-slate-900 tracking-tight mt-0.5 block">312</span>
-            <span className="text-[10px] font-medium text-slate-400 mt-1 block">vs last 30 days</span>
+            <span className="block text-[11px] font-bold text-slate-400">Active Leads</span>
+            <span className="text-xl font-black text-slate-900 tracking-tight mt-0.5 block">{activeLeads}</span>
+            <span className="text-[10px] font-medium text-slate-400 mt-1 block">In sales pipeline</span>
           </div>
         </div>
 
-        {/* KPI 3: Total Projects */}
+        {/* KPI 3: QR Attributed Visits */}
         <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs hover:shadow-md transition">
           <div className="flex items-center justify-between">
             <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <Box size={18} />
+              <QrCode size={18} />
             </div>
             <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-              <ArrowUpRight size={12} /> 27%
+              <ArrowUpRight size={12} /> Traceable
             </span>
           </div>
           <div className="mt-3">
-            <span className="block text-[11px] font-bold text-slate-400">Total Projects</span>
-            <span className="text-xl font-black text-slate-900 tracking-tight mt-0.5 block">28</span>
-            <span className="text-[10px] font-medium text-slate-400 mt-1 block">vs last 30 days</span>
+            <span className="block text-[11px] font-bold text-slate-400">QR Visits</span>
+            <span className="text-xl font-black text-slate-900 tracking-tight mt-0.5 block">{qrAttributedVisits}</span>
+            <span className="text-[10px] font-medium text-slate-400 mt-1 block">QR landings</span>
           </div>
         </div>
 
-        {/* KPI 4: Total Views */}
+        {/* KPI 4: Total Sessions */}
         <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs hover:shadow-md transition">
           <div className="flex items-center justify-between">
             <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
               <Eye size={18} />
             </div>
-            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-              <ArrowUpRight size={12} /> 18%
+            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
+              <ArrowUpRight size={12} /> 30d
             </span>
           </div>
           <div className="mt-3">
-            <span className="block text-[11px] font-bold text-slate-400">Total Views</span>
-            <span className="text-xl font-black text-slate-900 tracking-tight mt-0.5 block">12,486</span>
-            <span className="text-[10px] font-medium text-slate-400 mt-1 block">vs last 30 days</span>
+            <span className="block text-[11px] font-bold text-slate-400">Total Sessions</span>
+            <span className="text-xl font-black text-slate-900 tracking-tight mt-0.5 block">{totalSessions}</span>
+            <span className="text-[10px] font-medium text-slate-400 mt-1 block">Visitor journeys</span>
           </div>
         </div>
 
@@ -170,14 +203,14 @@ export const LensHomeView: React.FC = () => {
             <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
               <Smartphone size={18} />
             </div>
-            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-              <ArrowUpRight size={12} /> 23%
+            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">
+              <ArrowUpRight size={12} /> Mobile
             </span>
           </div>
           <div className="mt-3">
-            <span className="block text-[11px] font-bold text-slate-400">AR Experiences</span>
-            <span className="text-xl font-black text-slate-900 tracking-tight mt-0.5 block">3,276</span>
-            <span className="text-[10px] font-medium text-slate-400 mt-1 block">vs last 30 days</span>
+            <span className="block text-[11px] font-bold text-slate-400">AR Intent</span>
+            <span className="text-xl font-black text-slate-900 tracking-tight mt-0.5 block">{arLaunchAttempts}</span>
+            <span className="text-[10px] font-medium text-slate-400 mt-1 block">Launch attempts</span>
           </div>
         </div>
 
@@ -188,13 +221,13 @@ export const LensHomeView: React.FC = () => {
               <PieChart size={18} />
             </div>
             <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-              <ArrowUpRight size={12} /> 5%
+              <ArrowUpRight size={12} /> SQL
             </span>
           </div>
           <div className="mt-3">
             <span className="block text-[11px] font-bold text-slate-400">Conversion Rate</span>
-            <span className="text-xl font-black text-slate-900 tracking-tight mt-0.5 block">25.0%</span>
-            <span className="text-[10px] font-medium text-slate-400 mt-1 block">vs last 30 days</span>
+            <span className="text-xl font-black text-slate-900 tracking-tight mt-0.5 block">{conversionRate}</span>
+            <span className="text-[10px] font-medium text-slate-400 mt-1 block">Lead / session ratio</span>
           </div>
         </div>
       </div>
