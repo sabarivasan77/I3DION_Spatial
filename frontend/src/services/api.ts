@@ -200,10 +200,6 @@ function isOfflineToken(token?: string) {
   return !token || token === OFFLINE_TOKEN;
 }
 
-function isApiUnavailable(error: unknown) {
-  return error instanceof TypeError || error instanceof DOMException;
-}
-
 function offlineClone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
@@ -1376,7 +1372,6 @@ export async function apiRequest<T>(
   }
 
   let response: Response;
-  const isAuthEndpoint = path === '/auth/login' || path === '/auth/signup';
 
   try {
     response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers, body, signal: controller.signal });
