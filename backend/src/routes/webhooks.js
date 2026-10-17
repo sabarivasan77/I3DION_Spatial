@@ -27,28 +27,37 @@ router.post('/razorpay', express.raw({ type: 'application/json' }), async (req, 
     return res.status(400).send('Invalid JSON payload');
   }
 
-  const eventId = event.event_id || event.payload?.payment?.entity?.id || `${Date.now()}`;
+  // Deduplicate on provider's event-id header (Finding 7 / Annex A8)
+  const eventId = req.headers['x-razorpay-event-id'] || event.event_id || event.id || event.payload?.payment?.entity?.id;
+  if (!eventId) {
+    return res.status(400).send('Missing event ID header or payload identifier');
+  }
+
   const eventType = event.event;
 
   try {
-    // Check webhook idempotency
-    const existing = await pool.query(
-      `SELECT id FROM billing_events WHERE provider = 'razorpay' AND provider_event_id = $1`,
-      [eventId]
+    // Durable Write First: atomic insertion before processing side-effects (Finding 7)
+    const insertResult = await pool.query(
+      `INSERT INTO billing_events (provider, provider_event_id, event_type, payload)
+       VALUES ('razorpay', $1, $2, $3)
+       ON CONFLICT (provider, provider_event_id) DO NOTHING
+       RETURNING id`,
+      [eventId, eventType, event]
     );
 
-    if (existing.rows.length > 0) {
-      console.log(`ℹ️ Webhook event ${eventId} already processed.`);
+    // If already stored, event is a duplicate; return 200 idempotent response immediately
+    if (insertResult.rows.length === 0) {
+      console.log(`ℹ️ Webhook event ${eventId} already durably recorded. Idempotent skip.`);
       return res.status(200).json({ received: true, duplicate: true });
     }
 
-    // Process event types
+    // Process event business logic only once after durable write
     switch (eventType) {
       case 'payment.captured': {
-        const payment = event.payload.payment.entity;
-        const orgId = payment.notes?.organizationId;
-        const planId = payment.notes?.planId;
-        const cycle = payment.notes?.billingCycle || 'monthly';
+        const payment = event.payload.payment?.entity;
+        const orgId = payment?.notes?.organizationId;
+        const planId = payment?.notes?.planId;
+        const cycle = payment?.notes?.billingCycle || 'monthly';
 
         if (orgId && planId) {
           await subscriptionService.changePlan(orgId, planId, cycle);
@@ -56,8 +65,8 @@ router.post('/razorpay', express.raw({ type: 'application/json' }), async (req, 
         break;
       }
       case 'subscription.charged': {
-        const subEntity = event.payload.subscription.entity;
-        const orgId = subEntity.notes?.organizationId;
+        const subEntity = event.payload.subscription?.entity;
+        const orgId = subEntity?.notes?.organizationId;
         if (orgId) {
           await pool.query(
             `UPDATE subscriptions SET status = 'active', current_period_end = now() + interval '30 days' WHERE organization_id = $1`,
@@ -80,15 +89,8 @@ router.post('/razorpay', express.raw({ type: 'application/json' }), async (req, 
       }
     }
 
-    // Save event for idempotency
-    await pool.query(
-      `INSERT INTO billing_events (provider, provider_event_id, event_type, payload)
-       VALUES ('razorpay', $1, $2, $3)
-       ON CONFLICT (provider, provider_event_id) DO NOTHING`,
-      [eventId, eventType, event]
-    );
-
-    res.status(200).json({ received: true });
+    // Return 2xx only after durable write and successful handling
+    res.status(200).json({ received: true, eventId });
   } catch (err) {
     console.error('❌ Error processing webhook event:', err);
     res.status(500).send('Webhook processing error');
