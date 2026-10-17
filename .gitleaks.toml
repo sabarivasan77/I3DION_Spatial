@@ -1,0 +1,36 @@
+# Gitleaks Configuration for I3DION Spatial Platform
+title = "I3DION Spatial Gitleaks Config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "razorpay-key"
+description = "Razorpay API Key ID detected"
+regex = '''rzp_(live|test)_[a-zA-Z0-9]{14}'''
+tags = ["key", "razorpay"]
+
+[[rules]]
+id = "razorpay-secret"
+description = "Razorpay API Key Secret"
+regex = '''(?i)(?:razorpay[_-]?(?:key[_-]?)?secret|rzp_secret)\s*[:=]\s*['\"][a-zA-Z0-9]{20,}['\"]'''
+tags = ["key", "razorpay"]
+
+[[rules]]
+id = "jwt-secret-insecure"
+description = "Insecure hardcoded JWT secret"
+regex = '''(?i)(?:jwt[_-]?secret)\s*[:=]\s*['\"][a-zA-Z0-9_\-]{8,}['\"]'''
+tags = ["jwt", "secret"]
+
+[allowlist]
+description = "Allow placeholders in example configs and tests"
+paths = [
+  '''.env.example''',
+  '''test-''',
+  '''package-lock.json'''
+]
+regexes = [
+  '''test_jwt_secret_only''',
+  '''dummy_hash''',
+  '''test_secret'''
+]
