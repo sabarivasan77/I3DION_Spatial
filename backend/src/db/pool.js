@@ -18,6 +18,46 @@ export async function query(text, params = []) {
   return result;
 }
 
+/**
+ * Execute a callback within an isolated PostgreSQL transaction on a dedicated client.
+ * Automatically handles BEGIN, COMMIT, ROLLBACK, and releases the client. (Annex A6)
+ */
+export async function withTransaction(fn) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await fn(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Execute a callback within a tenant-scoped PostgreSQL transaction with transaction-local app.org_id. (Annex A6)
+ */
+export async function withTenant(orgId, fn) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    if (orgId) {
+      await client.query("SELECT set_config('app.org_id', $1, true)", [orgId]);
+    }
+    const result = await fn(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 let migrationRun = false;
 
 export async function ensureMigrated() {

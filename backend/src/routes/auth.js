@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { query } from '../db/pool.js';
+import { query, withTransaction } from '../db/pool.js';
 import { config } from '../config.js';
 import { ApiError } from '../utils/errors.js';
 import { OAuth2Client } from 'google-auth-library';
@@ -21,67 +21,86 @@ authRouter.post('/signup', async (req, res, next) => {
       throw new ApiError(400, 'Name, email, password, and organization name are required');
     }
 
+    if (typeof password !== 'string' || password.length < 8) {
+      throw new ApiError(400, 'Password must be at least 8 characters long');
+    }
+
+    // Verify JWT secret is configured BEFORE executing any database operations (Finding C3)
+    const jwtSecret = getJwtSecret();
+    if (!jwtSecret) {
+      throw new ApiError(500, 'Authentication configuration failure');
+    }
+
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check if user exists
+    // Check if user already exists
     const userExists = await query('SELECT id FROM users WHERE email = $1', [normalizedEmail]);
     if (userExists.rows.length > 0) {
       throw new ApiError(409, 'Email is already registered');
     }
 
-    // Begin transaction
-    await query('BEGIN');
-
-    // 1. Create Organization
-    const orgRes = await query(
-      'INSERT INTO organizations (name) VALUES ($1) RETURNING id',
-      [organizationName]
-    );
-    const orgId = orgRes.rows[0].id;
-
-    // 2. Hash Password
+    // Hash Password before entering transaction
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // 3. Create User (Link to org as primary organization_id)
-    const userRes = await query(
-      `INSERT INTO users (name, email, password_hash, organization_id, role) 
-       VALUES ($1, $2, $3, $4, 'Admin') RETURNING id, name, email, role`,
-      [name, normalizedEmail, passwordHash, orgId]
-    );
-    const user = userRes.rows[0];
+    // Execute all account creation mutations atomically on a dedicated client (Finding C3 / Annex A6)
+    const result = await withTransaction(async (client) => {
+      // 1. Create Organization
+      const orgRes = await client.query(
+        'INSERT INTO organizations (name) VALUES ($1) RETURNING id',
+        [organizationName]
+      );
+      const orgId = orgRes.rows[0].id;
 
-    // 4. Create Organization Membership (Owner/Admin)
-    await query(
-      `INSERT INTO organization_members (organization_id, user_id, role)
-       VALUES ($1, $2, 'Admin')`,
-      [orgId, user.id]
-    );
+      // 2. Create User linked to org
+      const userRes = await client.query(
+        `INSERT INTO users (name, email, password_hash, organization_id, role) 
+         VALUES ($1, $2, $3, $4, 'Admin') RETURNING id, name, email, role`,
+        [name, normalizedEmail, passwordHash, orgId]
+      );
+      const user = userRes.rows[0];
 
-    // Commit transaction
-    await query('COMMIT');
+      // 3. Create Organization Membership (Owner/Admin)
+      await client.query(
+        `INSERT INTO organization_members (organization_id, user_id, role)
+         VALUES ($1, $2, 'Admin')`,
+        [orgId, user.id]
+      );
 
-    // Generate JWT
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      getJwtSecret(),
-      { expiresIn: JWT_EXPIRES_IN }
-    );
+      // 4. Create default FREE subscription
+      await client.query(
+        `INSERT INTO subscriptions (organization_id, plan_id, billing_cycle, status)
+         VALUES ($1, 'FREE', 'monthly', 'active')
+         ON CONFLICT (organization_id) DO NOTHING`,
+        [orgId]
+      );
 
-    res.status(201).json({
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        organizationId: orgId,
-      }
+      // 5. Generate JWT token INSIDE transaction so any token signing error triggers full rollback
+      const token = jwt.sign(
+        { userId: user.id, email: user.email },
+        jwtSecret,
+        { expiresIn: JWT_EXPIRES_IN }
+      );
+
+      return {
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          organizationId: orgId,
+        }
+      };
     });
 
+    res.status(201).json(result);
   } catch (error) {
-    await query('ROLLBACK');
-    next(error);
+    if (error instanceof ApiError) {
+      return next(error);
+    }
+    console.error('Registration failure:', error.message);
+    next(new ApiError(500, 'Unable to complete registration. Please try again.'));
   }
 });
 
@@ -195,27 +214,34 @@ authRouter.post('/google', async (req, res, next) => {
     let role = 'Viewer';
 
     if (!user) {
-      // Create new user & default org using transaction
-      await query('BEGIN');
-      const orgRes = await query(
-        'INSERT INTO organizations (name) VALUES ($1) RETURNING id',
-        [`${name}'s Workspace`]
-      );
-      orgId = orgRes.rows[0].id;
-      
-      const insertUserRes = await query(
-        `INSERT INTO users (name, email, password_hash, organization_id, role) 
-         VALUES ($1, $2, $3, $4, 'Admin') RETURNING id, name, email, role`,
-        [name, normalizedEmail, 'google_oauth_managed', orgId]
-      );
-      user = insertUserRes.rows[0];
+      // Create new user & default org using transaction (Annex A6)
+      await withTransaction(async (client) => {
+        const orgRes = await client.query(
+          'INSERT INTO organizations (name) VALUES ($1) RETURNING id',
+          [`${name}'s Workspace`]
+        );
+        orgId = orgRes.rows[0].id;
+        
+        const insertUserRes = await client.query(
+          `INSERT INTO users (name, email, password_hash, organization_id, role) 
+           VALUES ($1, $2, $3, $4, 'Admin') RETURNING id, name, email, role`,
+          [name, normalizedEmail, 'google_oauth_managed', orgId]
+        );
+        user = insertUserRes.rows[0];
 
-      await query(
-        `INSERT INTO organization_members (organization_id, user_id, role)
-         VALUES ($1, $2, 'Admin')`,
-        [orgId, user.id]
-      );
-      await query('COMMIT');
+        await client.query(
+          `INSERT INTO organization_members (organization_id, user_id, role)
+           VALUES ($1, $2, 'Admin')`,
+          [orgId, user.id]
+        );
+
+        await client.query(
+          `INSERT INTO subscriptions (organization_id, plan_id, billing_cycle, status)
+           VALUES ($1, 'FREE', 'monthly', 'active')
+           ON CONFLICT (organization_id) DO NOTHING`,
+          [orgId]
+        );
+      });
       role = 'Admin';
     } else {
       orgId = user.organization_id;
@@ -250,9 +276,6 @@ authRouter.post('/google', async (req, res, next) => {
       }
     });
   } catch (error) {
-    if (error.message.includes('BEGIN') || error.message.includes('COMMIT')) {
-        await query('ROLLBACK');
-    }
     next(error);
   }
 });
