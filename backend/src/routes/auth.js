@@ -1,21 +1,24 @@
 import crypto from 'node:crypto';
 import { Router } from 'express';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { query, withTransaction } from '../db/pool.js';
 import { config } from '../config.js';
 import { ApiError } from '../utils/errors.js';
 import { OAuth2Client } from 'google-auth-library';
 import { emailProvider, EmailService } from '../services/emailService.js';
-
+import { passwordService } from '../services/auth/passwordService.js';
+import { sessionService } from '../services/auth/sessionService.js';
+import { mfaService } from '../services/auth/mfaService.js';
+import { requireAuth } from '../middleware/auth.js';
 import { loginLimiter, signupLimiter, forgotPasswordLimiter, resetPasswordLimiter } from '../middleware/rateLimiters.js';
 
 export const authRouter = Router();
 
 const getJwtSecret = () => config.jwtSecret;
-const JWT_EXPIRES_IN = '7d';
 
-// POST /api/auth/signup
+// ============================================================================
+// POST /api/auth/signup (Annex A1 & A6)
+// ============================================================================
 authRouter.post('/signup', signupLimiter, async (req, res, next) => {
   try {
     const { name, email, password, organizationName } = req.body;
@@ -24,8 +27,10 @@ authRouter.post('/signup', signupLimiter, async (req, res, next) => {
       throw new ApiError(400, 'Name, email, password, and organization name are required');
     }
 
-    if (typeof password !== 'string' || password.length < 8) {
-      throw new ApiError(400, 'Password must be at least 8 characters long');
+    // Annex A1: Enterprise Password Policy (12-128 chars + breached password check)
+    const policyResult = await passwordService.validatePolicy(password, { email, name });
+    if (!policyResult.valid) {
+      throw new ApiError(400, policyResult.reason);
     }
 
     // Verify JWT secret is configured BEFORE executing any database operations (Finding C3)
@@ -42,9 +47,8 @@ authRouter.post('/signup', signupLimiter, async (req, res, next) => {
       throw new ApiError(409, 'Email is already registered');
     }
 
-    // Hash Password before entering transaction
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
+    // Hash Password using Argon2id (Annex A1)
+    const passwordHash = await passwordService.hash(password);
 
     // Execute all account creation mutations atomically on a dedicated client (Finding C3 / Annex A6)
     const result = await withTransaction(async (client) => {
@@ -58,7 +62,7 @@ authRouter.post('/signup', signupLimiter, async (req, res, next) => {
       // 2. Create User linked to org
       const userRes = await client.query(
         `INSERT INTO users (name, email, password_hash, organization_id, role) 
-         VALUES ($1, $2, $3, $4, 'Admin') RETURNING id, name, email, role`,
+         VALUES ($1, $2, $3, $4, 'Admin') RETURNING id, name, email, role, token_version`,
         [name, normalizedEmail, passwordHash, orgId]
       );
       const user = userRes.rows[0];
@@ -78,26 +82,34 @@ authRouter.post('/signup', signupLimiter, async (req, res, next) => {
         [orgId]
       );
 
-      // 5. Generate JWT token INSIDE transaction so any token signing error triggers full rollback
-      const token = jwt.sign(
-        { userId: user.id, email: user.email },
-        jwtSecret,
-        { expiresIn: JWT_EXPIRES_IN }
-      );
+      // 5. Create authoritative initial session
+      const session = await sessionService.createSession({
+        userId: user.id,
+        organizationId: orgId,
+        userAgent: req.headers['user-agent'] || '',
+        ipAddress: req.ip || '',
+        client
+      });
 
       return {
-        token,
+        session,
         user: {
           id: user.id,
           name: user.name,
           email: user.email,
-          role: user.role,
+          role: 'Admin',
           organizationId: orgId,
         }
       };
     });
 
-    res.status(201).json(result);
+    // Set HttpOnly refresh token cookie (Annex A2)
+    sessionService.setRefreshCookie(res, result.session.refreshToken, result.session.expiresAt);
+
+    res.status(201).json({
+      token: result.session.accessToken,
+      user: result.user
+    });
   } catch (error) {
     if (error instanceof ApiError) {
       return next(error);
@@ -107,10 +119,12 @@ authRouter.post('/signup', signupLimiter, async (req, res, next) => {
   }
 });
 
-// POST /api/auth/login
+// ============================================================================
+// POST /api/auth/login (Annex A1, A2, A4)
+// ============================================================================
 authRouter.post('/login', loginLimiter, async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, mfaCode } = req.body;
 
     if (!email || !password) {
       throw new ApiError(400, 'Email and password are required');
@@ -118,55 +132,90 @@ authRouter.post('/login', loginLimiter, async (req, res, next) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Find user
+    // Find user by email
     const userRes = await query(
-      'SELECT id, name, email, password_hash, organization_id, role FROM users WHERE email = $1',
+      `SELECT id, name, email, password_hash, organization_id, role, token_version 
+       FROM users WHERE email = $1`,
       [normalizedEmail]
     );
     const user = userRes.rows[0];
 
-    if (!user) {
+    // Constant-time timing equalization & password verification (Annex A1)
+    const { isValid, needsUpgrade } = await passwordService.verify(user?.password_hash, password);
+    if (!user || !isValid) {
       throw new ApiError(401, 'Invalid credentials');
     }
 
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-    if (!isMatch) {
-      throw new ApiError(401, 'Invalid credentials');
+    // Transparently upgrade legacy bcrypt hash to Argon2id upon successful login (Annex A1)
+    if (needsUpgrade) {
+      const newArgonHash = await passwordService.hash(password);
+      await query('UPDATE users SET password_hash = $1 WHERE id = $2', [newArgonHash, user.id]);
+      console.log(`ℹ️ [Security Upgrade] Transparently upgraded password hash to Argon2id for user ${user.id}`);
     }
 
-    // Resolve membership. If organization_id is null, find first membership
+    // Check Multi-Factor Authentication requirement
+    const isMfaActive = await mfaService.isMfaEnabled(user.id);
+    if (isMfaActive) {
+      const submittedMfaCode = mfaCode || req.headers['x-mfa-code'];
+      if (!submittedMfaCode) {
+        return res.status(200).json({
+          mfaRequired: true,
+          userId: user.id,
+          message: 'Multi-factor authentication code required'
+        });
+      }
+
+      const mfaVerification = await mfaService.verifyMfa(user.id, submittedMfaCode);
+      if (!mfaVerification.verified) {
+        throw new ApiError(401, 'Invalid multi-factor authentication code');
+      }
+    }
+
+    // Resolve active organization membership
     let orgId = user.organization_id;
-    let role = user.role;
+    let membershipRole = user.role || 'Viewer';
+
+    if (orgId) {
+      const memRes = await query(
+        'SELECT role FROM organization_members WHERE organization_id = $1 AND user_id = $2',
+        [orgId, user.id]
+      );
+      if (memRes.rows.length > 0) {
+        membershipRole = memRes.rows[0].role;
+      } else {
+        orgId = null;
+      }
+    }
 
     if (!orgId) {
-       const memRes = await query(
-         'SELECT organization_id, role FROM organization_members WHERE user_id = $1 ORDER BY joined_at DESC LIMIT 1',
-         [user.id]
-       );
-       if (memRes.rows[0]) {
-         orgId = memRes.rows[0].organization_id;
-         role = memRes.rows[0].role;
-         
-         // Update user's last active organization_id
-         await query('UPDATE users SET organization_id = $1, role = $2 WHERE id = $3', [orgId, role, user.id]);
-       }
+      const anyMemRes = await query(
+        'SELECT organization_id, role FROM organization_members WHERE user_id = $1 ORDER BY joined_at DESC LIMIT 1',
+        [user.id]
+      );
+      if (anyMemRes.rows.length > 0) {
+        orgId = anyMemRes.rows[0].organization_id;
+        membershipRole = anyMemRes.rows[0].role;
+        await query('UPDATE users SET organization_id = $1, role = $2 WHERE id = $3', [orgId, membershipRole, user.id]);
+      }
     }
 
-    // Generate JWT
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      getJwtSecret(),
-      { expiresIn: JWT_EXPIRES_IN }
-    );
+    // Create session and issue 10-minute access token + rotating refresh token (Annex A2)
+    const session = await sessionService.createSession({
+      userId: user.id,
+      organizationId: orgId,
+      userAgent: req.headers['user-agent'] || '',
+      ipAddress: req.ip || ''
+    });
+
+    sessionService.setRefreshCookie(res, session.refreshToken, session.expiresAt);
 
     res.json({
-      token,
+      token: session.accessToken,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: role,
+        role: membershipRole,
         organizationId: orgId,
       }
     });
@@ -175,10 +224,165 @@ authRouter.post('/login', loginLimiter, async (req, res, next) => {
   }
 });
 
+// ============================================================================
+// POST /api/auth/refresh (Annex A2 - Token Rotation & Reuse Detection)
+// ============================================================================
+authRouter.post('/refresh', async (req, res, next) => {
+  try {
+    const rawRefreshToken = req.cookies?.i3dion_refresh_token || req.body?.refreshToken;
+    if (!rawRefreshToken) {
+      throw new ApiError(401, 'Refresh token is required');
+    }
+
+    // CSRF mitigation: require custom header if cookie-authenticated
+    if (req.cookies?.i3dion_refresh_token && !req.headers['x-requested-with'] && !req.body?.refreshToken) {
+      // Allowed in dev, enforce header in production
+      if (process.env.NODE_ENV === 'production') {
+        throw new ApiError(403, 'CSRF verification failed: missing X-Requested-With header');
+      }
+    }
+
+    const rotated = await sessionService.rotateSession({
+      rawRefreshToken,
+      userAgent: req.headers['user-agent'] || '',
+      ipAddress: req.ip || ''
+    });
+
+    sessionService.setRefreshCookie(res, rotated.refreshToken, rotated.expiresAt);
+
+    res.json({
+      token: rotated.accessToken,
+      role: rotated.role
+    });
+  } catch (error) {
+    if (error.code === 'TOKEN_REUSE_DETECTED') {
+      sessionService.clearRefreshCookie(res);
+      return res.status(401).json({
+        error: 'Security Alert: Token reuse detected. All active sessions have been terminated.',
+        code: 'TOKEN_REUSE_DETECTED'
+      });
+    }
+    next(error instanceof ApiError ? error : new ApiError(401, error.message || 'Session rotation failed'));
+  }
+});
+
+// ============================================================================
+// POST /api/auth/logout (Revoke active session)
+// ============================================================================
+authRouter.post('/logout', async (req, res, next) => {
+  try {
+    const rawRefreshToken = req.cookies?.i3dion_refresh_token || req.body?.refreshToken;
+    if (rawRefreshToken) {
+      const tokenHash = sessionService.hashToken(rawRefreshToken);
+      await query(`UPDATE sessions SET revoked_at = now() WHERE token_hash = $1`, [tokenHash]);
+    }
+    sessionService.clearRefreshCookie(res);
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================================================
+// POST /api/auth/logout-all (Revoke all user sessions & bump token_version)
+// ============================================================================
+authRouter.post('/logout-all', requireAuth, async (req, res, next) => {
+  try {
+    await sessionService.revokeAllUserSessions(req.user.userId);
+    sessionService.clearRefreshCookie(res);
+    res.json({ message: 'All active sessions and access tokens revoked successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================================================
+// POST /api/auth/switch-org (Switch active organization scope)
+// ============================================================================
+authRouter.post('/switch-org', requireAuth, async (req, res, next) => {
+  try {
+    const { organizationId } = req.body;
+    if (!organizationId) {
+      throw new ApiError(400, 'organizationId is required');
+    }
+
+    // Verify membership
+    const memberRes = await query(
+      `SELECT role FROM organization_members WHERE organization_id = $1 AND user_id = $2`,
+      [organizationId, req.user.userId]
+    );
+
+    if (memberRes.rows.length === 0) {
+      throw new ApiError(403, 'You are not a member of this organization');
+    }
+
+    const membershipRole = memberRes.rows[0].role;
+
+    // Update active organization on user profile
+    await query(`UPDATE users SET organization_id = $1, role = $2 WHERE id = $3`, [
+      organizationId,
+      membershipRole,
+      req.user.userId
+    ]);
+
+    // Create new session bound specifically to the switched organization
+    const session = await sessionService.createSession({
+      userId: req.user.userId,
+      organizationId,
+      userAgent: req.headers['user-agent'] || '',
+      ipAddress: req.ip || ''
+    });
+
+    sessionService.setRefreshCookie(res, session.refreshToken, session.expiresAt);
+
+    res.json({
+      token: session.accessToken,
+      organizationId,
+      role: membershipRole
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================================================
+// Multi-Factor Authentication (TOTP MFA) Endpoints
+// ============================================================================
+authRouter.post('/mfa/setup', requireAuth, async (req, res, next) => {
+  try {
+    const setup = await mfaService.generateMfaSetup(req.user.userId, req.user.email);
+    res.json(setup);
+  } catch (error) {
+    next(error);
+  }
+});
+
+authRouter.post('/mfa/confirm', requireAuth, async (req, res, next) => {
+  try {
+    const { token } = req.body;
+    if (!token) throw new ApiError(400, 'MFA verification token is required');
+    const result = await mfaService.confirmMfaSetup(req.user.userId, token);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+authRouter.post('/mfa/disable', requireAuth, async (req, res, next) => {
+  try {
+    await mfaService.disableMfa(req.user.userId);
+    res.json({ enabled: false, message: 'Multi-factor authentication disabled' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================================================
+// Google OAuth Flow
+// ============================================================================
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID;
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-// POST /api/auth/google
 authRouter.post('/google', async (req, res, next) => {
   try {
     const { accessToken, idToken } = req.body;
@@ -206,7 +410,6 @@ authRouter.post('/google', async (req, res, next) => {
     const normalizedEmail = payload.email.toLowerCase().trim();
     const name = payload.name || payload.email.split('@')[0];
 
-    // Find or create user
     let userRes = await query(
       'SELECT id, name, email, organization_id, role FROM users WHERE email = $1',
       [normalizedEmail]
@@ -217,7 +420,6 @@ authRouter.post('/google', async (req, res, next) => {
     let role = 'Viewer';
 
     if (!user) {
-      // Create new user & default org using transaction (Annex A6)
       await withTransaction(async (client) => {
         const orgRes = await client.query(
           'INSERT INTO organizations (name) VALUES ($1) RETURNING id',
@@ -250,26 +452,29 @@ authRouter.post('/google', async (req, res, next) => {
       orgId = user.organization_id;
       role = user.role;
       if (!orgId) {
-         const memRes = await query(
-           'SELECT organization_id, role FROM organization_members WHERE user_id = $1 ORDER BY joined_at DESC LIMIT 1',
-           [user.id]
-         );
-         if (memRes.rows[0]) {
-           orgId = memRes.rows[0].organization_id;
-           role = memRes.rows[0].role;
-           await query('UPDATE users SET organization_id = $1, role = $2 WHERE id = $3', [orgId, role, user.id]);
-         }
+        const memRes = await query(
+          'SELECT organization_id, role FROM organization_members WHERE user_id = $1 ORDER BY joined_at DESC LIMIT 1',
+          [user.id]
+        );
+        if (memRes.rows[0]) {
+          orgId = memRes.rows[0].organization_id;
+          role = memRes.rows[0].role;
+          await query('UPDATE users SET organization_id = $1, role = $2 WHERE id = $3', [orgId, role, user.id]);
+        }
       }
     }
 
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      getJwtSecret(),
-      { expiresIn: JWT_EXPIRES_IN }
-    );
+    const session = await sessionService.createSession({
+      userId: user.id,
+      organizationId: orgId,
+      userAgent: req.headers['user-agent'] || '',
+      ipAddress: req.ip || ''
+    });
+
+    sessionService.setRefreshCookie(res, session.refreshToken, session.expiresAt);
 
     res.json({
-      token,
+      token: session.accessToken,
       user: {
         id: user.id,
         name: user.name,
@@ -283,7 +488,9 @@ authRouter.post('/google', async (req, res, next) => {
   }
 });
 
-// POST /api/auth/forgot-password
+// ============================================================================
+// POST /api/auth/forgot-password (Annex A9)
+// ============================================================================
 authRouter.post('/forgot-password', forgotPasswordLimiter, async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -294,18 +501,15 @@ authRouter.post('/forgot-password', forgotPasswordLimiter, async (req, res, next
     const user = userRes.rows[0];
 
     if (user) {
-      // Generate 256-bit random cryptographic token (Annex A9)
       const rawToken = crypto.randomBytes(32).toString('base64url');
       const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
-      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes expiry
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
 
-      // Invalidate any existing unused reset tokens for this user
       await query(
         `UPDATE password_reset_tokens SET used_at = now() WHERE user_id = $1 AND used_at IS NULL`,
         [user.id]
       ).catch(() => {});
 
-      // Insert single-use hashed token
       await query(
         `INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
          VALUES ($1, $2, $3)`,
@@ -313,9 +517,7 @@ authRouter.post('/forgot-password', forgotPasswordLimiter, async (req, res, next
       );
 
       const resetUrl = `${config.appUrl}/reset-password?token=${rawToken}`;
-      // Log hygiene: NEVER log reset tokens or URLs to console or logs (Finding H5 / Annex A9)
 
-      // Dispatch password reset email via emailProvider
       const emailService = new EmailService();
       const emailHtml = emailService.renderTemplate(
         'Password Reset Request',
@@ -336,19 +538,22 @@ authRouter.post('/forgot-password', forgotPasswordLimiter, async (req, res, next
   }
 });
 
-// POST /api/auth/reset-password
+// ============================================================================
+// POST /api/auth/reset-password (Annex A9)
+// ============================================================================
 authRouter.post('/reset-password', resetPasswordLimiter, async (req, res, next) => {
   try {
     const { token, password } = req.body;
     if (!token || !password) throw new ApiError(400, 'Token and new password are required');
-    if (typeof password !== 'string' || password.length < 8) {
-      throw new ApiError(400, 'Password must be at least 8 characters long');
+
+    // Annex A1: Validate new password policy
+    const policyResult = await passwordService.validatePolicy(password);
+    if (!policyResult.valid) {
+      throw new ApiError(400, policyResult.reason);
     }
 
-    // Hash incoming token with sha256 to lookup stored hash (Annex A9)
     const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
 
-    // Atomic single-use consumption: invalidate token on first use and ensure not expired
     const tokenRes = await query(
       `UPDATE password_reset_tokens
        SET used_at = now()
@@ -363,11 +568,14 @@ authRouter.post('/reset-password', resetPasswordLimiter, async (req, res, next) 
 
     const userId = tokenRes.rows[0].user_id;
 
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
+    // Hash with Argon2id (Annex A1)
+    const passwordHash = await passwordService.hash(password);
 
+    // Update password, increment token_version to invalidate all existing sessions (Annex A2)
     const updateRes = await query(
-      'UPDATE users SET password_hash = $1, updated_at = now() WHERE id = $2 RETURNING id, email',
+      `UPDATE users 
+       SET password_hash = $1, token_version = token_version + 1, updated_at = now() 
+       WHERE id = $2 RETURNING id, email`,
       [passwordHash, userId]
     );
 
@@ -375,9 +583,12 @@ authRouter.post('/reset-password', resetPasswordLimiter, async (req, res, next) 
       throw new ApiError(404, 'User not found');
     }
 
+    // Revoke all existing sessions in database
+    await sessionService.revokeAllUserSessions(userId);
+
     res.json({
       success: true,
-      message: 'Password has been reset successfully. You can now log in with your new password.'
+      message: 'Password has been reset successfully. All existing sessions have been terminated. Please log in with your new password.'
     });
   } catch (error) {
     next(error);

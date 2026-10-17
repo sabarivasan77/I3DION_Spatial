@@ -831,3 +831,37 @@ CREATE TABLE IF NOT EXISTS enterprise_requests (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- ============================================================================
+-- Phase S1: Identity, Sessions, and Multi-Factor Authentication
+-- ============================================================================
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version integer NOT NULL DEFAULT 1;
+
+CREATE TABLE IF NOT EXISTS sessions (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  family_id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  token_hash text NOT NULL UNIQUE,
+  organization_id uuid REFERENCES organizations(id) ON DELETE CASCADE,
+  ua_hash text,
+  ip_prefix text,
+  expires_at timestamptz NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  revoked_at timestamptz,
+  replaced_by uuid REFERENCES sessions(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_token_hash ON sessions(token_hash);
+CREATE INDEX IF NOT EXISTS idx_sessions_family_id ON sessions(family_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+
+CREATE TABLE IF NOT EXISTS user_mfa (
+  user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  secret_encrypted text NOT NULL,
+  is_enabled boolean NOT NULL DEFAULT false,
+  scratch_codes jsonb NOT NULL DEFAULT '[]'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+

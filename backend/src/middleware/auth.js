@@ -36,10 +36,15 @@ export async function requireAuth(req, _res, next) {
       throw new ApiError(401, 'Invalid or expired session');
     }
 
-    // Fetch user and current membership
+    const userId = payload.sub || payload.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Malformed token payload: missing subject');
+    }
+
+    // Fetch user and token_version
     const userRes = await query(
-      'SELECT id, name, email, organization_id, role FROM users WHERE id = $1',
-      [payload.userId]
+      'SELECT id, name, email, organization_id, role, token_version FROM users WHERE id = $1',
+      [userId]
     );
     const user = userRes.rows[0];
 
@@ -47,35 +52,66 @@ export async function requireAuth(req, _res, next) {
       throw new ApiError(401, 'User no longer exists');
     }
 
-    let orgId = user.organization_id;
-    if (!orgId) {
-      // Check organization_members table explicitly for membership
+    // Annex A2: Token Version Validation (Revocation check)
+    // If token payload has 'ver' and it does not match user's current token_version, session is revoked
+    if (payload.ver !== undefined && payload.ver !== user.token_version) {
+      throw new ApiError(401, 'Session has been revoked. Please log in again.');
+    }
+
+    // Resolve active organization: prefer token payload org, then user.organization_id
+    let orgId = payload.org || payload.organizationId || user.organization_id;
+    let membershipRole = 'Viewer';
+
+    if (orgId) {
       const memRes = await query(
+        'SELECT role FROM organization_members WHERE organization_id = $1 AND user_id = $2',
+        [orgId, user.id]
+      );
+      if (memRes.rows.length > 0) {
+        membershipRole = memRes.rows[0].role;
+      } else if (user.organization_id === orgId) {
+        membershipRole = user.role || 'Admin';
+        await query(
+          'INSERT INTO organization_members (organization_id, user_id, role) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+          [orgId, user.id, membershipRole]
+        ).catch(() => {});
+      } else {
+        // Not a member of the requested org
+        orgId = null;
+      }
+    }
+
+    if (!orgId) {
+      // Fallback: check if user has any active organization membership
+      const anyMemRes = await query(
         'SELECT organization_id, role FROM organization_members WHERE user_id = $1 ORDER BY joined_at DESC LIMIT 1',
         [user.id]
       );
-      if (memRes.rows[0]) {
-        orgId = memRes.rows[0].organization_id;
-        await query('UPDATE users SET organization_id = $1 WHERE id = $2', [orgId, user.id]).catch(() => null);
+      if (anyMemRes.rows.length > 0) {
+        orgId = anyMemRes.rows[0].organization_id;
+        membershipRole = anyMemRes.rows[0].role;
       } else {
-        throw new ApiError(403, 'User does not belong to an organization');
+        throw new ApiError(403, 'User does not belong to an active organization');
       }
     }
 
     req.user = {
       id: user.id,
+      userId: user.id,
       name: user.name,
       email: user.email,
-      role: user.role || 'Viewer',
+      role: membershipRole,
       organization_id: orgId,
       organizationId: orgId,
+      tokenVersion: user.token_version,
+      sid: payload.sid
     };
     req.organizationId = orgId;
     req.token = token;
     next();
   } catch (error) {
-    console.error('requireAuth error:', error.message);
-    next(error instanceof ApiError ? error : new ApiError(401, 'Invalid or expired token'));
+    if (error instanceof ApiError) return next(error);
+    next(new ApiError(401, error.message || 'Invalid or expired token'));
   }
 }
 
@@ -86,16 +122,13 @@ export function requireRole(...roles) {
     }
 
     const userRole = req.user.role;
-    if (userRole === 'Super Admin' || userRole === 'Company Admin') {
+    // Explicit role match or Owner/Admin authorization
+    if (roles.includes(userRole) || userRole === 'Owner' || userRole === 'Admin') {
       return next();
     }
 
-    const userRank = roleRank[userRole] || 0;
-    const allowed = roles.some((role) => userRank >= (roleRank[role] || 0));
-    if (!allowed) {
-      return next(new ApiError(403, 'Insufficient permissions'));
-    }
-
-    next();
+    return next(new ApiError(403, `Insufficient permissions: required one of [${roles.join(', ')}]`));
   };
 }
+
+export { can, authorize, PERMISSIONS } from './authorizationEngine.js';

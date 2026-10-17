@@ -7,10 +7,11 @@
     "dev": "node src/server.js",
     "start": "node src/server.js",
     "migrate": "node src/migrate.js",
-    "test": "node test-tenant-auth.js && node test-core-permissions.js && node --experimental-strip-types test-walking-skeleton.js && node --experimental-strip-types test-vault-hardening.js && node --experimental-strip-types test-studio-hardening.js && node --experimental-strip-types test-engine-hardening.js && node --experimental-strip-types test-hub-lens-hardening.js && node --experimental-strip-types test-commercial-readiness.js && node test-security-s0.js"
+    "test": "node test-tenant-auth.js && node test-core-permissions.js && node --experimental-strip-types test-walking-skeleton.js && node --experimental-strip-types test-vault-hardening.js && node --experimental-strip-types test-studio-hardening.js && node --experimental-strip-types test-engine-hardening.js && node --experimental-strip-types test-hub-lens-hardening.js && node --experimental-strip-types test-commercial-readiness.js && node test-security-s0.js && node test-security-s1.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.115.0",
+    "argon2": "^0.45.1",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

@@ -230,7 +230,7 @@ async function runS0Tests() {
         body: JSON.stringify({
           name: 'Factory Owner',
           email: validEmail,
-          password: 'SecurePassword123!',
+          password: 'StrongS0EnterpriseSecure2026!#$',
           organizationName: validOrgName
         })
       });
