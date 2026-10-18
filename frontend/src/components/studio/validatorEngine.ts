@@ -12,7 +12,7 @@ export interface ValidationError {
 export const validatorEngine = {
   validateProject: (project: StudioProject): ValidationError[] => {
     const errors: ValidationError[] = [];
-    const doc = project.project_document || { screens: [], components: [], variables: [] };
+    const doc: any = project.project_document || { screens: [], components: [], variables: [], scripts: [] };
 
     // 1. Validate Screens & Navigation Targets
     const screenIds = new Set((doc.screens || []).map((s: any) => s.id));

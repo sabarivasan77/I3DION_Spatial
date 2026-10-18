@@ -93,7 +93,7 @@ export const StudioScreenPanel: React.FC<StudioScreenPanelProps> = ({
               }`}
             >
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                {isInitial && <Star size={12} className="text-amber-400 fill-amber-400 shrink-0" title="Initial Start Screen" />}
+                {isInitial && <span title="Initial Start Screen" className="shrink-0"><Star size={12} className="text-amber-400 fill-amber-400" /></span>}
                 
                 {editingId === screen.id ? (
                   <input

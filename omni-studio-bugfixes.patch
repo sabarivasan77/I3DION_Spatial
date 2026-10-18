@@ -1,0 +1,223 @@
+diff --git a/frontend/src/api/studioApi.ts b/frontend/src/api/studioApi.ts
+index 58a770b..b82eb17 100644
+--- a/frontend/src/api/studioApi.ts
++++ b/frontend/src/api/studioApi.ts
+@@ -98,6 +98,7 @@ export interface StudioProject {
+     component_tree: any[];
+     variables: StudioLowCodeVariable[];
+     logic: StudioLowCodeLogicNode[];
++    scripts?: { id: string; name: string; code: string }[];
+     theme: Record<string, any>;
+     settings: Record<string, any>;
+   };
+diff --git a/frontend/src/components/studio/StudioScreenPanel.tsx b/frontend/src/components/studio/StudioScreenPanel.tsx
+index 725dc21..ba33f78 100644
+--- a/frontend/src/components/studio/StudioScreenPanel.tsx
++++ b/frontend/src/components/studio/StudioScreenPanel.tsx
+@@ -93,7 +93,7 @@ export const StudioScreenPanel: React.FC<StudioScreenPanelProps> = ({
+               }`}
+             >
+               <div className="flex items-center gap-2 flex-1 min-w-0">
+-                {isInitial && <Star size={12} className="text-amber-400 fill-amber-400 shrink-0" title="Initial Start Screen" />}
++                {isInitial && <span title="Initial Start Screen" className="shrink-0"><Star size={12} className="text-amber-400 fill-amber-400" /></span>}
+                 
+                 {editingId === screen.id ? (
+                   <input
+diff --git a/frontend/src/components/studio/validatorEngine.ts b/frontend/src/components/studio/validatorEngine.ts
+index 955446f..0bb5e54 100644
+--- a/frontend/src/components/studio/validatorEngine.ts
++++ b/frontend/src/components/studio/validatorEngine.ts
+@@ -12,7 +12,7 @@ export interface ValidationError {
+ export const validatorEngine = {
+   validateProject: (project: StudioProject): ValidationError[] => {
+     const errors: ValidationError[] = [];
+-    const doc = project.project_document || { screens: [], components: [], variables: [] };
++    const doc: any = project.project_document || { screens: [], components: [], variables: [], scripts: [] };
+ 
+     // 1. Validate Screens & Navigation Targets
+     const screenIds = new Set((doc.screens || []).map((s: any) => s.id));
+diff --git a/frontend/src/features/logic/components/LogicRuleBuilder.tsx b/frontend/src/features/logic/components/LogicRuleBuilder.tsx
+index b2dd209..96ca8eb 100644
+--- a/frontend/src/features/logic/components/LogicRuleBuilder.tsx
++++ b/frontend/src/features/logic/components/LogicRuleBuilder.tsx
+@@ -34,7 +34,7 @@ export const LogicRuleBuilder: React.FC<LogicRuleBuilderProps> = ({ rule }) => {
+       propertyName: 'content',
+       value: 'Updated Text',
+     };
+-    updateRule(rule.id, { actions: [...rule.actions, newAction] });
++    updateRule(rule.id, { actions: [...(rule.actions ?? []), newAction] });
+   };
+ 
+   const handleActionChange = (
+@@ -42,7 +42,7 @@ export const LogicRuleBuilder: React.FC<LogicRuleBuilderProps> = ({ rule }) => {
+     key: string,
+     val: any
+   ) => {
+-    const updatedActions = rule.actions.map((act) =>
++    const updatedActions = (rule.actions ?? []).map((act) =>
+       act.id === actionId ? { ...act, [key]: val } : act
+     );
+     updateRule(rule.id, { actions: updatedActions });
+@@ -50,7 +50,7 @@ export const LogicRuleBuilder: React.FC<LogicRuleBuilderProps> = ({ rule }) => {
+ 
+   const handleDeleteAction = (actionId: string) => {
+     updateRule(rule.id, {
+-      actions: rule.actions.filter((act) => act.id !== actionId),
++      actions: (rule.actions ?? []).filter((act) => act.id !== actionId),
+     });
+   };
+ 
+@@ -111,7 +111,7 @@ export const LogicRuleBuilder: React.FC<LogicRuleBuilderProps> = ({ rule }) => {
+           <div className="mt-3 space-y-3">
+             <TargetWidgetPicker
+               label="Source Widget"
+-              value={rule.sourceNodeId}
++              value={rule.sourceNodeId ?? ''}
+               onChange={handleSourceNodeChange}
+             />
+ 
+@@ -150,7 +150,7 @@ export const LogicRuleBuilder: React.FC<LogicRuleBuilderProps> = ({ rule }) => {
+           </div>
+ 
+           <div className="mt-3 space-y-3">
+-            {rule.actions.map((act) => (
++            {(rule.actions ?? []).map((act) => (
+               <div
+                 key={act.id}
+                 className="relative rounded-lg border border-slate-200 bg-white p-3 space-y-2"
+@@ -166,7 +166,7 @@ export const LogicRuleBuilder: React.FC<LogicRuleBuilderProps> = ({ rule }) => {
+ 
+                 <TargetWidgetPicker
+                   label="Target Widget ID"
+-                  value={act.targetNodeId}
++                  value={act.targetNodeId ?? ''}
+                   onChange={(val) => handleActionChange(act.id, 'targetNodeId', val)}
+                 />
+ 
+diff --git a/frontend/src/features/logic/engine/logicEngine.ts b/frontend/src/features/logic/engine/logicEngine.ts
+index 240d2f5..494edaf 100644
+--- a/frontend/src/features/logic/engine/logicEngine.ts
++++ b/frontend/src/features/logic/engine/logicEngine.ts
+@@ -23,9 +23,9 @@ export class LogicEngineService {
+     );
+ 
+     for (const rule of matchingRules) {
+-      const conditionsPassed = this.evaluateConditions(rule.conditions, callbacks);
++      const conditionsPassed = this.evaluateConditions(rule.conditions ?? [], callbacks);
+       if (conditionsPassed) {
+-        this.executeActions(rule.actions, callbacks);
++        this.executeActions(rule.actions ?? [], callbacks);
+         executedCount++;
+       }
+     }
+@@ -40,6 +40,7 @@ export class LogicEngineService {
+     if (!conditions || conditions.length === 0) return true;
+ 
+     for (const cond of conditions) {
++      if (!cond.targetNodeId || !cond.propertyName) return false; // fail closed on malformed condition
+       const props = callbacks.getWidgetProps(cond.targetNodeId);
+       if (!props) return false;
+ 
+@@ -76,22 +77,24 @@ export class LogicEngineService {
+     callbacks: LogicEngineCallbacks
+   ): void {
+     for (const action of actions) {
++      if (!action.targetNodeId && action.type !== 'NAVIGATE_URL') continue; // skip malformed action
+       switch (action.type) {
+         case 'SET_PROPERTY':
+           if (action.propertyName) {
+-            callbacks.updateWidgetProps(action.targetNodeId, {
++            callbacks.updateWidgetProps(action.targetNodeId as string, {
+               [action.propertyName]: action.value,
+             });
+           }
+           break;
+ 
+-        case 'TOGGLE_VISIBILITY':
+-          const currentProps = callbacks.getWidgetProps(action.targetNodeId) || {};
++        case 'TOGGLE_VISIBILITY': {
++          const currentProps = callbacks.getWidgetProps(action.targetNodeId as string) || {};
+           const isCurrentlyHidden = currentProps.opacity === 0;
+-          callbacks.updateWidgetProps(action.targetNodeId, {
++          callbacks.updateWidgetProps(action.targetNodeId as string, {
+             opacity: isCurrentlyHidden ? 1 : 0,
+           });
+           break;
++        }
+ 
+         case 'NAVIGATE_URL':
+           if (action.value && callbacks.navigateUrl) {
+diff --git a/frontend/src/features/scripting/generator/iscriptGenerator.ts b/frontend/src/features/scripting/generator/iscriptGenerator.ts
+index 83ff5ad..9ec68ad 100644
+--- a/frontend/src/features/scripting/generator/iscriptGenerator.ts
++++ b/frontend/src/features/scripting/generator/iscriptGenerator.ts
+@@ -14,9 +14,9 @@ export function generateIScript(rules: LogicRule[]): string {
+ 
+   rules.forEach((rule) => {
+     code += `// Rule: ${rule.name}\n`;
+-    code += `WHEN ${rule.sourceNodeId} ${rule.triggerType.replace('ON_', '')}\nDO\n`;
++    code += `WHEN ${rule.sourceNodeId} ${(rule.triggerType ?? 'ON_CLICK').replace('ON_', '')}\nDO\n`;
+ 
+-    rule.actions.forEach((act) => {
++    (rule.actions ?? []).forEach((act) => {
+       if (act.type === 'SET_PROPERTY' && act.propertyName) {
+         const valStr = typeof act.value === 'string' ? `"${act.value}"` : act.value;
+         code += `  SET ${act.targetNodeId}.${act.propertyName} = ${valStr}\n`;
+diff --git a/frontend/src/pages/studio/StudioLogicWorkspace.tsx b/frontend/src/pages/studio/StudioLogicWorkspace.tsx
+index dabcfe6..72266a8 100644
+--- a/frontend/src/pages/studio/StudioLogicWorkspace.tsx
++++ b/frontend/src/pages/studio/StudioLogicWorkspace.tsx
+@@ -51,8 +51,8 @@ export function StudioLogicWorkspace() {
+       studioApi.getProject(projectId).then(p => {
+         if (p) {
+           setProject(p);
+-          if (p.project_document?.logic?.length > 0) {
+-            setNodes(p.project_document.logic);
++          if ((p.project_document?.logic?.length ?? 0) > 0) {
++            setNodes(p.project_document!.logic);
+           }
+           if (p.project_document?.scripts?.[0]?.code) {
+             setIScriptCode(p.project_document.scripts[0].code);
+@@ -72,20 +72,20 @@ export function StudioLogicWorkspace() {
+     const updated = [...nodes, newNode];
+     setNodes(updated);
+     // Sync to iScript
+-    const code = iScriptEngine.convertVisualLogicToIScript(updated);
++    const code = iScriptEngine.convertLogicNodesToiScript(updated);
+     setIScriptCode(code);
+   };
+ 
+   const handleDeleteNode = (id: string) => {
+     const updated = nodes.filter(n => n.id !== id);
+     setNodes(updated);
+-    const code = iScriptEngine.convertVisualLogicToIScript(updated);
++    const code = iScriptEngine.convertLogicNodesToiScript(updated);
+     setIScriptCode(code);
+   };
+ 
+   const handleModeSwitch = (mode: 'visual' | 'iscript') => {
+     if (mode === 'iscript' && activeMode === 'visual') {
+-      const code = iScriptEngine.convertVisualLogicToIScript(nodes);
++      const code = iScriptEngine.convertLogicNodesToiScript(nodes);
+       setIScriptCode(code);
+     }
+     setActiveMode(mode);
+@@ -105,7 +105,9 @@ export function StudioLogicWorkspace() {
+     if (!project) return;
+     setIsSaving(true);
+     try {
+-      const doc = project.project_document || { screens: [], components: [] };
++      const doc = project.project_document || {
++        screens: [], components: [], component_tree: [], variables: [], logic: [], theme: {}, settings: {}
++      };
+       const updatedDoc = {
+         ...doc,
+         logic: nodes,
+@@ -114,6 +116,7 @@ export function StudioLogicWorkspace() {
+       await studioApi.updateProject(project.id, { project_document: updatedDoc });
+     } catch (err) {
+       console.error('Save logic error', err);
++      setScriptError(`Save failed: ${(err as Error)?.message || 'unknown error'}. Your changes were NOT saved.`);
+     } finally {
+       setTimeout(() => setIsSaving(false), 500);
+     }

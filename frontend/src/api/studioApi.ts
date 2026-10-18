@@ -98,6 +98,7 @@ export interface StudioProject {
     component_tree: any[];
     variables: StudioLowCodeVariable[];
     logic: StudioLowCodeLogicNode[];
+    scripts?: { id: string; name: string; code: string }[];
     theme: Record<string, any>;
     settings: Record<string, any>;
   };

@@ -51,8 +51,8 @@ export function StudioLogicWorkspace() {
       studioApi.getProject(projectId).then(p => {
         if (p) {
           setProject(p);
-          if (p.project_document?.logic?.length > 0) {
-            setNodes(p.project_document.logic);
+          if ((p.project_document?.logic?.length ?? 0) > 0) {
+            setNodes(p.project_document!.logic);
           }
           if (p.project_document?.scripts?.[0]?.code) {
             setIScriptCode(p.project_document.scripts[0].code);
@@ -72,20 +72,20 @@ export function StudioLogicWorkspace() {
     const updated = [...nodes, newNode];
     setNodes(updated);
     // Sync to iScript
-    const code = iScriptEngine.convertVisualLogicToIScript(updated);
+    const code = iScriptEngine.convertLogicNodesToiScript(updated);
     setIScriptCode(code);
   };
 
   const handleDeleteNode = (id: string) => {
     const updated = nodes.filter(n => n.id !== id);
     setNodes(updated);
-    const code = iScriptEngine.convertVisualLogicToIScript(updated);
+    const code = iScriptEngine.convertLogicNodesToiScript(updated);
     setIScriptCode(code);
   };
 
   const handleModeSwitch = (mode: 'visual' | 'iscript') => {
     if (mode === 'iscript' && activeMode === 'visual') {
-      const code = iScriptEngine.convertVisualLogicToIScript(nodes);
+      const code = iScriptEngine.convertLogicNodesToiScript(nodes);
       setIScriptCode(code);
     }
     setActiveMode(mode);
@@ -105,7 +105,9 @@ export function StudioLogicWorkspace() {
     if (!project) return;
     setIsSaving(true);
     try {
-      const doc = project.project_document || { screens: [], components: [] };
+      const doc = project.project_document || {
+        screens: [], components: [], component_tree: [], variables: [], logic: [], theme: {}, settings: {}
+      };
       const updatedDoc = {
         ...doc,
         logic: nodes,
@@ -114,6 +116,7 @@ export function StudioLogicWorkspace() {
       await studioApi.updateProject(project.id, { project_document: updatedDoc });
     } catch (err) {
       console.error('Save logic error', err);
+      setScriptError(`Save failed: ${(err as Error)?.message || 'unknown error'}. Your changes were NOT saved.`);
     } finally {
       setTimeout(() => setIsSaving(false), 500);
     }

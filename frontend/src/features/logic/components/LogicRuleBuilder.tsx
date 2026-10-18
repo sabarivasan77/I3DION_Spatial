@@ -34,7 +34,7 @@ export const LogicRuleBuilder: React.FC<LogicRuleBuilderProps> = ({ rule }) => {
       propertyName: 'content',
       value: 'Updated Text',
     };
-    updateRule(rule.id, { actions: [...rule.actions, newAction] });
+    updateRule(rule.id, { actions: [...(rule.actions ?? []), newAction] });
   };
 
   const handleActionChange = (
@@ -42,7 +42,7 @@ export const LogicRuleBuilder: React.FC<LogicRuleBuilderProps> = ({ rule }) => {
     key: string,
     val: any
   ) => {
-    const updatedActions = rule.actions.map((act) =>
+    const updatedActions = (rule.actions ?? []).map((act) =>
       act.id === actionId ? { ...act, [key]: val } : act
     );
     updateRule(rule.id, { actions: updatedActions });
@@ -50,7 +50,7 @@ export const LogicRuleBuilder: React.FC<LogicRuleBuilderProps> = ({ rule }) => {
 
   const handleDeleteAction = (actionId: string) => {
     updateRule(rule.id, {
-      actions: rule.actions.filter((act) => act.id !== actionId),
+      actions: (rule.actions ?? []).filter((act) => act.id !== actionId),
     });
   };
 
@@ -111,7 +111,7 @@ export const LogicRuleBuilder: React.FC<LogicRuleBuilderProps> = ({ rule }) => {
           <div className="mt-3 space-y-3">
             <TargetWidgetPicker
               label="Source Widget"
-              value={rule.sourceNodeId}
+              value={rule.sourceNodeId ?? ''}
               onChange={handleSourceNodeChange}
             />
 
@@ -150,7 +150,7 @@ export const LogicRuleBuilder: React.FC<LogicRuleBuilderProps> = ({ rule }) => {
           </div>
 
           <div className="mt-3 space-y-3">
-            {rule.actions.map((act) => (
+            {(rule.actions ?? []).map((act) => (
               <div
                 key={act.id}
                 className="relative rounded-lg border border-slate-200 bg-white p-3 space-y-2"
@@ -166,7 +166,7 @@ export const LogicRuleBuilder: React.FC<LogicRuleBuilderProps> = ({ rule }) => {
 
                 <TargetWidgetPicker
                   label="Target Widget ID"
-                  value={act.targetNodeId}
+                  value={act.targetNodeId ?? ''}
                   onChange={(val) => handleActionChange(act.id, 'targetNodeId', val)}
                 />
 

@@ -23,9 +23,9 @@ export class LogicEngineService {
     );
 
     for (const rule of matchingRules) {
-      const conditionsPassed = this.evaluateConditions(rule.conditions, callbacks);
+      const conditionsPassed = this.evaluateConditions(rule.conditions ?? [], callbacks);
       if (conditionsPassed) {
-        this.executeActions(rule.actions, callbacks);
+        this.executeActions(rule.actions ?? [], callbacks);
         executedCount++;
       }
     }
@@ -40,6 +40,7 @@ export class LogicEngineService {
     if (!conditions || conditions.length === 0) return true;
 
     for (const cond of conditions) {
+      if (!cond.targetNodeId || !cond.propertyName) return false; // fail closed on malformed condition
       const props = callbacks.getWidgetProps(cond.targetNodeId);
       if (!props) return false;
 
@@ -76,22 +77,24 @@ export class LogicEngineService {
     callbacks: LogicEngineCallbacks
   ): void {
     for (const action of actions) {
+      if (!action.targetNodeId && action.type !== 'NAVIGATE_URL') continue; // skip malformed action
       switch (action.type) {
         case 'SET_PROPERTY':
           if (action.propertyName) {
-            callbacks.updateWidgetProps(action.targetNodeId, {
+            callbacks.updateWidgetProps(action.targetNodeId as string, {
               [action.propertyName]: action.value,
             });
           }
           break;
 
-        case 'TOGGLE_VISIBILITY':
-          const currentProps = callbacks.getWidgetProps(action.targetNodeId) || {};
+        case 'TOGGLE_VISIBILITY': {
+          const currentProps = callbacks.getWidgetProps(action.targetNodeId as string) || {};
           const isCurrentlyHidden = currentProps.opacity === 0;
-          callbacks.updateWidgetProps(action.targetNodeId, {
+          callbacks.updateWidgetProps(action.targetNodeId as string, {
             opacity: isCurrentlyHidden ? 1 : 0,
           });
           break;
+        }
 
         case 'NAVIGATE_URL':
           if (action.value && callbacks.navigateUrl) {
