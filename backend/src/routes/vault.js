@@ -11,6 +11,12 @@ import { detectMimeType, extractAssetMetadata, runAssetProcessingJob } from '../
 import { validateFileMagicBytes, generateSignedUrl } from '../services/storageService.js';
 import { entitlementService } from '../services/entitlement/entitlementService.js';
 import { usageService } from '../services/usage/usageService.js';
+import { sanitizeRecordForCaller, sanitizeRecordsForCaller } from '../services/vault/columnSecurityService.js';
+import { assertDeleteAllowed, evaluateFormula } from '../services/vault/schemaDesignerService.js';
+import { ensureFolderPath, assertRetentionLabelPermitsDeletion, createShareLink } from '../services/vault/documentLibraryService.js';
+import { logChainedAudit, verifyAuditChain } from '../services/vault/auditChainingService.js';
+import { autoIngestAsset, getAssetUsage } from '../services/vault/autoIngestService.js';
+import { bulkImportRecords, exportToCsv } from '../services/vault/importExportService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -70,14 +76,19 @@ function requireMinRole(allowedRoles) {
   };
 }
 
-// Helper for audit logging
+// Helper for audit logging with cryptographic hash chaining
 async function logActivity(orgId, userId, userName, action, targetType, targetId, targetName, details = {}) {
   try {
-    await pool.query(
-      `INSERT INTO vault_audit_logs (organization_id, user_id, user_name, action, target_type, target_id, target_name, details)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [orgId, userId, userName || 'User', action, targetType, targetId || null, targetName || '', JSON.stringify(details)]
-    );
+    await logChainedAudit({
+      organizationId: orgId,
+      userId,
+      userName: userName || 'User',
+      action,
+      targetType,
+      targetId: targetId || null,
+      targetName: targetName || '',
+      details
+    });
   } catch (err) {
     console.warn('Vault audit log error:', err.message);
   }
@@ -701,11 +712,18 @@ vaultRouter.delete('/assets/:id/permanent', requireMinRole(['Admin']), async (re
     const { organization_id, id: userId, name: userName } = req.user;
 
     const check = await pool.query(
-      `SELECT name, storage_key FROM vault_assets WHERE id = $1 AND organization_id = $2`,
+      `SELECT name, storage_key, retention_label FROM vault_assets WHERE id = $1 AND organization_id = $2`,
       [id, organization_id]
     );
     if (check.rows.length === 0) return res.status(404).json({ error: 'Asset not found' });
     const asset = check.rows[0];
+
+    // Enforce retention label compliance (blocks deletion if active retention label exists)
+    try {
+      assertRetentionLabelPermitsDeletion(asset);
+    } catch (retentionErr) {
+      return res.status(409).json({ error: retentionErr.message });
+    }
 
     // Clean up physical disk file if present
     if (asset.storage_key) {
@@ -910,6 +928,13 @@ vaultRouter.delete('/collections/:id', requireMinRole(['Admin']), async (req, re
     const check = await pool.query(`SELECT name FROM vault_collections WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
     if (check.rows.length === 0) return res.status(404).json({ error: 'Collection not found' });
 
+    // Enforce relational restrict constraint
+    try {
+      await assertDeleteAllowed('collection', id, organization_id);
+    } catch (relErr) {
+      return res.status(409).json({ error: relErr.message });
+    }
+
     await pool.query(`DELETE FROM vault_collections WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
     await logActivity(organization_id, userId, userName, 'Deleted Data Source', 'Collection', id, check.rows[0].name);
 
@@ -983,9 +1008,22 @@ vaultRouter.get('/collections/:id/records', async (req, res) => {
       [id, organization_id]
     );
 
+    // Fetch schema fields to apply column-level security
+    const fieldsRes = await pool.query(
+      `SELECT * FROM vault_schema_fields WHERE organization_id = $1`,
+      [organization_id]
+    );
+
+    const isPublicAudience = req.query.audience === 'public' || req.headers['x-audience'] === 'public';
+    const sanitizedRecords = sanitizeRecordsForCaller(
+      records.rows,
+      fieldsRes.rows,
+      { role: req.user.role, isPublicAudience }
+    );
+
     res.json({
       collection,
-      records: records.rows
+      records: sanitizedRecords
     });
   } catch (error) {
     console.error('Vault GET Records Error:', error);
@@ -1068,6 +1106,13 @@ vaultRouter.delete('/collections/:id/records/:recordId', requireMinRole(['Admin'
     );
 
     if (check.rows.length === 0) return res.status(404).json({ error: 'Record not found' });
+
+    // Enforce relational restrict constraint
+    try {
+      await assertDeleteAllowed('record', recordId, organization_id);
+    } catch (relErr) {
+      return res.status(409).json({ error: relErr.message });
+    }
 
     await pool.query(
       `DELETE FROM vault_records WHERE id = $1 AND collection_id = $2 AND organization_id = $3`,
@@ -2214,6 +2259,235 @@ vaultRouter.get('/datasets/:collectionId/export', async (req, res) => {
   } catch (error) {
     console.error('Vault Export Dataset Error:', error);
     res.status(500).json({ error: 'Failed to export dataset' });
+  }
+});
+
+// ---------------------------------------------------------
+// PHASE 3: VAULT DATAVERSE & SHAREPOINT EXPANDED APIS
+// ---------------------------------------------------------
+
+// GET /api/vault/relationships
+vaultRouter.get('/relationships', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const result = await pool.query(
+      `SELECT r.*, sc.name as source_name, tc.name as target_name
+       FROM vault_relationships r
+       JOIN vault_collections sc ON sc.id = r.source_collection_id
+       JOIN vault_collections tc ON tc.id = r.target_collection_id
+       WHERE r.organization_id = $1
+       ORDER BY r.created_at DESC`,
+      [organization_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Vault GET Relationships Error:', error);
+    res.status(500).json({ error: 'Failed to fetch relationships' });
+  }
+});
+
+// POST /api/vault/relationships
+vaultRouter.post('/relationships', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const { name, source_collection_id, target_collection_id, relationship_type = 'lookup', on_delete = 'restrict' } = req.body;
+
+    if (!name || !source_collection_id || !target_collection_id) {
+      return res.status(400).json({ error: 'name, source_collection_id, and target_collection_id are required' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO vault_relationships (organization_id, name, source_collection_id, target_collection_id, relationship_type, on_delete)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [organization_id, name, source_collection_id, target_collection_id, relationship_type, on_delete]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Vault POST Relationship Error:', error);
+    res.status(500).json({ error: 'Failed to create relationship' });
+  }
+});
+
+// DELETE /api/vault/relationships/:id
+vaultRouter.delete('/relationships/:id', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+
+    const result = await pool.query(
+      `DELETE FROM vault_relationships WHERE id = $1 AND organization_id = $2 RETURNING id`,
+      [id, organization_id]
+    );
+
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Relationship not found' });
+    res.json({ message: 'Relationship deleted successfully' });
+  } catch (error) {
+    console.error('Vault DELETE Relationship Error:', error);
+    res.status(500).json({ error: 'Failed to delete relationship' });
+  }
+});
+
+// GET /api/vault/folders
+vaultRouter.get('/folders', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const result = await pool.query(
+      `SELECT * FROM vault_folders WHERE organization_id = $1 ORDER BY path ASC`,
+      [organization_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Vault GET Folders Error:', error);
+    res.status(500).json({ error: 'Failed to fetch folders' });
+  }
+});
+
+// POST /api/vault/folders
+vaultRouter.post('/folders', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { organization_id, id: userId } = req.user;
+    const { path: folderPath } = req.body;
+
+    if (!folderPath) return res.status(400).json({ error: 'path is required' });
+
+    const folderId = await ensureFolderPath(folderPath, organization_id, userId);
+    res.status(201).json({ folder_id: folderId, path: folderPath });
+  } catch (error) {
+    console.error('Vault POST Folder Error:', error);
+    res.status(500).json({ error: 'Failed to create folder' });
+  }
+});
+
+// POST /api/vault/assets/auto-ingest (§4.8 "Every asset goes into the Vault")
+vaultRouter.post('/assets/auto-ingest', async (req, res) => {
+  try {
+    const { organization_id, id: userId } = req.user;
+    const { name, original_name, content, mime_type, catalog_id, consumer_type, consumer_id, consumer_name, context } = req.body;
+
+    if (!name || !content) {
+      return res.status(400).json({ error: 'name and content are required for auto-ingest' });
+    }
+
+    const result = await autoIngestAsset({
+      organizationId: organization_id,
+      userId,
+      name,
+      originalName: original_name,
+      content,
+      mimeType: mime_type || 'application/octet-stream',
+      catalogId: catalog_id,
+      consumerType: consumer_type || 'catalog',
+      consumerId: consumer_id,
+      consumerName: consumer_name,
+      context: context || {}
+    });
+
+    res.status(result.duplicate ? 200 : 201).json(result);
+  } catch (error) {
+    console.error('Vault Auto-Ingest Error:', error);
+    res.status(500).json({ error: 'Auto-ingest failed: ' + error.message });
+  }
+});
+
+// GET /api/vault/assets/:id/usage ("Used in" query)
+vaultRouter.get('/assets/:id/usage', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+
+    const usageList = await getAssetUsage(id, organization_id);
+    res.json(usageList);
+  } catch (error) {
+    console.error('Vault GET Asset Usage Error:', error);
+    res.status(500).json({ error: 'Failed to fetch asset usage' });
+  }
+});
+
+// GET /api/vault/audit/verify (Cryptographic Hash-Chain Verification)
+vaultRouter.get('/audit/verify', async (req, res) => {
+  try {
+    const { organization_id } = req.user;
+    const verification = await verifyAuditChain(organization_id);
+    res.json(verification);
+  } catch (error) {
+    console.error('Vault Verify Audit Error:', error);
+    res.status(500).json({ error: 'Failed to verify audit chain' });
+  }
+});
+
+// POST /api/vault/datasets/:collectionId/import-advanced
+vaultRouter.post('/datasets/:collectionId/import-advanced', requireMinRole(['Admin', 'Manager']), async (req, res) => {
+  try {
+    const { collectionId } = req.params;
+    const { organization_id, id: userId } = req.user;
+    const { records, mapping = {}, upsert_key = null } = req.body;
+
+    if (!Array.isArray(records) || records.length === 0) {
+      return res.status(400).json({ error: 'records array is required' });
+    }
+
+    const fieldsRes = await pool.query(
+      `SELECT * FROM vault_schema_fields WHERE organization_id = $1`,
+      [organization_id]
+    );
+
+    const report = await bulkImportRecords({
+      collectionId,
+      organizationId: organization_id,
+      userId,
+      rawRecords: records,
+      mapping,
+      upsertKey: upsert_key,
+      schemaFields: fieldsRes.rows
+    });
+
+    res.json(report);
+  } catch (error) {
+    console.error('Vault Import-Advanced Error:', error);
+    res.status(500).json({ error: 'Advanced import failed: ' + error.message });
+  }
+});
+
+// GET /api/vault/datasets/:collectionId/export-safe
+vaultRouter.get('/datasets/:collectionId/export-safe', async (req, res) => {
+  try {
+    const { collectionId } = req.params;
+    const { organization_id } = req.user;
+    const format = (req.query.format || 'json').toLowerCase();
+
+    const result = await pool.query(
+      `SELECT r.id, r.name, r.data, r.status, r.created_at, r.updated_at
+       FROM vault_records r
+       WHERE r.collection_id = $1 AND r.organization_id = $2
+       ORDER BY r.created_at DESC`,
+      [collectionId, organization_id]
+    );
+
+    const fieldsRes = await pool.query(
+      `SELECT * FROM vault_schema_fields WHERE organization_id = $1`,
+      [organization_id]
+    );
+
+    const isPublicAudience = req.query.audience === 'public' || req.headers['x-audience'] === 'public';
+    const sanitized = sanitizeRecordsForCaller(
+      result.rows,
+      fieldsRes.rows,
+      { role: req.user.role, isPublicAudience }
+    );
+
+    if (format === 'csv') {
+      const csvStr = exportToCsv(sanitized);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="vault_export_${collectionId}.csv"`);
+      return res.send(csvStr);
+    }
+
+    res.json(sanitized);
+  } catch (error) {
+    console.error('Vault Export Safe Error:', error);
+    res.status(500).json({ error: 'Safe export failed' });
   }
 });
 
