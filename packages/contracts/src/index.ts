@@ -5,3 +5,4 @@ export * from './event.js';
 export * from './lead.js';
 export * from './catalogComposition.js';
 export * from './experienceScene.js';
+export * from './flow.js';
