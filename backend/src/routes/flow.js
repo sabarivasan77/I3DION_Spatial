@@ -1,5 +1,6 @@
 import express from 'express';
 import { requireAuth } from '../middleware/auth.js';
+import { authorize } from '../middleware/authorizationEngine.js';
 import {
   createFlow,
   getFlowById,
@@ -50,7 +51,7 @@ function getOrgId(req) {
 // 1. LIST FLOWS
 // -----------------------------------------------------------------------------
 // GET /api/flows?status=active&search=rfq&limit=20&offset=0
-flowRouter.get('/', async (req, res) => {
+flowRouter.get('/', authorize('flow:read'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const { status, search, limit, offset } = req.query;
@@ -72,7 +73,7 @@ flowRouter.get('/', async (req, res) => {
 // 2. CREATE FLOW
 // -----------------------------------------------------------------------------
 // POST /api/flows
-flowRouter.post('/', async (req, res) => {
+flowRouter.post('/', authorize('flow:create'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const { name, description, triggerType, triggerConfig, flowDefinition } = req.body;
@@ -101,7 +102,7 @@ flowRouter.post('/', async (req, res) => {
 // ANALYTICS OVERVIEW
 // -----------------------------------------------------------------------------
 // GET /api/flows/analytics/overview
-flowRouter.get('/analytics/overview', async (req, res) => {
+flowRouter.get('/analytics/overview', authorize('flow:read'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const analytics = await getFlowAnalytics(orgId, null);
@@ -115,7 +116,7 @@ flowRouter.get('/analytics/overview', async (req, res) => {
 // LIST ALL ORGANIZATION RUNS
 // -----------------------------------------------------------------------------
 // GET /api/flows/runs/all
-flowRouter.get('/runs/all', async (req, res) => {
+flowRouter.get('/runs/all', authorize('flow:read'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const { status, search, limit, offset, flowId } = req.query;
@@ -136,7 +137,7 @@ flowRouter.get('/runs/all', async (req, res) => {
 // GET SINGLE RUN DETAILS WITH STEP RESULTS
 // -----------------------------------------------------------------------------
 // GET /api/flows/runs/:runId
-flowRouter.get('/runs/:runId', async (req, res) => {
+flowRouter.get('/runs/:runId', authorize('flow:read'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const run = await getRunDetails(orgId, req.params.runId);
@@ -153,7 +154,7 @@ flowRouter.get('/runs/:runId', async (req, res) => {
 // RETRY RUN
 // -----------------------------------------------------------------------------
 // POST /api/flows/runs/:runId/retry
-flowRouter.post('/runs/:runId/retry', async (req, res) => {
+flowRouter.post('/runs/:runId/retry', authorize('flow:execute'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const newRun = await retryRun(
@@ -172,7 +173,7 @@ flowRouter.post('/runs/:runId/retry', async (req, res) => {
 // COMMERCIAL QUOTA & SUBSCRIPTIONS
 // -----------------------------------------------------------------------------
 // GET /api/flows/quota
-flowRouter.get('/quota', async (req, res) => {
+flowRouter.get('/quota', authorize('flow:read'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const quota = await getOrganizationPlan(orgId);
@@ -183,7 +184,7 @@ flowRouter.get('/quota', async (req, res) => {
 });
 
 // POST /api/flows/plan/upgrade
-flowRouter.post('/plan/upgrade', async (req, res) => {
+flowRouter.post('/plan/upgrade', authorize('org:update'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const { planId } = req.body;
@@ -202,7 +203,7 @@ flowRouter.post('/plan/upgrade', async (req, res) => {
 // RECIPES / INDUSTRIAL TEMPLATES
 // -----------------------------------------------------------------------------
 // GET /api/flows/recipes
-flowRouter.get('/recipes', (req, res) => {
+flowRouter.get('/recipes', authorize('flow:read'), (req, res) => {
   try {
     const recipes = listRecipes();
     res.json({ recipes });
@@ -212,7 +213,7 @@ flowRouter.get('/recipes', (req, res) => {
 });
 
 // GET /api/flows/recipes/:key
-flowRouter.get('/recipes/:key', (req, res) => {
+flowRouter.get('/recipes/:key', authorize('flow:read'), (req, res) => {
   try {
     const recipe = getRecipe(req.params.key);
     res.json({ recipe });
@@ -222,7 +223,7 @@ flowRouter.get('/recipes/:key', (req, res) => {
 });
 
 // POST /api/flows/recipes/:key/instantiate
-flowRouter.post('/recipes/:key/instantiate', async (req, res) => {
+flowRouter.post('/recipes/:key/instantiate', authorize('flow:create'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const flow = await instantiateRecipe(
@@ -241,7 +242,7 @@ flowRouter.post('/recipes/:key/instantiate', async (req, res) => {
 // IMPORT FLOW DEFINITION PACKAGE
 // -----------------------------------------------------------------------------
 // POST /api/flows/import
-flowRouter.post('/import', async (req, res) => {
+flowRouter.post('/import', authorize('flow:create'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const flow = await importFlowDefinition(orgId, req.user.id, req.body);
@@ -289,7 +290,7 @@ flowRouter.post('/plan/upgrade', async (req, res) => {
 // EVENT INGESTION & OUTBOX ROUTES (MUST BE BEFORE /:id TO AVOID COLLISION)
 // -----------------------------------------------------------------------------
 // POST /api/flows/events
-flowRouter.post('/events', async (req, res) => {
+flowRouter.post('/events', authorize('flow:execute'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const { eventType, payload } = req.body;
@@ -311,7 +312,7 @@ flowRouter.post('/events', async (req, res) => {
 });
 
 // POST /api/flows/events/spatial
-flowRouter.post('/events/spatial', async (req, res) => {
+flowRouter.post('/events/spatial', authorize('flow:execute'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const { eventType, payload, sourceApp } = req.body;
@@ -336,7 +337,7 @@ flowRouter.post('/events/spatial', async (req, res) => {
 });
 
 // POST /api/flows/outbox/process
-flowRouter.post('/outbox/process', async (req, res) => {
+flowRouter.post('/outbox/process', authorize('flow:execute'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const { limit } = req.body;
@@ -354,7 +355,7 @@ flowRouter.post('/outbox/process', async (req, res) => {
 });
 
 // GET /api/flows/outbox
-flowRouter.get('/outbox', async (req, res) => {
+flowRouter.get('/outbox', authorize('flow:read'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const items = await withTenant(orgId, async (client) => {
@@ -378,7 +379,7 @@ flowRouter.get('/outbox', async (req, res) => {
 // 3. GET FLOW DETAILS
 // -----------------------------------------------------------------------------
 // GET /api/flows/:id
-flowRouter.get('/:id', async (req, res) => {
+flowRouter.get('/:id', authorize('flow:read'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const flow = await getFlowById(orgId, req.params.id);
@@ -397,7 +398,7 @@ flowRouter.get('/:id', async (req, res) => {
 // EXPORT FLOW DEFINITION PACKAGE
 // -----------------------------------------------------------------------------
 // GET /api/flows/:id/export
-flowRouter.get('/:id/export', async (req, res) => {
+flowRouter.get('/:id/export', authorize('flow:read'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const exportBundle = await exportFlowDefinition(orgId, req.params.id);
@@ -414,7 +415,7 @@ flowRouter.get('/:id/export', async (req, res) => {
 // 4. UPDATE FLOW
 // -----------------------------------------------------------------------------
 // PUT /api/flows/:id
-flowRouter.put('/:id', async (req, res) => {
+flowRouter.put('/:id', authorize('flow:update'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const updated = await updateFlow(orgId, req.params.id, req.body);
@@ -428,7 +429,7 @@ flowRouter.put('/:id', async (req, res) => {
 // 5. PUBLISH FLOW VERSION
 // -----------------------------------------------------------------------------
 // POST /api/flows/:id/publish
-flowRouter.post('/:id/publish', async (req, res) => {
+flowRouter.post('/:id/publish', authorize('flow:publish'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const { changeSummary } = req.body;
@@ -450,7 +451,7 @@ flowRouter.post('/:id/publish', async (req, res) => {
 // 6. DUPLICATE FLOW
 // -----------------------------------------------------------------------------
 // POST /api/flows/:id/duplicate
-flowRouter.post('/:id/duplicate', async (req, res) => {
+flowRouter.post('/:id/duplicate', authorize('flow:create'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const duplicated = await duplicateFlow(orgId, req.params.id, req.user.id);
@@ -464,7 +465,7 @@ flowRouter.post('/:id/duplicate', async (req, res) => {
 // 7. ARCHIVE / DELETE FLOW
 // -----------------------------------------------------------------------------
 // DELETE /api/flows/:id
-flowRouter.delete('/:id', async (req, res) => {
+flowRouter.delete('/:id', authorize('flow:archive'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const archived = await archiveFlow(orgId, req.params.id);
@@ -478,7 +479,7 @@ flowRouter.delete('/:id', async (req, res) => {
 // 8. LIST PUBLISHED VERSIONS
 // -----------------------------------------------------------------------------
 // GET /api/flows/:id/versions
-flowRouter.get('/:id/versions', async (req, res) => {
+flowRouter.get('/:id/versions', authorize('flow:read'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const versions = await listFlowVersions(orgId, req.params.id);
@@ -492,7 +493,7 @@ flowRouter.get('/:id/versions', async (req, res) => {
 // 9. TRIGGER TEST RUN / EXECUTE FLOW
 // -----------------------------------------------------------------------------
 // POST /api/flows/:id/trigger
-flowRouter.post('/:id/trigger', async (req, res) => {
+flowRouter.post('/:id/trigger', authorize('flow:execute'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const run = await executeFlowRun({
@@ -511,7 +512,7 @@ flowRouter.post('/:id/trigger', async (req, res) => {
 // 10. LIST EXECUTION RUNS FOR FLOW
 // -----------------------------------------------------------------------------
 // GET /api/flows/:id/runs
-flowRouter.get('/:id/runs', async (req, res) => {
+flowRouter.get('/:id/runs', authorize('flow:read'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const result = await listOrganizationRuns(orgId, {
@@ -530,7 +531,7 @@ flowRouter.get('/:id/runs', async (req, res) => {
 // GET PER-FLOW ANALYTICS
 // -----------------------------------------------------------------------------
 // GET /api/flows/:id/analytics
-flowRouter.get('/:id/analytics', async (req, res) => {
+flowRouter.get('/:id/analytics', authorize('flow:read'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
     const analytics = await getFlowAnalytics(orgId, req.params.id);

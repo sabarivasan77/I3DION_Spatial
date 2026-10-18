@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { pool } from '../db/pool.js';
 import { requireAuth as authenticateToken } from '../middleware/auth.js';
+import { can, authorize } from '../middleware/authorizationEngine.js';
 import { projectService, defaultProjectDocument } from '../services/studio/projectService.js';
 import { formulaService } from '../services/studio/formulaService.js';
 import { bindingService } from '../services/studio/bindingService.js';
@@ -23,7 +24,7 @@ studioRouter.use(authenticateToken);
 // ---------------------------------------------------------
 // 1. GET /api/studio/projects (List projects for organization)
 // ---------------------------------------------------------
-studioRouter.get('/projects', async (req, res) => {
+studioRouter.get('/projects', authorize('studio:read'), async (req, res) => {
   try {
     const { organization_id } = req.user;
     const { status, type, search } = req.query;
@@ -62,7 +63,7 @@ studioRouter.get('/projects', async (req, res) => {
 // ---------------------------------------------------------
 // 2. POST /api/studio/projects (Create new low-code project)
 // ---------------------------------------------------------
-studioRouter.post('/projects', async (req, res) => {
+studioRouter.post('/projects', authorize('studio:create'), async (req, res) => {
   try {
     const { organization_id, id: userId } = req.user;
     const { name, description, project_type, visibility, template_id, project_document } = req.body;
@@ -96,7 +97,7 @@ studioRouter.post('/projects', async (req, res) => {
 // ---------------------------------------------------------
 // 3. GET /api/studio/projects/:id (Fetch single project detail)
 // ---------------------------------------------------------
-studioRouter.get('/projects/:id', async (req, res) => {
+studioRouter.get('/projects/:id', authorize('studio:read'), async (req, res) => {
   try {
     const { id } = req.params;
     const { organization_id } = req.user;
@@ -114,7 +115,7 @@ studioRouter.get('/projects/:id', async (req, res) => {
 // ---------------------------------------------------------
 // 4. PATCH /api/studio/projects/:id (Update project & document)
 // ---------------------------------------------------------
-studioRouter.patch('/projects/:id', async (req, res) => {
+studioRouter.patch('/projects/:id', authorize('studio:update'), async (req, res) => {
   try {
     const { id } = req.params;
     const { organization_id } = req.user;
@@ -130,7 +131,7 @@ studioRouter.patch('/projects/:id', async (req, res) => {
 // ---------------------------------------------------------
 // 5. DELETE /api/studio/projects/:id (Archive project)
 // ---------------------------------------------------------
-studioRouter.delete('/projects/:id', async (req, res) => {
+studioRouter.delete('/projects/:id', authorize('studio:delete'), async (req, res) => {
   try {
     const { id } = req.params;
     const { organization_id } = req.user;
@@ -150,7 +151,7 @@ studioRouter.delete('/projects/:id', async (req, res) => {
 // ---------------------------------------------------------
 // 6. POST /api/studio/projects/:id/publish (Publish version)
 // ---------------------------------------------------------
-studioRouter.post('/projects/:id/publish', async (req, res) => {
+studioRouter.post('/projects/:id/publish', authorize('studio:publish'), async (req, res) => {
   try {
     const { id } = req.params;
     const { organization_id, id: userId } = req.user;
@@ -581,7 +582,7 @@ studioRouter.post('/forms/generate', async (req, res) => {
 // ---------------------------------------------------------
 
 // GET /api/studio/catalogs (List catalogs with product counts)
-studioRouter.get('/catalogs', async (req, res) => {
+studioRouter.get('/catalogs', authorize('catalog:read'), async (req, res) => {
   try {
     const { organization_id } = req.user;
     const { status, search } = req.query;
@@ -594,7 +595,7 @@ studioRouter.get('/catalogs', async (req, res) => {
 });
 
 // POST /api/studio/catalogs (Create new catalog)
-studioRouter.post('/catalogs', enforceQuota('catalogs'), async (req, res) => {
+studioRouter.post('/catalogs', authorize('catalog:create'), enforceQuota('catalogs'), async (req, res) => {
   try {
     const { organization_id, id: userId } = req.user;
     const created = await catalogService.createCatalog(organization_id, userId, req.body);
@@ -606,7 +607,7 @@ studioRouter.post('/catalogs', enforceQuota('catalogs'), async (req, res) => {
 });
 
 // GET /api/studio/catalogs/:id (Fetch single catalog detail with pinned products)
-studioRouter.get('/catalogs/:id', async (req, res) => {
+studioRouter.get('/catalogs/:id', authorize('catalog:read'), async (req, res) => {
   try {
     const { id } = req.params;
     const { organization_id } = req.user;
@@ -620,7 +621,7 @@ studioRouter.get('/catalogs/:id', async (req, res) => {
 });
 
 // PATCH /api/studio/catalogs/:id (Update catalog metadata, layout, branding)
-studioRouter.patch('/catalogs/:id', async (req, res) => {
+studioRouter.patch('/catalogs/:id', authorize('catalog:update'), async (req, res) => {
   try {
     const { id } = req.params;
     const { organization_id } = req.user;
@@ -634,7 +635,7 @@ studioRouter.patch('/catalogs/:id', async (req, res) => {
 });
 
 // POST /api/studio/catalogs/:id/duplicate (Clone catalog)
-studioRouter.post('/catalogs/:id/duplicate', async (req, res) => {
+studioRouter.post('/catalogs/:id/duplicate', authorize('catalog:create'), async (req, res) => {
   try {
     const { id } = req.params;
     const { organization_id, id: userId } = req.user;
@@ -647,7 +648,7 @@ studioRouter.post('/catalogs/:id/duplicate', async (req, res) => {
 });
 
 // DELETE /api/studio/catalogs/:id (Archive catalog)
-studioRouter.delete('/catalogs/:id', async (req, res) => {
+studioRouter.delete('/catalogs/:id', authorize('catalog:delete'), async (req, res) => {
   try {
     const { id } = req.params;
     const { organization_id } = req.user;
@@ -746,7 +747,7 @@ studioRouter.get('/catalogs/:id/preview', async (req, res) => {
 });
 
 // POST /api/studio/catalogs/:id/publish (Universal Publishing Ceremony)
-studioRouter.post('/api/studio/catalogs/:id/publish', async (req, res) => {
+studioRouter.post('/api/studio/catalogs/:id/publish', authorize('catalog:publish'), async (req, res) => {
   try {
     const { id } = req.params;
     const { organization_id, id: userId } = req.user;
@@ -758,7 +759,7 @@ studioRouter.post('/api/studio/catalogs/:id/publish', async (req, res) => {
   }
 });
 // Also support route without prefix inside studioRouter
-studioRouter.post('/catalogs/:id/publish', async (req, res) => {
+studioRouter.post('/catalogs/:id/publish', authorize('catalog:publish'), async (req, res) => {
   try {
     const { id } = req.params;
     const { organization_id, id: userId } = req.user;

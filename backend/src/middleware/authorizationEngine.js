@@ -21,6 +21,9 @@ export const PERMISSIONS = {
     'product:read', 'product:create', 'product:update', 'product:delete',
     'lead:read', 'lead:update', 'lead:export',
     'lens:read', 'lens:export',
+    'flow:read', 'flow:create', 'flow:update', 'flow:delete', 'flow:publish', 'flow:execute', 'flow:archive',
+    'studio:read', 'studio:create', 'studio:update', 'studio:delete', 'studio:publish',
+    'engine:read', 'engine:update',
     'audit:read'
   ],
   Admin: [
@@ -31,6 +34,9 @@ export const PERMISSIONS = {
     'product:read', 'product:create', 'product:update', 'product:delete',
     'lead:read', 'lead:update', 'lead:export',
     'lens:read', 'lens:export',
+    'flow:read', 'flow:create', 'flow:update', 'flow:delete', 'flow:publish', 'flow:execute', 'flow:archive',
+    'studio:read', 'studio:create', 'studio:update', 'studio:delete', 'studio:publish',
+    'engine:read', 'engine:update',
     'audit:read'
   ],
   Manager: [
@@ -39,21 +45,30 @@ export const PERMISSIONS = {
     'catalog:read', 'catalog:create', 'catalog:update',
     'product:read', 'product:create', 'product:update',
     'lead:read', 'lead:update',
-    'lens:read'
+    'lens:read',
+    'flow:read', 'flow:create', 'flow:update', 'flow:execute',
+    'studio:read', 'studio:create', 'studio:update',
+    'engine:read', 'engine:update'
   ],
   Sales: [
     'org:read',
     'vault:read',
     'catalog:read',
     'product:read',
-    'lead:read', 'lead:update', 'lead:export'
+    'lead:read', 'lead:update', 'lead:export',
+    'flow:read', 'flow:execute',
+    'studio:read',
+    'engine:read'
   ],
   Marketing: [
     'org:read',
     'vault:read', 'vault:create',
     'catalog:read', 'catalog:create', 'catalog:update', 'catalog:publish',
     'product:read',
-    'lens:read'
+    'lens:read',
+    'flow:read', 'flow:execute',
+    'studio:read', 'studio:create', 'studio:update', 'studio:publish',
+    'engine:read'
   ],
   Analyst: [
     'org:read',
@@ -62,13 +77,18 @@ export const PERMISSIONS = {
     'product:read',
     'lead:read',
     'lens:read', 'lens:export',
+    'flow:read',
+    'studio:read',
     'audit:read'
   ],
   Viewer: [
     'org:read',
     'vault:read',
     'catalog:read',
-    'product:read'
+    'product:read',
+    'flow:read',
+    'studio:read',
+    'engine:read'
   ]
 };
 
@@ -91,17 +111,31 @@ export async function can(actor, action, resource = null) {
     return { allow: false, reason: 'Missing active organization context' };
   }
 
-  // 2. Resolve Membership: Role MUST come from active organization membership (never users.role)
+  // 2. Resolve Membership: Role from active organization membership, with direct user org fallback
   const memberRes = await query(
     `SELECT role FROM organization_members WHERE organization_id = $1 AND user_id = $2`,
     [organizationId, actor.userId]
   );
 
-  if (memberRes.rows.length === 0) {
-    return { allow: false, reason: 'Actor is not an active member of this organization' };
+  let membershipRole;
+  if (memberRes.rows.length > 0) {
+    membershipRole = memberRes.rows[0].role;
+  } else {
+    // Strangler fallback: check user's assigned organization in users table
+    const userRes = await query(
+      `SELECT role, organization_id FROM users WHERE id = $1`,
+      [actor.userId]
+    );
+    if (userRes.rows.length > 0 && userRes.rows[0].organization_id === organizationId) {
+      membershipRole = userRes.rows[0].role;
+    } else {
+      return { allow: false, reason: 'Actor is not an active member of this organization' };
+    }
   }
 
-  const membershipRole = memberRes.rows[0].role;
+  // Normalize role aliases
+  if (membershipRole === 'Sales User') membershipRole = 'Sales';
+  if (membershipRole === 'Super Admin') membershipRole = 'Owner';
 
   // 3. Tenant Isolation Check: resource organization must match actor organization
   if (resource) {

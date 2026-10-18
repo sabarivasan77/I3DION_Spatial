@@ -5,6 +5,7 @@ import fs from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { pool } from '../db/pool.js';
 import { requireAuth } from '../middleware/auth.js';
+import { can, authorize } from '../middleware/authorizationEngine.js';
 import { config } from '../config.js';
 import { detectMimeType, extractAssetMetadata, runAssetProcessingJob } from '../services/vault/assetProcessor.js';
 import { entitlementService } from '../services/entitlement/entitlementService.js';
@@ -30,14 +31,41 @@ const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 * 1024 } })
 // Apply auth middleware to all vault routes
 vaultRouter.use(requireAuth);
 
-// Helper for RBAC checks
+// Helper for RBAC checks wired to canonical authorization engine
 function requireMinRole(allowedRoles) {
-  return (req, res, next) => {
-    const userRole = req.user?.role || 'Viewer';
-    if (!allowedRoles.includes(userRole)) {
-      return res.status(403).json({ error: 'Permission denied: insufficient role privileges' });
+  return async (req, res, next) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Check with can() to resolve real organization membership and normalized role
+      const decision = await can(req.user, 'vault:read');
+      const resolvedRole = decision.role || req.user?.role || 'Viewer';
+
+      const normalizedAllowed = allowedRoles.map(r => {
+        if (r === 'Sales User') return 'Sales';
+        if (r === 'Super Admin') return 'Owner';
+        return r;
+      });
+
+      // Owners / Super Admins always possess top privileges
+      if (resolvedRole === 'Owner' || resolvedRole === 'Super Admin') {
+        return next();
+      }
+
+      if (!allowedRoles.includes(resolvedRole) && !normalizedAllowed.includes(resolvedRole)) {
+        return res.status(403).json({
+          error: 'Permission denied: insufficient role privileges',
+          role: resolvedRole,
+          required: allowedRoles
+        });
+      }
+      next();
+    } catch (err) {
+      console.error('Vault requireMinRole check error:', err);
+      return res.status(500).json({ error: 'Authorization check failed' });
     }
-    next();
   };
 }
 
