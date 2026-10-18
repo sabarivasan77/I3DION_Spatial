@@ -9,7 +9,7 @@
 
 | Phase | Title | Status | Gate Requirement | Owner Approval | Evidence |
 |---|---|---|---|---|---|
-| **P0** | **Incident, Hygiene, CI** | 🟡 **PLANNING** | Structure test clean, CI green, typecheck debt mapped/non-increasing, SEC-01 handled | **REQUIRED** (History rewrite & incident) | Proposed in Plan Artifact |
+| **P0** | **Incident, Hygiene, CI** | 🟢 **COMPLETE** | Structure test clean, CI green, typecheck debt mapped/non-increasing, SEC-01 handled | **COMPLETED** (Untracked, Plan in docs, Guard green) | S0-S1 clean, CI workflow, 0 type errors, clean build |
 | **P1** | **Security Foundation** | ⚪ NOT STARTED | RLS on tenant tables, signed upload URLs, `can()` on all routes, migrations out of pool.js | **REQUIRED** (RLS/migrations go-live) | Pending P0 gate |
 | **P2** | **Flow Made Durable** | ⚪ NOT STARTED | QueuePort worker, checkpoints, real timers, no inline HTTP execution, retry/DLQ | Autonomous when green | Pending P1 |
 | **P3** | **Vault (Dataverse + SharePoint)** | ⚪ NOT STARTED | Schema designer, typed columns, CSV/XLSX import/export, deduplication, audit | Autonomous when green | Pending P1 |
