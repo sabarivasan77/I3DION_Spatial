@@ -3,19 +3,14 @@ import {
   Sparkles,
   ArrowRight,
   Bot,
-  Zap,
-  CheckCircle2,
-  Cpu,
-  Clock,
-  Layers,
-  Send
+  Zap
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useFlowDesignerStore } from '../store/useFlowDesignerStore';
 
 export const FlowAiSuggestionsView: React.FC = () => {
   const navigate = useNavigate();
-  const { createFromTemplate, createBlankFlow } = useFlowDesignerStore();
+  const { createFromTemplate } = useFlowDesignerStore();
 
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);

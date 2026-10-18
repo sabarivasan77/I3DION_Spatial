@@ -8,7 +8,7 @@ import { FlowDesignerCanvas } from './components/FlowDesignerCanvas';
 import { FlowNodeInspector } from './components/FlowNodeInspector';
 import { FlowTestConsole } from './components/FlowTestConsole';
 import { FlowRunsView } from './components/FlowRunsView';
-import { FlowSidebar, FlowNavTab } from './components/FlowSidebar';
+import { FlowSidebar } from './components/FlowSidebar';
 import { useFlowDesignerStore } from './store/useFlowDesignerStore';
 import { Loader2 } from 'lucide-react';
 
@@ -60,7 +60,7 @@ export const FlowPage: React.FC = () => {
       {/* Left Navigation Sidebar */}
       <FlowSidebar
         activeTab="workflows"
-        onSelectTab={(tab) => {
+        onSelectTab={() => {
           navigate('/flow');
         }}
         isCollapsed={isSidebarCollapsed}

@@ -9,7 +9,6 @@ import {
   Sparkles,
   Settings,
   ChevronRight,
-  ExternalLink,
   Layers,
   ChevronLeft
 } from 'lucide-react';

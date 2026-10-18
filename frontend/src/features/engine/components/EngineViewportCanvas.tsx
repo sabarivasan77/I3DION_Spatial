@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
@@ -10,7 +10,7 @@ import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter.js';
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
 
 import { useEngineStore } from '../store/useEngineStore';
-import { SceneNode, BlenderShadingMode, Vector3D } from '../types/engineTypes';
+import { SceneNode, BlenderShadingMode } from '../types/engineTypes';
 import { vaultApi } from '../../../api/vaultApi';
 
 import { BlenderTopMenu } from './viewport/BlenderTopMenu';
@@ -32,10 +32,8 @@ export const EngineViewportCanvas: React.FC = () => {
     updateSceneNodeTransform,
     addSceneNode,
     deleteSceneNode,
-    activeBlenderTool,
     setActiveBlenderTool,
     cursor3D,
-    setCursor3D,
   } = useEngineStore();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -837,7 +835,7 @@ export const EngineViewportCanvas: React.FC = () => {
     } else if (format === 'stl') {
       const exporter = new STLExporter();
       const result = exporter.parse(exportTarget, { binary: true });
-      const blob = new Blob([result], { type: 'application/octet-stream' });
+      const blob = new Blob([typeof result === 'string' ? result : (result.buffer as ArrayBuffer)], { type: 'application/octet-stream' });
       downloadBlob(blob, `${baseName}.stl`);
       showToast(`Exported "${baseName}.stl"`);
     }
@@ -912,7 +910,7 @@ export const EngineViewportCanvas: React.FC = () => {
       {/* 1. Blender Top Menu Bar */}
       <BlenderTopMenu
         onOpenFilePicker={() => openFileInputRef.current?.click()}
-        onImportFilePicker={(format) => importFileInputRef.current?.click()}
+        onImportFilePicker={() => importFileInputRef.current?.click()}
         onAppendFilePicker={() => appendFileInputRef.current?.click()}
         onExport={handleExport}
         onSaveToVault={handleSaveToVault}

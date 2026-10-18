@@ -2,21 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
-  Search,
   Zap,
   Copy,
   Trash2,
   Clock,
   Sparkles,
   Send,
-  Activity,
-  ArrowRight,
   Loader2,
   Workflow,
   Upload,
   Download,
-  Filter,
-  CheckCircle2,
   ChevronRight
 } from 'lucide-react';
 import { flowApi, FlowListItem } from '../services/flowApi';
@@ -35,11 +30,9 @@ import { FlowAnalyticsView } from './FlowAnalyticsView';
 export const FlowListView: React.FC = () => {
   const navigate = useNavigate();
   const [flows, setFlows] = useState<FlowListItem[]>([]);
-  const [recipes, setRecipes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
@@ -65,7 +58,6 @@ export const FlowListView: React.FC = () => {
 
   useEffect(() => {
     fetchFlows();
-    flowApi.listRecipes().then(setRecipes).catch(console.error);
   }, [selectedStatus]);
 
   const handleDuplicate = async (flowId: string) => {
@@ -121,26 +113,13 @@ export const FlowListView: React.FC = () => {
     }
   };
 
-  const handleInstantiateRecipe = async (recipeKey: string) => {
-    try {
-      const newFlow = await flowApi.instantiateRecipe(recipeKey);
-      setShowTemplateModal(false);
-      navigate(`/flow/${newFlow.id}`);
-    } catch (err: any) {
-      console.error('Instantiate recipe failed, falling back to client draft:', err);
-      handleSelectTemplate(recipeKey);
-    }
-  };
-
   const handleCreateBlank = () => {
     createBlankFlow('New Automation Flow');
-    setShowTemplateModal(false);
     navigate('/flow/new');
   };
 
   const handleSelectTemplate = (templateKey: string) => {
     createFromTemplate(templateKey);
-    setShowTemplateModal(false);
     navigate('/flow/new');
   };
 
