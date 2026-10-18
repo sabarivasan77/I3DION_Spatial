@@ -9,3 +9,4 @@ export * from './flow.js';
 export * from './catalogAppDefinition.js';
 export * from './vaultDataverse.js';
 export * from './engineCircuits.js';
+export * from './lensAnalytics.js';

@@ -265,12 +265,105 @@ export async function getLensHotspotHeatmap(organizationId) {
     [organizationId]
   );
 
-  return rows.map(r => ({
-    label: r.hotspot_label,
-    metricUnit: r.metric_unit,
-    clicks: parseInt(r.click_count, 10),
-    uniqueVisitors: parseInt(r.unique_interactors, 10)
-  }));
+  const totalClicks = rows.reduce((sum, r) => sum + parseInt(r.click_count, 10), 0);
+
+  return rows.map(r => {
+    const clicks = parseInt(r.click_count, 10);
+    const share = totalClicks > 0 ? (clicks / totalClicks) * 100 : 0;
+    let recommendation = 'Engagement within normal parameters.';
+    if (share > 30) {
+      recommendation = `High engagement (${share.toFixed(0)}% of clicks). Recommend promoting to primary specification hero card.`;
+    } else if (share < 10) {
+      recommendation = `Low engagement (${share.toFixed(0)}% of clicks). Consider adjusting 3D camera focus position or callout contrast.`;
+    }
+
+    return {
+      label: r.hotspot_label,
+      metricUnit: r.metric_unit,
+      clicks,
+      uniqueVisitors: parseInt(r.unique_interactors, 10),
+      engagementShare: parseFloat(share.toFixed(1)),
+      recommendation
+    };
+  });
+}
+
+export async function getLensDealerReports(organizationId) {
+  const { rows } = await query(
+    `SELECT
+       COALESCE(metadata->>'dealerId', metadata->>'dealerCode', 'default_dealer') as dealer_id,
+       COALESCE(metadata->>'dealerName', 'General Regional Dealer') as dealer_name,
+       COUNT(*) as total_visits,
+       COUNT(DISTINCT visitor_id) as unique_visitors,
+       COUNT(CASE WHEN event_type IN ('quote_request', 'rfq_submitted') THEN 1 END) as inquiries,
+       COALESCE(SUM((metadata->>'quoteValue')::numeric), 0) as total_quote_value
+     FROM analytics_events
+     WHERE organization_id = $1 AND created_at >= (now() - interval '30 days')
+     GROUP BY dealer_id, dealer_name
+     ORDER BY total_visits DESC`,
+    [organizationId]
+  );
+
+  return rows.map(r => {
+    const visits = parseInt(r.total_visits || '0', 10);
+    const inquiries = parseInt(r.inquiries || '0', 10);
+    const conversionRate = visits > 0 ? parseFloat(((inquiries / visits) * 100).toFixed(1)) : 0;
+    return {
+      dealerId: r.dealer_id,
+      dealerName: r.dealer_name,
+      totalVisits: visits,
+      uniqueVisitors: parseInt(r.unique_visitors || '0', 10),
+      inquiries,
+      totalQuoteValue: parseFloat(r.total_quote_value || '0'),
+      conversionRate
+    };
+  });
+}
+
+export async function getLensCampaignReports(organizationId) {
+  const { rows } = await query(
+    `SELECT
+       COALESCE(metadata->>'campaign', metadata->>'utm_campaign', 'Direct QR Scan') as campaign_name,
+       COALESCE(metadata->>'source', 'qr_code') as campaign_source,
+       COUNT(*) as total_landings,
+       COUNT(DISTINCT visitor_id) as unique_visitors,
+       COUNT(CASE WHEN event_type IN ('quote_request', 'rfq_submitted', 'lead_form_submitted') THEN 1 END) as leads_generated
+     FROM analytics_events
+     WHERE organization_id = $1 AND (event_type = 'qr_landing' OR (metadata->>'qrAttributed')::boolean = true)
+     GROUP BY campaign_name, campaign_source
+     ORDER BY total_landings DESC`,
+    [organizationId]
+  );
+
+  return rows.map(r => {
+    const landings = parseInt(r.total_landings || '0', 10);
+    const leads = parseInt(r.leads_generated || '0', 10);
+    const conversionRate = landings > 0 ? parseFloat(((leads / landings) * 100).toFixed(1)) : 0;
+    return {
+      campaignName: r.campaign_name,
+      source: r.campaign_source,
+      totalLandings: landings,
+      uniqueVisitors: parseInt(r.unique_visitors || '0', 10),
+      leadsGenerated: leads,
+      conversionRate
+    };
+  });
+}
+
+export async function triggerLensFlowAction(organizationId, userId, { flowId, eventType = 'analytics.anomaly_detected', data = {} }) {
+  const res = await query(
+    `INSERT INTO flow_event_outbox (organization_id, event_type, payload, status)
+     VALUES ($1, $2, $3, 'pending')
+     RETURNING *`,
+    [organizationId, eventType, JSON.stringify({ ...data, triggeredBy: userId, flowId })]
+  );
+
+  return {
+    success: true,
+    outboxId: res.rows[0].id,
+    eventType: res.rows[0].event_type,
+    status: 'pending'
+  };
 }
 
 export function getMetricDefinitions() {

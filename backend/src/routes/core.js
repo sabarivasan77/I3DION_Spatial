@@ -3,6 +3,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { requireTenant } from '../middleware/tenant.js';
 import { evaluatePermission, ROLE_PERMISSIONS_TABLE } from '../services/core/permissionService.js';
 import { query } from '../db/pool.js';
+import { approvalService } from '../services/core/approvalService.js';
 
 export const coreRouter = Router();
 
@@ -155,3 +156,50 @@ coreRouter.get('/launcher', async (req, res, next) => {
     next(err);
   }
 });
+
+// ====================================================
+// UNIFIED APPROVALS CENTRE (Phase P9)
+// ====================================================
+
+// GET /api/core/approvals (List pending/resolved approvals)
+coreRouter.get('/approvals', async (req, res, next) => {
+  try {
+    const { status, resourceType } = req.query;
+    const approvals = await approvalService.listApprovals(req.organizationId, { status, resourceType });
+    res.json(approvals);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/core/approvals (Submit approval request)
+coreRouter.post('/approvals', async (req, res, next) => {
+  try {
+    const { resourceType, resourceId, versionId, notes } = req.body;
+    const approval = await approvalService.submitForApproval(req.organizationId, req.user.id, {
+      resourceType,
+      resourceId,
+      versionId,
+      notes
+    });
+    res.status(201).json(approval);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/core/approvals/:id/resolve (Resolve approval request)
+coreRouter.post('/approvals/:id/resolve', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status, notes } = req.body;
+    const resolved = await approvalService.resolveApproval(req.organizationId, req.user.id, id, {
+      status,
+      notes
+    });
+    res.json(resolved);
+  } catch (err) {
+    next(err);
+  }
+});
+

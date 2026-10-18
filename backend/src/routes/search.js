@@ -68,3 +68,110 @@ searchRouter.get(
     res.json(results);
   })
 );
+
+// ====================================================
+// UNIVERSAL COMMAND PALETTE (Phase P9)
+// Fast multi-entity search and navigation shortcuts
+// ====================================================
+searchRouter.get(
+  '/command-palette',
+  asyncHandler(async (req, res) => {
+    const organizationId = req.organizationId || req.user?.organizationId || req.user?.organization_id;
+    const { q = '', limit = 15 } = req.query;
+    const searchTerm = q.trim();
+    const likePattern = `%${searchTerm}%`;
+
+    const items = [];
+
+    // Quick platform action shortcuts
+    const standardActions = [
+      { id: 'act-new-prod', title: 'New 3D Product', subtitle: 'Upload CAD model or specification', category: 'actions', icon: 'Box', action: { type: 'navigate', url: '/products/new' } },
+      { id: 'act-new-exp', title: 'New Spatial Experience', subtitle: 'Launch Omni Engine 3D editor', category: 'actions', icon: 'Layers', action: { type: 'navigate', url: '/engine/new' } },
+      { id: 'act-new-flow', title: 'New Automation Flow', subtitle: 'Open Flow Durable Designer', category: 'actions', icon: 'GitFork', action: { type: 'navigate', url: '/flows/designer' } },
+      { id: 'act-approvals', title: 'Pending Approvals', subtitle: 'Open Unified Approvals Centre', category: 'actions', icon: 'CheckCircle', action: { type: 'navigate', url: '/approvals' } },
+      { id: 'act-lens', title: 'Spatial Lens Analytics', subtitle: 'View live telemetry & funnel', category: 'actions', icon: 'BarChart2', action: { type: 'navigate', url: '/sales-intelligence' } }
+    ];
+
+    if (!searchTerm) {
+      // Return default navigation items when empty query
+      return res.json({ items: standardActions, total: standardActions.length });
+    }
+
+    // Filter matching standard actions
+    for (const act of standardActions) {
+      if (act.title.toLowerCase().includes(searchTerm.toLowerCase()) || act.subtitle.toLowerCase().includes(searchTerm.toLowerCase())) {
+        items.push(act);
+      }
+    }
+
+    // Search Catalogs
+    const catRes = await query(
+      `SELECT id, name, description FROM catalogs WHERE organization_id = $1 AND name ILIKE $2 LIMIT 4`,
+      [organizationId, likePattern]
+    ).catch(() => ({ rows: [] }));
+    for (const cat of catRes.rows) {
+      items.push({
+        id: `cat-${cat.id}`,
+        title: cat.name,
+        subtitle: cat.description || 'Omni Studio Catalog',
+        category: 'catalogs',
+        icon: 'BookOpen',
+        action: { type: 'navigate', url: `/catalogs/${cat.id}` }
+      });
+    }
+
+    // Search Spatial Experiences
+    const expRes = await query(
+      `SELECT id, name, slug FROM spatial_experiences WHERE organization_id = $1 AND (name ILIKE $2 OR slug ILIKE $2) LIMIT 4`,
+      [organizationId, likePattern]
+    ).catch(() => ({ rows: [] }));
+    for (const exp of expRes.rows) {
+      items.push({
+        id: `exp-${exp.id}`,
+        title: exp.name,
+        subtitle: `Twin slug: ${exp.slug}`,
+        category: 'experiences',
+        icon: 'Cuboid',
+        action: { type: 'navigate', url: `/engine/experiences/${exp.id}` }
+      });
+    }
+
+    // Search Vault Assets
+    const assetRes = await query(
+      `SELECT id, name, type FROM vault_assets WHERE organization_id = $1 AND name ILIKE $2 LIMIT 4`,
+      [organizationId, likePattern]
+    ).catch(() => ({ rows: [] }));
+    for (const ast of assetRes.rows) {
+      items.push({
+        id: `ast-${ast.id}`,
+        title: ast.name,
+        subtitle: `Vault Asset (${ast.type})`,
+        category: 'assets',
+        icon: 'FileCode',
+        action: { type: 'navigate', url: `/vault/assets/${ast.id}` }
+      });
+    }
+
+    // Search Flows
+    const flowRes = await query(
+      `SELECT id, name, status FROM flows WHERE organization_id = $1 AND name ILIKE $2 LIMIT 4`,
+      [organizationId, likePattern]
+    ).catch(() => ({ rows: [] }));
+    for (const fl of flowRes.rows) {
+      items.push({
+        id: `fl-${fl.id}`,
+        title: fl.name,
+        subtitle: `Flow Recipe (${fl.status})`,
+        category: 'flows',
+        icon: 'GitFork',
+        action: { type: 'navigate', url: `/flows/${fl.id}` }
+      });
+    }
+
+    res.json({
+      items: items.slice(0, Number(limit) || 15),
+      total: items.length
+    });
+  })
+);
+

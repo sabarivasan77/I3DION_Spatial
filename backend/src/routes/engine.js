@@ -6,12 +6,26 @@ import { pool } from '../db/pool.js';
 import { saveSceneDocument, assertGlbIntegrityUnchanged } from '../services/engine/sceneDocumentService.js';
 import { compileCircuitGraph, CHIP_CATALOG, TOTAL_REGISTERED_CHIPS } from '../services/engine/circuitsCompiler.js';
 import { interpretCircuitIR } from '../services/engine/circuitsInterpreter.js';
+import { presenterService } from '../services/engine/presenterService.js';
 
 export const engineRouter = express.Router();
 
 // ---------------------------------------------------------
 // PUBLIC ENDPOINTS (NO AUTH REQUIRED)
 // ---------------------------------------------------------
+
+// GET /api/engine/presenter/sessions/:code (Public client join presenter session)
+engineRouter.get('/presenter/sessions/:code', async (req, res) => {
+  try {
+    const { code } = req.params;
+    const session = await presenterService.getSessionByCode(code);
+    if (!session) return res.status(404).json({ error: 'Presenter session not found or inactive' });
+    res.json(session);
+  } catch (error) {
+    console.error('Engine Presenter Session Fetch Error:', error);
+    res.status(500).json({ error: 'Failed to fetch presenter session' });
+  }
+});
 
 // GET /api/engine/published/:slug (Public experience delivery for Spatial Hub / Viewer)
 engineRouter.get('/published/:slug', async (req, res) => {
@@ -352,4 +366,48 @@ engineRouter.post('/experiences/:id/circuits/execute', async (req, res) => {
     res.status(500).json({ error: error.message || 'Circuit execution failed' });
   }
 });
+
+// ====================================================
+// PRESENTER MODE (Phase P9 Innovation Item 11)
+// ====================================================
+
+// POST /api/engine/presenter/sessions (Rep starts presenter session)
+engineRouter.post('/presenter/sessions', async (req, res) => {
+  try {
+    const { organization_id, id: userId } = req.user;
+    const { experienceId } = req.body;
+    const session = await presenterService.createSession(organization_id, userId, { experienceId });
+    res.status(201).json(session);
+  } catch (error) {
+    console.error('Engine Create Presenter Session Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to start presenter session' });
+  }
+});
+
+// PATCH /api/engine/presenter/sessions/:code (Rep broadcasts state update)
+engineRouter.patch('/presenter/sessions/:code', async (req, res) => {
+  try {
+    const { code } = req.params;
+    const { organization_id, id: userId } = req.user;
+    const updated = await presenterService.updateState(organization_id, userId, code, req.body);
+    res.json(updated);
+  } catch (error) {
+    console.error('Engine Update Presenter State Error:', error);
+    res.status(400).json({ error: error.message || 'Failed to update presenter state' });
+  }
+});
+
+// DELETE /api/engine/presenter/sessions/:code (Rep ends presenter session)
+engineRouter.delete('/presenter/sessions/:code', async (req, res) => {
+  try {
+    const { code } = req.params;
+    const { organization_id, id: userId } = req.user;
+    const ended = await presenterService.endSession(organization_id, userId, code);
+    res.json(ended);
+  } catch (error) {
+    console.error('Engine End Presenter Session Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to end presenter session' });
+  }
+});
+
 

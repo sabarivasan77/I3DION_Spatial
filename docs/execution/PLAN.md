@@ -18,7 +18,7 @@
 | **P6** | **Catalog Player PWA, QR & Offline** | 🟢 **COMPLETE** | Non-enumerable QRs, offline service worker, RFQ → lead → Flow, server-side audience | **COMPLETED** (Non-enumerable 108-bit QRs, Server-side audience filter, PWA SW, RFQ outbox) | 17 integration test suites green, test-catalog-player-p6 8/8 pass, 0 TS errors, clean build |
 | **P7** | **PDF / Print Engine & Exports** | 🟢 **COMPLETE** | PDF synthesis, TOC, repeating headers/footers, batch dealer PDFs, GST quote | **COMPLETED** (Low-level PDF 1.4 synthesizer, Decision D-07 sRGB honest disclosure, GST quote template, batch dealer resume, signed download URLs) | 18 integration test suites green, test-print-engine-p7 8/8 pass, 0 TS errors, clean build |
 | **P8** | **Omni Engine: 3D Scenes & Circuits** | 🟢 **COMPLETE** | Non-destructive scene doc, OCC locking, circuits compiler/catalog, viewer-3d widget | **COMPLETED** (70-chip catalog, Kahn DAG compiler, deterministic IR, undo/redo command bus, 3-tier AR matrix, Flow/Lens/Core wiring) | 21 integration test suites green, test-engine-circuits-p8 8/8 pass |
-| **P9** | **Lens Live, Ecosystem & Innovation** | ⚪ NOT STARTED | Live telemetry ingestion, funnel analytics, unified approvals, trade-show kit | Autonomous when green | Pending P6, P7, P8 |
+| **P9** | **Lens Live, Ecosystem & Innovation** | 🟢 **COMPLETE** | Live telemetry ingestion, funnel analytics, unified approvals, trade-show kit | **COMPLETED** (Real telemetry ingestion with 10s LRU/DB deduplication, 5-stage funnel, dealer-personalized analytics, 3D hotspot heatmaps, "Use in Flow" action dispatching, Unified Approvals Centre, Presenter Mode 6-char session sync, AI Assist opt-in & zero-training governance) | 23 integration test suites green, test-lens-ecosystem-p9 8/8 pass, migration 0007 applied |
 | **P10** | **Hardening, A11y, Performance, Pilots** | ⚪ NOT STARTED | Pen test, restore drill, WCAG 2.2 AA, LCP ≤ 2.5s, 2-3 pilot accounts | Autonomous when green | Pending P9 |
 
 ---
@@ -36,7 +36,7 @@
 | **D-7** | **PDF Scope v1** | RGB only; PDF/X and CMYK later. *(Recommended: Yes)* | 🟢 **IMPLEMENTED (P7)** | RGB only with honest sRGB scope declaration in PDF dictionary |
 | **D-8** | **WhatsApp Provider** | Official Business Platform via BSP. *(Recommended: Evaluate sandbox first)* | 🟢 **IMPLEMENTED (P2)** | Official Meta Cloud API template adapter with in-memory sandbox delivery ledger |
 | **D-9** | **Pricing & Packaging** | Studio + Vault core; Flow runs metered add-on. *(Recommended: Yes)* | ⚪ LATER (P10) | - |
-| **D-10** | **AI Assist Policy** | Opt-in, no customer data for model training, human review. *(Recommended: Yes)* | ⚪ LATER (P5/P9) | - |
+| **D-10** | **AI Assist Policy** | Opt-in, no customer data for model training, human review. *(Recommended: Yes)* | 🟢 **IMPLEMENTED (P9)** | Per-organization `ai_assist_enabled` flag, strict opt-in requirement, zero customer training data guarantee, and mandatory human review |
 | **D-11** | **Frozen Modules** | Keep iScript, LogicCraft text, DataBridge, intelligence engines frozen until paying pilots. *(Recommended: Yes)* | ⚪ ACTIVE | Kept behind flags |
 
 ---

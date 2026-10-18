@@ -9,7 +9,10 @@ import {
   getLensFunnel, 
   getLensQRAttribution, 
   getLensHotspotHeatmap, 
-  getMetricDefinitions 
+  getMetricDefinitions,
+  getLensDealerReports,
+  getLensCampaignReports,
+  triggerLensFlowAction
 } from '../services/lens/lensService.js';
 import { query } from '../db/pool.js';
 import { publicEventsLimiter, enforcePayloadCap } from '../middleware/rateLimiters.js';
@@ -152,3 +155,34 @@ lensRouter.get(
     res.json(leads);
   })
 );
+
+// Dealer-Personalized Analytics Rollup
+lensRouter.get(
+  '/dealers',
+  asyncHandler(async (req, res) => {
+    const orgId = resolveOrgId(req);
+    const dealerReports = await getLensDealerReports(orgId);
+    res.json(dealerReports);
+  })
+);
+
+// Per-QR Campaign Analytics Rollup
+lensRouter.get(
+  '/campaigns',
+  asyncHandler(async (req, res) => {
+    const orgId = resolveOrgId(req);
+    const campaignReports = await getLensCampaignReports(orgId);
+    res.json(campaignReports);
+  })
+);
+
+// "Use in Flow" Action Dispatcher
+lensRouter.post(
+  '/actions/trigger-flow',
+  asyncHandler(async (req, res) => {
+    const orgId = resolveOrgId(req);
+    const result = await triggerLensFlowAction(orgId, req.user?.id || req.user?.userId, req.body);
+    res.status(202).json(result);
+  })
+);
+

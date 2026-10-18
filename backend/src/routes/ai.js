@@ -3,6 +3,8 @@ import { requireAuth } from '../middleware/auth.js';
 import { asyncHandler } from '../utils/errors.js';
 import { recommendationEngine } from '../services/recommendationEngine.js';
 import { salesAssistant } from '../services/salesAssistant.js';
+import { aiAssistService } from '../services/ai/aiAssistService.js';
+import { pool } from '../db/pool.js';
 
 export const aiRouter = Router();
 
@@ -122,3 +124,48 @@ aiRouter.post('/assistant/chat', requireAuth, asyncHandler(async (req, res) => {
     actionBtn,
   });
 }));
+
+// ====================================================
+// AI ASSIST (Phase P9 Innovation Item 10)
+// ====================================================
+
+// POST /api/ai/assist/opt-in (Toggle AI Assist organization opt-in per Decision D-10)
+aiRouter.post('/assist/opt-in', requireAuth, asyncHandler(async (req, res) => {
+  const orgId = req.user.organizationId || req.user.organization_id;
+  const { enabled = true } = req.body;
+
+  const result = await pool.query(
+    `UPDATE organizations
+     SET ai_assist_enabled = $1, updated_at = NOW()
+     WHERE id = $2
+     RETURNING id, name, ai_assist_enabled`,
+    [Boolean(enabled), orgId]
+  );
+
+  res.json({
+    success: true,
+    organizationId: orgId,
+    aiAssistEnabled: result.rows[0]?.ai_assist_enabled || false,
+    message: enabled 
+      ? 'AI Assist enabled. Customer data remains isolated and is never used for model training.'
+      : 'AI Assist disabled.'
+  });
+}));
+
+// POST /api/ai/assist/generate-metadata (Generate product descriptions & 3D alt-text with human review)
+aiRouter.post('/assist/generate-metadata', requireAuth, asyncHandler(async (req, res) => {
+  const orgId = req.user.organizationId || req.user.organization_id;
+  try {
+    const proposal = await aiAssistService.generateProductMetadata(orgId, req.body);
+    res.json(proposal);
+  } catch (err) {
+    if (err.status === 403) {
+      return res.status(403).json({
+        error: err.message,
+        code: err.code || 'AI_ASSIST_OPT_IN_REQUIRED'
+      });
+    }
+    throw err;
+  }
+}));
+
