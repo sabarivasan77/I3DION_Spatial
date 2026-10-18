@@ -24,11 +24,14 @@ export type AppNodeLayout = z.infer<typeof AppNodeLayoutSchema>;
  * Recursive App Definition Node Schema (Canvas widget instance)
  */
 export const BaseAppNodeSchema = z.object({
-  id: z.string().min(1),
+  id: z.string().optional().default(() => `node-${Math.random().toString(36).slice(2, 8)}`),
   type: z.string().min(1),
   title: z.string().optional(),
   props: z.record(z.unknown()).default({}),
+  bind: z.string().optional(),
   layout: AppNodeLayoutSchema.optional(),
+  on: z.record(z.any()).optional(),
+  visibility: z.record(z.any()).optional(),
   conditional: z.object({
     visibleExpr: z.string().optional()
   }).optional()
@@ -48,6 +51,7 @@ export const AppNodeSchema: z.ZodType<AppNode> = BaseAppNodeSchema.extend({
 export const AppPageSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
+  route: z.string().optional(),
   slug: z.string().optional(),
   icon: z.string().optional(),
   layout: AppNodeLayoutSchema.default({
@@ -134,6 +138,7 @@ export const AppDefinitionContractSchema = z.object({
   publishedSnapshot: z.record(z.unknown()).optional().nullable(),
   publishedAt: z.string().datetime().optional().nullable()
 });
+export const AppDefinitionSchema = AppDefinitionContractSchema;
 export type AppDefinitionContract = z.infer<typeof AppDefinitionContractSchema>;
 
 /**

@@ -19,6 +19,7 @@
     "baseUrl": ".",
     "paths": {
       "zod": ["./frontend/node_modules/zod"],
+      "yaml": ["./frontend/node_modules/yaml"],
       "@i3dion/contracts": ["./packages/contracts/src/index.ts"],
       "@i3dion/contracts/*": ["./packages/contracts/src/*"],
       "@i3dion/block-registry": ["./packages/block-registry/src/index.ts"],

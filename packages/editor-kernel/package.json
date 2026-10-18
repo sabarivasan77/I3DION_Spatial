@@ -8,6 +8,7 @@
   "dependencies": {
     "@i3dion/contracts": "*",
     "@i3dion/block-registry": "*",
-    "zod": "^3.24.2"
+    "zod": "^3.24.2",
+    "yaml": "^2.7.0"
   }
 }
