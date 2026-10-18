@@ -585,7 +585,9 @@ export class PrintEngine {
     const writer = new PdfBinaryWriter({ pageSize: 'A4', title: `Quotation ${quoteNumber}` });
 
     // Determine GST Type: Same state -> CGST(9%) + SGST(9%), Different state -> IGST(18%)
-    const isInterState = seller.stateCode.slice(0, 2) !== buyer.stateCode.slice(0, 2);
+    const sellerState = seller?.stateCode ? String(seller.stateCode).slice(0, 2) : '33';
+    const buyerState = buyer?.stateCode ? String(buyer.stateCode).slice(0, 2) : '27';
+    const isInterState = sellerState !== buyerState;
     let subtotal = 0;
     for (const item of items) {
       subtotal += item.quantity * item.rate;

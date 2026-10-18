@@ -12,6 +12,7 @@ import {
   listFlowVersions,
 } from '../services/flow/flowPersistenceService.js';
 import { executeFlowRun, enqueueOutboxEvent } from '../services/flow/flowExecutor.js';
+import { durableQueueService } from '../services/flow/durableQueueService.js';
 import {
   listOrganizationRuns,
   getRunDetails,
@@ -492,10 +493,44 @@ flowRouter.get('/:id/versions', authorize('flow:read'), async (req, res) => {
 // -----------------------------------------------------------------------------
 // 9. TRIGGER TEST RUN / EXECUTE FLOW
 // -----------------------------------------------------------------------------
+// POST /api/flows/:id/enqueue
+flowRouter.post('/:id/enqueue', authorize('flow:execute'), async (req, res) => {
+  try {
+    const orgId = getOrgId(req);
+    const enqueued = await durableQueueService.enqueueFlowRun({
+      flowId: req.params.id,
+      organizationId: orgId,
+      triggerPayload: req.body.payload || req.body || {},
+      userId: req.user.id,
+      priority: req.body.priority || 0
+    });
+    res.status(202).json({ success: true, ...enqueued });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
 // POST /api/flows/:id/trigger
 flowRouter.post('/:id/trigger', authorize('flow:execute'), async (req, res) => {
   try {
     const orgId = getOrgId(req);
+    const isAsync = req.query.async === 'true' || req.body?.async === true || req.headers['x-flow-execution'] === 'durable';
+
+    if (isAsync) {
+      const enqueued = await durableQueueService.enqueueFlowRun({
+        flowId: req.params.id,
+        organizationId: orgId,
+        triggerPayload: req.body.payload || req.body || {},
+        userId: req.user.id,
+        priority: req.body.priority || 0
+      });
+      return res.status(202).json({
+        run: { id: enqueued.runId, status: 'queued' },
+        enqueued: true,
+        queueId: enqueued.queueId
+      });
+    }
+
     const run = await executeFlowRun({
       flowId: req.params.id,
       organizationId: orgId,
@@ -503,6 +538,26 @@ flowRouter.post('/:id/trigger', authorize('flow:execute'), async (req, res) => {
       userId: req.user.id,
     });
     res.json({ run });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+// GET /api/flows/runs/:runId/checkpoints
+flowRouter.get('/runs/:runId/checkpoints', authorize('flow:read'), async (req, res) => {
+  try {
+    const orgId = getOrgId(req);
+    const checkpoints = await withTenant(orgId, async (client) => {
+      const result = await client.query(
+        `SELECT step_id, idempotency_key, step_index, status, output, created_at
+         FROM flow_step_checkpoints
+         WHERE run_id = $1 AND organization_id = $2
+         ORDER BY step_index ASC`,
+        [req.params.runId, orgId]
+      );
+      return result.rows;
+    });
+    res.json({ checkpoints });
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
   }

@@ -36,13 +36,13 @@ export async function ingestSpatialEvent({
       // Non-blocking telemetry
     }
 
-    // 2. Discover active published workflows in this tenant configured with trigger_event
+    // 2. Discover active published workflows in this tenant configured with trigger_event or event
     const flowsRes = await client.query(
       `SELECT id, name, trigger_config, flow_definition
        FROM flows
        WHERE organization_id = $1
          AND status = 'published'
-         AND (trigger_type = 'trigger_event' OR trigger_type = 'trigger_webhook')`,
+         AND (trigger_type = 'trigger_event' OR trigger_type = 'trigger_webhook' OR trigger_type = 'event')`,
       [organizationId]
     );
 
