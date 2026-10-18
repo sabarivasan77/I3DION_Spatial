@@ -46,6 +46,7 @@ export async function withTenant(orgId, fn) {
     await client.query('BEGIN');
     if (orgId) {
       await client.query("SELECT set_config('app.org_id', $1, true)", [orgId]);
+      await client.query("SET LOCAL ROLE i3dion_app").catch(() => {});
     }
     const result = await fn(client);
     await client.query('COMMIT');

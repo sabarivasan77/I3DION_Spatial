@@ -8,6 +8,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { can, authorize } from '../middleware/authorizationEngine.js';
 import { config } from '../config.js';
 import { detectMimeType, extractAssetMetadata, runAssetProcessingJob } from '../services/vault/assetProcessor.js';
+import { validateFileMagicBytes, generateSignedUrl } from '../services/storageService.js';
 import { entitlementService } from '../services/entitlement/entitlementService.js';
 import { usageService } from '../services/usage/usageService.js';
 
@@ -286,10 +287,51 @@ vaultRouter.get('/assets/:id', async (req, res) => {
       asset.connected_apps = ['Spatial Hub', 'Omni Studio'];
     }
 
+    const filename = asset.storage_key || path.basename(asset.public_url || '');
+    if (filename) {
+      asset.signed_url = generateSignedUrl(filename, { orgId: organization_id });
+    }
+
     res.json(asset);
   } catch (error) {
     console.error('Vault GET Asset Error:', error);
     res.status(500).json({ error: 'Failed to fetch asset' });
+  }
+});
+
+// GET /api/vault/assets/:id/signed-url (Generate secure pre-expiring download link)
+vaultRouter.get('/assets/:id/signed-url', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const expiresInSeconds = Math.min(parseInt(req.query.expiresIn || '3600', 10), 86400);
+
+    const assetRes = await pool.query(
+      `SELECT * FROM vault_assets WHERE id = $1 AND organization_id = $2 AND is_deleted = false`,
+      [id, organization_id]
+    );
+
+    if (assetRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Asset not found' });
+    }
+
+    const asset = assetRes.rows[0];
+    const filename = asset.storage_key || path.basename(asset.public_url || '');
+    const signedUrl = generateSignedUrl(filename, {
+      expiresInSeconds,
+      orgId: organization_id
+    });
+
+    res.json({
+      asset_id: asset.id,
+      name: asset.name,
+      signed_url: signedUrl,
+      expires_in_seconds: expiresInSeconds,
+      expires_at: new Date(Date.now() + expiresInSeconds * 1000).toISOString()
+    });
+  } catch (error) {
+    console.error('Vault Signed URL Error:', error);
+    res.status(500).json({ error: 'Failed to generate signed download link' });
   }
 });
 
@@ -301,6 +343,15 @@ vaultRouter.post('/assets/upload', requireMinRole(['Admin', 'Manager', 'Sales Us
 
     if (!file) {
       return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // 0. Magic-byte signature verification
+    const magicCheck = await validateFileMagicBytes(file.path, file.originalname);
+    if (!magicCheck.valid) {
+      await fs.unlink(file.path).catch(() => {});
+      return res.status(400).json({
+        error: `File integrity check failed: ${magicCheck.reason}`
+      });
     }
 
     // 1. Storage Quota & Plan Limits Enforcement
@@ -444,6 +495,15 @@ vaultRouter.post('/assets/:id/versions', requireMinRole(['Admin', 'Manager', 'Sa
     const file = req.file;
 
     if (!file) return res.status(400).json({ error: 'No file provided' });
+
+    // Magic-byte signature verification
+    const magicCheck = await validateFileMagicBytes(file.path, file.originalname);
+    if (!magicCheck.valid) {
+      await fs.unlink(file.path).catch(() => {});
+      return res.status(400).json({
+        error: `File integrity check failed: ${magicCheck.reason}`
+      });
+    }
 
     const check = await pool.query(`SELECT * FROM vault_assets WHERE id = $1 AND organization_id = $2`, [id, organization_id]);
     if (check.rows.length === 0) return res.status(404).json({ error: 'Asset not found' });

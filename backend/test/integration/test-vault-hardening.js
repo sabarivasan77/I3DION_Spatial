@@ -183,8 +183,21 @@ async function runSuite() {
     // TEST 3: Strict Versioning & Deterministic Rollback
     // -------------------------------------------------------------
     try {
+      // Helper for creating valid minimal GLB buffer with 0x46546C67 magic header
+      function makeGlb(dataStr) {
+        const payload = Buffer.from(dataStr);
+        const glb = Buffer.alloc(20 + payload.length);
+        glb.writeUInt32LE(0x46546C67, 0); // 'glTF' magic
+        glb.writeUInt32LE(2, 4);          // version 2
+        glb.writeUInt32LE(glb.length, 8); // total length
+        glb.writeUInt32LE(payload.length, 12); // chunk 0 length
+        glb.writeUInt32LE(0x4E4F534A, 16);// chunk 0 type 'JSON'
+        payload.copy(glb, 20);
+        return glb;
+      }
+
       // 3.1: Upload initial version v1
-      const v1Content = Buffer.from('V1_ORIGINAL_GEOMETRY_BUFFER_BYTES');
+      const v1Content = makeGlb('{"asset":{"version":"2.0"},"scene":"v1"}');
       const formV1 = new FormData();
       formV1.append('file', new Blob([v1Content]), 'turbine_v1.glb');
       formV1.append('name', 'Turbine Rotor');
@@ -202,7 +215,7 @@ async function runSuite() {
       const v1SizeBytes = assetV1.size_bytes;
 
       // 3.2: Upload new version v2
-      const v2Content = Buffer.from('V2_ENHANCED_AERODYNAMICS_AND_CHANNELS_BUFFER_BYTES_EXTENDED');
+      const v2Content = makeGlb('{"asset":{"version":"2.0"},"scene":"v2_enhanced"}');
       const formV2 = new FormData();
       formV2.append('file', new Blob([v2Content]), 'turbine_v2.glb');
       formV2.append('change_description', 'High pressure channel additions');

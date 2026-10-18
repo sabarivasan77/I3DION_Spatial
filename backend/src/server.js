@@ -35,6 +35,7 @@ import { lensRouter } from './routes/lens.js';
 import { coreRouter } from './routes/core.js';
 import onboardingRouter from './routes/onboarding.js';
 import flowRouter from './routes/flow.js';
+import { secureFileHandler, createStorageRouter } from './services/storageService.js';
 import { errorHandler, notFound } from './utils/errors.js';
 
 export const app = express();
@@ -76,8 +77,8 @@ app.use(cookieParser());
 app.use(morgan('dev'));
 app.use(rateLimit({ windowMs: 60_000, limit: 180 }));
 
-// Serve uploaded files
-app.use(`/${config.uploadDir}`, express.static(path.resolve(process.cwd(), config.uploadDir)));
+// Secure private storage pipeline (SEC-03)
+app.get(`/${config.uploadDir}/:filename`, secureFileHandler);
 
 // Serve .well-known for Android App Links / iOS Universal Links
 app.use('/.well-known', express.static(path.resolve(process.cwd(), 'public/.well-known')));
@@ -141,6 +142,7 @@ apiRouter.use('/vault', vaultRouter);
 apiRouter.use('/core', coreRouter);
 apiRouter.use('/notifications', notificationsRouter);
 apiRouter.use('/onboarding', onboardingRouter);
+apiRouter.use('/storage', createStorageRouter());
 apiRouter.use('/', resourcesRouter);
 
 app.use('/api', apiRouter);

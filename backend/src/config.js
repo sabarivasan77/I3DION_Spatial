@@ -35,7 +35,7 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET || (process.env.NODE_ENV === 'test' ? 'test_jwt_secret_only' : (() => {
     throw new Error('FATAL: JWT_SECRET environment variable is required. Refusing to start with insecure fallbacks.');
   })()),
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '10m',
   uploadDir: process.env.UPLOAD_DIR ?? 'uploads',
   maxFileSize: Number(process.env.MAX_FILE_SIZE ?? 150 * 1024 * 1024),
   supabaseUrl: process.env.SUPABASE_URL,
