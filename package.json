@@ -9,6 +9,7 @@
     "dev:frontend": "npm --prefix frontend run dev -- --host 127.0.0.1",
     "dev:backend": "npm --prefix backend run dev",
     "build": "npm --prefix frontend run build",
+    "check:structure": "node tools/check-structure.cjs",
     "preview": "npm --prefix frontend run preview -- --host 127.0.0.1",
     "postinstall": "node -e \"const fs=require('fs'),cp=require('child_process'); cp.execSync('npm --prefix frontend install', {stdio:'inherit'}); if(fs.existsSync('backend/package.json')) cp.execSync('npm --prefix backend install', {stdio:'inherit'});\""
   }
