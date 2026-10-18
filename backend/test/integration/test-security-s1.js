@@ -3,17 +3,17 @@
  * Tests AUTH-ARGON2, AUTH-SESSION-ROTATION, AUTH-REUSE-DETECTION, AUTH-MFA, AUTHZ-CAN, and ORG-SWITCH.
  */
 
-import { app } from './src/server.js';
-import { pool, query, ensureMigrated } from './src/db/pool.js';
-import { passwordService } from './src/services/auth/passwordService.js';
-import { sessionService } from './src/services/auth/sessionService.js';
-import { mfaService } from './src/services/auth/mfaService.js';
-import { can, PERMISSIONS } from './src/middleware/authorizationEngine.js';
-import { getRoutePolicy, ROUTE_POLICIES } from './src/routes/policies.js';
+import { app } from '../../src/server.js';
+import { pool, query, ensureMigrated } from '../../src/db/pool.js';
+import { passwordService } from '../../src/services/auth/passwordService.js';
+import { sessionService } from '../../src/services/auth/sessionService.js';
+import { mfaService } from '../../src/services/auth/mfaService.js';
+import { can, PERMISSIONS } from '../../src/middleware/authorizationEngine.js';
+import { getRoutePolicy, ROUTE_POLICIES } from '../../src/routes/policies.js';
 import { generateSync } from 'otplib';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { config } from './src/config.js';
+import { config } from '../../src/config.js';
 import crypto from 'node:crypto';
 import assert from 'node:assert';
 

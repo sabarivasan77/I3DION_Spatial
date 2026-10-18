@@ -3,10 +3,10 @@
  * Tests findings C1, C2, C3, SEC-01, H5, H3, H4/Webhook against live database & server.
  */
 
-import { app } from './src/server.js';
-import { pool, query, ensureMigrated } from './src/db/pool.js';
+import { app } from '../../src/server.js';
+import { pool, query, ensureMigrated } from '../../src/db/pool.js';
 import jwt from 'jsonwebtoken';
-import { config } from './src/config.js';
+import { config } from '../../src/config.js';
 import crypto from 'node:crypto';
 import assert from 'node:assert';
 import fs from 'node:fs';
@@ -420,7 +420,7 @@ async function runS0Tests() {
     try {
       const webhookSecret = 'test_webhook_secret_key_12345';
       process.env.RAZORPAY_WEBHOOK_SECRET = webhookSecret;
-      const { billingProvider } = await import('./src/services/billing/billingProvider.js');
+      const { billingProvider } = await import('../../src/services/billing/billingProvider.js');
       billingProvider.webhookSecret = webhookSecret;
 
       // 1. Length-safe signature comparison: disparate signature length must return false without crash

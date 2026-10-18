@@ -1,6 +1,6 @@
 process.env.TEST_MODE = 'true';
 import assert from 'node:assert';
-import { app } from './src/server.js';
+import { app } from '../../src/server.js';
 
 console.log('🧪 Running I3DION Spatial Integration Tests...\n');
 
@@ -14,7 +14,7 @@ async function runTests() {
     let errorCaught = null;
     const next = (err) => { errorCaught = err; };
 
-    const { requireAuth } = await import('./src/middleware/auth.js');
+    const { requireAuth } = await import('../../src/middleware/auth.js');
     await requireAuth(req, {}, next);
 
     assert.ok(errorCaught, 'Expected error caught for unauthenticated request');
@@ -43,7 +43,7 @@ async function runTests() {
 
   // Test 3: Verify standard trial period configured to 14 days
   try {
-    const { config } = await import('./src/config.js');
+    const { config } = await import('../../src/config.js');
     assert.strictEqual(config.billing.standardTrialDays, 14, 'Standard trial period should be 14 days');
     console.log('✅ Test 3 Passed: Standard trial period configured to 14 days for B2B procurement.');
     passed++;

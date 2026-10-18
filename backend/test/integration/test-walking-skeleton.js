@@ -1,13 +1,13 @@
 import assert from 'node:assert';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { query } from './src/db/pool.js';
-import { config } from './src/config.js';
-import { trackEvent } from './src/services/trackingEngine.js';
-import { AssetReferenceSchema } from '../packages/contracts/src/assetRef.ts';
-import { PublishingContractSchema } from '../packages/contracts/src/publishing.ts';
-import { EventContractSchema } from '../packages/contracts/src/event.ts';
-import { LeadContractSchema } from '../packages/contracts/src/lead.ts';
+import { query } from '../../src/db/pool.js';
+import { config } from '../../src/config.js';
+import { trackEvent } from '../../src/services/trackingEngine.js';
+import { AssetReferenceSchema } from '../../../packages/contracts/src/assetRef.ts';
+import { PublishingContractSchema } from '../../../packages/contracts/src/publishing.ts';
+import { EventContractSchema } from '../../../packages/contracts/src/event.ts';
+import { LeadContractSchema } from '../../../packages/contracts/src/lead.ts';
 
 console.log('================================================================');
 console.log('🧪 I3DION Walking Skeleton: End-to-End Asset Lifecycle Test');

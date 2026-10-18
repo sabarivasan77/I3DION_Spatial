@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { evaluatePermission, ROLE_PERMISSIONS_TABLE } from './src/services/core/permissionService.js';
+import { evaluatePermission, ROLE_PERMISSIONS_TABLE } from '../../src/services/core/permissionService.js';
 
 console.log('🧪 Running I3DION Platform Core & Cross-Tenant RBAC Automated Tests...\n');
 

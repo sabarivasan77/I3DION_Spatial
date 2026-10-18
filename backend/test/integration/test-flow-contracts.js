@@ -5,7 +5,7 @@ import {
   FlowRunSchema,
   ACTION_REGISTRY,
   validateFlowDAG,
-} from '../packages/contracts/src/flow.ts';
+} from '../../../packages/contracts/src/flow.ts';
 
 async function runFlowContractTests() {
   console.log('================================================================');

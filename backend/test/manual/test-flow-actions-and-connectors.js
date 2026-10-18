@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
-import { pool } from './src/db/pool.js';
-import { config } from './src/config.js';
-import { isSafeDestinationUrl, signWebhookPayload } from './src/services/flow/outboxDispatcher.js';
+import { pool } from '../../src/db/pool.js';
+import { config } from '../../src/config.js';
+import { isSafeDestinationUrl, signWebhookPayload } from '../../src/services/flow/outboxDispatcher.js';
 
 const BASE_URL = 'http://localhost:4000/api';
 

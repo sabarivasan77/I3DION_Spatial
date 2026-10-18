@@ -1,10 +1,10 @@
 import assert from 'node:assert';
 import jwt from 'jsonwebtoken';
-import { app } from './src/server.js';
-import { pool, query, ensureMigrated } from './src/db/pool.js';
-import { config } from './src/config.js';
-import { EventContractSchema } from '../packages/contracts/src/event.ts';
-import { LeadContractSchema } from '../packages/contracts/src/lead.ts';
+import { app } from '../../src/server.js';
+import { pool, query, ensureMigrated } from '../../src/db/pool.js';
+import { config } from '../../src/config.js';
+import { EventContractSchema } from '../../../packages/contracts/src/event.ts';
+import { LeadContractSchema } from '../../../packages/contracts/src/lead.ts';
 
 console.log('================================================================');
 console.log('🧪 Spatial Hub & Spatial Lens Hardening: Automated Verification Suite');

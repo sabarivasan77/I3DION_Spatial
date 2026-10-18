@@ -2,10 +2,10 @@ import assert from 'node:assert';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import jwt from 'jsonwebtoken';
-import { app } from './src/server.js';
-import { pool, query, ensureMigrated } from './src/db/pool.js';
-import { config } from './src/config.js';
-import { CatalogCompositionContractSchema } from '../packages/contracts/src/catalogComposition.ts';
+import { app } from '../../src/server.js';
+import { pool, query, ensureMigrated } from '../../src/db/pool.js';
+import { config } from '../../src/config.js';
+import { CatalogCompositionContractSchema } from '../../../packages/contracts/src/catalogComposition.ts';
 
 console.log('================================================================');
 console.log('🧪 Omni Studio Product Hardening: Automated Verification Suite');

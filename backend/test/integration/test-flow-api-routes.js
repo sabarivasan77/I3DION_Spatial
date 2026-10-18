@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
-import { app } from './src/server.js';
-import { pool, ensureMigrated } from './src/db/pool.js';
-import { config } from './src/config.js';
+import { app } from '../../src/server.js';
+import { pool, ensureMigrated } from '../../src/db/pool.js';
+import { config } from '../../src/config.js';
 
 let server;
 let baseUrl;

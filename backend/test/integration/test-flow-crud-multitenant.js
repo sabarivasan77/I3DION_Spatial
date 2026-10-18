@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
-import { pool, ensureMigrated } from './src/db/pool.js';
+import { pool, ensureMigrated } from '../../src/db/pool.js';
 import {
   createFlow,
   getFlowById,
@@ -10,11 +10,11 @@ import {
   duplicateFlow,
   archiveFlow,
   listFlowVersions,
-} from './src/services/flow/flowPersistenceService.js';
+} from '../../src/services/flow/flowPersistenceService.js';
 import {
   executeFlowRun,
   enqueueOutboxEvent,
-} from './src/services/flow/flowExecutor.js';
+} from '../../src/services/flow/flowExecutor.js';
 
 async function runFlowPersistenceTests() {
   console.log('================================================================');

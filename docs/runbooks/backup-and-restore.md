@@ -82,8 +82,8 @@ In the event of catastrophic data corruption or infrastructure failure:
    ```
 4. Run database verification and tenant health checks:
    ```bash
-   node test-tenant-auth.js
-   node --experimental-strip-types test-commercial-readiness.js
+   node test/integration/test-tenant-auth.js
+   node --experimental-strip-types test/integration/test-commercial-readiness.js
    ```
 5. Resume application services:
    ```bash

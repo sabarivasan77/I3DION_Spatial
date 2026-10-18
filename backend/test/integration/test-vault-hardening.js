@@ -2,10 +2,10 @@ import assert from 'node:assert';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import jwt from 'jsonwebtoken';
-import { app } from './src/server.js';
-import { pool, query, ensureMigrated } from './src/db/pool.js';
-import { config } from './src/config.js';
-import { extractAssetMetadata, detectMimeType } from './src/services/vault/assetProcessor.js';
+import { app } from '../../src/server.js';
+import { pool, query, ensureMigrated } from '../../src/db/pool.js';
+import { config } from '../../src/config.js';
+import { extractAssetMetadata, detectMimeType } from '../../src/services/vault/assetProcessor.js';
 
 console.log('================================================================');
 console.log('🧪 Spatial Vault Product Hardening: Automated Verification Suite');

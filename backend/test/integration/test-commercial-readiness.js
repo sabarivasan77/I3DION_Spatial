@@ -1,10 +1,10 @@
 import assert from 'node:assert';
 import jwt from 'jsonwebtoken';
-import { app } from './src/server.js';
-import { pool, query, ensureMigrated } from './src/db/pool.js';
-import { config } from './src/config.js';
-import { runDatabaseBackup } from './scripts/backup-database.js';
-import { runDatabaseRestore } from './scripts/restore-database.js';
+import { app } from '../../src/server.js';
+import { pool, query, ensureMigrated } from '../../src/db/pool.js';
+import { config } from '../../src/config.js';
+import { runDatabaseBackup } from '../../scripts/backup-database.js';
+import { runDatabaseRestore } from '../../scripts/restore-database.js';
 
 console.log('================================================================');
 console.log('🧪 Commercial Readiness & Pilot Hardening: Automated Verification Suite');

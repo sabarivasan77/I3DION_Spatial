@@ -3,10 +3,10 @@
  * Defined in I3DION Spatial Security-First Master Prompt v2.0
  */
 
-import { app } from './src/server.js';
-import { pool, query } from './src/db/pool.js';
+import { app } from '../../src/server.js';
+import { pool, query } from '../../src/db/pool.js';
 import jwt from 'jsonwebtoken';
-import { config } from './src/config.js';
+import { config } from '../../src/config.js';
 import crypto from 'node:crypto';
 
 let server;
