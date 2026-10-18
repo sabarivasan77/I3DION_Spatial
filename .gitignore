@@ -25,8 +25,22 @@ frontend/public/models/*.glb
 frontend/public/models/*.gltf
 *.glb
 *.gltf
+database/backups/
 database/backups/*
-!database/backups/.gitkeep
+*.sql
+*.meta.json
+!backend/src/db/schema.sql
+!database/schema.sql
+
+# Test Artifacts & Reports
+frontend/playwright-report/
+frontend/test-results/
+playwright-report/
+test-results/
+
+# Python Cache
+__pycache__/
+*.pyc
 
 # Env
 .env*
