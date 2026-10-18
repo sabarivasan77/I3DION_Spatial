@@ -20,18 +20,68 @@ export const hubRouter = Router();
 hubRouter.get(
   '/feed',
   asyncHandler(async (req, res) => {
-    const { rows } = await query(`
-      SELECT p.*, c.name as company_name, c.logo_url as company_logo, 
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 12, 1), 50);
+    const cursor = req.query.cursor;
+    const category = req.query.category;
+    const sort = req.query.sort || 'popular';
+    const search = req.query.search;
+    const isPaginated = req.query.paginated === 'true' || Boolean(cursor);
+
+    let whereClause = `WHERE p.is_public = true AND p.status = 'Published'`;
+    const params = [];
+
+    if (category && category !== 'All') {
+      params.push(category);
+      whereClause += ` AND p.category = $${params.length}`;
+    }
+
+    if (search && search.trim()) {
+      params.push(`%${search.trim()}%`);
+      whereClause += ` AND (p.name ILIKE $${params.length} OR p.description ILIKE $${params.length} OR $${params.length} = ANY(p.tags))`;
+    }
+
+    if (cursor) {
+      params.push(cursor);
+      whereClause += ` AND p.created_at < $${params.length}`;
+    }
+
+    let orderClause = `ORDER BY trending_score DESC, p.created_at DESC`;
+    if (sort === 'newest') {
+      orderClause = `ORDER BY p.created_at DESC`;
+    } else if (sort === 'alphabetical') {
+      orderClause = `ORDER BY p.name ASC`;
+    }
+
+    params.push(limit + 1);
+    const limitParam = `$${params.length}`;
+
+    const sql = `
+      SELECT p.*, c.name as company_name, c.logo_url as company_logo, c.is_verified as company_verified,
              u.name as creator_name, u.avatar_url as creator_avatar,
              (p.likes_count * 5 + p.views_count * 1) as trending_score
       FROM products p
       JOIN organizations c ON p.organization_id = c.id
       LEFT JOIN users u ON p.created_by = u.id
-      WHERE p.is_public = true AND p.status = 'Published'
-      ORDER BY trending_score DESC, p.created_at DESC
-      LIMIT 50
-    `);
-    res.json(rows);
+      ${whereClause}
+      ${orderClause}
+      LIMIT ${limitParam}
+    `;
+
+    const { rows } = await query(sql, params);
+    const hasMore = rows.length > limit;
+    const items = hasMore ? rows.slice(0, limit) : rows;
+    const nextCursor = items.length > 0 && hasMore ? items[items.length - 1].created_at : null;
+
+    if (isPaginated) {
+      res.json({
+        items,
+        nextCursor,
+        hasMore,
+        count: items.length
+      });
+    } else {
+      res.json(items);
+    }
   })
 );
 
