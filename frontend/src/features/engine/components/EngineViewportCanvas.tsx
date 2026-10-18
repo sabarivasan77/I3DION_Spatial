@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { useEngineStore } from '../store/useEngineStore';
-import { MousePointer, Move, RotateCw, Maximize2, Box, Eye, Layers, Grid, SlidersHorizontal, Cpu, Play } from 'lucide-react';
+import { MousePointer, Move, RotateCw, Maximize2 } from 'lucide-react';
 
 export const EngineViewportCanvas: React.FC = () => {
   const { currentProject, selectedNodeId, setSelectedNodeId, gizmoMode, setGizmoMode, renderMode, setRenderMode } = useEngineStore();
   const [cameraPreset, setCameraPreset] = useState<'Perspective' | 'Top' | 'Front' | 'Right'>('Perspective');
-
-  const selectedNode = currentProject.sceneGraph.find((n) => n.id === selectedNodeId);
 
   return (
     <div className="flex-1 h-full bg-slate-900 relative overflow-hidden flex flex-col select-none">

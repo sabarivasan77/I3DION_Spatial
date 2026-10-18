@@ -13,7 +13,6 @@ import {
   Terminal,
   UploadCloud,
   Loader2,
-  FileCode2,
   Workflow,
   Clock,
   Download,
