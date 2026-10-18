@@ -7,7 +7,16 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config.js';
 import { pool } from '../db/pool.js';
 
+import { fileURLToPath } from 'node:url';
+
 const SIGNING_SECRET = process.env.STORAGE_SIGNING_SECRET || config.jwtSecret;
+
+/**
+ * Returns absolute storage directory path (backend/uploads), invariant of process.cwd()
+ */
+export function getStorageDirectory() {
+  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../uploads');
+}
 
 /**
  * Validates magic-byte signatures for uploaded file types to prevent
@@ -178,7 +187,7 @@ export async function secureFileHandler(req, res) {
     const rawFilename = req.params.filename || path.basename(req.path);
     // Sanitize filename to prevent directory traversal
     const safeFilename = path.basename(rawFilename);
-    const targetDir = path.resolve(process.cwd(), config.uploadDir);
+    const targetDir = getStorageDirectory();
     const resolvedPath = path.resolve(targetDir, safeFilename);
 
     // Prevent path escape

@@ -36,6 +36,7 @@ import { coreRouter } from './routes/core.js';
 import onboardingRouter from './routes/onboarding.js';
 import flowRouter from './routes/flow.js';
 import { playerRouter } from './routes/player.js';
+import { printRouter } from './routes/print.js';
 import { secureFileHandler, createStorageRouter } from './services/storageService.js';
 import { errorHandler, notFound } from './utils/errors.js';
 
@@ -140,6 +141,7 @@ apiRouter.use('/engine', engineRouter);
 apiRouter.use('/lens', lensRouter);
 apiRouter.use('/flows', flowRouter);
 apiRouter.use('/player', playerRouter);
+apiRouter.use('/print', printRouter);
 apiRouter.use('/vault', vaultRouter);
 apiRouter.use('/core', coreRouter);
 apiRouter.use('/notifications', notificationsRouter);
