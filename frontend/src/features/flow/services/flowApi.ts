@@ -153,4 +153,45 @@ export const flowApi = {
     });
     return res.runs || [];
   },
+
+  // 11. Ingest 3D Spatial Event (Hub / Engine / Studio)
+  ingestSpatialEvent: async (payload: {
+    eventType: string;
+    payload?: Record<string, any>;
+    sourceApp?: string;
+  }) => {
+    const res = await apiRequest<{
+      success: boolean;
+      eventType: string;
+      sourceApp: string;
+      triggeredFlowsCount: number;
+      flowRunIds: string[];
+    }>('/flows/events/spatial', {
+      method: 'POST',
+      token: localStorage.getItem('i3dion_token') || '',
+      body: JSON.stringify(payload),
+    });
+    return res;
+  },
+
+  // 12. Process Outbox batch
+  processOutbox: async (limit = 20) => {
+    const res = await apiRequest<{ summary: { processedCount: number; deliveredCount: number; failedCount: number } }>(
+      '/flows/outbox/process',
+      {
+        method: 'POST',
+        token: localStorage.getItem('i3dion_token') || '',
+        body: JSON.stringify({ limit }),
+      }
+    );
+    return res.summary;
+  },
+
+  // 13. List Outbox events
+  listOutbox: async () => {
+    const res = await apiRequest<{ outbox: any[] }>('/flows/outbox', {
+      token: localStorage.getItem('i3dion_token') || '',
+    });
+    return res.outbox || [];
+  },
 };

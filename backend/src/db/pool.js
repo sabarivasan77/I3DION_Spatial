@@ -634,6 +634,11 @@ export async function ensureMigrated() {
         processed_at timestamptz
       );
 
+      ALTER TABLE flow_event_outbox ADD COLUMN IF NOT EXISTS attempts integer NOT NULL DEFAULT 0;
+      ALTER TABLE flow_event_outbox ADD COLUMN IF NOT EXISTS last_error text;
+      ALTER TABLE flow_event_outbox ADD COLUMN IF NOT EXISTS destination_url text;
+      ALTER TABLE flow_event_outbox ADD COLUMN IF NOT EXISTS response_status integer;
+
       CREATE INDEX IF NOT EXISTS idx_flows_org_id ON flows(organization_id);
       CREATE INDEX IF NOT EXISTS idx_flow_runs_flow_id ON flow_runs(flow_id);
       CREATE INDEX IF NOT EXISTS idx_flow_runs_org_id ON flow_runs(organization_id);

@@ -237,9 +237,83 @@ flowRouter.post('/events', async (req, res) => {
       organizationId: orgId,
       eventType,
       payload: payload || {},
+      destinationUrl: req.body.destinationUrl || null,
     });
 
     res.status(202).json({ outboxItem });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+// -----------------------------------------------------------------------------
+// 12. INGEST 3D SPATIAL EVENT (HUB / ENGINE / STUDIO)
+// -----------------------------------------------------------------------------
+// POST /api/flows/events/spatial
+flowRouter.post('/events/spatial', async (req, res) => {
+  try {
+    const orgId = getOrgId(req);
+    const { eventType, payload, sourceApp } = req.body;
+
+    if (!eventType) {
+      return res.status(400).json({ error: 'eventType is required' });
+    }
+
+    const { ingestSpatialEvent } = await import('../services/flow/spatialTriggerService.js');
+    const result = await ingestSpatialEvent({
+      organizationId: orgId,
+      eventType,
+      payload: payload || {},
+      sourceApp: sourceApp || 'engine',
+      userId: req.user?.id || null,
+    });
+
+    res.json(result);
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+// -----------------------------------------------------------------------------
+// 13. PROCESS OUTBOX DISPATCH BATCH
+// -----------------------------------------------------------------------------
+// POST /api/flows/outbox/process
+flowRouter.post('/outbox/process', async (req, res) => {
+  try {
+    const orgId = getOrgId(req);
+    const { limit } = req.body;
+
+    const { processPendingOutboxEvents } = await import('../services/flow/outboxDispatcher.js');
+    const summary = await processPendingOutboxEvents({
+      organizationId: orgId,
+      limit: parseInt(limit, 10) || 20,
+    });
+
+    res.json({ summary });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+// -----------------------------------------------------------------------------
+// 14. LIST OUTBOX EVENTS
+// -----------------------------------------------------------------------------
+// GET /api/flows/outbox
+flowRouter.get('/outbox', async (req, res) => {
+  try {
+    const orgId = getOrgId(req);
+    const items = await withTenant(orgId, async (client) => {
+      const result = await client.query(
+        `SELECT * FROM flow_event_outbox
+         WHERE organization_id = $1
+         ORDER BY created_at DESC
+         LIMIT 50`,
+        [orgId]
+      );
+      return result.rows;
+    });
+
+    res.json({ outbox: items });
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
   }
