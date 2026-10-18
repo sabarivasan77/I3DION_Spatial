@@ -1,5 +1,6 @@
 import { withTenant } from '../../db/pool.js';
 import { emailProvider } from '../emailService.js';
+import { assertFlowExecutionQuota } from '../billing/quotaService.js';
 import crypto from 'node:crypto';
 
 // -----------------------------------------------------------------------------
@@ -87,6 +88,9 @@ export async function executeFlowRun({
   triggerPayload = {},
   userId = null,
 }) {
+  // Commercial Readiness: Strict server-side execution quota check
+  await assertFlowExecutionQuota(organizationId);
+
   return withTenant(organizationId, async (client) => {
     // 1. Fetch flow definition and verify active tenant context
     const flowRes = await client.query(
@@ -391,6 +395,8 @@ export async function executeFlowRun({
 
           // --- INTEGRATION: OUTBOX / WEBHOOK DISPATCH ---
           case 'webhook_dispatch':
+          case 'outbox_webhook':
+          case 'webhook_outbox':
           case 'slack_notification': {
             const eventType = params.eventType || (nodeType === 'slack_notification' ? 'slack_alert' : 'webhook_dispatch');
             const destUrl = params.destinationUrl || params.channel || null;

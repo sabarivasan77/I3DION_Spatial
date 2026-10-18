@@ -1,5 +1,6 @@
 import { withTenant, query } from '../../db/pool.js';
 import { validateFlowDAG } from '../../../../packages/contracts/src/flow.ts';
+import { assertFlowCreationQuota } from '../billing/quotaService.js';
 
 /**
  * Flow Persistence Service (Phase 2 Foundation)
@@ -18,6 +19,9 @@ export async function createFlow({
   if (!name || typeof name !== 'string') {
     throw new Error('Flow name is required');
   }
+
+  // Commercial Readiness: Strict server-side creation quota check
+  await assertFlowCreationQuota(organizationId);
 
   const defaultDefinition = flowDefinition || {
     trigger: {
@@ -251,6 +255,9 @@ export async function publishFlow(organizationId, flowId, authorId = null, chang
 }
 
 export async function duplicateFlow(organizationId, flowId, newOwnerId = null) {
+  // Commercial Readiness: Strict server-side creation quota check
+  await assertFlowCreationQuota(organizationId);
+
   return withTenant(organizationId, async (client) => {
     const currentRes = await client.query(
       `SELECT * FROM flows WHERE id = $1 AND organization_id = $2`,
