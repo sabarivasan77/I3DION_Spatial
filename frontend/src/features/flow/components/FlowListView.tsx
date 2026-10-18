@@ -20,6 +20,7 @@ import { flowApi, FlowListItem } from '../services/flowApi';
 import { useFlowDesignerStore } from '../store/useFlowDesignerStore';
 import { FlowRunsView } from './FlowRunsView';
 import { FlowAnalyticsView } from './FlowAnalyticsView';
+import { EcosystemHeader } from '../../../design-system/navigation/EcosystemHeader';
 
 export const FlowListView: React.FC = () => {
   const navigate = useNavigate();
@@ -150,66 +151,112 @@ export const FlowListView: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-16">
-      {/* Top Banner */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <div className="w-10 h-10 rounded-xl bg-cyan-50 border border-cyan-100 flex items-center justify-center text-cyan-600 shadow-2xs">
-                  <Workflow size={22} />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">I3DION Flow</h1>
-                  <span className="text-xs font-semibold text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-full border border-cyan-100 uppercase tracking-wider">
-                    Visual Automation Platform
-                  </span>
-                </div>
+      {/* 1. Global I3DION Unified Ecosystem Header */}
+      <EcosystemHeader productName="Flow" productBadgeColor="text-cyan-700 bg-cyan-50 border-cyan-200" />
+
+      {/* 2. Top Dark Obsidian Hero Card (Inspired by Omni Studio Tier-1 Aesthetics) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
+        <div className="bg-gradient-to-br from-[#0B0F19] via-[#0F172A] to-[#1E293B] border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+          {/* Ambient Glow Orbs */}
+          <div className="absolute -right-20 -top-20 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+            <div className="max-w-2xl">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-[11px] font-extrabold uppercase tracking-widest text-cyan-400 bg-cyan-950/80 px-3 py-1 rounded-full border border-cyan-800/80 shadow-sm flex items-center gap-1.5">
+                  <Sparkles size={12} className="text-cyan-400 animate-pulse" />
+                  WELCOME TO I3DION FLOW
+                </span>
+                <span className="text-xs font-mono text-slate-400">Enterprise v2.0</span>
               </div>
-              <p className="text-sm text-slate-500 mt-1 max-w-2xl">
-                Design, test, and automate 3D spatial lead scoring, document generation, and business event workflows with an intuitive drag-and-drop designer.
+              <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+                Autonomous 3D Spatial Automation Engine
+              </h1>
+              <p className="text-sm sm:text-base text-slate-300 mt-2 leading-relaxed">
+                Design, test, and automate 3D spatial lead qualification, CAD document generation, and ERP business event workflows with an intuitive visual designer.
               </p>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-3 mt-6">
+                <button
+                  onClick={() => setShowTemplateModal(true)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/25 transition active:scale-95 cursor-pointer"
+                >
+                  <Plus size={18} className="stroke-[2.5]" />
+                  <span>+ Create New Flow</span>
+                </button>
+                <button
+                  onClick={() => setShowTemplateModal(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-white font-semibold text-sm border border-slate-700 shadow-md transition active:scale-95 cursor-pointer"
+                >
+                  <Sparkles size={16} className="text-cyan-400" />
+                  <span>Browse Recipes</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setImportError(null);
+                    setShowImportModal(true);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 hover:text-white font-medium text-sm border border-slate-700/70 transition cursor-pointer"
+                >
+                  <Upload size={16} />
+                  <span>Import Package</span>
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => {
-                  setImportError(null);
-                  setShowImportModal(true);
-                }}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm shadow-2xs transition active:scale-95"
-              >
-                <Upload size={16} />
-                <span>Import Flow</span>
-              </button>
-
-              <button
-                onClick={() => setShowTemplateModal(true)}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-sm shadow-sm transition active:scale-95"
-              >
-                <Plus size={18} />
-                <span>Create New Flow</span>
-              </button>
+            {/* Right Side Featured Automation Pipeline Preview */}
+            <div className="w-full lg:w-96 bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl backdrop-blur-md">
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-3 border-b border-slate-800 pb-2">
+                <span className="flex items-center gap-1.5 text-cyan-400 font-bold">
+                  <Workflow size={14} />
+                  <span>Active Ecosystem Pipeline</span>
+                </span>
+                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800 font-bold">
+                  Live
+                </span>
+              </div>
+              <div className="space-y-2.5 font-mono text-xs">
+                <div className="flex items-center gap-2 text-slate-300 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                  <span className="text-[11px] text-cyan-300 font-bold">Spatial Hub / Engine</span>
+                  <span className="text-slate-500">→</span>
+                  <span className="text-[11px] text-slate-300">Hotspot Inspected</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-300 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+                  <span className="w-2 h-2 rounded-full bg-amber-400" />
+                  <span className="text-[11px] text-amber-300 font-bold">Rule Engine</span>
+                  <span className="text-slate-500">→</span>
+                  <span className="text-[11px] text-slate-300">Dwell &gt; 60s (VIP Lead)</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-300 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <span className="text-[11px] text-emerald-300 font-bold">CRM &amp; Outbox</span>
+                  <span className="text-slate-500">→</span>
+                  <span className="text-[11px] text-slate-300">Spec Sheet &amp; Webhook</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Stats Ribbon */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-slate-100">
-            <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
+          {/* Stats Ribbon (Dark Glassmorphic) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-slate-800/80">
+            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
               <span className="text-xs font-medium text-slate-400">Total Automations</span>
-              <div className="text-2xl font-bold text-slate-900 mt-1">{flows.length || 6}</div>
+              <div className="text-2xl font-black text-white mt-1">{flows.length}</div>
             </div>
-            <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
+            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
               <span className="text-xs font-medium text-slate-400">Executions (24h)</span>
-              <div className="text-2xl font-bold text-cyan-600 mt-1">1,482</div>
+              <div className="text-2xl font-black text-cyan-400 mt-1">1,482</div>
             </div>
-            <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
+            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
               <span className="text-xs font-medium text-slate-400">Success Rate</span>
-              <div className="text-2xl font-bold text-emerald-600 mt-1">99.8%</div>
+              <div className="text-2xl font-black text-emerald-400 mt-1">99.8%</div>
             </div>
-            <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
-              <span className="text-xs font-medium text-slate-400">Avg Execution Time</span>
-              <div className="text-2xl font-bold text-slate-900 mt-1">42ms</div>
+            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
+              <span className="text-xs font-medium text-slate-400">Avg Latency (p50)</span>
+              <div className="text-2xl font-black text-white mt-1">42ms</div>
             </div>
           </div>
         </div>
@@ -302,20 +349,63 @@ export const FlowListView: React.FC = () => {
             <p className="text-sm">Loading workflows from database...</p>
           </div>
         ) : flows.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center max-w-lg mx-auto">
-            <div className="w-14 h-14 rounded-2xl bg-cyan-50 border border-cyan-100 flex items-center justify-center text-cyan-600 mx-auto mb-4">
-              <Workflow size={28} />
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border border-slate-700/80 rounded-2xl p-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-400 bg-cyan-950/80 px-2.5 py-0.5 rounded-full border border-cyan-800">
+                  Ready to Deploy
+                </span>
+                <h3 className="text-lg font-bold text-white mt-1">Get Started with Pre-Built Industrial Recipes</h3>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Select any pre-configured 3D workflow below to instantiate a production automation pipeline instantly.
+                </p>
+              </div>
+              <button
+                onClick={handleCreateBlank}
+                className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition active:scale-95 cursor-pointer"
+              >
+                <Plus size={14} />
+                <span>Blank Flow from Scratch</span>
+              </button>
             </div>
-            <h3 className="text-base font-semibold text-slate-900">No workflows found</h3>
-            <p className="text-xs text-slate-500 mt-1 mb-6">
-              Create your first automation workflow to streamline 3D spatial lead qualification and actions.
-            </p>
-            <button
-              onClick={() => setShowTemplateModal(true)}
-              className="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-sm shadow-sm transition"
-            >
-              Get Started with a Template
-            </button>
+
+            {/* Industrial Recipe Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {recipes.map((recipe) => (
+                <div
+                  key={recipe.key}
+                  className="bg-white border border-slate-200 hover:border-cyan-400 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-100">
+                        {recipe.triggerType?.replace('trigger_', '') || 'EVENT'}
+                      </span>
+                      <span className="text-[11px] font-mono text-slate-400">
+                        {recipe.nodeCount || 3} steps
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-slate-900 text-sm group-hover:text-cyan-700 transition">
+                      {recipe.name}
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-3 leading-relaxed">
+                      {recipe.description}
+                    </p>
+                  </div>
+
+                  <div className="mt-5 pt-4 border-t border-slate-100">
+                    <button
+                      onClick={() => handleInstantiateRecipe(recipe.key)}
+                      className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-cyan-600 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
+                    >
+                      <Sparkles size={13} className="text-cyan-400" />
+                      <span>Use Recipe</span>
+                      <ArrowRight size={13} className="ml-0.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

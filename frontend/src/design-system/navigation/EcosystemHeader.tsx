@@ -65,15 +65,17 @@ export const EcosystemHeader: React.FC<EcosystemHeaderProps> = ({
 
   const activeAppId = location.pathname.startsWith('/vault') 
     ? 'vault' 
-    : location.pathname.startsWith('/studio') 
+    : location.pathname.startsWith('/studio') || location.pathname.startsWith('/omni-studio')
       ? 'studio' 
       : location.pathname.startsWith('/engine') 
         ? 'engine' 
-        : location.pathname.startsWith('/hub') 
-          ? 'hub' 
-          : location.pathname.startsWith('/sales') 
-            ? 'lens' 
-            : 'home';
+        : location.pathname.startsWith('/flow')
+          ? 'flow'
+          : location.pathname.startsWith('/hub') 
+            ? 'hub' 
+            : location.pathname.startsWith('/sales') || location.pathname.startsWith('/lens')
+              ? 'lens' 
+              : 'home';
 
   return (
     <>
