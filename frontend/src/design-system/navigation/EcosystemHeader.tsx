@@ -94,8 +94,12 @@ export const EcosystemHeader: React.FC<EcosystemHeaderProps> = ({
 
           {/* I3DION Brand + Product Pill */}
           <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/home')}>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-xs tracking-wider shadow-sm">
-              I3
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white border border-slate-200/80 p-0.5 shadow-2xs shrink-0">
+              <img
+                src={activeAppId === 'home' ? '/assets/logos/hub.png' : `/assets/logos/${activeAppId}.png`}
+                alt="I3DION Spatial"
+                className="h-7 w-7 object-contain drop-shadow-sm"
+              />
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-sm font-bold text-slate-900 tracking-tight">I3DION</span>

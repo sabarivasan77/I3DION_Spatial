@@ -7,7 +7,6 @@ import { IScriptValidator } from '../validation/iscriptValidator';
 import { IScriptParser } from '../parser/iscriptParser';
 import { IScriptRuntimeAdapter } from '../runtime/iscriptRuntimeAdapter';
 import { useLogicCraftStore } from '../../logic/store/useLogicCraftStore';
-import { useRuntimeStore } from '../../logic/runtime/runtimeContext';
 import { IScriptProblem } from '../types/iscriptTypes';
 import { BookOpen, Sparkles } from 'lucide-react';
 

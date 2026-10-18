@@ -2,16 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
-  Plus,
   Play,
   Cpu,
   Trash2,
   GitBranch,
   Sparkles,
-  Database,
-  Box,
   CheckCircle2,
-  X,
   Code,
   Save,
   AlertTriangle
@@ -51,7 +47,7 @@ export function StudioLogicWorkspace() {
       studioApi.getProject(projectId).then(p => {
         if (p) {
           setProject(p);
-          if (p.project_document?.logic?.length > 0) {
+          if (p.project_document?.logic && p.project_document.logic.length > 0) {
             setNodes(p.project_document.logic);
           }
           if (p.project_document?.scripts?.[0]?.code) {
@@ -105,7 +101,15 @@ export function StudioLogicWorkspace() {
     if (!project) return;
     setIsSaving(true);
     try {
-      const doc = project.project_document || { screens: [], components: [] };
+      const doc = project.project_document || {
+        screens: [],
+        components: [],
+        component_tree: [],
+        variables: [],
+        logic: [],
+        theme: {},
+        settings: {}
+      };
       const updatedDoc = {
         ...doc,
         logic: nodes,

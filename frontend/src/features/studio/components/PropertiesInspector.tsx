@@ -6,15 +6,11 @@ import {
   SlidersHorizontal,
   Trash2,
   Copy,
-  Image as ImageIcon,
   ChevronRight,
   ChevronDown,
-  Info,
   Lock,
-  Eye,
 } from 'lucide-react';
 
-import { ThreePropertiesInspector } from './ThreePropertiesInspector';
 import { EventActionBuilder } from './EventActionBuilder';
 
 export const PropertiesInspector: React.FC = () => {
@@ -24,7 +20,6 @@ export const PropertiesInspector: React.FC = () => {
     updateWidgetProperties,
     deleteWidget,
     duplicateWidget,
-    openAssetPicker,
   } = useStudioStore();
 
   const [activeTab, setActiveTab] = useState<'Content' | 'Style' | 'Layout' | 'Events'>('Content');

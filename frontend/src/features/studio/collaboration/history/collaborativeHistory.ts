@@ -34,7 +34,7 @@ export class CollaborativeHistoryManager {
     return opToUndo;
   }
 
-  public redoLocal(actorId: string): CollaborativeOperation | null {
+  public redoLocal(_actorId: string): CollaborativeOperation | null {
     if (this.localHistoryFuture.length === 0) return null;
 
     const opToRedo = this.localHistoryFuture.pop();

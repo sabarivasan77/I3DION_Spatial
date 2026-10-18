@@ -13,8 +13,8 @@ export function Logo({ variant = 'full', theme = 'light', className }: LogoProps
   if (variant === 'icon') {
     return (
       <div className={cx("flex items-center justify-center select-none", className)}>
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 font-extrabold text-white text-xs shadow-md shadow-blue-600/30 font-sans tracking-tight">
-          i3D
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/90 border border-slate-200/80 shadow-md p-1">
+          <img src="/assets/logos/hub.png" alt="I3DION Spatial" className="h-7 w-7 object-contain drop-shadow-sm" />
         </div>
       </div>
     );
@@ -22,9 +22,9 @@ export function Logo({ variant = 'full', theme = 'light', className }: LogoProps
 
   return (
     <div className={cx("flex items-center gap-2.5 select-none font-sans tracking-tight", className)}>
-      {/* Sleek Vector 3D Badge */}
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 font-extrabold text-white text-xs shadow-md shadow-blue-600/30">
-        i3D
+      {/* Official 3D Spatial Portal Logo */}
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white border border-slate-200/80 shadow-xs p-1 shrink-0">
+        <img src="/assets/logos/hub.png" alt="I3DION Spatial" className="h-7 w-7 object-contain drop-shadow-sm" />
       </div>
       
       {/* Bold Modern Typography Wordmark */}

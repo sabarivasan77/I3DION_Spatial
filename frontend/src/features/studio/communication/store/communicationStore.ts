@@ -108,7 +108,7 @@ export const useCommunicationStore = create<CommunicationStoreState>((set, get) 
     }),
 
   endSession: () => {
-    const { localStream, localScreenStream, remoteStreams } = get();
+    const { localStream, localScreenStream } = get();
     // Clean up local tracks
     if (localStream) {
       localStream.getTracks().forEach((track) => track.stop());

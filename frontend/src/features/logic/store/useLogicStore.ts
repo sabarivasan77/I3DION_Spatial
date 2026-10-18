@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { LogicRule, TriggerType, ActionType } from '../types/logic';
+import { LogicRule, TriggerType } from '../types/logic';
 
 const generateRuleId = (): string => {
   return `rule_${Math.random().toString(36).substring(2, 9)}`;

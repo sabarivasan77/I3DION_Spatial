@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { PageHeader, Card, Button, Badge } from '../components/ui';
-import { Bot, User, CheckCircle, MessageSquare, Ticket, RefreshCw, Sparkles, HelpCircle, Plus, X, Send, AlertCircle, ShieldAlert } from 'lucide-react';
+import { PageHeader, Card, Button } from '../components/ui';
+import { Bot, User, CheckCircle, MessageSquare, Ticket, RefreshCw, Sparkles, HelpCircle, Plus, X, Send } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
-import { api, API_BASE_URL } from '../services/api';
+import { api } from '../services/api';
 import { useToast } from '../components/Toast';
 
 const DEFAULT_STATS = {
@@ -13,7 +13,6 @@ const DEFAULT_STATS = {
 
 export function SupportDashboardPage() {
   const token = useAuthStore((s) => s.token);
-  const user = useAuthStore((s) => s.user);
   const { success, error: showError } = useToast();
 
   const [stats, setStats] = useState<any>(DEFAULT_STATS);

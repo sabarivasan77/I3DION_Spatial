@@ -143,6 +143,7 @@ export default function VaultDataWorkspace() {
 
     const fields: VaultSchemaField[] = collection?.schema_fields || [];
     for (const f of fields) {
+      if (!f.key) continue;
       if (f.required && !newRecordData[f.key]) {
         setValidationError(`Field "${f.name}" is required.`);
         return false;
@@ -461,8 +462,8 @@ export default function VaultDataWorkspace() {
                       </span>
                     </td>
                     {fields.map(f => (
-                      <td key={f.key} className="px-4 py-3 text-slate-600 truncate max-w-xs">
-                        {String(rec.data?.[f.key] ?? '—')}
+                      <td key={f.key || f.name} className="px-4 py-3 text-slate-600 truncate max-w-xs">
+                        {String((f.key ? rec.data?.[f.key] : undefined) ?? '—')}
                       </td>
                     ))}
                     <td className="px-4 py-3 text-slate-400">{new Date(rec.created_at).toLocaleDateString()}</td>
@@ -495,9 +496,9 @@ export default function VaultDataWorkspace() {
                   </div>
                   <div className="space-y-1 mt-3">
                     {fields.slice(0, 3).map(f => (
-                      <div key={f.key} className="flex justify-between text-xs">
+                      <div key={f.key || f.name} className="flex justify-between text-xs">
                         <span className="text-slate-400 font-medium">{f.name}:</span>
-                        <span className="font-semibold text-slate-700 truncate max-w-[150px]">{String(rec.data?.[f.key] ?? '—')}</span>
+                        <span className="font-semibold text-slate-700 truncate max-w-[150px]">{String((f.key ? rec.data?.[f.key] : undefined) ?? '—')}</span>
                       </div>
                     ))}
                   </div>
@@ -549,8 +550,8 @@ export default function VaultDataWorkspace() {
                   </label>
                   <input
                     type={f.type === 'Number' ? 'number' : f.type === 'Date' ? 'date' : 'text'}
-                    value={newRecordData[f.key] || ''}
-                    onChange={(e) => setNewRecordData({ ...newRecordData, [f.key]: e.target.value })}
+                    value={(f.key ? newRecordData[f.key] : '') || ''}
+                    onChange={(e) => f.key && setNewRecordData({ ...newRecordData, [f.key]: e.target.value })}
                     className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs font-semibold outline-none focus:border-emerald-500"
                   />
                 </div>
@@ -630,8 +631,8 @@ export default function VaultDataWorkspace() {
                     <label className="block text-[11px] font-semibold text-slate-600 mb-1">{f.name}</label>
                     <input
                       type={f.type === 'Number' ? 'number' : f.type === 'Date' ? 'date' : 'text'}
-                      value={editRecordData[f.key] || ''}
-                      onChange={(e) => setEditRecordData({ ...editRecordData, [f.key]: e.target.value })}
+                      value={(f.key ? editRecordData[f.key] : '') || ''}
+                      onChange={(e) => f.key && setEditRecordData({ ...editRecordData, [f.key]: e.target.value })}
                       className="h-9 w-full rounded-xl border border-slate-200 px-3 text-xs font-medium outline-none focus:border-emerald-500"
                     />
                   </div>
@@ -654,9 +655,9 @@ export default function VaultDataWorkspace() {
                 <span className="text-slate-400 font-bold uppercase block mb-2">Record Attributes</span>
                 <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
                   {fields.map(f => (
-                    <div key={f.key} className="flex justify-between border-b border-slate-200/60 pb-2 last:border-0 last:pb-0">
+                    <div key={f.key || f.name} className="flex justify-between border-b border-slate-200/60 pb-2 last:border-0 last:pb-0">
                       <span className="font-bold text-slate-500">{f.name}:</span>
-                      <span className="font-semibold text-slate-800">{String(activeRecord.data?.[f.key] ?? '—')}</span>
+                      <span className="font-semibold text-slate-800">{String((f.key ? activeRecord.data?.[f.key] : undefined) ?? '—')}</span>
                     </div>
                   ))}
                 </div>

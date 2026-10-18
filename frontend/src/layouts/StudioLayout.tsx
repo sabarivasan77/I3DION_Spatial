@@ -59,12 +59,12 @@ export const StudioLayout: React.FC = () => {
         {/* Left Branding */}
         <div className="flex items-center gap-4">
           <Link to="/omni-studio" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/25 group-hover:scale-105 transition-transform">
-              <Sparkles className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-white border border-purple-200/80 p-1 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+              <img src="/assets/logos/studio.png" alt="I3DION Omni Studio" className="h-7 w-7 object-contain drop-shadow-sm" />
             </div>
             <div>
               <span className="font-extrabold text-base tracking-tight text-slate-900 block leading-none">I3DION</span>
-              <span className="text-[11px] font-bold text-indigo-600 tracking-wider uppercase block mt-0.5">Omni Studio</span>
+              <span className="text-[11px] font-bold text-purple-600 tracking-wider uppercase block mt-0.5">Omni Studio</span>
             </div>
           </Link>
         </div>

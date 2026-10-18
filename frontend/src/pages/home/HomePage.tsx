@@ -11,8 +11,6 @@ import {
   Upload, 
   Sparkles,
   Clock,
-  CheckCircle2,
-  AlertCircle,
   FileSpreadsheet,
   Layers,
   ChevronRight
@@ -20,6 +18,7 @@ import {
 import { useAuthStore } from '../../store/authStore';
 import { EcosystemHeader } from '../../design-system/navigation/EcosystemHeader';
 import { SkeletonLoader } from '../../design-system/states/SkeletonLoader';
+import { ProductLogo, ProductKey } from '../../components/ProductLogo';
 
 interface HomeMetrics {
   assetsCount: number;
@@ -43,7 +42,7 @@ export const HomePage: React.FC = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('i3dion.token');
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
     Promise.all([
       fetch('/api/vault/datasets/summary', { headers }).then(r => r.ok ? r.json() : null).catch(() => null),
@@ -100,66 +99,75 @@ export const HomePage: React.FC = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const productCards = [
-    {
-      id: 'vault',
-      name: 'Spatial Vault',
-      subtitle: 'Authoritative CAD Assets & Records',
-      description: 'Single source of truth for 3D geometries, specs, documents and custom product collections.',
-      path: '/vault/workspace',
-      icon: Database,
-      badge: `${metrics?.assetsCount ?? 0} Assets`,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50 border-amber-200',
-      hoverBorder: 'hover:border-amber-400',
-    },
-    {
-      id: 'studio',
-      name: 'Omni Studio',
-      subtitle: 'Interactive Catalog Composer',
-      description: 'Design and publish structured industrial catalogs bound directly to Vault product versions.',
-      path: '/studio/projects',
-      icon: LayoutTemplate,
-      badge: `${metrics?.catalogsCount ?? 0} Catalogs`,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50 border-blue-200',
-      hoverBorder: 'hover:border-blue-400',
-    },
-    {
-      id: 'engine',
-      name: 'Spatial Engine',
-      subtitle: '3D/AR Experience & Hotspots',
-      description: 'Author interactive assemblies, technical callout hotspots, animations, and WebXR AR handoffs.',
-      path: '/engine/workspace',
-      icon: Box,
-      badge: 'Interactive 3D/AR',
-      color: 'text-cyan-600',
-      bgColor: 'bg-cyan-50 border-cyan-200',
-      hoverBorder: 'hover:border-cyan-400',
-    },
+  const productCards: Array<{
+    id: ProductKey;
+    name: string;
+    subtitle: string;
+    description: string;
+    path: string;
+    badge: string;
+    hoverBorder: string;
+    bgBorder: string;
+  }> = [
     {
       id: 'hub',
-      name: 'Spatial Hub',
+      name: 'I3DION Spatial Hub',
       subtitle: 'Public Discovery & Delivery',
       description: 'Mobile-first public showcase and QR destination for customers exploring technical machinery.',
       path: '/hub/feed',
-      icon: Globe,
       badge: 'Public Showcase',
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-50 border-indigo-200',
-      hoverBorder: 'hover:border-indigo-400',
+      hoverBorder: 'hover:border-blue-400',
+      bgBorder: 'bg-blue-50/60 border-blue-200/80',
+    },
+    {
+      id: 'vault',
+      name: 'I3DION Spatial Vault',
+      subtitle: 'Authoritative CAD Assets & Records',
+      description: 'Single source of truth for 3D geometries, specs, documents and custom product collections.',
+      path: '/vault',
+      badge: `${metrics?.assetsCount ?? 0} Assets`,
+      hoverBorder: 'hover:border-emerald-400',
+      bgBorder: 'bg-emerald-50/60 border-emerald-200/80',
+    },
+    {
+      id: 'engine',
+      name: 'I3DION Spatial Engine',
+      subtitle: '3D/AR Experience & Hotspots',
+      description: 'Author interactive assemblies, technical callout hotspots, animations, and WebXR AR handoffs.',
+      path: '/engine',
+      badge: 'Interactive 3D/AR',
+      hoverBorder: 'hover:border-rose-400',
+      bgBorder: 'bg-rose-50/60 border-rose-200/80',
     },
     {
       id: 'lens',
-      name: 'Spatial Lens',
+      name: 'I3DION Spatial Lens',
       subtitle: 'Telemetry & Buyer Intent',
       description: 'Real-time telemetry, 3D dwell time, QR attribution, and lead intent conversion dashboards.',
-      path: '/sales-intelligence',
-      icon: BarChart3,
+      path: '/lens',
       badge: `${metrics?.leadsCount ?? 0} Leads`,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50 border-emerald-200',
-      hoverBorder: 'hover:border-emerald-400',
+      hoverBorder: 'hover:border-amber-400',
+      bgBorder: 'bg-amber-50/60 border-amber-200/80',
+    },
+    {
+      id: 'studio',
+      name: 'I3DION Omni Studio',
+      subtitle: 'Interactive Catalog Composer',
+      description: 'Design and publish structured industrial catalogs bound directly to Vault product versions.',
+      path: '/omni-studio',
+      badge: `${metrics?.catalogsCount ?? 0} Catalogs`,
+      hoverBorder: 'hover:border-purple-400',
+      bgBorder: 'bg-purple-50/60 border-purple-200/80',
+    },
+    {
+      id: 'flow',
+      name: 'I3DION Flow',
+      subtitle: 'Workflow & Integration Automation',
+      description: 'Connect enterprise tools, CRM leads, quote approvals, and event-driven automation pipelines.',
+      path: '/flow',
+      badge: 'Automate & Connect',
+      hoverBorder: 'hover:border-cyan-400',
+      bgBorder: 'bg-cyan-50/60 border-cyan-200/80',
     },
   ];
 
@@ -229,7 +237,6 @@ export const HomePage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {productCards.map((product) => {
-              const Icon = product.icon;
               return (
                 <div
                   key={product.id}
@@ -238,8 +245,8 @@ export const HomePage: React.FC = () => {
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <div className={`p-3 rounded-xl border ${product.bgColor}`}>
-                        <Icon className="h-6 w-6" />
+                      <div className={`p-2 rounded-xl border ${product.bgBorder}`}>
+                        <ProductLogo product={product.id} size="md" badge={false} />
                       </div>
                       <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
                         {product.badge}

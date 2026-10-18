@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { widgetRegistry } from '../registry/widgetRegistry';
 import { useStudioStore } from '../store/useStudioStore';
-import { WidgetDefinition } from '../types/studio';
 import { LayerTreePanel } from './LayerTreePanel';
 import {
   Search,
@@ -11,26 +9,11 @@ import {
   Image as ImageIcon,
   Video,
   MousePointerClick,
-  ShoppingBag,
-  Sliders,
-  MapPin,
-  Smartphone,
-  FileText,
-  FormInput,
-  Mail,
-  Send,
-  Minus,
-  MoveVertical,
   Plus,
   Layers,
   ChevronDown,
   ChevronRight,
   Shapes,
-  Sparkles,
-  Database,
-  LayoutGrid,
-  Zap,
-  Code2,
 } from 'lucide-react';
 
 export const WidgetLibraryPanel: React.FC = () => {

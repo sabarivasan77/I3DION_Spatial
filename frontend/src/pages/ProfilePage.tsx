@@ -16,7 +16,7 @@ export function ProfilePage() {
   const [fullName, setFullName] = useState(user?.name || 'John Smith');
   const [email, setEmail] = useState(user?.email || 'john.smith@example.com');
   const [organization, setOrganization] = useState(user?.companyId || 'Not associated');
-  const [accountType, setAccountType] = useState('Individual User');
+  const [accountType] = useState('Individual User');
 
   // Relocated Side Note State
   const [sideNotes, setSideNotes] = useState<string[]>(() => {

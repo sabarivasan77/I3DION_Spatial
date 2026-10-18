@@ -52,14 +52,12 @@ export const LensSidebar: React.FC = () => {
       {/* Top Branding Header */}
       <div>
         <div className="flex items-center gap-2.5 px-2 mb-6">
-          <div className="w-8 h-8 rounded-xl bg-[#F4B400] flex items-center justify-center text-slate-950 font-black text-sm shadow-md">
-            3D
+          <div className="w-9 h-9 rounded-xl bg-white border border-amber-200/80 p-1 flex items-center justify-center shadow-xs shrink-0">
+            <img src="/assets/logos/lens.png" alt="I3DION Spatial Lens" className="h-7 w-7 object-contain drop-shadow-sm" />
           </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1 font-black text-slate-900 text-sm tracking-tight leading-none">
-              <span>I3DION</span>
-            </div>
-            <span className="text-[#D97706] font-bold text-xs tracking-tight">
+          <div className="flex flex-col text-left leading-none">
+            <span className="font-black text-slate-900 text-base tracking-tight leading-none">I3DION</span>
+            <span className="text-[#D97706] font-bold text-[10px] tracking-widest uppercase mt-0.5">
               Spatial Lens
             </span>
           </div>

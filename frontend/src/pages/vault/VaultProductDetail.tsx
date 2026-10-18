@@ -4,14 +4,12 @@ import {
   ArrowLeft,
   Package,
   Box,
-  FileText,
   CheckCircle2,
   Share2,
   Edit3,
   Plus,
   Link2,
   Trash2,
-  Inbox,
   ListOrdered,
   X
 } from 'lucide-react';
@@ -72,7 +70,7 @@ export default function VaultProductDetail() {
       setProduct(prodData);
       setRelationships(relData);
       setAvailableAssets(assetsData);
-      setAvailableProducts(prodsData.filter(p => p.id !== productId));
+      setAvailableProducts(prodsData.filter((p: VaultProduct) => p.id !== productId));
 
       setName(prodData.name);
       setCategory(prodData.category || 'Equipment');

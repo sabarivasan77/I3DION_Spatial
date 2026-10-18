@@ -31,7 +31,6 @@ import {
   StudioLowCodeComponent,
   StudioLowCodeScreen
 } from '../../api/studioApi';
-import { vaultApi, VaultAsset } from '../../api/vaultApi';
 import { StudioScreenPanel } from '../../components/studio/StudioScreenPanel';
 import { EBookReaderModal } from '../../components/studio/ebookEngine';
 import { StudioDataWorkspace } from '../../components/studio/StudioDataWorkspace';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useCollaborationStore } from '../store/collaborationStore';
-import { History, RotateCcw, X, Clock, User, FileText, CheckCircle2 } from 'lucide-react';
+import { History, RotateCcw, X, Clock, User, CheckCircle2 } from 'lucide-react';
 
 export const VersionHistoryModal: React.FC = () => {
   const { isVersionHistoryOpen, closeVersionHistory, versions, restoreVersion, currentDocument } = useCollaborationStore();

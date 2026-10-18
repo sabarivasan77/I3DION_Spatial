@@ -23,9 +23,9 @@ export class LogicEngineService {
     );
 
     for (const rule of matchingRules) {
-      const conditionsPassed = this.evaluateConditions(rule.conditions, callbacks);
+      const conditionsPassed = this.evaluateConditions(rule.conditions || [], callbacks);
       if (conditionsPassed) {
-        this.executeActions(rule.actions, callbacks);
+        this.executeActions(rule.actions || [], callbacks);
         executedCount++;
       }
     }
@@ -40,6 +40,7 @@ export class LogicEngineService {
     if (!conditions || conditions.length === 0) return true;
 
     for (const cond of conditions) {
+      if (!cond.targetNodeId || !cond.propertyName) continue;
       const props = callbacks.getWidgetProps(cond.targetNodeId);
       if (!props) return false;
 
@@ -76,6 +77,7 @@ export class LogicEngineService {
     callbacks: LogicEngineCallbacks
   ): void {
     for (const action of actions) {
+      if (!action.targetNodeId) continue;
       switch (action.type) {
         case 'SET_PROPERTY':
           if (action.propertyName) {
@@ -85,13 +87,14 @@ export class LogicEngineService {
           }
           break;
 
-        case 'TOGGLE_VISIBILITY':
+        case 'TOGGLE_VISIBILITY': {
           const currentProps = callbacks.getWidgetProps(action.targetNodeId) || {};
           const isCurrentlyHidden = currentProps.opacity === 0;
           callbacks.updateWidgetProps(action.targetNodeId, {
             opacity: isCurrentlyHidden ? 1 : 0,
           });
           break;
+        }
 
         case 'NAVIGATE_URL':
           if (action.value && callbacks.navigateUrl) {

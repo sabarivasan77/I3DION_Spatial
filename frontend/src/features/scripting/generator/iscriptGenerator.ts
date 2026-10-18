@@ -14,9 +14,10 @@ export function generateIScript(rules: LogicRule[]): string {
 
   rules.forEach((rule) => {
     code += `// Rule: ${rule.name}\n`;
-    code += `WHEN ${rule.sourceNodeId} ${rule.triggerType.replace('ON_', '')}\nDO\n`;
+    const trigger = (rule.triggerType || 'ON_CLICK').replace('ON_', '');
+    code += `WHEN ${rule.sourceNodeId || 'unknown'} ${trigger}\nDO\n`;
 
-    rule.actions.forEach((act) => {
+    (rule.actions || []).forEach((act) => {
       if (act.type === 'SET_PROPERTY' && act.propertyName) {
         const valStr = typeof act.value === 'string' ? `"${act.value}"` : act.value;
         code += `  SET ${act.targetNodeId}.${act.propertyName} = ${valStr}\n`;

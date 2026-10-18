@@ -36,7 +36,7 @@ interface RealtimeCollaborationState {
   clearStaleLocks: () => void;
 }
 
-export const useRealtimeCollaborationStore = create<RealtimeCollaborationState>((set, get) => ({
+export const useRealtimeCollaborationStore = create<RealtimeCollaborationState>((set) => ({
   transportStatus: 'synced',
   remoteCursors: new Map(),
   remoteSelections: new Map(),

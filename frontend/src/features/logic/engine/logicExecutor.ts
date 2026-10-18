@@ -18,7 +18,7 @@ export interface ExecutionLogItem {
 export async function executeLogicGraph(
   graph: LogicGraph,
   event: ExecutionEvent,
-  variablesContext: Record<string, any> = {}
+  _variablesContext: Record<string, any> = {}
 ): Promise<ExecutionLogItem[]> {
   const logs: ExecutionLogItem[] = [];
 

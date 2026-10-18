@@ -81,12 +81,15 @@ export default function VaultLayout() {
         }`}
       >
         <div className="mb-8 flex items-center justify-between px-2">
-          <div className="flex items-center gap-2 text-white">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 text-white font-bold shadow-md">
-              V
+          <NavLink to="/vault" className="flex items-center gap-2.5 text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 border border-emerald-500/30 p-1 shadow-md shrink-0">
+              <img src="/assets/logos/vault.png" alt="I3DION Spatial Vault" className="h-7 w-7 object-contain drop-shadow-sm" />
             </div>
-            <span className="text-lg font-bold tracking-tight">Spatial Vault</span>
-          </div>
+            <div className="flex flex-col text-left leading-none">
+              <span className="text-base font-black tracking-tight text-white uppercase">I3DION</span>
+              <span className="text-[9.5px] font-bold text-emerald-400 uppercase tracking-widest mt-0.5">Spatial Vault</span>
+            </div>
+          </NavLink>
           <button
             onClick={() => setMobileSidebarOpen(false)}
             className="lg:hidden rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"

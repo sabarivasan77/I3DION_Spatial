@@ -1,17 +1,12 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Globe, 
-  Database, 
-  LayoutTemplate, 
-  Box, 
-  BarChart3, 
   X, 
   ExternalLink,
   ShieldCheck,
   Building2,
-  type LucideIcon
 } from 'lucide-react';
+import { ProductLogo, ProductKey } from '../../components/ProductLogo';
 
 interface AppLauncherProps {
   isOpen: boolean;
@@ -20,61 +15,56 @@ interface AppLauncherProps {
 }
 
 interface EcosystemApp {
-  id: string;
+  id: ProductKey;
   name: string;
   tagline: string;
   path: string;
-  icon: LucideIcon;
   badgeColor: string;
-  iconColor: string;
   roleRequired?: string;
 }
 
 export const ECOSYSTEM_APPS: EcosystemApp[] = [
   {
     id: 'hub',
-    name: 'Spatial Hub',
+    name: 'I3DION Spatial Hub',
     tagline: 'Public discovery, showcases, and QR entry',
     path: '/hub/feed',
-    icon: Globe,
-    badgeColor: 'bg-indigo-50 border-indigo-200 text-indigo-700',
-    iconColor: 'text-indigo-600',
+    badgeColor: 'bg-blue-50/60 border-blue-200/80',
   },
   {
     id: 'vault',
-    name: 'Spatial Vault',
+    name: 'I3DION Spatial Vault',
     tagline: 'Authoritative CAD models, specs & collections',
-    path: '/vault/workspace',
-    icon: Database,
-    badgeColor: 'bg-amber-50 border-amber-200 text-amber-700',
-    iconColor: 'text-amber-600',
-  },
-  {
-    id: 'studio',
-    name: 'Omni Studio',
-    tagline: 'Interactive B2B catalog & layout builder',
-    path: '/studio/projects',
-    icon: LayoutTemplate,
-    badgeColor: 'bg-blue-50 border-blue-200 text-blue-700',
-    iconColor: 'text-blue-600',
+    path: '/vault',
+    badgeColor: 'bg-emerald-50/60 border-emerald-200/80',
   },
   {
     id: 'engine',
-    name: 'Spatial Engine',
+    name: 'I3DION Spatial Engine',
     tagline: '3D/AR interaction, hotspots & assemblies',
-    path: '/engine/workspace',
-    icon: Box,
-    badgeColor: 'bg-cyan-50 border-cyan-200 text-cyan-700',
-    iconColor: 'text-cyan-600',
+    path: '/engine',
+    badgeColor: 'bg-rose-50/60 border-rose-200/80',
   },
   {
     id: 'lens',
-    name: 'Spatial Lens',
+    name: 'I3DION Spatial Lens',
     tagline: 'Buyer telemetry, dwell time & intent scoring',
-    path: '/sales-intelligence',
-    icon: BarChart3,
-    badgeColor: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-    iconColor: 'text-emerald-600',
+    path: '/lens',
+    badgeColor: 'bg-amber-50/60 border-amber-200/80',
+  },
+  {
+    id: 'studio',
+    name: 'I3DION Omni Studio',
+    tagline: 'Interactive B2B catalog & layout builder',
+    path: '/omni-studio',
+    badgeColor: 'bg-purple-50/60 border-purple-200/80',
+  },
+  {
+    id: 'flow',
+    name: 'I3DION Flow',
+    tagline: 'Visual Workflow & CRM Automation Engine',
+    path: '/flow',
+    badgeColor: 'bg-cyan-50/60 border-cyan-200/80',
   },
 ];
 
@@ -128,7 +118,6 @@ export const AppLauncherModal: React.FC<AppLauncherProps> = ({
         {/* 5 Core Product Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {ECOSYSTEM_APPS.map((app) => {
-            const Icon = app.icon;
             const isActive = activeAppId === app.id;
 
             return (
@@ -146,8 +135,8 @@ export const AppLauncherModal: React.FC<AppLauncherProps> = ({
                 }`}
               >
                 <div className="flex items-center justify-between w-full mb-2">
-                  <div className={`p-2 rounded-lg border ${app.badgeColor}`}>
-                    <Icon className="h-5 w-5" />
+                  <div className={`p-1.5 rounded-xl border bg-white shadow-2xs ${app.badgeColor}`}>
+                    <ProductLogo product={app.id} size="sm" badge={false} />
                   </div>
                   {isActive ? (
                     <span className="text-[10px] font-semibold tracking-wide uppercase px-1.5 py-0.5 rounded bg-blue-600 text-white">

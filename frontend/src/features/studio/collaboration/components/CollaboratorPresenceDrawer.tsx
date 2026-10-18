@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRealtimeCollaborationStore } from '../store/realtimeCollaborationStore';
 import { useCollaborationStore } from '../store/collaborationStore';
-import { Users, X, Activity, Lock, Layers, Film, Box } from 'lucide-react';
+import { Users, X, Lock, Layers, Film, Box } from 'lucide-react';
 
 export const CollaboratorPresenceDrawer: React.FC = () => {
   const { isPresenceDrawerOpen, togglePresenceDrawer, softLocks, transportStatus } = useRealtimeCollaborationStore();

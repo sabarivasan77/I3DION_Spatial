@@ -4,8 +4,7 @@ import {
   ArrowLeft,
   Monitor,
   Tablet,
-  Smartphone,
-  Sparkles
+  Smartphone
 } from 'lucide-react';
 import { studioApi, StudioProject } from '../../api/studioApi';
 import { RuntimeRenderer } from '../../components/studio/runtimeRenderer';

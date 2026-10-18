@@ -11,11 +11,9 @@ import {
   UploadCloud,
   Trash2,
   Save,
-  ShieldCheck,
   Share2,
   RotateCcw,
-  Sparkles,
-  Layers
+  Sparkles
 } from 'lucide-react';
 import { vaultApi, VaultAsset } from '../../api/vaultApi';
 import { VaultShareModal } from '../../components/vault/VaultShareModal';

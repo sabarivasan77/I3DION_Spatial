@@ -64,7 +64,8 @@ export function VaultImportModal({ collection, isOpen, onClose, onImportComplete
     const sampleKeys = Object.keys(sampleRow);
     
     collection.schema_fields.forEach(f => {
-      const match = sampleKeys.find(k => k.toLowerCase() === f.name.toLowerCase() || k.toLowerCase() === f.key.toLowerCase());
+      if (!f.key) return;
+      const match = sampleKeys.find(k => k.toLowerCase() === f.name.toLowerCase() || (f.key && k.toLowerCase() === f.key.toLowerCase()));
       if (match) mapping[f.key] = match;
     });
 
@@ -85,6 +86,7 @@ export function VaultImportModal({ collection, isOpen, onClose, onImportComplete
         let recordName = row[fieldMapping['name']] || row['name'] || row['Name'] || 'Imported Record';
 
         collection.schema_fields.forEach(f => {
+          if (!f.key) return;
           const mappedKey = fieldMapping[f.key];
           if (mappedKey && row[mappedKey] !== undefined) {
             customData[f.key] = row[mappedKey];
@@ -153,15 +155,15 @@ export function VaultImportModal({ collection, isOpen, onClose, onImportComplete
 
               <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
                 {collection.schema_fields.map(f => (
-                  <div key={f.key} className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50">
+                  <div key={f.key || f.name} className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-slate-800">{f.name}</span>
                       <span className="text-[10px] text-slate-400">({f.type})</span>
                       {f.required && <span className="text-[10px] font-bold text-red-500">*Required</span>}
                     </div>
                     <select
-                      value={fieldMapping[f.key] || ''}
-                      onChange={(e) => setFieldMapping({ ...fieldMapping, [f.key]: e.target.value })}
+                      value={(f.key ? fieldMapping[f.key] : '') || ''}
+                      onChange={(e) => f.key && setFieldMapping({ ...fieldMapping, [f.key]: e.target.value })}
                       className="h-8 rounded-lg border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 outline-none focus:border-emerald-500"
                     >
                       <option value="">-- Ignore Field --</option>

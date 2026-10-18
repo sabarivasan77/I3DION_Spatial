@@ -1,16 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-import { Grid, Globe, Database, Sparkles, Cpu, BarChart3, Lock, ShieldCheck, LucideIcon, Workflow } from 'lucide-react';
+import { Grid, Lock, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useLicenseStore, AppKey } from '../store/licenseStore';
 import { canAccessApp } from '../utils/permissions';
+import { ProductLogo, ProductKey } from './ProductLogo';
 
 interface AppDefinition {
   key: AppKey;
   name: string;
   subtitle: string;
   path: string;
-  icon: LucideIcon;
   badge: string;
   color: string;
   bgLight: string;
@@ -22,60 +22,54 @@ const APPS: AppDefinition[] = [
     name: 'I3DION Spatial Hub',
     subtitle: 'Public Discovery & Showcases',
     path: '/hub',
-    icon: Globe,
     badge: 'Hub',
     color: 'text-blue-500',
-    bgLight: 'bg-blue-50 hover:bg-blue-100 border-blue-200',
+    bgLight: 'bg-blue-50/60 hover:bg-blue-100/80 border-blue-200/80',
   },
   {
     key: 'vault',
     name: 'I3DION Spatial Vault',
     subtitle: 'Central Asset & Model Repository',
     path: '/vault',
-    icon: Database,
     badge: 'Vault',
-    color: 'text-amber-500',
-    bgLight: 'bg-amber-50 hover:bg-amber-100 border-amber-200',
+    color: 'text-emerald-500',
+    bgLight: 'bg-emerald-50/60 hover:bg-emerald-100/80 border-emerald-200/80',
   },
   {
     key: 'studio',
     name: 'I3DION Omni Studio',
     subtitle: 'Catalog & Visual Content Builder',
     path: '/omni-studio',
-    icon: Sparkles,
     badge: 'OmniStudio',
-    color: 'text-indigo-500',
-    bgLight: 'bg-indigo-50 hover:bg-indigo-100 border-indigo-200',
+    color: 'text-purple-500',
+    bgLight: 'bg-purple-50/60 hover:bg-purple-100/80 border-purple-200/80',
   },
   {
     key: 'engine',
     name: 'I3DION Spatial Engine',
     subtitle: 'Interactive 3D Logic & Verge3D Puzzles',
     path: '/engine',
-    icon: Cpu,
     badge: 'Engine',
     color: 'text-rose-500',
-    bgLight: 'bg-rose-50 hover:bg-rose-100 border-rose-200',
+    bgLight: 'bg-rose-50/60 hover:bg-rose-100/80 border-rose-200/80',
   },
   {
     key: 'flow',
     name: 'I3DION Flow',
     subtitle: 'Visual Workflow & CRM Automation Engine',
     path: '/flow',
-    icon: Workflow,
     badge: 'Flow',
     color: 'text-cyan-500',
-    bgLight: 'bg-cyan-50 hover:bg-cyan-100 border-cyan-200',
+    bgLight: 'bg-cyan-50/60 hover:bg-cyan-100/80 border-cyan-200/80',
   },
   {
     key: 'lens',
     name: 'I3DION Spatial Lens',
     subtitle: 'Analytics & BI Dashboard Builder',
     path: '/lens',
-    icon: BarChart3,
     badge: 'Lens',
     color: 'text-amber-500',
-    bgLight: 'bg-amber-50 hover:bg-amber-100 border-amber-200',
+    bgLight: 'bg-amber-50/60 hover:bg-amber-100/80 border-amber-200/80',
   },
 ];
 
@@ -148,8 +142,6 @@ export const AppLauncher: React.FC = () => {
           <div className="grid grid-cols-1 gap-2">
             {APPS.map((app) => {
               const hasAccess = canAccessApp(user, app.key);
-              const Icon = app.icon;
-
               if (!hasAccess) {
                 return (
                   <div
@@ -157,9 +149,7 @@ export const AppLauncher: React.FC = () => {
                     className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 opacity-60 cursor-not-allowed select-none"
                     title={`Requires ${app.key === 'lens' ? 'Enterprise' : 'Professional'} License Tier`}
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-200 text-slate-400">
-                      <Icon size={18} />
-                    </div>
+                    <ProductLogo product={app.key} size="sm" badge={false} className="grayscale opacity-50 shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-slate-500 truncate">{app.name}</span>
@@ -176,11 +166,9 @@ export const AppLauncher: React.FC = () => {
                   key={app.key}
                   href={getAppUrl(app.key, app.path)}
                   onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-3 rounded-xl border p-2.5 transition active:scale-[0.98] ${app.bgLight}`}
+                  className={`flex items-center gap-3 rounded-xl border p-2 transition active:scale-[0.98] ${app.bgLight}`}
                 >
-                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white shadow-2xs ${app.color}`}>
-                    <Icon size={18} />
-                  </div>
+                  <ProductLogo product={app.key} size="sm" badge={false} className="shrink-0" />
                   <div className="flex-1 min-w-0">
                     <span className="block text-xs font-bold text-slate-800 truncate">{app.name}</span>
                     <p className="text-[10px] text-slate-500 truncate">{app.subtitle}</p>

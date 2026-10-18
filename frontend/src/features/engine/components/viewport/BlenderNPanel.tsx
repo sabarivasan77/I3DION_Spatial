@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useEngineStore } from '../../store/useEngineStore';
-import { ChevronRight, ChevronDown, RotateCcw, Lock, Eye, EyeOff, Sliders, Box, Layers } from 'lucide-react';
+import { ChevronRight, ChevronDown, RotateCcw, Eye, EyeOff, Box } from 'lucide-react';
 
 interface BlenderNPanelProps {
   onCameraView: (view: 'perspective' | 'top' | 'front' | 'right' | 'ortho') => void;
@@ -147,15 +147,16 @@ export const BlenderNPanel: React.FC<BlenderNPanelProps> = ({ onCameraView }) =>
                     {transformCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
                     <span>Transform</span>
                   </span>
-                  <RotateCcw
-                    size={11}
+                  <span
                     onClick={(e) => {
                       e.stopPropagation();
                       resetAllTransforms();
                     }}
                     title="Reset All Transforms"
-                    className="text-[#777] hover:text-white"
-                  />
+                    className="text-[#777] hover:text-white inline-flex items-center cursor-pointer"
+                  >
+                    <RotateCcw size={11} />
+                  </span>
                 </button>
 
                 {!transformCollapsed && (

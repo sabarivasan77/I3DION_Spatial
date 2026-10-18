@@ -50,18 +50,18 @@ export const useHubPersonalStore = create<HubPersonalState>((set, get) => ({
     set({ isLoading: true });
     try {
       const [savedRes, likedRes, subRes] = await Promise.all([
-        apiRequest('/hub/personal/saved'),
-        apiRequest('/hub/personal/liked'),
-        apiRequest('/hub/personal/subscriptions')
+        apiRequest<SavedItem[]>('/hub/personal/saved'),
+        apiRequest<LikedItem[]>('/hub/personal/liked'),
+        apiRequest<{ subscription?: any }>('/hub/personal/subscriptions')
       ]);
 
-      const savedIds = new Set<string>(savedRes.map((item: SavedItem) => item.content_id));
-      const likedIds = new Set<string>(likedRes.map((item: LikedItem) => item.content_id));
+      const savedIds = new Set<string>((Array.isArray(savedRes) ? savedRes : []).map((item: SavedItem) => item.content_id));
+      const likedIds = new Set<string>((Array.isArray(likedRes) ? likedRes : []).map((item: LikedItem) => item.content_id));
 
       set({
         savedIds,
         likedIds,
-        subscription: subRes.subscription || null,
+        subscription: subRes?.subscription || null,
         isLoading: false
       });
     } catch (error) {

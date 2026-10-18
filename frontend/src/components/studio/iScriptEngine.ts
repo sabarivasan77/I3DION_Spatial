@@ -109,5 +109,9 @@ export const iScriptEngine = {
     });
 
     return lines.join('\n');
+  },
+
+  convertVisualLogicToIScript: (nodes: any[]): string => {
+    return iScriptEngine.convertLogicNodesToiScript(nodes);
   }
 };

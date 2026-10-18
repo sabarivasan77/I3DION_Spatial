@@ -412,6 +412,23 @@ export const vaultApi = {
       body: JSON.stringify(data)
     }),
 
+  getProducts: async (): Promise<VaultProduct[]> => {
+    try {
+      const data = await vaultApi.getProductDataset();
+      return (data.records || []).map((r) => ({
+        id: r.id,
+        name: (r.data?.name as string) || (r.data?.title as string) || 'Unnamed Product',
+        sku: (r.data?.sku as string) || '',
+        category: (r.data?.category as string) || '',
+        price: Number(r.data?.price) || 0,
+        status: (r.data?.status as string) || 'Draft',
+        created_at: r.created_at,
+      }));
+    } catch {
+      return [];
+    }
+  },
+
   // --- Catalog Product Reordering ---
   getCatalogProducts: (catalogId: string) =>
     apiRequest<any[]>(`/api/vault/catalogs/${catalogId}/products`, { method: 'GET' })
@@ -572,5 +589,15 @@ export interface VaultProductDetail {
   associated_assets?: VaultAsset[];
   created_at: string;
   updated_at: string;
+}
+
+export interface VaultProduct {
+  id: string;
+  name: string;
+  sku?: string;
+  category?: string;
+  price?: number;
+  status?: string;
+  created_at?: string;
 }
 

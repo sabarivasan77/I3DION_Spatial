@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MessageSquare, Send, Heart, Trash2, ShieldAlert } from 'lucide-react';
+import { MessageSquare, Send, Heart } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { hubApi, HubComment } from '../../services/hubApi';
 import { useToast } from '../Toast';
@@ -80,7 +80,7 @@ export function HubCommentsSection({ entityType, entityId }: HubCommentsSectionP
       const optimistic: HubComment = {
         id: `c_opt_${Date.now()}`,
         user_name: currentUser?.name || 'Anonymous User',
-        user_avatar: currentUser?.avatarUrl,
+        user_avatar: (currentUser as any)?.avatarUrl || (currentUser as any)?.avatar_url,
         content: newComment.trim(),
         created_at: new Date().toISOString(),
         likes_count: 0

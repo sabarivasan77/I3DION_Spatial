@@ -1,4 +1,4 @@
-import { SpatialAudioSettings, SpatialPosition } from '../types/communicationTypes';
+import { SpatialPosition } from '../types/communicationTypes';
 import { useCommunicationStore } from '../store/communicationStore';
 
 interface AudioNodePipeline {

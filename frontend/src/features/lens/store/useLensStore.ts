@@ -8,7 +8,7 @@ import {
   LensReport,
   LensFilterState,
   LeadStatus,
-  DateRangeOption
+  LeadSource
 } from '../types/lensTypes';
 import {
   INITIAL_LENS_LEADS,
@@ -163,20 +163,24 @@ export const useLensStore = create<LensStoreState>((set, get) => ({
       }
       if (leadsRes.status === 'fulfilled' && Array.isArray(leadsRes.value)) {
         const liveLeads: LensLead[] = leadsRes.value.map((l: any) => ({
-          id: l.id,
-          name: l.name,
-          email: l.email,
+          id: String(l.id),
+          name: l.name || 'Anonymous Prospect',
           company: l.company || l.organization || 'Inbound Prospect',
-          role: l.designation || 'Buyer',
-          status: (l.status || 'NEW') as LeadStatus,
-          score: l.behavior_score || l.score || 0,
-          source: l.source || 'Spatial Hub',
+          email: l.email || '',
+          phone: l.phone || '',
+          location: l.location || 'Remote',
+          productProject: l.product_name || l.project_title || 'General Experience',
+          status: (l.status || 'New') as LeadStatus,
+          source: (l.source || 'Website') as LeadSource,
+          date: l.created_at ? new Date(l.created_at).toLocaleDateString() : 'Recent',
           assignedTo: l.assigned_to_name || 'Unassigned',
-          lastActivity: l.updated_at ? new Date(l.updated_at).toLocaleDateString() : 'Recent',
+          notes: l.notes ? [l.notes] : [],
+          tags: Array.isArray(l.tags) ? l.tags : [],
+          interestedIn: l.intent || 'Catalog Inquiries',
           activityTimeline: [
             {
               id: `act_${l.id}`,
-              type: 'interaction',
+              type: 'viewed_product',
               description: `Lead submitted via ${l.source || 'Spatial Hub'} with intent ${l.notes || 'Quote'}`,
               timestamp: l.created_at ? new Date(l.created_at).toLocaleString() : 'Recent'
             }

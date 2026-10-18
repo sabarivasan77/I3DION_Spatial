@@ -6,13 +6,9 @@ import {
   Trash2, 
   Edit3, 
   Star, 
-  Eye, 
-  EyeOff, 
-  FolderPlus, 
   ChevronUp, 
   ChevronDown,
   Layers,
-  FileText,
   BookOpen
 } from 'lucide-react';
 
@@ -93,7 +89,14 @@ export const StudioScreenPanel: React.FC<StudioScreenPanelProps> = ({
               }`}
             >
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                {isInitial && <Star size={12} className="text-amber-400 fill-amber-400 shrink-0" title="Initial Start Screen" />}
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onSetInitialScreen(screen.id); }}
+                  className="shrink-0 flex items-center p-0.5"
+                  title={isInitial ? "Initial Start Screen" : "Set as Initial Screen"}
+                >
+                  <Star size={12} className={isInitial ? "text-amber-400 fill-amber-400" : "text-slate-600 hover:text-amber-400"} />
+                </button>
                 
                 {editingId === screen.id ? (
                   <input

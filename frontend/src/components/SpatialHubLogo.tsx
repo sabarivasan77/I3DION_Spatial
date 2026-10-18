@@ -35,16 +35,11 @@ export const SpatialHubLogo: React.FC<SpatialHubLogoProps> = ({
     <div className="flex items-center gap-3 select-none">
       {/* 3D Perspective Gateway Logo Mark */}
       <div className={`relative flex items-center justify-center ${iconSizes[size]} shrink-0`}>
-        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-          {/* Left Solid Polygon */}
-          <path d="M20 25 L50 10 L50 85 L20 70 Z" fill={variant === 'monochrome' ? '#64748B' : '#0EA5E9'} />
-          {/* Top Perspective Face */}
-          <path d="M50 10 L80 25 L50 40 L20 25 Z" fill={variant === 'monochrome' ? '#334155' : '#2563EB'} />
-          {/* Right Gateway Glass Face */}
-          <path d="M50 40 L80 25 L80 75 L50 90 Z" fill={variant === 'monochrome' ? '#0F172A' : '#38BDF8'} fillOpacity="0.9" />
-          {/* Inner Gateway Frame Line */}
-          <path d="M50 40 L50 90" stroke="#FFFFFF" strokeWidth="2.5" strokeOpacity="0.4" />
-        </svg>
+        <img
+          src="/assets/logos/hub.png"
+          alt="I3DION Spatial Hub"
+          className="w-full h-full object-contain drop-shadow-md"
+        />
       </div>
 
       {/* Typography */}

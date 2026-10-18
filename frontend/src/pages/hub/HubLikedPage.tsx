@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Sparkles, ArrowRight, Trash2 } from 'lucide-react';
+import { Heart, Sparkles, ArrowRight } from 'lucide-react';
 import { SPATIAL_HUB_MODELS } from '../../data/spatialHubModels';
 import ThreeProduct from '../../components/ThreeProduct';
 import { useHubPersonalStore } from '../../store/hubPersonalStore';

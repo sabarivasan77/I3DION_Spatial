@@ -3,11 +3,8 @@ import {
   FolderOpen,
   ArrowUp,
   ArrowDown,
-  Plus,
   CheckCircle2,
-  Package,
-  Layers,
-  X
+  Package
 } from 'lucide-react';
 import { vaultApi } from '../../api/vaultApi';
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { BillingSettingsPage } from '../settings/BillingSettingsPage';
 
 export function HubSubscriptionsPage() {

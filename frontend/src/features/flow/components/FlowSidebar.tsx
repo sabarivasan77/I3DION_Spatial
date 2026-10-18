@@ -86,17 +86,17 @@ export const FlowSidebar: React.FC<FlowSidebarProps> = ({
       <div className="h-16 px-4 flex items-center justify-between border-b border-slate-100">
         <div className="flex items-center gap-3 overflow-hidden">
           {/* I3DION Flow Brand Logo */}
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 shrink-0 font-black text-sm tracking-wide">
-            <Workflow size={20} className="stroke-[2.5]" />
+          <div className="w-9 h-9 rounded-xl bg-white border border-cyan-200/80 p-1 flex items-center justify-center shadow-xs shrink-0">
+            <img src="/assets/logos/flow.png" alt="I3DION Flow" className="h-7 w-7 object-contain drop-shadow-sm" />
           </div>
           {!isCollapsed && (
             <div className="flex flex-col text-left truncate leading-tight">
               <span className="font-black text-slate-900 text-base tracking-tight flex items-center gap-1">
                 <span>I3DION</span>
-                <span className="text-blue-600 font-bold">Flow</span>
+                <span className="text-cyan-600 font-bold">Flow</span>
               </span>
-              <span className="text-[10px] text-slate-400 font-medium tracking-wider uppercase">
-                Enterprise Automation
+              <span className="text-[9.5px] text-slate-400 font-bold tracking-wider uppercase">
+                AUTOMATE • CONNECT
               </span>
             </div>
           )}

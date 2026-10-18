@@ -26,13 +26,13 @@ interface FlowDesignerCanvasProps {
 }
 
 const nodeTypes = {
-  customFlowNode: FlowNode,
+  customFlowNode: FlowNode as any,
 };
 
 export const FlowDesignerCanvas: React.FC<FlowDesignerCanvasProps> = ({
   nodes,
   edges,
-  selectedNodeId,
+  selectedNodeId: _selectedNodeId,
   onNodesChange,
   onEdgesChange,
   onSelectNode,
@@ -116,7 +116,7 @@ export const FlowDesignerCanvas: React.FC<FlowDesignerCanvasProps> = ({
   );
 
   // Validate connection: prevent self-connection
-  const isValidConnection = useCallback((connection: Connection) => {
+  const isValidConnection = useCallback((connection: any) => {
     if (connection.source === connection.target) return false;
     return true;
   }, []);

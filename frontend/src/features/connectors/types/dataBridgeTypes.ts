@@ -79,7 +79,7 @@ export interface NormalizedResponse<T = any> {
   status: number;
   statusText?: string;
   headers: Record<string, string>;
-  data: T;
+  data: T | null;
   durationMs: number;
   error?: {
     code: string;

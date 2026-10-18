@@ -66,12 +66,12 @@ export const EngineHeader: React.FC = () => {
 
         {/* Brand Icon & Name */}
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#E94B4B] flex items-center justify-center text-white shadow-sm font-black text-sm tracking-wide">
-            3D
+          <div className="w-9 h-9 rounded-xl bg-white border border-rose-200/80 p-1 flex items-center justify-center shadow-xs shrink-0">
+            <img src="/assets/logos/engine.png" alt="I3DION Spatial Engine" className="h-7 w-7 object-contain drop-shadow-sm" />
           </div>
           <div className="flex items-center gap-1.5 font-bold text-slate-900 text-sm tracking-tight">
             <span>I3DION</span>
-            <span className="text-[#E94B4B] font-semibold">Spatial Engine</span>
+            <span className="text-[#E94B4B] font-bold">Spatial Engine</span>
           </div>
         </div>
 

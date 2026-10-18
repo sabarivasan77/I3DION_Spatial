@@ -89,7 +89,7 @@ class CollaborationTransportManager {
     useRealtimeCollaborationStore.getState().setTransportStatus('offline');
   }
 
-  private startHeartbeat(experienceId: string, actorId: string, actorName: string) {
+  private startHeartbeat(_experienceId: string, _actorId: string, _actorName: string) {
     this.stopHeartbeat();
     this.heartbeatTimer = setInterval(() => {
       useRealtimeCollaborationStore.getState().clearStaleLocks();
