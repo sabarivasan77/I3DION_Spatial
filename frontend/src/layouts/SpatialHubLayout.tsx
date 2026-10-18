@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { SpatialHubLogo } from '../components/SpatialHubLogo';
 import {
@@ -18,9 +18,11 @@ import {
   Menu,
   X,
   ShoppingBag,
+  GitCompare,
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useHubQuoteStore } from '../store/hubQuoteStore';
+import { useHubCompareStore } from '../store/hubCompareStore';
 import { getUserContext } from '../utils/permissions';
 import { AppLauncher } from '../components/AppLauncher';
 import { QrScannerModal } from '../components/hub/QrScannerModal';
@@ -37,6 +39,14 @@ export default function SpatialHubLayout() {
   const [scanOpen, setScanOpen] = useState(false);
   const basketItems = useHubQuoteStore((state) => state.items);
   const basketCount = basketItems.reduce((acc, i) => acc + i.quantity, 0);
+  const compareModels = useHubCompareStore((state) => state.models);
+  const compareCount = compareModels.length;
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator && !window.location.hostname.includes('localhost')) {
+      navigator.serviceWorker.register('/spatial-hub-sw.js').catch(() => {});
+    }
+  }, []);
 
   const { isOrgUser } = getUserContext(user);
 
@@ -400,10 +410,93 @@ export default function SpatialHubLayout() {
         </header>
 
         {/* Scrollable Page Body */}
-        <main className="no-scrollbar flex-1 overflow-y-auto">
+        <main className="no-scrollbar flex-1 overflow-y-auto pb-20 lg:pb-0">
           <Outlet />
         </main>
       </div>
+
+      {/* ─── 3. MOBILE BOTTOM NAVIGATION BAR (FIXED ON MOBILE, HIDDEN ON LG) ─── */}
+      <nav 
+        aria-label="Mobile Navigation"
+        className="fixed bottom-0 inset-x-0 z-40 flex h-16 items-center justify-around border-t border-slate-200/90 bg-white/95 px-2 backdrop-blur-md lg:hidden shadow-lg safe-bottom"
+      >
+        {/* 1. Explore */}
+        <NavLink
+          to="/hub"
+          end
+          aria-label="Explore 3D Models"
+          className={({ isActive }) =>
+            `flex min-h-[44px] min-w-[44px] flex-col items-center justify-center rounded-xl p-1 text-[10px] font-bold transition ${
+              isActive ? 'text-blue-600' : 'text-slate-500 hover:text-slate-900'
+            }`
+          }
+        >
+          <Compass size={20} />
+          <span>Explore</span>
+        </NavLink>
+
+        {/* 2. Search */}
+        <NavLink
+          to="/hub/search"
+          aria-label="Search Catalog"
+          className={({ isActive }) =>
+            `flex min-h-[44px] min-w-[44px] flex-col items-center justify-center rounded-xl p-1 text-[10px] font-bold transition ${
+              isActive ? 'text-blue-600' : 'text-slate-500 hover:text-slate-900'
+            }`
+          }
+        >
+          <Search size={20} />
+          <span>Search</span>
+        </NavLink>
+
+        {/* 3. Center Elevated Quick Scanner Button */}
+        <button
+          type="button"
+          onClick={() => setScanOpen(true)}
+          aria-label="Scan QR Code"
+          className="relative -top-3 flex h-12 w-12 min-h-[48px] min-w-[48px] items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-500/30 transition hover:bg-blue-700 active:scale-95"
+        >
+          <ScanLine size={22} />
+        </button>
+
+        {/* 4. Compare */}
+        <NavLink
+          to="/hub/compare"
+          aria-label={`Compare Models: ${compareCount} selected`}
+          className={({ isActive }) =>
+            `relative flex min-h-[44px] min-w-[44px] flex-col items-center justify-center rounded-xl p-1 text-[10px] font-bold transition ${
+              isActive ? 'text-blue-600' : 'text-slate-500 hover:text-slate-900'
+            }`
+          }
+        >
+          <GitCompare size={20} />
+          <span>Compare</span>
+          {compareCount > 0 && (
+            <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-indigo-600 px-1 text-[9px] font-black text-white">
+              {compareCount}
+            </span>
+          )}
+        </NavLink>
+
+        {/* 5. RFQ Basket */}
+        <NavLink
+          to="/hub/rfq"
+          aria-label={`RFQ Basket: ${basketCount} items`}
+          className={({ isActive }) =>
+            `relative flex min-h-[44px] min-w-[44px] flex-col items-center justify-center rounded-xl p-1 text-[10px] font-bold transition ${
+              isActive ? 'text-blue-600' : 'text-slate-500 hover:text-slate-900'
+            }`
+          }
+        >
+          <ShoppingBag size={20} />
+          <span>RFQ</span>
+          {basketCount > 0 && (
+            <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-black text-white">
+              {basketCount}
+            </span>
+          )}
+        </NavLink>
+      </nav>
     </div>
   );
 }
