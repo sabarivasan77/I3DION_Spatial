@@ -17,6 +17,13 @@ import {
   retryRun,
   getFlowAnalytics,
 } from '../services/flow/flowMonitoringService.js';
+import {
+  listRecipes,
+  getRecipe,
+  instantiateRecipe,
+  exportFlowDefinition,
+  importFlowDefinition,
+} from '../services/flow/flowRecipeService.js';
 import { withTenant } from '../db/pool.js';
 
 const flowRouter = express.Router();
@@ -158,6 +165,59 @@ flowRouter.post('/runs/:runId/retry', async (req, res) => {
 });
 
 // -----------------------------------------------------------------------------
+// RECIPES / INDUSTRIAL TEMPLATES
+// -----------------------------------------------------------------------------
+// GET /api/flows/recipes
+flowRouter.get('/recipes', (req, res) => {
+  try {
+    const recipes = listRecipes();
+    res.json({ recipes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/flows/recipes/:key
+flowRouter.get('/recipes/:key', (req, res) => {
+  try {
+    const recipe = getRecipe(req.params.key);
+    res.json({ recipe });
+  } catch (err) {
+    res.status(404).json({ error: err.message });
+  }
+});
+
+// POST /api/flows/recipes/:key/instantiate
+flowRouter.post('/recipes/:key/instantiate', async (req, res) => {
+  try {
+    const orgId = getOrgId(req);
+    const flow = await instantiateRecipe(
+      orgId,
+      req.user.id,
+      req.params.key,
+      req.body?.nameOverride || null
+    );
+    res.status(201).json({ flow });
+  } catch (err) {
+    res.status(err.status || 400).json({ error: err.message });
+  }
+});
+
+// -----------------------------------------------------------------------------
+// IMPORT FLOW DEFINITION PACKAGE
+// -----------------------------------------------------------------------------
+// POST /api/flows/import
+flowRouter.post('/import', async (req, res) => {
+  try {
+    const orgId = getOrgId(req);
+    const flow = await importFlowDefinition(orgId, req.user.id, req.body);
+    res.status(201).json({ flow });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// -----------------------------------------------------------------------------
 // 3. GET FLOW DETAILS
 // -----------------------------------------------------------------------------
 // GET /api/flows/:id
@@ -171,6 +231,23 @@ flowRouter.get('/:id', async (req, res) => {
     }
 
     res.json({ flow });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+// -----------------------------------------------------------------------------
+// EXPORT FLOW DEFINITION PACKAGE
+// -----------------------------------------------------------------------------
+// GET /api/flows/:id/export
+flowRouter.get('/:id/export', async (req, res) => {
+  try {
+    const orgId = getOrgId(req);
+    const exportBundle = await exportFlowDefinition(orgId, req.params.id);
+    const safeName = exportBundle.flow.name.toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeName}.flow.json"`);
+    res.json(exportBundle);
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
   }

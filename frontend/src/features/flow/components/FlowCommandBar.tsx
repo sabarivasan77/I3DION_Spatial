@@ -16,8 +16,10 @@ import {
   FileCode2,
   Workflow,
   Clock,
+  Download,
 } from 'lucide-react';
 import { useFlowDesignerStore } from '../store/useFlowDesignerStore';
+import { flowApi } from '../services/flowApi';
 
 export const FlowCommandBar: React.FC = () => {
   const navigate = useNavigate();
@@ -73,6 +75,22 @@ export const FlowCommandBar: React.FC = () => {
       setPublishSummary('');
       setValidationAlert({ valid: true, message: 'Flow version published successfully!' });
       setTimeout(() => setValidationAlert(null), 3000);
+    }
+  };
+
+  const handleExportCurrent = async () => {
+    if (!currentFlow?.id) return;
+    try {
+      const data = await flowApi.exportFlow(currentFlow.id);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${(currentFlow.name || 'flow').toLowerCase().replace(/[^a-z0-9_-]/g, '_')}-v${currentFlow.version || 1}.flow.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert(err.message || 'Export failed');
     }
   };
 
@@ -271,6 +289,16 @@ export const FlowCommandBar: React.FC = () => {
           >
             {isSaving ? <Loader2 size={15} className="animate-spin text-slate-500" /> : <Save size={15} />}
             <span>Save</span>
+          </button>
+
+          {/* Export Flow Package */}
+          <button
+            onClick={handleExportCurrent}
+            className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 active:scale-95 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition"
+            title="Export Flow Package (.flow.json)"
+          >
+            <Download size={14} />
+            <span className="hidden md:inline">Export</span>
           </button>
 
           {/* Publish Flow Version */}

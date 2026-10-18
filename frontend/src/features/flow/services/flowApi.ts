@@ -269,4 +269,41 @@ export const flowApi = {
       token: localStorage.getItem('i3dion_token') || '',
     });
   },
+
+  // 19. List industrial workflow recipes
+  listRecipes: async () => {
+    const res = await apiRequest<{ recipes: any[] }>('/flows/recipes', {
+      token: localStorage.getItem('i3dion_token') || '',
+    });
+    return res.recipes || [];
+  },
+
+  // 20. Instantiate flow from pre-built recipe
+  instantiateRecipe: async (recipeKey: string, nameOverride?: string) => {
+    const res = await apiRequest<{ flow: any }>(`/flows/recipes/${recipeKey}/instantiate`, {
+      method: 'POST',
+      token: localStorage.getItem('i3dion_token') || '',
+      body: JSON.stringify({ nameOverride }),
+    });
+    return res.flow;
+  },
+
+  // 21. Export flow definition as downloadable JSON package
+  exportFlow: async (id: string) => {
+    const res = await apiRequest<any>(`/flows/${id}/export`, {
+      token: localStorage.getItem('i3dion_token') || '',
+    });
+    return res;
+  },
+
+  // 22. Import flow package
+  importFlow: async (packageData: any) => {
+    const res = await apiRequest<{ flow: any }>('/flows/import', {
+      method: 'POST',
+      token: localStorage.getItem('i3dion_token') || '',
+      body: JSON.stringify(packageData),
+    });
+    return res.flow;
+  },
 };
+
