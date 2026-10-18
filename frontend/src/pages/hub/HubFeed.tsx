@@ -5,6 +5,8 @@ import { SPATIAL_HUB_MODELS, SpatialHubModel } from '../../data/spatialHubModels
 import ThreeProduct, { RenderMode } from '../../components/ThreeProduct';
 import { useToast } from '../../components/Toast';
 import { hubApi } from '../../services/hubApi';
+import { ModelCardPreview } from '../../components/hub/ModelCardPreview';
+import { QRCodeGenerator } from '../../components/QRCodeGenerator';
 import { HubContextMenu } from '../../components/hub/HubContextMenu';
 
 export function HubFeed() {
@@ -318,16 +320,13 @@ export function HubFeed() {
                           autoRotate={false}
                         />
                       ) : (
-                        <Link to={`/hub/product/${model.slug}`} className="w-full h-full flex items-center justify-center">
-                          <img
-                            src={model.thumbnail}
-                            alt={model.name}
-                            className="max-h-full max-w-full object-contain filter drop-shadow-md group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/models/thumbnails/thumb_1.svg';
-                            }}
-                          />
-                        </Link>
+                        <ModelCardPreview
+                          id={model.id}
+                          slug={model.slug}
+                          name={model.name}
+                          modelUrl={model.modelUrl}
+                          thumbnail={model.thumbnail}
+                        />
                       )}
 
                       {/* Mode Selector / 3D Toggle Overlay */}
@@ -454,12 +453,10 @@ export function HubFeed() {
 
             {/* Generated QR Image with I3DION branding */}
             <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 inline-block mb-6 shadow-inner relative">
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
-                  `${window.location.origin}/hub/product/${activeQrModel.slug}`
-                )}`}
-                alt="AR QR Code"
-                className="w-48 h-48 mx-auto"
+              <QRCodeGenerator
+                url={`${window.location.origin}/hub/product/${activeQrModel.slug}`}
+                size={220}
+                className="mx-auto"
               />
               <div className="mt-3 text-[11px] font-extrabold text-slate-700 tracking-wider uppercase">
                 I3DION SPATIAL

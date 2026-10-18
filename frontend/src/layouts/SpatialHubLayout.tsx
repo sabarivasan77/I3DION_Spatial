@@ -14,12 +14,14 @@ import {
   Settings,
   LogOut,
   Bell,
+  ScanLine,
   Menu,
   X,
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { getUserContext } from '../utils/permissions';
 import { AppLauncher } from '../components/AppLauncher';
+import { QrScannerModal } from '../components/hub/QrScannerModal';
 
 export default function SpatialHubLayout() {
   const { user, logout } = useAuthStore();
@@ -30,6 +32,7 @@ export default function SpatialHubLayout() {
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(location.pathname.startsWith('/hub/organization'));
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [scanOpen, setScanOpen] = useState(false);
 
   const { isOrgUser } = getUserContext(user);
 
@@ -297,6 +300,17 @@ export default function SpatialHubLayout() {
 
           {/* Right Header Actions */}
           <div className="flex items-center gap-3">
+            {/* QR scanner (mobile-first) */}
+            <button
+              onClick={() => setScanOpen(true)}
+              aria-label="Scan a QR code"
+              title="Scan a QR code"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+            >
+              <ScanLine size={17} />
+            </button>
+            <QrScannerModal open={scanOpen} onClose={() => setScanOpen(false)} />
+
             {/* App Launcher */}
             <AppLauncher />
 

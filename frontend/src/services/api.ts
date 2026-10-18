@@ -300,8 +300,8 @@ async function offlineFallback<T>(rawPath: string, options: RequestInit & { toke
       product_id: id,
       product_slug: id,
       target_url: targetUrl,
-      png_url: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`,
-      svg_url: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&format=svg&data=${encodeURIComponent(targetUrl)}`,
+      png_url: `/api/qr/product/${id}`,
+      svg_url: `/api/qr/product/${id}`,
     } as T;
   }
   if (path.startsWith('/products/') && method === 'GET') {
@@ -673,8 +673,8 @@ async function offlineFallback<T>(rawPath: string, options: RequestInit & { toke
     ) ?? allProducts[0];
 
     const targetUrl = typeof window !== 'undefined' ? `${window.location.origin}/product/${slug}` : `https://i3-dion-spatial.vercel.app/product/${slug}`;
-    const qrPng = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`;
-    const qrSvg = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&format=svg&data=${encodeURIComponent(targetUrl)}`;
+    const qrPng = `/api/qr/product/${slug}`;
+    const qrSvg = `/api/qr/product/${slug}`;
 
     return {
       ...offlineClone(match),
@@ -1691,8 +1691,8 @@ export async function uploadFileWithProgress({
         } else if (assetType === 'model') {
           target.model_url = fileUrl;
           target.modelUrl = fileUrl;
-          const qrPng = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`;
-          const qrSvg = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&format=svg&data=${encodeURIComponent(targetUrl)}`;
+          const qrPng = `/api/qr/product/${target.id || target.slug}`;
+          const qrSvg = `/api/qr/product/${target.id || target.slug}`;
           target.qr = target.qr || {
             id: `qr-${Date.now()}`,
             product_id: target.id,

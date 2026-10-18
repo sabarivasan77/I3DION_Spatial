@@ -85,6 +85,23 @@ for (const item of currentRootItems) {
   }
 }
 
+// 4. Verify no third-party QR server leak
+if (fs.existsSync('frontend/src/services/api.ts')) {
+  const apiContent = fs.readFileSync('frontend/src/services/api.ts', 'utf8');
+  if (apiContent.includes('api.qrserver.com')) {
+    errors.push('[Privacy Violation] api.qrserver.com detected in frontend/src/services/api.ts');
+  }
+}
+
+// 5. Run Starter Model Library License Gate
+if (fs.existsSync('tools/verify-library.mjs')) {
+  try {
+    execSync('node tools/verify-library.mjs', { stdio: 'inherit' });
+  } catch (e) {
+    errors.push('[License Gate Violation] Starter model library license check failed.');
+  }
+}
+
 if (errors.length > 0) {
   console.error('\n❌ Repository Structure Check FAILED:');
   for (const err of errors) {

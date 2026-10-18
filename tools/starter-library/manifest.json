@@ -1,0 +1,960 @@
+{
+ "schema": "i3dion.starter-library/1",
+ "generated": "2026-10-18",
+ "sourceCommit": "edc7c9e67c639d230715049ee31f9a96a6babbbe",
+ "models": [
+  {
+   "id": "std-anisotropybarnlamp",
+   "slug": "anisotropybarnlamp",
+   "name": "Anisotropy Barn Lamp",
+   "category": "Demonstration model (not industrial equipment)",
+   "summary": "Wayfair AnisotropyBarnLamp model using anisotropy, clearcoat, emissive_strength, transmission, volume, and basisu extensions.",
+   "tags": [
+    "showcase",
+    "extension"
+   ],
+   "stats": {
+    "triangles": 10203,
+    "meshes": 3,
+    "animations": 0,
+    "materials": 3,
+    "extensionsUsed": [
+     "KHR_materials_anisotropy",
+     "KHR_materials_clearcoat",
+     "KHR_materials_emissive_strength",
+     "KHR_materials_transmission",
+     "KHR_materials_volume"
+    ],
+    "previewExtensions": [
+     "EXT_meshopt_compression",
+     "EXT_texture_webp",
+     "KHR_materials_anisotropy",
+     "KHR_materials_clearcoat",
+     "KHR_materials_emissive_strength",
+     "KHR_materials_transmission",
+     "KHR_materials_volume",
+     "KHR_mesh_quantization"
+    ]
+   },
+   "source": {
+    "repo": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+    "commit": "edc7c9e67c639d230715049ee31f9a96a6babbbe",
+    "path": "Models/AnisotropyBarnLamp/glTF-Binary/AnisotropyBarnLamp.glb",
+    "rawUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/edc7c9e67c639d230715049ee31f9a96a6babbbe/Models/AnisotropyBarnLamp/glTF-Binary/AnisotropyBarnLamp.glb",
+    "licenseFile": "Models/AnisotropyBarnLamp/LICENSE.md"
+   },
+   "licenses": [
+    {
+     "spdx": "CC-BY-4.0",
+     "artist": "Eric Chadwick",
+     "owner": "Copyright 2023 Wayfair, LLC",
+     "year": "2023",
+     "what": "Everything"
+    }
+   ],
+   "spdx": [
+    "CC-BY-4.0"
+   ],
+   "attributionRequired": true,
+   "commercialUse": true,
+   "files": {
+    "preview": {
+     "path": "preview/AnisotropyBarnLamp.glb",
+     "bytes": 249480,
+     "sha256": "522c7b6e8f5c1a5b9761ff455d376a0c71db9f9aa63307b4cced44168444a8cf",
+     "note": "meshopt + WebP, textures <=1024px; for web cards/viewers only"
+    },
+    "original": {
+     "bytes": 7833440,
+     "sha256": "0e728826c30bd6f3a18a0911db9f5f9ddc2dafa8e20bf9c3312c9625d1e32a24",
+     "note": "use for AR (Scene Viewer / Quick Look) and downloads; fetch with fetch-originals.mjs"
+    }
+   }
+  },
+  {
+   "id": "std-antiquecamera",
+   "slug": "antiquecamera",
+   "name": "Antique Camera",
+   "category": "Demonstration model (not industrial equipment)",
+   "summary": "Static model of old camera on a tripod. [Issues: non-Khronos mark]",
+   "tags": [
+    "core",
+    "testing",
+    "issues"
+   ],
+   "stats": {
+    "triangles": 20066,
+    "meshes": 2,
+    "animations": 0,
+    "materials": 2,
+    "extensionsUsed": [],
+    "previewExtensions": [
+     "EXT_meshopt_compression",
+     "EXT_texture_webp",
+     "KHR_mesh_quantization"
+    ]
+   },
+   "source": {
+    "repo": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+    "commit": "edc7c9e67c639d230715049ee31f9a96a6babbbe",
+    "path": "Models/AntiqueCamera/glTF-Binary/AntiqueCamera.glb",
+    "rawUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/edc7c9e67c639d230715049ee31f9a96a6babbbe/Models/AntiqueCamera/glTF-Binary/AntiqueCamera.glb",
+    "licenseFile": "Models/AntiqueCamera/LICENSE.md"
+   },
+   "licenses": [
+    {
+     "spdx": "CC0-1.0",
+     "artist": "Maximillan Kamps",
+     "owner": "UX3D",
+     "year": "2018",
+     "what": "Everything"
+    }
+   ],
+   "spdx": [
+    "CC0-1.0"
+   ],
+   "attributionRequired": false,
+   "commercialUse": true,
+   "files": {
+    "preview": {
+     "path": "preview/AntiqueCamera.glb",
+     "bytes": 685584,
+     "sha256": "e24516bb12281b6007769dabf8686d978df759988f750af22f03519a7a2e6119",
+     "note": "meshopt + WebP, textures <=1024px; for web cards/viewers only"
+    },
+    "original": {
+     "bytes": 17540348,
+     "sha256": "ae89695479ad997f09ebea8060a5ad01312ad8fe7ffb92f73b4e895109feecd2",
+     "note": "use for AR (Scene Viewer / Quick Look) and downloads; fetch with fetch-originals.mjs"
+    }
+   }
+  },
+  {
+   "id": "std-avocado",
+   "slug": "avocado",
+   "name": "Avocado",
+   "category": "Demonstration model (not industrial equipment)",
+   "summary": "A natural object created with Core glTF 2.0",
+   "tags": [
+    "core",
+    "testing"
+   ],
+   "stats": {
+    "triangles": 682,
+    "meshes": 1,
+    "animations": 0,
+    "materials": 1,
+    "extensionsUsed": [],
+    "previewExtensions": [
+     "EXT_meshopt_compression",
+     "EXT_texture_webp",
+     "KHR_mesh_quantization"
+    ]
+   },
+   "source": {
+    "repo": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+    "commit": "edc7c9e67c639d230715049ee31f9a96a6babbbe",
+    "path": "Models/Avocado/glTF-Binary/Avocado.glb",
+    "rawUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/edc7c9e67c639d230715049ee31f9a96a6babbbe/Models/Avocado/glTF-Binary/Avocado.glb",
+    "licenseFile": "Models/Avocado/LICENSE.md"
+   },
+   "licenses": [
+    {
+     "spdx": "CC0-1.0",
+     "artist": "Microsoft",
+     "owner": "Public",
+     "year": "2017",
+     "what": "Everything"
+    }
+   ],
+   "spdx": [
+    "CC0-1.0"
+   ],
+   "attributionRequired": false,
+   "commercialUse": true,
+   "files": {
+    "preview": {
+     "path": "preview/Avocado.glb",
+     "bytes": 59512,
+     "sha256": "e461815c535b91956dd0ead3da4e25312071ee484510c0b0c0b241771b9a535f",
+     "note": "meshopt + WebP, textures <=1024px; for web cards/viewers only"
+    },
+    "original": {
+     "bytes": 8110040,
+     "sha256": "ccc9c3ce56423720b09399c2351537207cd5a65f859f9e6e2f30922762f3abd4",
+     "note": "use for AR (Scene Viewer / Quick Look) and downloads; fetch with fetch-originals.mjs"
+    }
+   }
+  },
+  {
+   "id": "std-barramundifish",
+   "slug": "barramundifish",
+   "name": "Barramundi Fish",
+   "category": "Demonstration model (not industrial equipment)",
+   "summary": "A fish created with Core glTF 2.0",
+   "tags": [
+    "core",
+    "testing"
+   ],
+   "stats": {
+    "triangles": 3864,
+    "meshes": 1,
+    "animations": 0,
+    "materials": 1,
+    "extensionsUsed": [],
+    "previewExtensions": [
+     "EXT_meshopt_compression",
+     "EXT_texture_webp",
+     "KHR_mesh_quantization"
+    ]
+   },
+   "source": {
+    "repo": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+    "commit": "edc7c9e67c639d230715049ee31f9a96a6babbbe",
+    "path": "Models/BarramundiFish/glTF-Binary/BarramundiFish.glb",
+    "rawUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/edc7c9e67c639d230715049ee31f9a96a6babbbe/Models/BarramundiFish/glTF-Binary/BarramundiFish.glb",
+    "licenseFile": "Models/BarramundiFish/LICENSE.md"
+   },
+   "licenses": [
+    {
+     "spdx": "CC0-1.0",
+     "artist": "Microsoft",
+     "owner": "Public",
+     "year": "2017",
+     "what": "Everything"
+    }
+   ],
+   "spdx": [
+    "CC0-1.0"
+   ],
+   "attributionRequired": false,
+   "commercialUse": true,
+   "files": {
+    "preview": {
+     "path": "preview/BarramundiFish.glb",
+     "bytes": 309884,
+     "sha256": "c0f30dd0f5ebcad5302d1071dd09954f816c60ecadbd1ca164e0c480f2f2f4bc",
+     "note": "meshopt + WebP, textures <=1024px; for web cards/viewers only"
+    },
+    "original": {
+     "bytes": 12488144,
+     "sha256": "ecc3bafb6b00f2c8b810863c388e3768a7b7ea0d0335e8cb8c574c266e571f4a",
+     "note": "use for AR (Scene Viewer / Quick Look) and downloads; fetch with fetch-originals.mjs"
+    }
+   }
+  },
+  {
+   "id": "std-boombox",
+   "slug": "boombox",
+   "name": "Boom Box",
+   "category": "Demonstration model (not industrial equipment)",
+   "summary": "A common object with glowing front panel created with Core glTF 2.0.",
+   "tags": [
+    "core",
+    "testing"
+   ],
+   "stats": {
+    "triangles": 6036,
+    "meshes": 1,
+    "animations": 0,
+    "materials": 1,
+    "extensionsUsed": [],
+    "previewExtensions": [
+     "EXT_meshopt_compression",
+     "EXT_texture_webp",
+     "KHR_mesh_quantization"
+    ]
+   },
+   "source": {
+    "repo": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+    "commit": "edc7c9e67c639d230715049ee31f9a96a6babbbe",
+    "path": "Models/BoomBox/glTF-Binary/BoomBox.glb",
+    "rawUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/edc7c9e67c639d230715049ee31f9a96a6babbbe/Models/BoomBox/glTF-Binary/BoomBox.glb",
+    "licenseFile": "Models/BoomBox/LICENSE.md"
+   },
+   "licenses": [
+    {
+     "spdx": "CC0-1.0",
+     "artist": "Microsoft",
+     "owner": "Public",
+     "year": "2017",
+     "what": "Everything"
+    }
+   ],
+   "spdx": [
+    "CC0-1.0"
+   ],
+   "attributionRequired": false,
+   "commercialUse": true,
+   "files": {
+    "preview": {
+     "path": "preview/BoomBox.glb",
+     "bytes": 188700,
+     "sha256": "3e67e6b24b5b3e098025e3259ef4899ee7fecb8da78f7986ad054727e78ff783",
+     "note": "meshopt + WebP, textures <=1024px; for web cards/viewers only"
+    },
+    "original": {
+     "bytes": 10614184,
+     "sha256": "f8b918445ebdd006768232205a62f5182d2208ca57f84c6ccc084943c0bc8f15",
+     "note": "use for AR (Scene Viewer / Quick Look) and downloads; fetch with fetch-originals.mjs"
+    }
+   }
+  },
+  {
+   "id": "std-carconcept",
+   "slug": "carconcept",
+   "name": "Car Concept",
+   "category": "Demonstration model (not industrial equipment)",
+   "summary": "Concept car with Khronos logos and material variants",
+   "tags": [
+    "showcase",
+    "extension"
+   ],
+   "stats": {
+    "triangles": 213347,
+    "meshes": 97,
+    "animations": 0,
+    "materials": 29,
+    "extensionsUsed": [
+     "KHR_materials_clearcoat",
+     "KHR_materials_emissive_strength",
+     "KHR_materials_iridescence",
+     "KHR_materials_transmission",
+     "KHR_materials_variants",
+     "KHR_texture_transform"
+    ],
+    "previewExtensions": [
+     "EXT_meshopt_compression",
+     "EXT_texture_webp",
+     "KHR_materials_clearcoat",
+     "KHR_materials_emissive_strength",
+     "KHR_materials_iridescence",
+     "KHR_materials_transmission",
+     "KHR_materials_variants",
+     "KHR_mesh_quantization",
+     "KHR_texture_transform"
+    ]
+   },
+   "source": {
+    "repo": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+    "commit": "edc7c9e67c639d230715049ee31f9a96a6babbbe",
+    "path": "Models/CarConcept/glTF-Binary/CarConcept.glb",
+    "rawUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/edc7c9e67c639d230715049ee31f9a96a6babbbe/Models/CarConcept/glTF-Binary/CarConcept.glb",
+    "licenseFile": "Models/CarConcept/LICENSE.md"
+   },
+   "licenses": [
+    {
+     "spdx": "CC-BY-4.0",
+     "artist": "Eric Chadwick",
+     "owner": "Darmstadt Graphics Group GmbH",
+     "year": "2024",
+     "what": "Model and textures"
+    }
+   ],
+   "spdx": [
+    "CC-BY-4.0"
+   ],
+   "attributionRequired": true,
+   "commercialUse": true,
+   "files": {
+    "preview": {
+     "path": "preview/CarConcept.glb",
+     "bytes": 1756420,
+     "sha256": "c449f1cc8cbe04f176ab5bd33c168e1ea37260f9a380a4f7383a70580272e17b",
+     "note": "meshopt + WebP, textures <=1024px; for web cards/viewers only"
+    },
+    "original": {
+     "bytes": 11778688,
+     "sha256": "c272098089d78c5cd9fd9f24ff50ee8acf8d932c55f2d55fc10adb6c8998966b",
+     "note": "use for AR (Scene Viewer / Quick Look) and downloads; fetch with fetch-originals.mjs"
+    }
+   }
+  },
+  {
+   "id": "std-cesiummilktruck",
+   "slug": "cesiummilktruck",
+   "name": "Cesium Milk Truck",
+   "category": "Demonstration model (not industrial equipment)",
+   "summary": "Textured. Multiple nodes/meshes. Animations. [Issues: non-Khronos mark]",
+   "tags": [
+    "core",
+    "issues",
+    "testing"
+   ],
+   "stats": {
+    "triangles": 2856,
+    "meshes": 2,
+    "animations": 1,
+    "materials": 4,
+    "extensionsUsed": [],
+    "previewExtensions": [
+     "EXT_meshopt_compression",
+     "EXT_texture_webp",
+     "KHR_mesh_quantization"
+    ]
+   },
+   "source": {
+    "repo": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+    "commit": "edc7c9e67c639d230715049ee31f9a96a6babbbe",
+    "path": "Models/CesiumMilkTruck/glTF-Binary/CesiumMilkTruck.glb",
+    "rawUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/edc7c9e67c639d230715049ee31f9a96a6babbbe/Models/CesiumMilkTruck/glTF-Binary/CesiumMilkTruck.glb",
+    "licenseFile": "Models/CesiumMilkTruck/LICENSE.md"
+   },
+   "licenses": [
+    {
+     "spdx": "CC-BY-4.0",
+     "artist": "Cesium",
+     "owner": "Cesium",
+     "year": "2017",
+     "what": "Everything"
+    }
+   ],
+   "spdx": [
+    "CC-BY-4.0"
+   ],
+   "attributionRequired": true,
+   "commercialUse": true,
+   "files": {
+    "preview": {
+     "path": "preview/CesiumMilkTruck.glb",
+     "bytes": 69688,
+     "sha256": "a6f1f9f0d7278597f407639b1f95a1ffc4b2a4938c1b9f26ad5dc9be0fa517ab",
+     "note": "meshopt + WebP, textures <=1024px; for web cards/viewers only"
+    },
+    "original": {
+     "bytes": 369980,
+     "sha256": "09371b34608116de5842d23abe260bf11acf3e1554daf334a647eb566eee5c49",
+     "note": "use for AR (Scene Viewer / Quick Look) and downloads; fetch with fetch-originals.mjs"
+    }
+   }
+  },
+  {
+   "id": "std-fox",
+   "slug": "fox",
+   "name": "Fox",
+   "category": "Demonstration model (not industrial equipment)",
+   "summary": "Multiple animations cycles: Survey, Walk, Run.",
+   "tags": [
+    "core",
+    "testing"
+   ],
+   "stats": {
+    "triangles": 576,
+    "meshes": 1,
+    "animations": 3,
+    "materials": 1,
+    "extensionsUsed": [],
+    "previewExtensions": [
+     "EXT_meshopt_compression",
+     "EXT_texture_webp",
+     "KHR_mesh_quantization"
+    ]
+   },
+   "source": {
+    "repo": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+    "commit": "edc7c9e67c639d230715049ee31f9a96a6babbbe",
+    "path": "Models/Fox/glTF-Binary/Fox.glb",
+    "rawUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/edc7c9e67c639d230715049ee31f9a96a6babbbe/Models/Fox/glTF-Binary/Fox.glb",
+    "licenseFile": "Models/Fox/LICENSE.md"
+   },
+   "licenses": [
+    {
+     "spdx": "CC0-1.0",
+     "artist": "PixelMannen",
+     "owner": "Public",
+     "year": "2014",
+     "what": "Model"
+    },
+    {
+     "spdx": "CC-BY-4.0",
+     "artist": "tomkranis",
+     "owner": "tomkranis",
+     "year": "2014",
+     "what": "Rigging & Animation"
+    },
+    {
+     "spdx": "CC-BY-4.0",
+     "artist": "@AsoboStudio and @scurest",
+     "owner": "@AsoboStudio and @scurest",
+     "year": "2017",
+     "what": "Conversion to glTF"
+    }
+   ],
+   "spdx": [
+    "CC-BY-4.0",
+    "CC0-1.0"
+   ],
+   "attributionRequired": true,
+   "commercialUse": true,
+   "files": {
+    "preview": {
+     "path": "preview/Fox.glb",
+     "bytes": 73312,
+     "sha256": "8d428a7c7ef922b53e6af350c8041a0aac91803ad7a6ed382621f5d80838f7cc",
+     "note": "meshopt + WebP, textures <=1024px; for web cards/viewers only"
+    },
+    "original": {
+     "bytes": 162852,
+     "sha256": "d97044e701822bac5a62696459b27d7b375aada5de8574ed4362edbba94771f7",
+     "note": "use for AR (Scene Viewer / Quick Look) and downloads; fetch with fetch-originals.mjs"
+    }
+   }
+  },
+  {
+   "id": "std-glamvelvetsofa",
+   "slug": "glamvelvetsofa",
+   "name": "Glam Velvet Sofa",
+   "category": "Demonstration model (not industrial equipment)",
+   "summary": "Sofa using material variants, sheen, and specular.",
+   "tags": [
+    "video",
+    "extension"
+   ],
+   "stats": {
+    "triangles": 4196,
+    "meshes": 3,
+    "animations": 0,
+    "materials": 7,
+    "extensionsUsed": [
+     "KHR_texture_transform",
+     "KHR_materials_sheen",
+     "KHR_materials_specular",
+     "KHR_materials_variants",
+     "KHR_lights_punctual"
+    ],
+    "previewExtensions": [
+     "EXT_meshopt_compression",
+     "EXT_texture_webp",
+     "KHR_lights_punctual",
+     "KHR_materials_sheen",
+     "KHR_materials_specular",
+     "KHR_materials_variants",
+     "KHR_mesh_quantization",
+     "KHR_texture_transform"
+    ]
+   },
+   "source": {
+    "repo": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+    "commit": "edc7c9e67c639d230715049ee31f9a96a6babbbe",
+    "path": "Models/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb",
+    "rawUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/edc7c9e67c639d230715049ee31f9a96a6babbbe/Models/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb",
+    "licenseFile": "Models/GlamVelvetSofa/LICENSE.md"
+   },
+   "licenses": [
+    {
+     "spdx": "CC-BY-4.0",
+     "artist": "Eric Chadwick",
+     "owner": "Wayfair, LLC",
+     "year": "2021",
+     "what": "Everything"
+    }
+   ],
+   "spdx": [
+    "CC-BY-4.0"
+   ],
+   "attributionRequired": true,
+   "commercialUse": true,
+   "files": {
+    "preview": {
+     "path": "preview/GlamVelvetSofa.glb",
+     "bytes": 425020,
+     "sha256": "9cff8477c1e0a0b7c8e57b77cf1a5b00467c4d9c84666bffac999fd108524ab2",
+     "note": "meshopt + WebP, textures <=1024px; for web cards/viewers only"
+    },
+    "original": {
+     "bytes": 3149844,
+     "sha256": "67202c74a1a33377771f162dc7fad612a6c9bd51ee15124c488e9851d9ac5266",
+     "note": "use for AR (Scene Viewer / Quick Look) and downloads; fetch with fetch-originals.mjs"
+    }
+   }
+  },
+  {
+   "id": "std-iridescencelamp",
+   "slug": "iridescencelamp",
+   "name": "Iridescence Lamp",
+   "category": "Demonstration model (not industrial equipment)",
+   "summary": "Wayfair Lamp model using transmission, volume, and KHR_materials_iridescence.",
+   "tags": [
+    "showcase",
+    "extension"
+   ],
+   "stats": {
+    "triangles": 18866,
+    "meshes": 3,
+    "animations": 0,
+    "materials": 3,
+    "extensionsUsed": [
+     "KHR_materials_transmission",
+     "KHR_materials_volume",
+     "KHR_materials_iridescence",
+     "KHR_materials_ior"
+    ],
+    "previewExtensions": [
+     "EXT_meshopt_compression",
+     "EXT_texture_webp",
+     "KHR_materials_ior",
+     "KHR_materials_iridescence",
+     "KHR_materials_transmission",
+     "KHR_materials_volume",
+     "KHR_mesh_quantization"
+    ]
+   },
+   "source": {
+    "repo": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+    "commit": "edc7c9e67c639d230715049ee31f9a96a6babbbe",
+    "path": "Models/IridescenceLamp/glTF-Binary/IridescenceLamp.glb",
+    "rawUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/edc7c9e67c639d230715049ee31f9a96a6babbbe/Models/IridescenceLamp/glTF-Binary/IridescenceLamp.glb",
+    "licenseFile": "Models/IridescenceLamp/LICENSE.md"
+   },
+   "licenses": [
+    {
+     "spdx": "CC-BY-4.0",
+     "artist": "Eric Chadwick",
+     "owner": "Wayfair, LLC",
+     "year": "2022",
+     "what": "Everything"
+    }
+   ],
+   "spdx": [
+    "CC-BY-4.0"
+   ],
+   "attributionRequired": true,
+   "commercialUse": true,
+   "files": {
+    "preview": {
+     "path": "preview/IridescenceLamp.glb",
+     "bytes": 201340,
+     "sha256": "02b9904617e8b28f669977469c7e091e504740d423914790ebd64a7ef9257733",
+     "note": "meshopt + WebP, textures <=1024px; for web cards/viewers only"
+    },
+    "original": {
+     "bytes": 4083912,
+     "sha256": "17cfdc79ec9e38fadb28db159734c5f9592ca423977b546e5057e350ba29ff13",
+     "note": "use for AR (Scene Viewer / Quick Look) and downloads; fetch with fetch-originals.mjs"
+    }
+   }
+  },
+  {
+   "id": "std-lantern",
+   "slug": "lantern",
+   "name": "Lantern",
+   "category": "Demonstration model (not industrial equipment)",
+   "summary": "Old wooden street light.",
+   "tags": [
+    "core",
+    "testing"
+   ],
+   "stats": {
+    "triangles": 5394,
+    "meshes": 3,
+    "animations": 0,
+    "materials": 1,
+    "extensionsUsed": [],
+    "previewExtensions": [
+     "EXT_meshopt_compression",
+     "EXT_texture_webp",
+     "KHR_mesh_quantization"
+    ]
+   },
+   "source": {
+    "repo": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+    "commit": "edc7c9e67c639d230715049ee31f9a96a6babbbe",
+    "path": "Models/Lantern/glTF-Binary/Lantern.glb",
+    "rawUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/edc7c9e67c639d230715049ee31f9a96a6babbbe/Models/Lantern/glTF-Binary/Lantern.glb",
+    "licenseFile": "Models/Lantern/LICENSE.md"
+   },
+   "licenses": [
+    {
+     "spdx": "CC0-1.0",
+     "artist": "sbtron",
+     "owner": "Microsoft",
+     "year": "2017",
+     "what": "Initial version"
+    },
+    {
+     "spdx": "CC0-1.0",
+     "artist": "Frank Galligan",
+     "owner": "Frank Galligan",
+     "year": "2018",
+     "what": "Draco compression"
+    }
+   ],
+   "spdx": [
+    "CC0-1.0"
+   ],
+   "attributionRequired": false,
+   "commercialUse": true,
+   "files": {
+    "preview": {
+     "path": "preview/Lantern.glb",
+     "bytes": 281692,
+     "sha256": "614ed4c63128f203328720cec61c8a5d3280fac06b0f6f831e26a3322d684e91",
+     "note": "meshopt + WebP, textures <=1024px; for web cards/viewers only"
+    },
+    "original": {
+     "bytes": 9564264,
+     "sha256": "a79458c4b02d695187a952f23a63b8bf278e7bc3d316a3c2a314f2d6974181f1",
+     "note": "use for AR (Scene Viewer / Quick Look) and downloads; fetch with fetch-originals.mjs"
+    }
+   }
+  },
+  {
+   "id": "std-materialsvariantsshoe",
+   "slug": "materialsvariantsshoe",
+   "name": "Materials Variants Shoe",
+   "category": "Demonstration model (not industrial equipment)",
+   "summary": "A model of a shoe that illustrates use of the KHR_materials_variants extension with three materials included in the asset.",
+   "tags": [
+    "extension",
+    "showcase",
+    "written"
+   ],
+   "stats": {
+    "triangles": 22700,
+    "meshes": 1,
+    "animations": 0,
+    "materials": 3,
+    "extensionsUsed": [
+     "KHR_materials_variants"
+    ],
+    "previewExtensions": [
+     "EXT_meshopt_compression",
+     "EXT_texture_webp",
+     "KHR_materials_variants",
+     "KHR_mesh_quantization"
+    ]
+   },
+   "source": {
+    "repo": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+    "commit": "edc7c9e67c639d230715049ee31f9a96a6babbbe",
+    "path": "Models/MaterialsVariantsShoe/glTF-Binary/MaterialsVariantsShoe.glb",
+    "rawUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/edc7c9e67c639d230715049ee31f9a96a6babbbe/Models/MaterialsVariantsShoe/glTF-Binary/MaterialsVariantsShoe.glb",
+    "licenseFile": "Models/MaterialsVariantsShoe/LICENSE.md"
+   },
+   "licenses": [
+    {
+     "spdx": "CC-BY-4.0",
+     "artist": "Shopify",
+     "owner": "Shopify",
+     "year": "2021",
+     "what": "Everthing"
+    }
+   ],
+   "spdx": [
+    "CC-BY-4.0"
+   ],
+   "attributionRequired": true,
+   "commercialUse": true,
+   "files": {
+    "preview": {
+     "path": "preview/MaterialsVariantsShoe.glb",
+     "bytes": 545844,
+     "sha256": "3efee78c69b7f22c5d6b25042152dbd2b5ddbdb2d41049076f11db49611f087e",
+     "note": "meshopt + WebP, textures <=1024px; for web cards/viewers only"
+    },
+    "original": {
+     "bytes": 7833592,
+     "sha256": "e1d7cb190382111e5a5b37b51e9a7f007f7eb2ab1b6185e0188e8d0a0d1265a7",
+     "note": "use for AR (Scene Viewer / Quick Look) and downloads; fetch with fetch-originals.mjs"
+    }
+   }
+  },
+  {
+   "id": "std-sheenchair",
+   "slug": "sheenchair",
+   "name": "Sheen Chair",
+   "category": "Demonstration model (not industrial equipment)",
+   "summary": "Chair using material variants and sheen.",
+   "tags": [
+    "showcase",
+    "video",
+    "extension"
+   ],
+   "stats": {
+    "triangles": 39936,
+    "meshes": 4,
+    "animations": 0,
+    "materials": 6,
+    "extensionsUsed": [
+     "KHR_texture_transform",
+     "KHR_materials_sheen",
+     "KHR_materials_variants"
+    ],
+    "previewExtensions": [
+     "EXT_meshopt_compression",
+     "EXT_texture_webp",
+     "KHR_materials_sheen",
+     "KHR_materials_variants",
+     "KHR_mesh_quantization",
+     "KHR_texture_transform"
+    ]
+   },
+   "source": {
+    "repo": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+    "commit": "edc7c9e67c639d230715049ee31f9a96a6babbbe",
+    "path": "Models/SheenChair/glTF-Binary/SheenChair.glb",
+    "rawUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/edc7c9e67c639d230715049ee31f9a96a6babbbe/Models/SheenChair/glTF-Binary/SheenChair.glb",
+    "licenseFile": "Models/SheenChair/LICENSE.md"
+   },
+   "licenses": [
+    {
+     "spdx": "CC0-1.0",
+     "artist": "Eric Chadwick",
+     "owner": "Wayfair, LLC",
+     "year": "2020",
+     "what": "Everything"
+    }
+   ],
+   "spdx": [
+    "CC0-1.0"
+   ],
+   "attributionRequired": false,
+   "commercialUse": true,
+   "files": {
+    "preview": {
+     "path": "preview/SheenChair.glb",
+     "bytes": 742684,
+     "sha256": "dadc0fde788203140109aac4276e924386db345b2fac008906090d1fe2fa2e8a",
+     "note": "meshopt + WebP, textures <=1024px; for web cards/viewers only"
+    },
+    "original": {
+     "bytes": 4125648,
+     "sha256": "f0af2a2b102d28d540236306ae19f8fb36842df76bd38cf76f063f9bd2853399",
+     "note": "use for AR (Scene Viewer / Quick Look) and downloads; fetch with fetch-originals.mjs"
+    }
+   }
+  },
+  {
+   "id": "std-toycar",
+   "slug": "toycar",
+   "name": "Toy Car",
+   "category": "Demonstration model (not industrial equipment)",
+   "summary": "Toy car example using transmission, clearcoat, and sheen.",
+   "tags": [
+    "showcase",
+    "video",
+    "extension"
+   ],
+   "stats": {
+    "triangles": 108936,
+    "meshes": 3,
+    "animations": 0,
+    "materials": 3,
+    "extensionsUsed": [
+     "KHR_texture_transform",
+     "KHR_materials_clearcoat",
+     "KHR_materials_transmission",
+     "KHR_materials_sheen"
+    ],
+    "previewExtensions": [
+     "EXT_meshopt_compression",
+     "EXT_texture_webp",
+     "KHR_materials_clearcoat",
+     "KHR_materials_sheen",
+     "KHR_materials_transmission",
+     "KHR_mesh_quantization",
+     "KHR_texture_transform"
+    ]
+   },
+   "source": {
+    "repo": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+    "commit": "edc7c9e67c639d230715049ee31f9a96a6babbbe",
+    "path": "Models/ToyCar/glTF-Binary/ToyCar.glb",
+    "rawUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/edc7c9e67c639d230715049ee31f9a96a6babbbe/Models/ToyCar/glTF-Binary/ToyCar.glb",
+    "licenseFile": "Models/ToyCar/LICENSE.md"
+   },
+   "licenses": [
+    {
+     "spdx": "CC0-1.0",
+     "artist": "Guido Odendahl",
+     "owner": "Public",
+     "year": "2020",
+     "what": "Initial car model"
+    },
+    {
+     "spdx": "CC0-1.0",
+     "artist": "Eric Chadwick",
+     "owner": "Public",
+     "year": "2020",
+     "what": "Extensions and scene composition"
+    }
+   ],
+   "spdx": [
+    "CC0-1.0"
+   ],
+   "attributionRequired": false,
+   "commercialUse": true,
+   "files": {
+    "preview": {
+     "path": "preview/ToyCar.glb",
+     "bytes": 861124,
+     "sha256": "25b00c41d539d5cdc15a84bcc1ccfc79a79f275d1b860d5ea1b60c4f51821bb8",
+     "note": "meshopt + WebP, textures <=1024px; for web cards/viewers only"
+    },
+    "original": {
+     "bytes": 5422412,
+     "sha256": "01a60862de55cd4b9f3acfab0b0def86451800f9c42467fcd61052c16cb9838c",
+     "note": "use for AR (Scene Viewer / Quick Look) and downloads; fetch with fetch-originals.mjs"
+    }
+   }
+  },
+  {
+   "id": "std-waterbottle",
+   "slug": "waterbottle",
+   "name": "Water Bottle",
+   "category": "Demonstration model (not industrial equipment)",
+   "summary": "Basic metal/roughness water bottle.",
+   "tags": [
+    "core",
+    "testing",
+    "written"
+   ],
+   "stats": {
+    "triangles": 4510,
+    "meshes": 1,
+    "animations": 0,
+    "materials": 1,
+    "extensionsUsed": [],
+    "previewExtensions": [
+     "EXT_meshopt_compression",
+     "EXT_texture_webp",
+     "KHR_mesh_quantization"
+    ]
+   },
+   "source": {
+    "repo": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+    "commit": "edc7c9e67c639d230715049ee31f9a96a6babbbe",
+    "path": "Models/WaterBottle/glTF-Binary/WaterBottle.glb",
+    "rawUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/edc7c9e67c639d230715049ee31f9a96a6babbbe/Models/WaterBottle/glTF-Binary/WaterBottle.glb",
+    "licenseFile": "Models/WaterBottle/LICENSE.md"
+   },
+   "licenses": [
+    {
+     "spdx": "CC0-1.0",
+     "artist": "Microsoft",
+     "owner": "Public",
+     "year": "2017",
+     "what": "Everything"
+    }
+   ],
+   "spdx": [
+    "CC0-1.0"
+   ],
+   "attributionRequired": false,
+   "commercialUse": true,
+   "files": {
+    "preview": {
+     "path": "preview/WaterBottle.glb",
+     "bytes": 91092,
+     "sha256": "25a0f7cb4af71daf990abcc690e1bcd35917e5dca74a2610540bdc004c738f8a",
+     "note": "meshopt + WebP, textures <=1024px; for web cards/viewers only"
+    },
+    "original": {
+     "bytes": 8966700,
+     "sha256": "b337e526fd6a162013c2984aeec163f5fbb4f717252724dfc3f3458bd51df94b",
+     "note": "use for AR (Scene Viewer / Quick Look) and downloads; fetch with fetch-originals.mjs"
+    }
+   }
+  }
+ ]
+}

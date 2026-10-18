@@ -24,6 +24,9 @@ jobs:
       - name: Run Structure Check
         run: node tools/check-structure.cjs
 
+      - name: Run Model License Gate
+        run: node tools/verify-library.mjs
+
       - name: Run Gitleaks Secret Scanner
         uses: gitleaks/gitleaks-action@v2
         env:
@@ -46,6 +49,9 @@ jobs:
 
       - name: Install Frontend Dependencies
         run: npm --prefix frontend ci
+
+      - name: TypeScript Type Check
+        run: npm --prefix frontend exec tsc -- --noEmit
 
       - name: Build Frontend Production Bundle
         run: npm --prefix frontend run build
