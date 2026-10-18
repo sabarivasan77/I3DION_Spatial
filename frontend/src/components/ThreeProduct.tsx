@@ -17,11 +17,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 export type RenderMode = 'solid' | 'wireframe' | 'xray';
 export type ThemeMode = 'light' | 'dark';
 
-// ─── React Error Boundary for Async GLTF Model Loading ────────────────────────
-
 interface ErrorBoundaryProps {
   fallback: ReactNode;
   children: ReactNode;
+  onError?: (error: any) => void;
 }
 
 interface ErrorBoundaryState {
@@ -39,7 +38,8 @@ class GLTFErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState
   }
 
   componentDidCatch(error: any) {
-    console.warn('3D GLTF asset loading fallback to procedural model:', error);
+    console.warn('3D GLTF asset loading failed:', error);
+    this.props.onError?.(error);
   }
 
   render() {
@@ -404,6 +404,7 @@ export default function ThreeProduct({
   interactive: _interactive
 }: { 
   modelUrl?: string;
+  posterUrl?: string;
   autoRotate?: boolean;
   productName?: string;
   renderMode?: RenderMode;
@@ -411,19 +412,52 @@ export default function ThreeProduct({
   className?: string;
   animationSpeed?: number;
   onHasAnimations?: (hasAnimations: boolean) => void;
+  onError?: (error: any) => void;
   interactive?: boolean;
+  allowProceduralFallback?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const isDark = themeMode === 'dark';
   const bgColor = isDark ? '#0F172A' : '#F8FAFC';
   const gridCellColor = isDark ? '#1E293B' : '#E2E8F0';
   const gridSectionColor = isDark ? '#334155' : '#CBD5E1';
 
+  const handleModelError = (err: any) => {
+    setLoadFailed(true);
+    onError?.(err);
+  };
+
   return (
     <div ref={containerRef} className={`relative w-full h-full ${isDark ? 'bg-[#0F172A]' : 'bg-[#F8FAFC]'} overflow-hidden rounded-inherit ${className}`}>
       {/* Loading Overlay */}
-      <LoadingOverlay productName={productName} />
+      {!loadFailed && <LoadingOverlay productName={productName} />}
+
+      {/* Honest Error & Poster Overlay (HUB-09: Never show fake procedural model) */}
+      {loadFailed && (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 text-center bg-slate-950/80 backdrop-blur-sm text-white">
+          {posterUrl ? (
+            <img 
+              src={posterUrl} 
+              alt={productName || 'Model Poster'} 
+              className="max-h-56 max-w-full object-contain mb-4 drop-shadow-lg"
+            />
+          ) : (
+            <div className="h-16 w-16 rounded-2xl bg-white/10 flex items-center justify-center mb-3">
+              <span className="text-2xl">📐</span>
+            </div>
+          )}
+          <div className="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-4 max-w-sm shadow-xl">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-1">
+              3D Model Rendering Unavailable
+            </h4>
+            <p className="text-[11px] text-slate-300 leading-relaxed">
+              The 3D GLB file could not be rendered on this device. Displaying authentic poster representation.
+            </p>
+          </div>
+        </div>
+      )}
 
       <Canvas 
         eventSource={containerRef as unknown as HTMLElement}
@@ -464,12 +498,19 @@ export default function ThreeProduct({
           <Bounds fit clip observe margin={1.2}>
             <Suspense fallback={null}>
               {modelUrl ? (
-                <GLTFErrorBoundary fallback={<DetailedProceduralModel productName={productName} renderMode={renderMode} themeMode={themeMode} animationSpeed={animationSpeed} onHasAnimations={onHasAnimations} />}>
+                <GLTFErrorBoundary 
+                  onError={handleModelError}
+                  fallback={
+                    allowProceduralFallback ? (
+                      <DetailedProceduralModel productName={productName} renderMode={renderMode} themeMode={themeMode} animationSpeed={animationSpeed} onHasAnimations={onHasAnimations} />
+                    ) : null
+                  }
+                >
                   <RealModel url={modelUrl} renderMode={renderMode} themeMode={themeMode} animationSpeed={animationSpeed} onHasAnimations={onHasAnimations} />
                 </GLTFErrorBoundary>
-              ) : (
+              ) : allowProceduralFallback ? (
                 <DetailedProceduralModel productName={productName} renderMode={renderMode} themeMode={themeMode} animationSpeed={animationSpeed} onHasAnimations={onHasAnimations} />
-              )}
+              ) : null}
             </Suspense>
           </Bounds>
 

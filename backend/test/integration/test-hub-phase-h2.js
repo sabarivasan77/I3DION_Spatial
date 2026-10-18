@@ -70,6 +70,7 @@ async function run() {
   pass('HUBCARD-LEGACY-01', 'Backward-compatible direct array response preserved for unpaginated callers');
 
   console.log('\n✅ All Phase H2 integration tests passed successfully!\n');
+  await pool.end();
 }
 
 run()
