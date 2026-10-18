@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireRole } from '../middleware/auth.js';
 import { asyncHandler } from '../utils/errors.js';
 import { recommendationEngine } from '../services/recommendationEngine.js';
 import { salesAssistant } from '../services/salesAssistant.js';
@@ -130,7 +130,7 @@ aiRouter.post('/assistant/chat', requireAuth, asyncHandler(async (req, res) => {
 // ====================================================
 
 // POST /api/ai/assist/opt-in (Toggle AI Assist organization opt-in per Decision D-10)
-aiRouter.post('/assist/opt-in', requireAuth, asyncHandler(async (req, res) => {
+aiRouter.post('/assist/opt-in', requireAuth, requireRole('Admin', 'Owner'), asyncHandler(async (req, res) => {
   const orgId = req.user.organizationId || req.user.organization_id;
   const { enabled = true } = req.body;
 

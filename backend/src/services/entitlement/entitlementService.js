@@ -9,6 +9,7 @@ export class EntitlementService {
   async getOrganizationEntitlementsAndUsage(organizationId) {
     const subRes = await pool.query(
       `SELECT p.id as plan_id, p.name as plan_name, 
+              p.max_active_flows, p.max_monthly_executions,
               COALESCE(s.custom_max_products, p.max_products) as max_products, 
               COALESCE(s.custom_max_catalogs, p.max_catalogs) as max_catalogs,
               COALESCE(s.custom_max_3d_models, p.max_3d_models) as max_3d_models, 
@@ -36,6 +37,7 @@ export class EntitlementService {
 
       const retry = await pool.query(
         `SELECT p.id as plan_id, p.name as plan_name, 
+                p.max_active_flows, p.max_monthly_executions,
                 COALESCE(s.custom_max_products, p.max_products) as max_products, 
                 COALESCE(s.custom_max_catalogs, p.max_catalogs) as max_catalogs,
                 COALESCE(s.custom_max_3d_models, p.max_3d_models) as max_3d_models, 
@@ -62,6 +64,8 @@ export class EntitlementService {
       max_3d_models: 3,
       max_storage_bytes: 52428800,
       max_team_members: 1,
+      max_active_flows: 3,
+      max_monthly_executions: 1000,
       features: { ar_views: true, qr_codes: true },
       subscription_status: 'active',
       org_created_at: new Date()
@@ -94,6 +98,8 @@ export class EntitlementService {
         sub.max_3d_models = 999999;
         sub.max_storage_bytes = 107374182400; // 100GB
         sub.max_team_members = 50;
+        sub.max_active_flows = 999999;
+        sub.max_monthly_executions = 99999999;
         sub.features = { ar_views: true, qr_codes: true, advanced_analytics: true, custom_branding: true, custom_domain: true, priority_support: true };
         sub.subscription_status = 'active';
       } else if (isTrialAccess) {
@@ -103,12 +109,16 @@ export class EntitlementService {
         sub.max_3d_models = 25;
         sub.max_storage_bytes = 1073741824; // 1GB
         sub.max_team_members = 3;
+        sub.max_active_flows = 10;
+        sub.max_monthly_executions = 10000;
         sub.features = { ar_views: true, qr_codes: true, advanced_analytics: true, custom_branding: false, custom_domain: false };
         sub.subscription_status = 'trialing';
       }
     }
 
     const usage = await usageService.syncOrganizationUsage(organizationId);
+
+    const flowAddonRuns = Number(sub.features?.flow_addon_runs || 0);
 
     return {
       plan: {
@@ -119,7 +129,9 @@ export class EntitlementService {
           maxCatalogs: sub.max_catalogs,
           max3dModels: sub.max_3d_models,
           maxStorageBytes: Number(sub.max_storage_bytes),
-          maxTeamMembers: sub.max_team_members
+          maxTeamMembers: sub.max_team_members,
+          maxActiveFlows: sub.max_active_flows || 3,
+          maxMonthlyExecutions: (sub.max_monthly_executions || 1000) + flowAddonRuns
         },
         features: sub.features,
         status: sub.subscription_status
@@ -178,6 +190,28 @@ export class EntitlementService {
         max = plan.limits.maxStorageBytes;
         label = 'storage quota';
         break;
+      case 'active_flows':
+      case 'flows': {
+        const flowRes = await pool.query(
+          `SELECT COUNT(*)::int as count FROM flows WHERE organization_id = $1 AND (status = 'ACTIVE' OR status = 'active' OR status = 'published')`,
+          [organizationId]
+        );
+        current = flowRes.rows[0]?.count || 0;
+        max = plan.limits.maxActiveFlows || 3;
+        label = 'active flows';
+        break;
+      }
+      case 'flow_runs':
+      case 'monthly_executions': {
+        const runRes = await pool.query(
+          `SELECT COUNT(*)::int as count FROM flow_runs WHERE organization_id = $1 AND started_at >= date_trunc('month', now())`,
+          [organizationId]
+        );
+        current = runRes.rows[0]?.count || 0;
+        max = plan.limits.maxMonthlyExecutions || 1000;
+        label = 'monthly flow executions';
+        break;
+      }
       default:
         return { allowed: true };
     }

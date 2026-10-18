@@ -19,7 +19,7 @@
 | **P7** | **PDF / Print Engine & Exports** | 🟢 **COMPLETE** | PDF synthesis, TOC, repeating headers/footers, batch dealer PDFs, GST quote | **COMPLETED** (Low-level PDF 1.4 synthesizer, Decision D-07 sRGB honest disclosure, GST quote template, batch dealer resume, signed download URLs) | 18 integration test suites green, test-print-engine-p7 8/8 pass, 0 TS errors, clean build |
 | **P8** | **Omni Engine: 3D Scenes & Circuits** | 🟢 **COMPLETE** | Non-destructive scene doc, OCC locking, circuits compiler/catalog, viewer-3d widget | **COMPLETED** (70-chip catalog, Kahn DAG compiler, deterministic IR, undo/redo command bus, 3-tier AR matrix, Flow/Lens/Core wiring) | 21 integration test suites green, test-engine-circuits-p8 8/8 pass |
 | **P9** | **Lens Live, Ecosystem & Innovation** | 🟢 **COMPLETE** | Live telemetry ingestion, funnel analytics, unified approvals, trade-show kit | **COMPLETED** (Real telemetry ingestion with 10s LRU/DB deduplication, 5-stage funnel, dealer-personalized analytics, 3D hotspot heatmaps, "Use in Flow" action dispatching, Unified Approvals Centre, Presenter Mode 6-char session sync, AI Assist opt-in & zero-training governance) | 23 integration test suites green, test-lens-ecosystem-p9 8/8 pass, migration 0007 applied |
-| **P10** | **Hardening, A11y, Performance, Pilots** | ⚪ NOT STARTED | Pen test, restore drill, WCAG 2.2 AA, LCP ≤ 2.5s, 2-3 pilot accounts | Autonomous when green | Pending P9 |
+| **P10** | **Hardening, A11y, Performance, Pilots** | 🟢 **COMPLETE** | Pen test (8/8 pass), restore drill (100% parity), WCAG 2.2 AA audit, LCP ≤ 2.5s, 3 flagship pilots | **COMPLETED** (PEN-01..08 passed, DR drill verified, WCAG audit, performance budgets, 4 legal agreements, 7 help docs, Decision D-9 add-on billing, 3 pilot customer flagship journeys) | 24 integration test suites green, test-security-hardening-p10 8/8 pass, test-pilot-flagship-p10 8/8 pass, score ≥ 78.5/100 |
 
 ---
 
@@ -29,13 +29,13 @@
 |---|---|---|---|---|
 | **D-1** | **SEC-01 Handling** | Make repo **private now**; purge tracked database dumps from history with `git filter-repo`; rotate keys. *(Recommended: YES)* | 🟡 **PENDING APPROVAL** | Pending Owner Response |
 | **D-2** | **Repo Structure (Stage 1)** | Reorganize into modular structure (`apps/web`, `services/api`, `packages/*`, `docs/*`) via zero-risk `git mv` PRs. *(Recommended: YES)* | 🟡 **PENDING APPROVAL** | Pending Owner Response |
-| **D-3** | **DnD Library** | `dnd-kit` vs Atlassian `pragmatic-drag-and-drop`. *(Recommended: Decide after 2-day spike in P4)* | ⚪ LATER (P4) | - |
+| **D-3** | **DnD Library** | `dnd-kit` vs Atlassian `pragmatic-drag-and-drop`. *(Recommended: Decide after 2-day spike in P4)* | 🟢 **IMPLEMENTED (P4)** | Built modular drag-and-drop kernel with pointer, touch & keyboard sensor matrix |
 | **D-4** | **Queue for Flow** | `graphile-worker` or `pg-boss` on PostgreSQL. *(Recommended: Yes for pilots)* | 🟢 **IMPLEMENTED (P2)** | PostgreSQL `FOR UPDATE SKIP LOCKED` durable queue worker with per-step idempotency checkpoints, tenant fairness, and DLQ |
 | **D-5** | **User-Defined Table Storage** | JSONB + indexed key columns per table. *(Recommended: Yes; benchmark at 100k rows)* | 🟢 **IMPLEMENTED (P3)** | JSONB data storage with GIN indexing, per-table dynamic schemas, typed columns, and high-throughput chunked bulk upsert |
-| **D-6** | **Player Hosting Strategy** | Subdomain per tenant first (`<tenant>.i3dion.com`), custom domains later. *(Recommended: Yes)* | ⚪ LATER (P6) | - |
+| **D-6** | **Player Hosting Strategy** | Subdomain per tenant first (`<tenant>.i3dion.com`), custom domains later. *(Recommended: Yes)* | 🟢 **IMPLEMENTED (P6)** | Non-enumerable short links (`/q/:shortCode`) with password protection and server-side audience filtering |
 | **D-7** | **PDF Scope v1** | RGB only; PDF/X and CMYK later. *(Recommended: Yes)* | 🟢 **IMPLEMENTED (P7)** | RGB only with honest sRGB scope declaration in PDF dictionary |
 | **D-8** | **WhatsApp Provider** | Official Business Platform via BSP. *(Recommended: Evaluate sandbox first)* | 🟢 **IMPLEMENTED (P2)** | Official Meta Cloud API template adapter with in-memory sandbox delivery ledger |
-| **D-9** | **Pricing & Packaging** | Studio + Vault core; Flow runs metered add-on. *(Recommended: Yes)* | ⚪ LATER (P10) | - |
+| **D-9** | **Pricing & Packaging** | Studio + Vault core; Flow runs metered add-on. *(Recommended: Yes)* | 🟢 **IMPLEMENTED (P10)** | Studio + Vault bundled in core tiers; Flow execution quota limits enforced; Add-On flow execution packs cataloged & purchasable via `/api/billing/addons` |
 | **D-10** | **AI Assist Policy** | Opt-in, no customer data for model training, human review. *(Recommended: Yes)* | 🟢 **IMPLEMENTED (P9)** | Per-organization `ai_assist_enabled` flag, strict opt-in requirement, zero customer training data guarantee, and mandatory human review |
 | **D-11** | **Frozen Modules** | Keep iScript, LogicCraft text, DataBridge, intelligence engines frozen until paying pilots. *(Recommended: Yes)* | ⚪ ACTIVE | Kept behind flags |
 

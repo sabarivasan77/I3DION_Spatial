@@ -433,4 +433,148 @@ router.post('/cancel', requirePermission('billing.manage'), async (req, res, nex
   }
 });
 
+export const AVAILABLE_ADDONS = [
+  {
+    id: 'FLOW_RUNS_10K',
+    name: '10,000 Flow Runs Add-on',
+    category: 'flow',
+    runs: 10000,
+    priceInr: 999,
+    description: 'Add 10,000 monthly durable flow execution credits'
+  },
+  {
+    id: 'FLOW_RUNS_50K',
+    name: '50,000 Flow Runs Add-on',
+    category: 'flow',
+    runs: 50000,
+    priceInr: 3999,
+    description: 'Add 50,000 monthly durable flow execution credits'
+  },
+  {
+    id: 'STORAGE_100GB',
+    name: '100 GB Vault Storage Add-on',
+    category: 'storage',
+    storageBytes: 107374182400,
+    priceInr: 1499,
+    description: 'Add 100 GB of secure encrypted 3D CAD/model storage'
+  }
+];
+
+/**
+ * GET /api/v1/billing/addons
+ * List available add-on packages
+ */
+router.get('/addons', async (req, res) => {
+  res.json({ addons: AVAILABLE_ADDONS });
+});
+
+/**
+ * POST /api/v1/billing/addons/checkout
+ * Create payment order for add-on pack
+ */
+router.post('/addons/checkout', requirePermission('billing.manage'), async (req, res, next) => {
+  try {
+    const { addonId } = req.body;
+    const addon = AVAILABLE_ADDONS.find(a => a.id === addonId);
+    if (!addon) {
+      return res.status(404).json({ error: 'ADDON_NOT_FOUND', message: 'Requested add-on does not exist' });
+    }
+
+    const order = await billingProvider.createOrder({
+      amountInr: addon.priceInr,
+      currency: 'INR',
+      receipt: `addon_${addonId.toLowerCase()}_${req.organizationId.slice(0, 8)}_${Date.now()}`,
+      notes: { organizationId: req.organizationId, addonId }
+    });
+
+    await pool.query(
+      `INSERT INTO orders (id, organization_id, user_id, plan_id, billing_cycle, amount_paise, amount_inr, currency, status)
+       VALUES ($1, $2, $3, $4, 'one_time', $5, $6, $7, 'created')
+       ON CONFLICT (id) DO UPDATE SET status = 'created', updated_at = now()`,
+      [order.id, req.organizationId, req.user?.id || null, addonId, order.amount, addon.priceInr, order.currency || 'INR']
+    );
+
+    res.json({
+      success: true,
+      order_id: order.id,
+      amount: order.amount,
+      currency: order.currency || 'INR',
+      key: billingProvider.keyId || 'rzp_test_mock',
+      addon
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/v1/billing/addons/verify
+ * Verify payment and credit add-on runs to subscription
+ */
+router.post('/addons/verify', requirePermission('billing.manage'), async (req, res, next) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, addonId } = req.body;
+
+    const addon = AVAILABLE_ADDONS.find(a => a.id === addonId);
+    if (!addon) {
+      return res.status(404).json({ error: 'ADDON_NOT_FOUND', message: 'Requested add-on does not exist' });
+    }
+
+    const isValid = billingProvider.verifyPaymentSignature({
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature
+    });
+
+    if (!isValid) {
+      return res.status(400).json({ error: 'INVALID_SIGNATURE', message: 'Payment verification signature mismatch' });
+    }
+
+    // Mark order paid
+    await pool.query(
+      `UPDATE orders SET status = 'paid', updated_at = now() WHERE id = $1 AND organization_id = $2`,
+      [razorpay_order_id, req.organizationId]
+    );
+
+    // Credit features in subscriptions
+    const subRes = await pool.query(
+      `SELECT custom_features FROM subscriptions WHERE organization_id = $1`,
+      [req.organizationId]
+    );
+    const existingFeatures = subRes.rows[0]?.custom_features || {};
+    if (addon.runs) {
+      existingFeatures.flow_addon_runs = (existingFeatures.flow_addon_runs || 0) + addon.runs;
+    }
+    if (addon.storageBytes) {
+      existingFeatures.extra_storage_bytes = (existingFeatures.extra_storage_bytes || 0) + addon.storageBytes;
+    }
+
+    await pool.query(
+      `UPDATE subscriptions SET custom_features = $1, updated_at = now() WHERE organization_id = $2`,
+      [existingFeatures, req.organizationId]
+    );
+
+    // Create invoice record
+    const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
+    const taxInr = Math.round(addon.priceInr * 0.18 * 100) / 100;
+    await pool.query(
+      `INSERT INTO invoices (organization_id, invoice_number, plan_id, amount_inr, tax_inr, status, period_start, period_end)
+       VALUES ($1, $2, $3, $4, $5, 'paid', now(), now() + interval '30 days')`,
+      [req.organizationId, invoiceNumber, addon.id, addon.priceInr, taxInr]
+    );
+
+    const entitlements = await entitlementService.getOrganizationEntitlementsAndUsage(req.organizationId);
+
+    res.json({
+      success: true,
+      message: `${addon.name} credited successfully!`,
+      addon,
+      entitlements
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;
+

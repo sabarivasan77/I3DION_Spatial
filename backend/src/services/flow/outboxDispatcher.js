@@ -17,15 +17,17 @@ export function isSafeDestinationUrl(urlStr) {
     }
 
     const host = parsed.hostname.toLowerCase();
+    const cleanHost = host.replace(/^\[|\]$/g, '');
 
     // Block loopback and local hostnames
     if (
-      host === 'localhost' ||
-      host === '127.0.0.1' ||
-      host === '::1' ||
-      host === '0.0.0.0' ||
-      host.endsWith('.local') ||
-      host.endsWith('.internal')
+      cleanHost === 'localhost' ||
+      cleanHost === '127.0.0.1' ||
+      cleanHost === '::1' ||
+      cleanHost === '0.0.0.0' ||
+      cleanHost === '::' ||
+      cleanHost.endsWith('.local') ||
+      cleanHost.endsWith('.internal')
     ) {
       return false;
     }
