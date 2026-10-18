@@ -138,7 +138,7 @@ class TrackingService {
       await fetch(`${API_BASE_URL}/public/analytics/events`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(eventRecord),
+        body: JSON.stringify({ ...eventRecord, eventType: eventRecord.eventName }),
       });
     } catch {
       // Non-blocking fallback if network fails

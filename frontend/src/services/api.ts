@@ -1364,8 +1364,12 @@ export async function apiRequest<T>(
     headers.set('Content-Type', 'application/json');
   }
 
-  if (options.token) {
-    headers.set('Authorization', `Bearer ${options.token}`);
+  const cleanPath = path.startsWith('/api/') ? path.slice(4) : path;
+  const targetUrl = `${API_BASE_URL}${cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`}`;
+
+  const token = options.token || (typeof localStorage !== 'undefined' ? localStorage.getItem('i3dion_token') : null);
+  if (token && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
   // BUG-07: Mock data ONLY in explicit DEMO_MODE or explicit offline dev token
@@ -1377,7 +1381,7 @@ export async function apiRequest<T>(
   let response: Response;
 
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers, body, signal: controller.signal });
+    response = await fetch(targetUrl, { ...options, headers, body, signal: controller.signal });
   } catch (error: any) {
     if (isExplicitDemoMode(options.token)) {
       console.warn(`[API Network Guard] Demo mode active. Serving mock fallback for ${path}.`);
@@ -1393,13 +1397,43 @@ export async function apiRequest<T>(
   }
   if (response.status === 204) return undefined as T;
 
-  const data = await response.json().catch(() => ({}));
+  let data: any = {};
+  let rawText = '';
+  try {
+    rawText = await response.text();
+    data = JSON.parse(rawText);
+  } catch {
+    data = {};
+  }
+
   if (!response.ok) {
-    const errorMsg = data.message || data.error || (response.status === 504 || response.status === 502
-      ? 'Backend proxy timeout. Please ensure the backend is running on port 4000.'
-      : response.status === 401
-        ? 'Invalid email or password'
-        : `Request failed with status ${response.status}`);
+    let errorMsg =
+      data.message ||
+      data.error ||
+      data.details?.originalError ||
+      data.details?.message;
+
+    if (errorMsg === 'Internal server error' && data.details?.originalError) {
+      errorMsg = data.details.originalError;
+    }
+
+    if (!errorMsg) {
+      if (response.status === 504 || response.status === 502) {
+        errorMsg = 'Backend proxy timeout. Please ensure the backend is running on port 4000.';
+      } else if (response.status === 500) {
+        errorMsg = rawText && !rawText.includes('<!DOCTYPE') && rawText.length < 200
+          ? rawText
+          : 'Internal server error (500). Please check backend logs or try again.';
+      } else if (response.status === 401) {
+        errorMsg = 'Invalid email or password';
+      } else if (response.status === 403) {
+        errorMsg = 'You do not have permission to perform this action.';
+      } else if (response.status === 404) {
+        errorMsg = 'Requested resource not found.';
+      } else {
+        errorMsg = `Request failed with status ${response.status}`;
+      }
+    }
     throw new ApiClientError(response.status, errorMsg, data.details || data);
   }
 

@@ -115,7 +115,7 @@ authRouter.post('/signup', signupLimiter, async (req, res, next) => {
       return next(error);
     }
     console.error('Registration failure:', error.message);
-    next(new ApiError(500, 'Unable to complete registration. Please try again.'));
+    next(new ApiError(500, `Registration failed: ${error.message}`));
   }
 });
 

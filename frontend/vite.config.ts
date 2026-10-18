@@ -16,6 +16,32 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:4000',
         changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('error', (err, _req, res) => {
+            if ('writeHead' in res && !res.headersSent) {
+              res.writeHead(502, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({
+                message: 'Backend server connection error. Please verify the API is running on port 4000.',
+                details: err.message
+              }));
+            }
+          });
+        }
+      },
+      '/auth': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('error', (err, _req, res) => {
+            if ('writeHead' in res && !res.headersSent) {
+              res.writeHead(502, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({
+                message: 'Backend server connection error. Please verify the API is running on port 4000.',
+                details: err.message
+              }));
+            }
+          });
+        }
       },
       '/uploads': {
         target: 'http://localhost:4000',
