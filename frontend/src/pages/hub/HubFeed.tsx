@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Search, Box, Sparkles, Filter, CheckCircle2, QrCode, Share2, Layers, 
-  ChevronDown, Bookmark, GitCompare, X, Loader2, ShieldCheck, Eye, Heart 
+  ChevronDown, Bookmark, GitCompare, X, Loader2, ShieldCheck, Eye, Heart, ShoppingBag 
 } from 'lucide-react';
 import { SPATIAL_HUB_MODELS, SpatialHubModel } from '../../data/spatialHubModels';
 import ThreeProduct, { RenderMode } from '../../components/ThreeProduct';
@@ -12,6 +12,7 @@ import { ModelCardPreview } from '../../components/hub/ModelCardPreview';
 import { QRCodeGenerator } from '../../components/QRCodeGenerator';
 import { HubContextMenu } from '../../components/hub/HubContextMenu';
 import { useHubPersonalStore } from '../../store/hubPersonalStore';
+import { useHubQuoteStore } from '../../store/hubQuoteStore';
 
 // Adapter to ensure uniform model representation between API and fallback
 interface HubDisplayModel {
@@ -42,6 +43,7 @@ interface HubDisplayModel {
 export function HubFeed() {
   const { success, info } = useToast();
   const { isSaved, toggleSaved } = useHubPersonalStore();
+  const { addItem, isInBasket, removeItem } = useHubQuoteStore();
 
   // Filter & Search State
   const [searchQuery, setSearchQuery] = useState('');
@@ -556,6 +558,37 @@ export function HubFeed() {
                             title={saved ? 'Saved in library' : 'Save model'}
                           >
                             <Bookmark className={`w-4 h-4 ${saved ? 'fill-blue-600 text-blue-600' : ''}`} />
+                          </button>
+
+                          {/* RFQ Quote Basket Button */}
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (isInBasket(model.id)) {
+                                removeItem(model.id);
+                                info(`Removed ${model.name} from Quote Basket`);
+                              } else {
+                                addItem({
+                                  productId: model.id,
+                                  name: model.name,
+                                  modelUrl: model.modelUrl,
+                                  posterUrl: model.thumbnail,
+                                  companyName: model.companyName,
+                                  quantity: 1
+                                });
+                                success(`Added ${model.name} to RFQ Basket`);
+                              }
+                            }}
+                            aria-label="Add to RFQ Quote Basket"
+                            className={`p-2.5 rounded-xl transition-colors font-bold text-xs ${
+                              isInBasket(model.id)
+                                ? 'bg-emerald-50 text-emerald-600'
+                                : 'bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900'
+                            }`}
+                            title={isInBasket(model.id) ? 'In RFQ Basket (Click to remove)' : 'Add to RFQ Basket'}
+                          >
+                            <ShoppingBag className={`w-4 h-4 ${isInBasket(model.id) ? 'fill-emerald-600 text-emerald-600' : ''}`} />
                           </button>
 
                           {/* Compare Toggle Button */}

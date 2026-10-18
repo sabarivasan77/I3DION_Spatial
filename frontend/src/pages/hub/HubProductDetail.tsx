@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   Heart, Bookmark, Share2, MessageSquare, ChevronRight, ShieldCheck, 
-  Download, Box, Sparkles, Scale, ExternalLink, Info, Check, Eye 
+  Download, Box, Sparkles, Scale, ExternalLink, Info, Check, Eye, ShoppingBag, Send 
 } from 'lucide-react';
 import ThreeProduct, { RenderMode } from '../../components/ThreeProduct';
 import { SPATIAL_HUB_MODELS, SpatialHubModel } from '../../data/spatialHubModels';
@@ -14,6 +14,7 @@ import { useAuthStore } from '../../store/authStore';
 import { hubApi, HubProduct } from '../../services/hubApi';
 import { useToast } from '../../components/Toast';
 import { useHubPersonalStore } from '../../store/hubPersonalStore';
+import { useHubQuoteStore } from '../../store/hubQuoteStore';
 
 export function HubProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +28,7 @@ export function HubProductDetail() {
   const [loading, setLoading] = useState(true);
 
   const { isSaved, isLiked, toggleSaved, toggleLiked } = useHubPersonalStore();
+  const { addItem, isInBasket, removeItem } = useHubQuoteStore();
   const token = useAuthStore((s) => s.token);
   const { success, info } = useToast();
 
@@ -374,13 +376,53 @@ export function HubProductDetail() {
             </div>
 
             {/* Request Quote / Enquiry Direct Action */}
-            <div className="pt-2">
-              <Link
-                to={`/hub/rfq?product=${product.slug}`}
-                className="w-full bg-slate-900 hover:bg-blue-600 text-white font-bold text-xs py-3.5 rounded-2xl transition flex items-center justify-center gap-2 shadow-sm"
+            <div className="pt-2 flex flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (isInBasket(product.id)) {
+                    removeItem(product.id);
+                    info('Removed from Quote Basket');
+                  } else {
+                    addItem({
+                      productId: product.id,
+                      name: product.name,
+                      modelUrl: product.modelUrl,
+                      posterUrl: product.posterUrl,
+                      companyName: product.companyName,
+                      quantity: 1
+                    });
+                    success('Added to RFQ Quote Basket');
+                  }
+                }}
+                className={`flex-1 font-bold text-xs py-3.5 rounded-2xl transition flex items-center justify-center gap-2 border ${
+                  isInBasket(product.id)
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100'
+                    : 'bg-white border-slate-300 text-slate-800 hover:bg-slate-50'
+                }`}
               >
-                <MessageSquare size={16} />
-                <span>Request Technical Quote / Inquire</span>
+                <ShoppingBag size={15} />
+                <span>{isInBasket(product.id) ? 'In Quote Basket' : 'Add to RFQ'}</span>
+              </button>
+
+              <Link
+                to="/hub/rfq"
+                onClick={() => {
+                  if (!isInBasket(product.id)) {
+                    addItem({
+                      productId: product.id,
+                      name: product.name,
+                      modelUrl: product.modelUrl,
+                      posterUrl: product.posterUrl,
+                      companyName: product.companyName,
+                      quantity: 1
+                    });
+                  }
+                }}
+                className="flex-1 bg-slate-900 hover:bg-blue-600 text-white font-bold text-xs py-3.5 rounded-2xl transition flex items-center justify-center gap-2 shadow-sm"
+              >
+                <Send size={15} />
+                <span>Request Quote</span>
               </Link>
             </div>
           </div>

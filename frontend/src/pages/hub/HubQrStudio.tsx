@@ -45,7 +45,7 @@ export function HubQrStudio() {
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">QR Studio & Print Sheet Engine</h1>
             <p className="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
-              Generate 100% locally rendered, high-contrast QR codes conforming to ISO 18004. Free of third-party tracking, with guaranteed >= 4 module quiet zones and campaign attribution.
+              Generate 100% locally rendered, high-contrast QR codes conforming to ISO 18004. Free of third-party tracking, with guaranteed &ge; 4 module quiet zones and campaign attribution.
             </p>
           </div>
 

@@ -413,3 +413,226 @@ export async function generateSocialMeta(type, slug) {
     card: 'summary_large_image'
   };
 }
+
+/**
+ * Submits an RFQ quote basket with idempotency, anti-bot check, and Flow lead outbox trigger
+ */
+export async function submitHubRfq(data, clientIp = '127.0.0.1') {
+  const {
+    name,
+    email,
+    phone = '',
+    company = '',
+    items = [],
+    message = '',
+    intent = 'quote',
+    timeline = '1-3 months',
+    targetDelivery = '',
+    campaign = 'Direct Hub',
+    shortCode = null,
+    qrAttributed = false,
+    idempotencyKey = null,
+    consent = {},
+    hp_token,
+    website_trap
+  } = data;
+
+  // 1. Anti-spam honeypot detection
+  if (hp_token || website_trap) {
+    console.warn(`[Anti-Spam] Bot trapped in Hub RFQ from IP: ${clientIp}, email: ${email}`);
+    return {
+      success: true,
+      leadId: 'spam-filtered',
+      status: 'filtered',
+      message: 'Thank you! Your quote request has been received.'
+    };
+  }
+
+  // 2. Validate mandatory consent
+  if (!consent || !consent.consentGiven) {
+    throw new ApiError(400, 'Explicit consent is required to submit RFQ inquiry');
+  }
+
+  if (!items || items.length === 0) {
+    throw new ApiError(400, 'Quote basket must contain at least one item');
+  }
+
+  // 3. Resolve Organization ID
+  let organizationId = data.organizationId;
+  let resolvedOrgName = 'I3DION Equipment';
+
+  if (!organizationId) {
+    for (const item of items) {
+      if (item.productId) {
+        const prodRes = await query(`SELECT organization_id FROM products WHERE id = $1`, [item.productId]);
+        if (prodRes.rows.length > 0) {
+          organizationId = prodRes.rows[0].organization_id;
+          break;
+        }
+      }
+    }
+  }
+
+  if (!organizationId) {
+    const orgRes = await query(`SELECT id, name FROM organizations WHERE slug = 'i3dion' OR is_verified = true ORDER BY is_verified DESC LIMIT 1`);
+    if (orgRes.rows.length > 0) {
+      organizationId = orgRes.rows[0].id;
+      resolvedOrgName = orgRes.rows[0].name;
+    }
+  }
+
+  if (!organizationId) {
+    throw new ApiError(400, 'Unable to identify target organization for RFQ');
+  }
+
+  // 4. Idempotency Key Deduplication
+  if (idempotencyKey) {
+    const existingRes = await query(
+      `SELECT id, created_at FROM leads WHERE organization_id = $1 AND metadata->>'idempotencyKey' = $2 LIMIT 1`,
+      [organizationId, idempotencyKey]
+    );
+    if (existingRes.rows.length > 0) {
+      return {
+        success: true,
+        leadId: existingRes.rows[0].id,
+        rfqId: existingRes.rows[0].id,
+        isDuplicate: true,
+        status: 'already_submitted',
+        message: 'RFQ inquiry already received previously.'
+      };
+    }
+  }
+
+  // 5. IP Anonymization for GDPR/Privacy compliance
+  const anonymizedIp = clientIp.includes(':') 
+    ? clientIp.split(':').slice(0, 3).join(':') + '::xxxx'
+    : clientIp.split('.').slice(0, 3).join('.') + '.0';
+
+  const consentRecord = {
+    consentGiven: true,
+    consentText: consent.consentText || 'I agree to be contacted regarding this quotation and technical requirements.',
+    consentTimestamp: consent.consentTimestamp || new Date().toISOString(),
+    anonymizedIp
+  };
+
+  const leadMetadata = {
+    items,
+    idempotencyKey,
+    campaign,
+    shortCode,
+    timeline,
+    targetDelivery,
+    source: 'Spatial Hub RFQ'
+  };
+
+  const formattedNotes = `[RFQ INQUIRY]\nItems (${items.length}):\n${items.map(it => `- ${it.name} (Qty: ${it.quantity || 1})${it.notes ? ' - Note: ' + it.notes : ''}`).join('\n')}\nTimeline: ${timeline}${targetDelivery ? `\nTarget Delivery: ${targetDelivery}` : ''}${message ? `\n\nClient Note:\n${message}` : ''}`;
+
+  // 6. Insert into Leads
+  const insertLeadSql = `
+    INSERT INTO leads (
+      organization_id, product_id, name, email, phone, company, organization,
+      intent, source, qr_attributed, status, consent_metadata, metadata, notes
+    ) VALUES ($1, $2, $3, $4, $5, $6, $6, 'quote', 'Spatial Hub RFQ', $7, 'New', $8, $9, $10)
+    RETURNING id, name, email, created_at
+  `;
+
+  const primaryProductId = items[0]?.productId || null;
+
+  const leadRes = await query(insertLeadSql, [
+    organizationId,
+    primaryProductId,
+    name,
+    email,
+    phone || null,
+    company || null,
+    Boolean(qrAttributed || shortCode),
+    JSON.stringify(consentRecord),
+    JSON.stringify(leadMetadata),
+    formattedNotes
+  ]);
+
+  const lead = leadRes.rows[0];
+
+  // 7. Flow Event Outbox trigger ('rfq.submitted')
+  try {
+    const outboxSql = `
+      INSERT INTO flow_event_outbox (
+        organization_id, event_type, payload, status
+      ) VALUES ($1, 'rfq.submitted', $2, 'pending')
+    `;
+    await query(outboxSql, [
+      organizationId,
+      JSON.stringify({
+        leadId: lead.id,
+        name: lead.name,
+        email: lead.email,
+        phone,
+        company,
+        itemsCount: items.length,
+        items,
+        campaign,
+        qrAttributed: Boolean(qrAttributed || shortCode),
+        timeline,
+        timestamp: new Date().toISOString()
+      })
+    ]);
+  } catch (err) {
+    console.warn('Flow outbox insertion warning for rfq.submitted:', err);
+  }
+
+  // 8. Execute Flow Rules directly
+  let flowResult = null;
+  try {
+    flowResult = await executeFlowRules({
+      organizationId,
+      eventType: 'rfq.submitted',
+      payload: {
+        leadId: lead.id,
+        name: lead.name,
+        email: lead.email,
+        phone,
+        company,
+        itemsCount: items.length,
+        items,
+        campaign
+      }
+    });
+  } catch (err) {
+    console.warn('Direct flow execution warning:', err);
+  }
+
+  // 9. Telemetry
+  try {
+    await trackEvent({
+      organizationId,
+      visitorId: data.visitorId || 'anonymous_hub_user',
+      leadId: lead.id,
+      eventType: 'rfq_submitted',
+      metadata: {
+        itemsCount: items.length,
+        leadId: lead.id,
+        campaign,
+        qrAttributed: Boolean(qrAttributed || shortCode)
+      }
+    });
+  } catch (err) {
+    console.warn('Telemetry tracking warning:', err);
+  }
+
+  // 10. WhatsApp Deep-Link Builder
+  const waSummary = items.map(i => `${i.name} (x${i.quantity || 1})`).join(', ');
+  const waText = encodeURIComponent(`Hello, I submitted an RFQ on I3DION Spatial Hub for: ${waSummary}. My reference is [RFQ-${lead.id.slice(0, 8)}].`);
+  const whatsappDeepLink = `https://wa.me/?text=${waText}`;
+
+  return {
+    success: true,
+    leadId: lead.id,
+    rfqId: lead.id,
+    itemsCount: items.length,
+    status: 'submitted',
+    whatsappDeepLink,
+    flow: flowResult,
+    message: 'Your Request for Quotation has been received. Our sales engineering team will follow up within 24 hours.'
+  };
+}
+

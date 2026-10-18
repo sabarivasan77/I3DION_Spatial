@@ -17,8 +17,10 @@ import {
   ScanLine,
   Menu,
   X,
+  ShoppingBag,
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import { useHubQuoteStore } from '../store/hubQuoteStore';
 import { getUserContext } from '../utils/permissions';
 import { AppLauncher } from '../components/AppLauncher';
 import { QrScannerModal } from '../components/hub/QrScannerModal';
@@ -33,6 +35,8 @@ export default function SpatialHubLayout() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [scanOpen, setScanOpen] = useState(false);
+  const basketItems = useHubQuoteStore((state) => state.items);
+  const basketCount = basketItems.reduce((acc, i) => acc + i.quantity, 0);
 
   const { isOrgUser } = getUserContext(user);
 
@@ -162,6 +166,26 @@ export default function SpatialHubLayout() {
           >
             <Bell size={17} />
             <span>Notifications</span>
+          </NavLink>
+
+          <NavLink
+            to="/hub/rfq"
+            onClick={() => setMobileSidebarOpen(false)}
+            className={({ isActive }) =>
+              `flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-bold transition ${
+                isActive ? 'bg-[#2563EB] text-white shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+              }`
+            }
+          >
+            <div className="flex items-center gap-3">
+              <ShoppingBag size={17} />
+              <span>Quote Basket</span>
+            </div>
+            {basketCount > 0 && (
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-black text-white">
+                {basketCount}
+              </span>
+            )}
           </NavLink>
 
           {/* Organization Navigation Section */}
@@ -299,7 +323,23 @@ export default function SpatialHubLayout() {
           </div>
 
           {/* Right Header Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* RFQ Quote Basket */}
+            <NavLink
+              to="/hub/rfq"
+              aria-label={`RFQ Basket: ${basketCount} items`}
+              title="View RFQ Quote Basket"
+              className="relative flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 text-slate-700 hover:bg-slate-50 transition"
+            >
+              <ShoppingBag size={17} />
+              <span className="hidden sm:inline text-xs font-bold">RFQ</span>
+              {basketCount > 0 && (
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-black text-white">
+                  {basketCount}
+                </span>
+              )}
+            </NavLink>
+
             {/* QR scanner (mobile-first) */}
             <button
               onClick={() => setScanOpen(true)}

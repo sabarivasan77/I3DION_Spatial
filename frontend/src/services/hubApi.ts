@@ -102,5 +102,55 @@ export const hubApi = {
 
   reportContent: async (token: string, entityType: string, id: string, reason: string): Promise<any> => {
     return apiRequest(`/hub/${entityType}/${id}/report`, { token, method: 'POST', body: JSON.stringify({ reason }) });
+  },
+
+  submitRfq: async (payload: HubRfqPayload): Promise<HubRfqResponse> => {
+    return apiRequest('/hub/rfq', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
   }
 };
+
+export interface HubRfqPayload {
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  intent?: string;
+  timeline?: string;
+  targetDelivery?: string;
+  message?: string;
+  campaign?: string;
+  shortCode?: string | null;
+  qrAttributed?: boolean;
+  idempotencyKey?: string;
+  organizationId?: string;
+  items: Array<{
+    productId?: string;
+    name: string;
+    modelUrl?: string;
+    posterUrl?: string;
+    quantity: number;
+    notes?: string;
+  }>;
+  consent: {
+    consentGiven: boolean;
+    consentText?: string;
+    consentTimestamp?: string;
+  };
+  hp_token?: string;
+  website_trap?: string;
+}
+
+export interface HubRfqResponse {
+  success: boolean;
+  leadId: string;
+  rfqId: string;
+  itemsCount: number;
+  status: string;
+  whatsappDeepLink?: string;
+  message: string;
+  isDuplicate?: boolean;
+}
+

@@ -10,14 +10,14 @@
 
 | Phase | Title | Status | Gate Criteria | Evidence / Links |
 | :--- | :--- | :---: | :--- | :--- |
-| **H0** | **Truth, Legal Cleanup, Patch, CI** | **In Progress** | Patch applied & validated; `spatialHubModels.ts` retired; fake metrics removed; GLB/MIME normalized; CI license gate active; 0 `qrserver` calls. | [Phase H0 Details](#phase-h0--truth-legal-cleanup-patch-ci) |
-| **H1** | **Model Pipeline, Tiers, Library** | Pending | 15 starter models ingested into Vault with 4 tiers (poster, preview, full, original); license metadata stored; signed URLs. | [Phase H1 Details](#phase-h1--model-pipeline-tiers-library) |
-| **H2** | **Feed & Live Model Cards** | Pending | Default live 3D cards via `ModelCardPreview`; server-side cursor pagination; WebGL slot pool; Lighthouse mobile ≥ 80. | [Phase H2 Details](#phase-h2--feed--live-model-cards) |
-| **H3** | **Product Page: 3D, AR, License, Downloads** | Pending | Solid/wireframe/x-ray modes; AR placement; CC-BY credit panel; honest error fallbacks (no fake models). | [Phase H3 Details](#phase-h3--product-page-3d-ar-license-downloads) |
-| **H4** | **QR Studio, Short Links, Scanner** | Pending | Native `/q/:id` short-links; local QR rendering; camera QR scanner with allow-list; handoff to phone. | [Phase H4 Details](#phase-h4--qr-studio-short-links-scanner) |
-| **H5** | **Organization Storefronts & Collections** | Pending | Branded storefronts; server-side audience pruning; private/expiring collections; zero cross-tenant leakage. | [Phase H5 Details](#phase-h5--organization-storefronts--collections) |
-| **H6** | **Quote Basket, RFQ, Leads, Flow** | Pending | Offline-capable quote basket; verified RFQ submission; Flow event trigger; WhatsApp lead handoff. | [Phase H6 Details](#phase-h6--quote-basket-rfq-leads-flow) |
-| **H7** | **Discovery (Search, Compare, Recommendations)** | Pending | Postgres FTS search; 4-model specification compare table; real saved/liked counts. | [Phase H7 Details](#phase-h7--discovery) |
+| **H0** | **Truth, Legal Cleanup, Patch, CI** | **Completed** | Patch applied & validated; `spatialHubModels.ts` retired; fake metrics removed; GLB/MIME normalized; CI license gate active; 0 `qrserver` calls. | Commit `037e016` |
+| **H1** | **Model Pipeline, Tiers, Library** | **Completed** | 15 starter models ingested into Vault with 4 tiers (poster, preview, full, original); license metadata stored; signed URLs. | Commit `b429e23` |
+| **H2** | **Feed & Live Model Cards** | **Completed** | Default live 3D cards via `ModelCardPreview`; server-side cursor pagination; WebGL slot pool; Lighthouse mobile ≥ 80. | Commit `5407e69` |
+| **H3** | **Product Page: 3D, AR, License, Downloads** | **Completed** | Solid/wireframe/x-ray modes; AR placement; CC-BY credit panel; honest error fallbacks (no fake models). | Commit `c868058` |
+| **H4** | **QR Studio, Short Links, Scanner** | **Completed** | Native `/q/:id` short-links; local QR rendering; camera QR scanner with allow-list; handoff to phone. | Commit `8cd1fcf` |
+| **H5** | **Organization Storefronts & Collections** | **Completed** | Branded storefronts; server-side audience pruning; private/expiring collections; zero cross-tenant leakage. | Commit `09567be` |
+| **H6** | **Quote Basket, RFQ, Leads, Flow** | **Completed** | Offline-capable quote basket; verified RFQ submission; Flow event trigger; WhatsApp lead handoff. | `test-hub-phase-h6.js` Passed |
+| **H7** | **Discovery (Search, Compare, Recommendations)** | **In Progress** | Postgres FTS search; 4-model specification compare table; real saved/liked counts. | [Phase H7 Details](#phase-h7--discovery) |
 | **H8** | **Mobile, PWA, Offline, Performance** | Pending | Responsive at 360/390/768/1024/1440px; bottom nav; service worker caching; initial JS ≤ 200KB gzip. | [Phase H8 Details](#phase-h8--mobile-pwa-offline-performance) |
 | **H9** | **Analytics, SEO, Moderation, A11y, Hardening** | Pending | Real Lens telemetry; SSR/OG meta tags; WCAG 2.2 AA audit; Scorecard ≥ 75/100. | [Phase H9 Details](#phase-h9--analytics-seo-moderation-accessibility-hardening) |
 

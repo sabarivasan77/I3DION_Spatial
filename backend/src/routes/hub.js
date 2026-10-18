@@ -9,6 +9,7 @@ import {
   getPublishedCatalog, 
   getPublishedExperience, 
   capturePublicLead, 
+  submitHubRfq,
   generateSocialMeta 
 } from '../services/hub/hubService.js';
 
@@ -278,6 +279,50 @@ hubRouter.post(
   asyncHandler(async (req, res) => {
     const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
     const result = await capturePublicLead(req.validated.body, clientIp);
+    res.status(201).json(result);
+  })
+);
+
+// Public Hub RFQ / Quote Basket Submission
+const publicHubRfqSchema = z.object({
+  body: z.object({
+    name: z.string().min(1, 'Name is required'),
+    email: z.string().email('Valid email is required'),
+    phone: z.string().optional(),
+    company: z.string().optional(),
+    intent: z.string().optional().default('quote'),
+    timeline: z.string().optional().default('1-3 months'),
+    targetDelivery: z.string().optional(),
+    message: z.string().optional(),
+    campaign: z.string().optional().default('Direct Hub'),
+    shortCode: z.string().nullable().optional(),
+    qrAttributed: z.boolean().optional().default(false),
+    idempotencyKey: z.string().optional(),
+    organizationId: z.string().uuid().optional(),
+    items: z.array(z.object({
+      productId: z.string().uuid().optional(),
+      name: z.string(),
+      modelUrl: z.string().optional(),
+      posterUrl: z.string().optional(),
+      quantity: z.number().int().min(1).default(1),
+      notes: z.string().optional()
+    })).min(1, 'At least one item required in RFQ'),
+    consent: z.object({
+      consentGiven: z.boolean(),
+      consentText: z.string().optional(),
+      consentTimestamp: z.string().optional()
+    }),
+    hp_token: z.string().optional(),
+    website_trap: z.string().optional()
+  })
+});
+
+hubRouter.post(
+  '/rfq',
+  validate(publicHubRfqSchema),
+  asyncHandler(async (req, res) => {
+    const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    const result = await submitHubRfq(req.validated.body, clientIp);
     res.status(201).json(result);
   })
 );
