@@ -1,0 +1,11 @@
+{
+  "name": "@i3dion/layout-dnd",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@i3dion/block-registry": "workspace:*",
+    "@i3dion/contracts": "workspace:*",
+    "@i3dion/editor-kernel": "workspace:*"
+  }
+}

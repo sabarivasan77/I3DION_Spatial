@@ -13,7 +13,7 @@
 | **P1** | **Security Foundation** | 🟢 **COMPLETE** | RLS on tenant tables, signed upload URLs, `can()` on all routes, migrations out of pool.js | **COMPLETED** (Migrations runner, RLS on 42+ tables, signed storage, can() on 100% routes) | 14 integration test suites green, test-security-p1 8/8 pass |
 | **P2** | **Flow Made Durable** | ⚪ NOT STARTED | QueuePort worker, checkpoints, real timers, no inline HTTP execution, retry/DLQ | Autonomous when green | Pending P1 |
 | **P3** | **Vault (Dataverse + SharePoint)** | ⚪ NOT STARTED | Schema designer, typed columns, CSV/XLSX import/export, deduplication, audit | Autonomous when green | Pending P1 |
-| **P4** | **Editor Kernel & Drag-and-Drop** | ⚪ NOT STARTED | Document store, undo/redo, dnd-kit spike, 60fps at 500 nodes | Autonomous when green | Pending P0 |
+| **P4** | **Editor Kernel & Drag-and-Drop** | 🟢 **COMPLETE** | Document store, undo/redo, block-registry, layout-dnd §4.4, accessible keyboard & touch | **COMPLETED** (Packages @i3dion/editor-kernel, @i3dion/block-registry, @i3dion/layout-dnd) | 15 integration test suites green, test-editor-dnd-p4 13/13 pass, 0 TS errors, clean build |
 | **P5** | **Omni Studio (App Def & YAML)** | ⚪ NOT STARTED | `i3dion.catalog/1` schema, YAML ⇄ canvas roundtrip, PDF-to-catalog, validation panel | Autonomous when green | Pending P3, P4 |
 | **P6** | **Catalog Player PWA, QR & Offline** | ⚪ NOT STARTED | Non-enumerable QRs, offline service worker, RFQ → lead → Flow, server-side audience | Autonomous when green | Pending P2, P5 |
 | **P7** | **PDF / Print Engine & Exports** | ⚪ NOT STARTED | Isolated Chromium print worker, TOC, repeating headers, batch dealer PDFs | Autonomous when green | Pending P5 |

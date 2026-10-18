@@ -14,9 +14,22 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "allowImportingTsExtensions": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "zod": ["./frontend/node_modules/zod"],
+      "@i3dion/contracts": ["./packages/contracts/src/index.ts"],
+      "@i3dion/contracts/*": ["./packages/contracts/src/*"],
+      "@i3dion/block-registry": ["./packages/block-registry/src/index.ts"],
+      "@i3dion/block-registry/*": ["./packages/block-registry/src/*"],
+      "@i3dion/editor-kernel": ["./packages/editor-kernel/src/index.ts"],
+      "@i3dion/editor-kernel/*": ["./packages/editor-kernel/src/*"],
+      "@i3dion/layout-dnd": ["./packages/layout-dnd/src/index.ts"],
+      "@i3dion/layout-dnd/*": ["./packages/layout-dnd/src/*"]
+    }
   },
-  "include": ["frontend/src/**/*"],
+  "include": ["frontend/src/**/*", "packages/**/*"],
   "exclude": ["node_modules", "dist", "frontend/dist", "backend", "backend/**/*", "mobile", "mobile/**/*", "scratch", "scratch/**/*", ".trunk", ".trunk/**/*"]
 }
 

@@ -1,0 +1,13 @@
+{
+  "name": "@i3dion/editor-kernel",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@i3dion/contracts": "*",
+    "@i3dion/block-registry": "*",
+    "zod": "^3.24.2"
+  }
+}
