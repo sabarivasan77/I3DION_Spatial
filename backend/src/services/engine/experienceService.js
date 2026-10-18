@@ -318,7 +318,10 @@ export const experienceService = {
       hotspots: exp.hotspots,
       animationConfig: exp.animation_config,
       blueprintConfig: exp.blueprint_config,
-      arConfig: exp.ar_config
+      arConfig: exp.ar_config,
+      sceneDocument: exp.scene_document || null,
+      circuitsGraph: exp.circuits_graph || null,
+      circuitsIR: exp.circuits_ir || null
     };
 
     const targetUrl = `${baseUrl}/experience/${exp.slug}`;

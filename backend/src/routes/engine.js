@@ -2,6 +2,10 @@ import express from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { experienceService } from '../services/engine/experienceService.js';
 import { enforceQuota } from '../middleware/entitlement.js';
+import { pool } from '../db/pool.js';
+import { saveSceneDocument, assertGlbIntegrityUnchanged } from '../services/engine/sceneDocumentService.js';
+import { compileCircuitGraph, CHIP_CATALOG, TOTAL_REGISTERED_CHIPS } from '../services/engine/circuitsCompiler.js';
+import { interpretCircuitIR } from '../services/engine/circuitsInterpreter.js';
 
 export const engineRouter = express.Router();
 
@@ -19,6 +23,31 @@ engineRouter.get('/published/:slug', async (req, res) => {
   } catch (error) {
     console.error('Engine GET Published Error:', error);
     res.status(500).json({ error: 'Failed to fetch published experience' });
+  }
+});
+
+// POST /api/engine/published/:slug/circuits/execute (Public Circuit IR execution for Player)
+engineRouter.post('/published/:slug/circuits/execute', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { eventTrigger, eventPayload, initialContext } = req.body;
+    const expRes = await pool.query(
+      `SELECT organization_id, circuits_ir, published_snapshot FROM spatial_experiences WHERE slug = $1 AND status = 'Published'`,
+      [slug]
+    );
+    if (expRes.rows.length === 0) return res.status(404).json({ error: 'Published experience not found' });
+    const exp = expRes.rows[0];
+    const ir = exp.published_snapshot?.circuitsIR || exp.circuits_ir;
+    if (!ir) return res.status(400).json({ error: 'Experience does not have compiled circuits' });
+
+    const result = await interpretCircuitIR(ir, eventTrigger, eventPayload, {
+      ...initialContext,
+      organizationId: exp.organization_id
+    });
+    res.json(result);
+  } catch (error) {
+    console.error('Engine Published Circuit Execution Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to execute circuit' });
   }
 });
 
@@ -201,3 +230,126 @@ engineRouter.get('/experiences/:id/qr', async (req, res) => {
     res.status(500).json({ error: 'Failed to generate QR code' });
   }
 });
+
+// GET /api/engine/chips (Catalog of ~70 registered chips across 5 domains)
+engineRouter.get('/chips', (req, res) => {
+  res.json({
+    chips: CHIP_CATALOG,
+    total: TOTAL_REGISTERED_CHIPS
+  });
+});
+
+// GET /api/engine/experiences/:id/scene-document (Fetch non-destructive scene document & revision)
+engineRouter.get('/experiences/:id/scene-document', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const expRes = await pool.query(
+      `SELECT id, name, slug, revision, scene_document FROM spatial_experiences WHERE id = $1 AND organization_id = $2`,
+      [id, organization_id]
+    );
+    if (expRes.rows.length === 0) return res.status(404).json({ error: 'Experience not found' });
+    res.json(expRes.rows[0]);
+  } catch (error) {
+    console.error('Engine GET Scene Document Error:', error);
+    res.status(500).json({ error: 'Failed to fetch scene document' });
+  }
+});
+
+// POST /api/engine/experiences/:id/scene-document (Save scene document with OCC revision check)
+engineRouter.post('/experiences/:id/scene-document', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const { sceneDocument, expectedRevision, originalSha256 } = req.body;
+
+    if (!sceneDocument) {
+      return res.status(400).json({ error: 'Missing sceneDocument payload' });
+    }
+
+    const saved = await saveSceneDocument(id, organization_id, sceneDocument, expectedRevision);
+
+    // Assert source GLB integrity remains untouched
+    if (originalSha256) {
+      await assertGlbIntegrityUnchanged(saved.vault_asset_id, originalSha256);
+    }
+
+    res.json(saved);
+  } catch (error) {
+    if (error.status === 409) {
+      return res.status(409).json({
+        error: error.message,
+        currentRevision: error.currentRevision
+      });
+    }
+    console.error('Engine Save Scene Document Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to save scene document' });
+  }
+});
+
+// POST /api/engine/experiences/:id/circuits/compile (Compile visual graph to deterministic IR)
+engineRouter.post('/experiences/:id/circuits/compile', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const { graph, save = true } = req.body;
+
+    if (!graph) {
+      return res.status(400).json({ error: 'Missing circuit graph payload' });
+    }
+
+    const ir = compileCircuitGraph(graph);
+
+    if (save) {
+      await pool.query(
+        `UPDATE spatial_experiences
+         SET circuits_graph = $1, circuits_ir = $2, updated_at = NOW()
+         WHERE id = $3 AND organization_id = $4`,
+        [JSON.stringify(graph), JSON.stringify(ir), id, organization_id]
+      );
+    }
+
+    res.json({
+      valid: true,
+      totalChips: ir.totalChips,
+      ir
+    });
+  } catch (error) {
+    console.error('Engine Circuits Compile Error:', error);
+    res.status(400).json({ error: error.message || 'Circuit compilation failed' });
+  }
+});
+
+// POST /api/engine/experiences/:id/circuits/execute (Execute Circuit IR in Editor runtime)
+engineRouter.post('/experiences/:id/circuits/execute', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { organization_id } = req.user;
+    const { eventTrigger, eventPayload, initialContext, ir } = req.body;
+
+    let circuitIR = ir;
+    if (!circuitIR) {
+      const expRes = await pool.query(
+        `SELECT circuits_ir FROM spatial_experiences WHERE id = $1 AND organization_id = $2`,
+        [id, organization_id]
+      );
+      if (expRes.rows.length === 0) return res.status(404).json({ error: 'Experience not found' });
+      circuitIR = expRes.rows[0].circuits_ir;
+    }
+
+    if (!circuitIR) {
+      return res.status(400).json({ error: 'No Circuit IR available for execution' });
+    }
+
+    const result = await interpretCircuitIR(circuitIR, eventTrigger, eventPayload, {
+      ...initialContext,
+      organizationId: organization_id
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error('Engine Circuits Execute Error:', error);
+    res.status(500).json({ error: error.message || 'Circuit execution failed' });
+  }
+});
+
