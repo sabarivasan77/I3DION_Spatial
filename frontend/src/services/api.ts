@@ -198,8 +198,9 @@ export interface ProductRecord {
 
 const OFFLINE_TOKEN = 'offline-dev-token';
 
-function isOfflineToken(token?: string) {
-  return !token || token === OFFLINE_TOKEN;
+function isExplicitDemoMode(token?: string): boolean {
+  // BUG-07: Mock data ONLY in explicit DEMO_MODE or explicit offline dev token
+  return Boolean(token && token === OFFLINE_TOKEN) || import.meta.env.VITE_DEMO_MODE === 'true';
 }
 
 function offlineClone<T>(value: T): T {
@@ -1317,7 +1318,7 @@ async function offlineFallback<T>(rawPath: string, options: RequestInit & { toke
     return {} as T;
   }
 
-  if (isOfflineToken(token)) {
+  if (isExplicitDemoMode(token)) {
     return undefined as T;
   }
 
@@ -1367,8 +1368,8 @@ export async function apiRequest<T>(
     headers.set('Authorization', `Bearer ${options.token}`);
   }
 
-  // If client explicitly uses an offline demo token or offline mode is forced
-  if (isOfflineToken(options.token) || import.meta.env.VITE_OFFLINE_MODE === 'true') {
+  // BUG-07: Mock data ONLY in explicit DEMO_MODE or explicit offline dev token
+  if (isExplicitDemoMode(options.token)) {
     window.clearTimeout(timeout);
     return offlineFallback<T>(path, options);
   }
@@ -1378,8 +1379,8 @@ export async function apiRequest<T>(
   try {
     response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers, body, signal: controller.signal });
   } catch (error) {
-    if (import.meta.env.VITE_OFFLINE_MODE === 'true' || isOfflineToken(options.token)) {
-      console.warn(`[API Network Guard] Offline mode enabled. Serving fallback for ${path}.`);
+    if (isExplicitDemoMode(options.token)) {
+      console.warn(`[API Network Guard] Demo mode active. Serving mock fallback for ${path}.`);
       return offlineFallback<T>(path, options);
     }
     throw error;
@@ -1577,7 +1578,7 @@ export async function uploadFileWithProgress({
   assetType?: string;
   onProgress: (progress: number) => void;
 }): Promise<UploadedFile> {
-  if (import.meta.env.VITE_OFFLINE_MODE === 'true' || isOfflineToken(token)) {
+  if (isExplicitDemoMode(token)) {
     return new Promise<UploadedFile>((resolve) => {
       let progress = 0;
       const interval = setInterval(() => {

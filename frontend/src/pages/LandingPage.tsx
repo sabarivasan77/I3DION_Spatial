@@ -479,24 +479,24 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ─── 6. ENTERPRISE STATS BANNER ────────────────────────────────────────── */}
+      {/* ─── 6. ENTERPRISE CAPABILITIES BANNER ────────────────────────────────────────── */}
       <section className="py-16 px-4 md:px-8 bg-slate-900 text-white">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           <div>
-            <p className="text-3xl md:text-4xl font-extrabold text-blue-400">99.9%</p>
-            <p className="mt-1 text-xs text-slate-400 font-medium uppercase tracking-wider">WebAR Session Uptime</p>
+            <p className="text-2xl md:text-3xl font-extrabold text-blue-400">Three.js</p>
+            <p className="mt-1 text-xs text-slate-400 font-medium uppercase tracking-wider">WebGL & WebXR 3D Engine</p>
           </div>
           <div>
-            <p className="text-3xl md:text-4xl font-extrabold text-blue-400">&lt; 2.5s</p>
-            <p className="mt-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Average 3D Load Time</p>
+            <p className="text-2xl md:text-3xl font-extrabold text-blue-400">Offline PWA</p>
+            <p className="mt-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Field-Ready Offline Caching</p>
           </div>
           <div>
-            <p className="text-3xl md:text-4xl font-extrabold text-blue-400">120+</p>
-            <p className="mt-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Enterprise Catalogs</p>
+            <p className="text-2xl md:text-3xl font-extrabold text-blue-400">Excel & CSV</p>
+            <p className="mt-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Bi-Directional Vault Sync</p>
           </div>
           <div>
-            <p className="text-3xl md:text-4xl font-extrabold text-blue-400">50,000+</p>
-            <p className="mt-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Spatial Events Tracked</p>
+            <p className="text-2xl md:text-3xl font-extrabold text-blue-400">Self-Hosted</p>
+            <p className="mt-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Docker & Cloud Portability</p>
           </div>
         </div>
       </section>
