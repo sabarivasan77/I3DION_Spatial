@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-import { Grid, Globe, Database, Sparkles, Cpu, BarChart3, Lock, ShieldCheck, LucideIcon } from 'lucide-react';
+import { Grid, Globe, Database, Sparkles, Cpu, BarChart3, Lock, ShieldCheck, LucideIcon, Workflow } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useLicenseStore, AppKey } from '../store/licenseStore';
 import { canAccessApp } from '../utils/permissions';
@@ -58,6 +58,16 @@ const APPS: AppDefinition[] = [
     bgLight: 'bg-rose-50 hover:bg-rose-100 border-rose-200',
   },
   {
+    key: 'flow',
+    name: 'I3DION Flow',
+    subtitle: 'Visual Workflow & CRM Automation Engine',
+    path: '/flow',
+    icon: Workflow,
+    badge: 'Flow',
+    color: 'text-cyan-500',
+    bgLight: 'bg-cyan-50 hover:bg-cyan-100 border-cyan-200',
+  },
+  {
     key: 'lens',
     name: 'I3DION Spatial Lens',
     subtitle: 'Analytics & BI Dashboard Builder',
@@ -80,6 +90,8 @@ const getAppUrl = (appKey: AppKey, fallbackPath: string): string => {
       return import.meta.env.VITE_OMNI_STUDIO_URL || `${origin}${fallbackPath}`;
     case 'engine':
       return import.meta.env.VITE_ENGINE_URL || `${origin}${fallbackPath}`;
+    case 'flow':
+      return import.meta.env.VITE_FLOW_URL || `${origin}${fallbackPath}`;
     case 'lens':
       return import.meta.env.VITE_LENS_URL || `${origin}${fallbackPath}`;
     default:

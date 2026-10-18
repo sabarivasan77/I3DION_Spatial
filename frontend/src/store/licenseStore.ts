@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 export type LicenseTier = 'Basic' | 'Professional' | 'Enterprise';
 
-export type AppKey = 'hub' | 'vault' | 'studio' | 'engine' | 'lens';
+export type AppKey = 'hub' | 'vault' | 'studio' | 'engine' | 'flow' | 'lens';
 
 export interface LicenseState {
   currentTier: LicenseTier;
@@ -17,19 +17,21 @@ export interface LicenseState {
 
 export const APP_ENTITLEMENTS: Record<LicenseTier, AppKey[]> = {
   Basic: ['hub'],
-  Professional: ['hub', 'vault', 'studio', 'engine'],
-  Enterprise: ['hub', 'vault', 'studio', 'engine', 'lens'],
+  Professional: ['hub', 'vault', 'studio', 'engine', 'flow'],
+  Enterprise: ['hub', 'vault', 'studio', 'engine', 'flow', 'lens'],
 };
 
 export const FEATURE_ENTITLEMENTS: Record<LicenseTier, string[]> = {
   Basic: ['hub.view', 'hub.like', 'hub.save', 'hub.comment', 'hub.share', 'hub.enquire', 'org.view_published'],
   Professional: [
     'hub.view', 'hub.like', 'hub.save', 'hub.comment', 'hub.share', 'hub.enquire', 'org.view_published',
-    'vault.manage', 'studio.create_catalog', 'engine.author_interactive', 'ar.export'
+    'vault.manage', 'studio.create_catalog', 'engine.author_interactive', 'ar.export',
+    'flow.create_workflows', 'flow.test_workflows'
   ],
   Enterprise: [
     'hub.view', 'hub.like', 'hub.save', 'hub.comment', 'hub.share', 'hub.enquire', 'org.view_published',
     'vault.manage', 'studio.create_catalog', 'engine.author_interactive', 'ar.export',
+    'flow.create_workflows', 'flow.test_workflows', 'flow.publish_workflows',
     'lens.build_dashboards', 'lens.publish_dashboards', 'org.billing.manage', 'org.advanced_rbac'
   ],
 };

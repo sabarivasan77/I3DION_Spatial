@@ -92,24 +92,33 @@ export type FlowNodeErrorPolicy = z.infer<typeof FlowNodeErrorPolicySchema>;
 
 export const FlowNodeDefinitionSchema = z.object({
   id: z.string().min(1),
-  type: z.string().min(1),
-  label: z.string().min(1),
-  category: FlowNodeTypeCategorySchema,
-  position: z.object({
-    x: z.number(),
-    y: z.number(),
-  }),
+  type: z.string().min(1).optional(),
+  label: z.string().optional(),
+  category: FlowNodeTypeCategorySchema.optional(),
+  position: z
+    .object({
+      x: z.number(),
+      y: z.number(),
+    })
+    .optional(),
   params: z.record(z.unknown()).default({}),
   errorPolicy: FlowNodeErrorPolicySchema.default({}),
+  data: z.record(z.unknown()).optional(),
 });
 export type FlowNodeDefinition = z.infer<typeof FlowNodeDefinitionSchema>;
 
 export const FlowEdgeDefinitionSchema = z.object({
   id: z.string().min(1),
-  sourceNodeId: z.string().min(1),
-  sourcePortId: z.string().min(1),
-  targetNodeId: z.string().min(1),
-  targetPortId: z.string().min(1),
+  sourceNodeId: z.string().min(1).optional(),
+  sourcePortId: z.string().optional().nullable(),
+  targetNodeId: z.string().min(1).optional(),
+  targetPortId: z.string().optional().nullable(),
+  source: z.string().min(1).optional(),
+  target: z.string().min(1).optional(),
+  sourceHandle: z.string().optional().nullable(),
+  targetHandle: z.string().optional().nullable(),
+  animated: z.boolean().optional(),
+  style: z.record(z.unknown()).optional(),
 });
 export type FlowEdgeDefinition = z.infer<typeof FlowEdgeDefinitionSchema>;
 
@@ -387,22 +396,25 @@ export function validateFlowDAG(flow: FlowDefinition): GraphValidationResult {
     inDegree.set(node.id, 0);
   }
 
-  for (const edge of flow.edges) {
-    if (!nodeMap.has(edge.sourceNodeId)) {
-      errors.push(`Edge "${edge.id}" references non-existent source node "${edge.sourceNodeId}"`);
+  for (const edge of (flow.edges as any[])) {
+    const sourceId = edge.sourceNodeId || edge.source;
+    const targetId = edge.targetNodeId || edge.target;
+
+    if (!sourceId || !nodeMap.has(sourceId)) {
+      errors.push(`Edge "${edge.id}" references non-existent source node "${sourceId}"`);
     }
-    if (!nodeMap.has(edge.targetNodeId)) {
-      errors.push(`Edge "${edge.id}" references non-existent target node "${edge.targetNodeId}"`);
+    if (!targetId || !nodeMap.has(targetId)) {
+      errors.push(`Edge "${edge.id}" references non-existent target node "${targetId}"`);
     }
-    if (edge.sourceNodeId === edge.targetNodeId) {
-      errors.push(`Self-referencing cycle detected on node "${edge.sourceNodeId}"`);
+    if (sourceId && targetId && sourceId === targetId) {
+      errors.push(`Self-referencing cycle detected on node "${sourceId}"`);
     }
 
-    if (adjacency.has(edge.sourceNodeId)) {
-      adjacency.get(edge.sourceNodeId)!.push(edge.targetNodeId);
+    if (sourceId && adjacency.has(sourceId)) {
+      adjacency.get(sourceId)!.push(targetId);
     }
-    if (inDegree.has(edge.targetNodeId)) {
-      inDegree.set(edge.targetNodeId, inDegree.get(edge.targetNodeId)! + 1);
+    if (targetId && inDegree.has(targetId)) {
+      inDegree.set(targetId, (inDegree.get(targetId) || 0) + 1);
     }
   }
 

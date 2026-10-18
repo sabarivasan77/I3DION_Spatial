@@ -44,6 +44,7 @@ const SecurityDashboard = lazyWithRetry(() => import('./pages/SecurityDashboard'
 const BillingSettingsPage = lazyWithRetry(() => import('./pages/settings/BillingSettingsPage').then((m) => ({ default: m.BillingSettingsPage })));
 const TeamManagementPage = lazyWithRetry(() => import('./pages/settings/TeamManagementPage').then((m) => ({ default: m.TeamManagementPage })));
 const EnginePage = lazyWithRetry(() => import('./features/engine/EnginePage').then((m) => ({ default: m.EnginePage })));
+const FlowPage = lazyWithRetry(() => import('./features/flow/FlowPage').then((m) => ({ default: m.FlowPage })));
 const LensPage = lazyWithRetry(() => import('./features/lens/LensPage').then((m) => ({ default: m.LensPage })));
 const BuildingManagementPage = lazyWithRetry(() => import('./pages/BuildingManagementPage').then((m) => ({ default: m.BuildingManagementPage })));
 
@@ -353,6 +354,32 @@ export default function App() {
               <ApplicationErrorBoundary appName="I3DION Spatial Lens">
                 <EntitlementGuard appKey="lens">
                   <LensPage />
+                </EntitlementGuard>
+              </ApplicationErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 6. DEDICATED STANDALONE I3DION FLOW */}
+        <Route
+          path="flow"
+          element={
+            <ProtectedRoute>
+              <ApplicationErrorBoundary appName="I3DION Flow">
+                <EntitlementGuard appKey="flow">
+                  <FlowPage />
+                </EntitlementGuard>
+              </ApplicationErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="flow/:id"
+          element={
+            <ProtectedRoute>
+              <ApplicationErrorBoundary appName="I3DION Flow">
+                <EntitlementGuard appKey="flow">
+                  <FlowPage />
                 </EntitlementGuard>
               </ApplicationErrorBoundary>
             </ProtectedRoute>
