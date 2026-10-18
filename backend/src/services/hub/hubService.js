@@ -13,13 +13,13 @@ export async function getOrganizationShowcase(identifier) {
   let orgResult;
   if (isUuid) {
     orgResult = await query(
-      `SELECT id, name, slug, profile, logo_url, website, primary_color, created_at 
+      `SELECT id, name, slug, profile, logo_url, website, primary_color, is_verified, created_at 
        FROM organizations WHERE id = $1`,
       [identifier]
     );
   } else {
     orgResult = await query(
-      `SELECT id, name, slug, profile, logo_url, website, primary_color, created_at 
+      `SELECT id, name, slug, profile, logo_url, website, primary_color, is_verified, created_at 
        FROM organizations WHERE slug = $1 OR LOWER(name) = LOWER($1)`,
       [identifier]
     );
@@ -49,9 +49,19 @@ export async function getOrganizationShowcase(identifier) {
     [org.id]
   );
 
+  // Fetch curated collections for this org
+  const { rows: collections } = await query(
+    `SELECT id, name, description, created_at
+     FROM vault_collections
+     WHERE organization_id = $1
+     ORDER BY created_at DESC`,
+    [org.id]
+  );
+
   // Fetch public showcase products
   const { rows: products } = await query(
-    `SELECT id, name, slug, category, description, specs, image_url, model_url, views_count, likes_count, updated_at
+    `SELECT id, name, slug, category, description, specs, image_url, model_url, preview_model_url, poster_url,
+            views_count, likes_count, license_spdx, license_artist, attribution_required, is_demo_model, updated_at
      FROM products
      WHERE organization_id = $1 AND is_public = true AND status = 'Published'
      ORDER BY views_count DESC, created_at DESC
@@ -63,10 +73,12 @@ export async function getOrganizationShowcase(identifier) {
     organization: org,
     catalogs,
     experiences,
+    collections,
     products,
     meta: {
       totalCatalogs: catalogs.length,
       totalExperiences: experiences.length,
+      totalCollections: collections.length,
       totalProducts: products.length,
     }
   };

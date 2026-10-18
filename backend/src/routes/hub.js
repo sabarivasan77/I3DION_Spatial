@@ -172,6 +172,52 @@ hubRouter.get(
   })
 );
 
+// Public Organization Storefront Alias (/org/:identifier)
+hubRouter.get(
+  '/org/:identifier',
+  asyncHandler(async (req, res) => {
+    const showcase = await getOrganizationShowcase(req.params.identifier);
+    res.json(showcase);
+  })
+);
+
+// Public Curated Collection Route with Server-Side Audience Filtering
+hubRouter.get(
+  '/collections/:id',
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { rows: collRows } = await query(
+      `SELECT c.*, o.name as org_name, o.logo_url as org_logo, o.is_verified as org_verified
+       FROM vault_collections c
+       JOIN organizations o ON c.organization_id = o.id
+       WHERE c.id = $1`,
+      [id]
+    );
+
+    if (!collRows[0]) {
+      throw new ApiError(404, 'Collection not found');
+    }
+
+    const collection = collRows[0];
+
+    // Server-side audience filtering: Only return public assets for public callers
+    const { rows: assets } = await query(
+      `SELECT id, name, original_name, category, type, mime_type, public_url, preview_url, poster_url,
+              size_bytes, license_spdx, license_artist, attribution_required, is_demo_model, tags
+       FROM vault_assets
+       WHERE collection_id = $1 AND is_deleted = false AND status = 'Ready' AND visibility = 'Public'
+       ORDER BY created_at DESC`,
+      [id]
+    );
+
+    res.json({
+      collection,
+      items: assets,
+      totalCount: assets.length
+    });
+  })
+);
+
 // Public Published Catalog
 hubRouter.get(
   '/catalogs/:slug',
