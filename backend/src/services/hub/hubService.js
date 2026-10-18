@@ -607,8 +607,9 @@ export async function submitHubRfq(data, clientIp = '127.0.0.1') {
       organizationId,
       visitorId: data.visitorId || 'anonymous_hub_user',
       leadId: lead.id,
-      eventType: 'rfq_submitted',
+      eventType: 'lead_form_submitted',
       metadata: {
+        type: 'rfq',
         itemsCount: items.length,
         leadId: lead.id,
         campaign,

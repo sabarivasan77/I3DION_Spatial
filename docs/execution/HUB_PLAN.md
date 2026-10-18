@@ -16,9 +16,9 @@
 | **H3** | **Product Page: 3D, AR, License, Downloads** | **Completed** | Solid/wireframe/x-ray modes; AR placement; CC-BY credit panel; honest error fallbacks (no fake models). | Commit `c868058` |
 | **H4** | **QR Studio, Short Links, Scanner** | **Completed** | Native `/q/:id` short-links; local QR rendering; camera QR scanner with allow-list; handoff to phone. | Commit `8cd1fcf` |
 | **H5** | **Organization Storefronts & Collections** | **Completed** | Branded storefronts; server-side audience pruning; private/expiring collections; zero cross-tenant leakage. | Commit `09567be` |
-| **H6** | **Quote Basket, RFQ, Leads, Flow** | **Completed** | Offline-capable quote basket; verified RFQ submission; Flow event trigger; WhatsApp lead handoff. | `test-hub-phase-h6.js` Passed |
-| **H7** | **Discovery (Search, Compare, Recommendations)** | **In Progress** | Postgres FTS search; 4-model specification compare table; real saved/liked counts. | [Phase H7 Details](#phase-h7--discovery) |
-| **H8** | **Mobile, PWA, Offline, Performance** | Pending | Responsive at 360/390/768/1024/1440px; bottom nav; service worker caching; initial JS ≤ 200KB gzip. | [Phase H8 Details](#phase-h8--mobile-pwa-offline-performance) |
+| **H6** | **Quote Basket, RFQ, Leads, Flow** | **Completed** | Offline-capable quote basket; verified RFQ submission; Flow event trigger; WhatsApp lead handoff. | Commit `eea6ac6` |
+| **H7** | **Discovery (Search, Compare, Recommendations)** | **Completed** | Postgres FTS search; 4-model specification compare table; real saved/liked counts. | `test-hub-phase-h7.js` Passed |
+| **H8** | **Mobile, PWA, Offline, Performance** | **In Progress** | Responsive at 360/390/768/1024/1440px; bottom nav; service worker caching; initial JS ≤ 200KB gzip. | [Phase H8 Details](#phase-h8--mobile-pwa-offline-performance) |
 | **H9** | **Analytics, SEO, Moderation, A11y, Hardening** | Pending | Real Lens telemetry; SSR/OG meta tags; WCAG 2.2 AA audit; Scorecard ≥ 75/100. | [Phase H9 Details](#phase-h9--analytics-seo-moderation-accessibility-hardening) |
 
 ---

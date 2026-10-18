@@ -42,6 +42,7 @@ const HubOrganizationPage = lazyWithRetry(() => import('./pages/hub/HubOrganizat
 const HubScanPage = lazyWithRetry(() => import('./pages/hub/HubScanPage').then((m) => ({ default: m.HubScanPage })));
 const HubQrStudioPage = lazyWithRetry(() => import('./pages/hub/HubQrStudio').then((m) => ({ default: m.HubQrStudio })));
 const HubRfqPage = lazyWithRetry(() => import('./pages/hub/HubRfqPage'));
+const HubComparePage = lazyWithRetry(() => import('./pages/hub/HubComparePage'));
 const QrLandingHandoffPage = lazyWithRetry(() => import('./pages/hub/QrLandingHandoff').then((m) => ({ default: m.QrLandingHandoff })));
 
 const ProfilePage = lazyWithRetry(() => import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
@@ -143,6 +144,7 @@ export default function App() {
           <Route path="hub/scan" element={<HubScanPage />} />
           <Route path="hub/qr-studio" element={<HubQrStudioPage />} />
           <Route path="hub/rfq" element={<HubRfqPage />} />
+          <Route path="hub/compare" element={<HubComparePage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<ProfilePage />} />
           <Route path="support" element={<SupportDashboardPage />} />

@@ -73,10 +73,22 @@ export const hubApi = {
     return apiRequest(`/hub/feed${queryString ? '?' + queryString : ''}`);
   },
   
-  search: async (query: string, category?: string): Promise<HubProduct[]> => {
+  search: async (
+    query: string,
+    options?: { category?: string; license?: string; sort?: string; organizationId?: string; format?: string } | string
+  ): Promise<any> => {
     const params = new URLSearchParams();
-    if (query) params.append('query', query);
-    if (category) params.append('category', category);
+    if (query) params.append('q', query);
+    
+    if (typeof options === 'string') {
+      if (options && options !== 'All') params.append('category', options);
+    } else if (options) {
+      if (options.category && options.category !== 'All') params.append('category', options.category);
+      if (options.license && options.license !== 'All') params.append('license', options.license);
+      if (options.sort) params.append('sort', options.sort);
+      if (options.organizationId && options.organizationId !== 'All') params.append('organizationId', options.organizationId);
+      if (options.format) params.append('format', options.format);
+    }
     return apiRequest(`/hub/search?${params.toString()}`);
   },
 

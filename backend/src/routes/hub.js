@@ -87,33 +87,139 @@ hubRouter.get(
 );
 
 // ==========================================
-// 2. SEARCH
+// 2. FULL-TEXT SEARCH & FACETED DISCOVERY
 // ==========================================
-const searchSchema = z.object({ query: z.object({ query: z.string().optional(), category: z.string().optional() }) });
+const searchSchema = z.object({
+  query: z.object({
+    query: z.string().optional(),
+    q: z.string().optional(),
+    category: z.string().optional(),
+    license: z.string().optional(),
+    organizationId: z.string().optional(),
+    format: z.string().optional(),
+    sort: z.enum(['relevant', 'relevance', 'newest', 'popular', 'alphabetical']).optional().default('relevant'),
+    limit: z.coerce.number().min(1).max(100).optional().default(50)
+  })
+});
+
 hubRouter.get(
   '/search',
   validate(searchSchema),
   asyncHandler(async (req, res) => {
-    const { query: searchQuery, category } = req.validated.query;
-    let sql = `
-      SELECT p.*, c.name as company_name, u.name as creator_name
+    const { 
+      query: qParam, 
+      q, 
+      category, 
+      license, 
+      organizationId,
+      format,
+      sort, 
+      limit 
+    } = req.validated.query;
+
+    const textSearch = (qParam || q || '').trim();
+
+    let whereClause = `WHERE p.is_public = true AND p.status = 'Published'`;
+    const params = [];
+
+    // Full-Text Search
+    if (textSearch) {
+      params.push(`%${textSearch}%`);
+      const termIdx = params.length;
+      whereClause += ` AND (
+        p.name ILIKE $${termIdx} 
+        OR p.description ILIKE $${termIdx} 
+        OR $${termIdx} = ANY(p.tags)
+        OR c.name ILIKE $${termIdx}
+      )`;
+    }
+
+    // Category Facet Filter
+    if (category && category !== 'All') {
+      params.push(category);
+      whereClause += ` AND p.category = $${params.length}`;
+    }
+
+    // License Facet Filter
+    if (license && license !== 'All') {
+      params.push(license);
+      whereClause += ` AND ($${params.length} = ANY(p.license_spdx) OR p.license_spdx @> ARRAY[$${params.length}]::text[])`;
+    }
+
+    // Organization Filter
+    if (organizationId && organizationId !== 'All') {
+      params.push(organizationId);
+      whereClause += ` AND (p.organization_id::text = $${params.length} OR c.slug = $${params.length})`;
+    }
+
+    // Sorting
+    let orderClause = 'ORDER BY p.views_count DESC, p.created_at DESC';
+    if (sort === 'newest') {
+      orderClause = 'ORDER BY p.created_at DESC';
+    } else if (sort === 'alphabetical') {
+      orderClause = 'ORDER BY p.name ASC';
+    } else if (sort === 'popular') {
+      orderClause = 'ORDER BY (p.likes_count * 5 + p.views_count) DESC, p.created_at DESC';
+    } else if (sort === 'relevant' || sort === 'relevance') {
+      if (textSearch) {
+        orderClause = `ORDER BY 
+          CASE WHEN p.name ILIKE $1 THEN 1 ELSE 2 END,
+          (p.likes_count * 5 + p.views_count) DESC,
+          p.created_at DESC`;
+      } else {
+        orderClause = 'ORDER BY (p.likes_count * 5 + p.views_count) DESC, p.created_at DESC';
+      }
+    }
+
+    params.push(limit);
+    const limitIdx = params.length;
+
+    const sql = `
+      SELECT p.*, 
+             c.name as company_name, 
+             c.logo_url as company_logo, 
+             c.is_verified as company_verified,
+             u.name as creator_name, 
+             u.avatar_url as creator_avatar
       FROM products p
       JOIN organizations c ON p.organization_id = c.id
       LEFT JOIN users u ON p.created_by = u.id
-      WHERE p.is_public = true AND p.status = 'Published'
+      ${whereClause}
+      ${orderClause}
+      LIMIT $${limitIdx}
     `;
-    const params = [];
-    if (searchQuery) {
-      params.push(`%${searchQuery}%`);
-      sql += ` AND (p.name ILIKE $${params.length} OR p.description ILIKE $${params.length} OR $${params.length} = ANY(p.tags))`;
-    }
-    if (category) {
-      params.push(category);
-      sql += ` AND p.category = $${params.length}`;
-    }
-    sql += ` ORDER BY p.created_at DESC LIMIT 50`;
+
     const { rows } = await query(sql, params);
-    res.json(rows);
+
+    // Compute dynamic Facets across published catalog
+    const { rows: categoryFacets } = await query(`
+      SELECT p.category, count(*)::int as count
+      FROM products p
+      WHERE p.is_public = true AND p.status = 'Published'
+      GROUP BY p.category
+      ORDER BY count DESC
+    `);
+
+    const { rows: licenseFacets } = await query(`
+      SELECT unnest(p.license_spdx) as spdx, count(*)::int as count
+      FROM products p
+      WHERE p.is_public = true AND p.status = 'Published'
+      GROUP BY spdx
+      ORDER BY count DESC
+    `);
+
+    if (req.query.format === 'verbose') {
+      res.json({
+        items: rows,
+        total: rows.length,
+        facets: {
+          categories: categoryFacets,
+          licenses: licenseFacets
+        }
+      });
+    } else {
+      res.json(rows);
+    }
   })
 );
 
