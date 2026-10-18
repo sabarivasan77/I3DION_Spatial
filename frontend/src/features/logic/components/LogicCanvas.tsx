@@ -3,6 +3,8 @@ import { useLogicCraftStore } from '../store/useLogicCraftStore';
 import { useRuntimeStore } from '../runtime/runtimeContext';
 import { LogicNode } from './LogicNode';
 import { LogicConnection } from '../types/logic';
+import { CircuitBoardCanvas } from '../../../packages/graph-editor';
+import { featureFlags } from '../../../packages/editor-kernel/featureFlags';
 
 export const LogicCanvas: React.FC = () => {
   const {
@@ -20,6 +22,16 @@ export const LogicCanvas: React.FC = () => {
     undo,
     redo,
   } = useLogicCraftStore();
+
+  const useNewCircuitKernel = featureFlags.isEnabled('ff.kernel.logic');
+
+  if (useNewCircuitKernel) {
+    return (
+      <main className="relative flex-1 w-full h-full min-h-[calc(100vh-4rem)] bg-slate-950 overflow-hidden flex flex-col">
+        <CircuitBoardCanvas onNodeSelect={(id) => selectNode(id)} />
+      </main>
+    );
+  }
 
   const activeConnectionId = useRuntimeStore((s) => s.activeConnectionId);
 

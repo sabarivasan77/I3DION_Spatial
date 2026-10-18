@@ -10,10 +10,101 @@ import { detectMimeType, extractAssetMetadata, runAssetProcessingJob } from '../
 import { entitlementService } from '../services/entitlement/entitlementService.js';
 import { usageService } from '../services/usage/usageService.js';
 
+import {
+  generatePresignedUploadUrl,
+  verifyPresignedUpload,
+  generatePresignedDownloadUrl,
+  verifyPresignedDownload,
+  validateUpload
+} from '../services/storageService.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const vaultRouter = express.Router();
+
+// Memory multer for signed uploads
+const signedUploadMulter = multer({ limits: { fileSize: 100 * 1024 * 1024 } });
+
+// ---------------------------------------------------------
+// PRE-SIGNED SECURE STORAGE ENDPOINTS (Phase S3 / Annex A10)
+// Self-authenticated via HMAC-SHA256 signature
+// ---------------------------------------------------------
+vaultRouter.post('/signed-upload', signedUploadMulter.single('file'), async (req, res) => {
+  try {
+    const { orgId, key, mime, size, expires, sig } = req.query;
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: 'No file payload provided' });
+    }
+
+    const sigResult = verifyPresignedUpload({
+      organizationId: orgId,
+      objectKey: key,
+      mimeType: mime,
+      byteSize: Number(size),
+      expiresAt: Number(expires),
+      signature: sig,
+    });
+
+    if (!sigResult.valid) {
+      return res.status(403).json({ error: sigResult.error });
+    }
+
+    // Validate size limit against signature
+    if (file.size > Number(size)) {
+      return res.status(400).json({ error: `Uploaded size ${file.size} exceeds signed limit of ${size} bytes` });
+    }
+
+    // Sniff magic bytes
+    const validation = validateUpload(file.buffer, path.basename(key), mime);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    // Persist file
+    const targetPath = path.resolve(process.cwd(), config.uploadDir, key);
+    await fs.mkdir(path.dirname(targetPath), { recursive: true });
+    await fs.writeFile(targetPath, file.buffer);
+
+    return res.status(200).json({
+      success: true,
+      objectKey: key,
+      sizeBytes: file.size,
+      mimeType: validation.verifiedMime,
+      publicUrl: `/${config.uploadDir}/${key}`,
+    });
+  } catch (err) {
+    console.error('Signed upload error:', err);
+    return res.status(500).json({ error: 'Internal signed upload error' });
+  }
+});
+
+vaultRouter.get('/signed-download', async (req, res) => {
+  try {
+    const { key, expires, sig } = req.query;
+    const sigResult = verifyPresignedDownload({
+      objectKey: key,
+      expiresAt: Number(expires),
+      signature: sig,
+    });
+
+    if (!sigResult.valid) {
+      return res.status(403).json({ error: sigResult.error });
+    }
+
+    const filePath = path.resolve(process.cwd(), config.uploadDir, key);
+    try {
+      await fs.access(filePath);
+    } catch {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    return res.sendFile(filePath);
+  } catch (err) {
+    return res.status(500).json({ error: 'Signed download error' });
+  }
+});
 
 // Multer storage configuration for local filesystem uploads
 const storage = multer.diskStorage({
@@ -27,7 +118,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 * 1024 } }); // 2GB
 
-// Apply auth middleware to all vault routes
+// Apply auth middleware to all remaining vault routes
 vaultRouter.use(requireAuth);
 
 // Helper for RBAC checks
@@ -265,6 +356,26 @@ vaultRouter.get('/assets/:id', async (req, res) => {
   }
 });
 
+// POST /api/vault/presigned-upload-url (Phase S3 Pre-signed URL Generator)
+vaultRouter.post('/presigned-upload-url', requireMinRole(['Admin', 'Manager', 'Sales User']), async (req, res) => {
+  try {
+    const { filename, mimeType, byteSize, expiresInSeconds } = req.body;
+    if (!filename || !mimeType) {
+      return res.status(400).json({ error: 'filename and mimeType are required' });
+    }
+    const result = generatePresignedUploadUrl({
+      organizationId: req.user.organization_id,
+      filename,
+      mimeType,
+      byteSize: Number(byteSize) || 50 * 1024 * 1024,
+      expiresInSeconds: expiresInSeconds ? Number(expiresInSeconds) : 900,
+    });
+    return res.json(result);
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
 // POST /api/vault/assets/upload
 vaultRouter.post('/assets/upload', requireMinRole(['Admin', 'Manager', 'Sales User']), upload.single('file'), async (req, res) => {
   try {
@@ -320,6 +431,15 @@ vaultRouter.post('/assets/upload', requireMinRole(['Admin', 'Manager', 'Sales Us
           message: modelCheck.message
         });
       }
+    }
+
+    // Magic Bytes & Payload Security Inspection (Phase S3 / Annex A10)
+    const fileBuffer = await fs.readFile(file.path);
+    const valCategory = is3DModel ? 'model' : (file.mimetype.startsWith('image/') ? 'image' : 'document');
+    const validation = validateUpload(fileBuffer, file.originalname, file.mimetype, valCategory);
+    if (!validation.valid) {
+      await fs.unlink(file.path).catch(() => {});
+      return res.status(400).json({ error: validation.error });
     }
 
     const {

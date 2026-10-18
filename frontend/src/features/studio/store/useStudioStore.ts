@@ -107,6 +107,7 @@ interface StudioState {
   copyWidget: (id?: string) => void;
   pasteWidget: () => string | null;
   moveWidget: (id: string, direction: 'up' | 'down') => void;
+  reorderWidgets: (activeId: string, overId: string) => void;
   bringToFront: (id?: string) => void;
   sendToBack: (id?: string) => void;
   bringForward: (id?: string) => void;
@@ -435,6 +436,29 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       experience: {
         ...get().experience,
         widgets: currentWidgets,
+        updatedAt: new Date().toISOString(),
+      },
+    });
+  },
+
+  reorderWidgets: (activeId: string, overId: string) => {
+    const currentWidgets = get().experience.widgets;
+    const oldIndex = currentWidgets.findIndex((w) => w.id === activeId);
+    const newIndex = currentWidgets.findIndex((w) => w.id === overId);
+    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
+
+    const reordered = [...currentWidgets];
+    const [moved] = reordered.splice(oldIndex, 1);
+    reordered.splice(newIndex, 0, moved);
+
+    set({
+      history: {
+        past: [...get().history.past, JSON.parse(JSON.stringify(currentWidgets))],
+        future: [],
+      },
+      experience: {
+        ...get().experience,
+        widgets: reordered,
         updatedAt: new Date().toISOString(),
       },
     });

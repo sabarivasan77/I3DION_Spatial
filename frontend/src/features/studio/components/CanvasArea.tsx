@@ -9,12 +9,23 @@ import {
   ChevronDown,
   Layers,
   MousePointer,
+  GripVertical,
 } from 'lucide-react';
 
 import { AlignmentToolbar } from './AlignmentToolbar';
 import { CollaboratorCursors } from '../collaboration/components/CollaboratorCursors';
 import { collaborationTransport } from '../collaboration/transport/collaborationTransport';
 import { useAuthStore } from '../../../store/authStore';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  LayoutDndProvider,
+  SortableBlockItem,
+  DroppableCanvas,
+} from '../../../packages/layout-dnd';
+import { featureFlags } from '../../../packages/editor-kernel/featureFlags';
 
 export const CanvasArea: React.FC = () => {
   const {
@@ -33,9 +44,18 @@ export const CanvasArea: React.FC = () => {
     copyWidget,
     pasteWidget,
     moveWidget,
+    reorderWidgets,
     undo,
     redo,
   } = useStudioStore();
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (!over) return;
+    if (active.id !== over.id) {
+      reorderWidgets(String(active.id), String(over.id));
+    }
+  };
 
   const user = useAuthStore((s) => s.user);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -120,77 +140,93 @@ export const CanvasArea: React.FC = () => {
     const isSelected = selectedWidgetId === node.id || selectedWidgetIds.includes(node.id);
 
     return (
-      <div key={node.id} className="group/item relative my-2">
-        {/* Selection Floating Toolbar */}
-        {isSelected && !isPreview && selectedWidgetIds.length <= 1 && (
-          <div className="absolute -top-9 right-0 z-30 flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-white shadow-xl animate-in fade-in zoom-in-95">
-            <span className="max-w-[120px] truncate text-[10px] font-mono text-slate-300">
-              {node.id}
-            </span>
-            <span className="text-slate-600">|</span>
+      <SortableBlockItem key={node.id} id={node.id}>
+        {({ setNodeRef, attributes, listeners, style }) => (
+          <div
+            ref={setNodeRef}
+            style={style}
+            className="group/item relative my-2"
+          >
+            {/* Selection Floating Toolbar */}
+            {isSelected && !isPreview && selectedWidgetIds.length <= 1 && (
+              <div className="absolute -top-9 right-0 z-30 flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-white shadow-xl animate-in fade-in zoom-in-95">
+                <span
+                  {...attributes}
+                  {...listeners}
+                  className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white"
+                  title="Drag to reorder"
+                >
+                  <GripVertical size={14} />
+                </span>
+                <span className="max-w-[120px] truncate text-[10px] font-mono text-slate-300">
+                  {node.id}
+                </span>
+                <span className="text-slate-600">|</span>
 
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                moveWidget(node.id, 'up');
-              }}
-              className="rounded p-1 hover:bg-slate-800 text-slate-300 hover:text-white"
-              title="Move Up"
-            >
-              <ChevronUp size={14} />
-            </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    moveWidget(node.id, 'up');
+                  }}
+                  className="rounded p-1 hover:bg-slate-800 text-slate-300 hover:text-white"
+                  title="Move Up"
+                >
+                  <ChevronUp size={14} />
+                </button>
 
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                moveWidget(node.id, 'down');
-              }}
-              className="rounded p-1 hover:bg-slate-800 text-slate-300 hover:text-white"
-              title="Move Down"
-            >
-              <ChevronDown size={14} />
-            </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    moveWidget(node.id, 'down');
+                  }}
+                  className="rounded p-1 hover:bg-slate-800 text-slate-300 hover:text-white"
+                  title="Move Down"
+                >
+                  <ChevronDown size={14} />
+                </button>
 
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                duplicateWidget(node.id);
-              }}
-              className="rounded p-1 hover:bg-slate-800 text-slate-300 hover:text-white"
-              title="Duplicate Widget"
-            >
-              <Copy size={14} />
-            </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    duplicateWidget(node.id);
+                  }}
+                  className="rounded p-1 hover:bg-slate-800 text-slate-300 hover:text-white"
+                  title="Duplicate Widget"
+                >
+                  <Copy size={14} />
+                </button>
 
-            <button
-              type="button"
-              onClick={(e) => {
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteWidget(node.id);
+                  }}
+                  className="rounded p-1 hover:bg-red-900/60 text-red-400 hover:text-red-300"
+                  title="Delete Widget"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            )}
+
+            {/* Component Renderer */}
+            <WidgetComponent
+              node={node}
+              isSelected={isSelected}
+              isPreview={isPreview}
+              onSelect={(e) => {
                 e.stopPropagation();
-                deleteWidget(node.id);
+                const isMulti = e.ctrlKey || e.metaKey;
+                selectWidget(node.id, isMulti);
               }}
-              className="rounded p-1 hover:bg-red-900/60 text-red-400 hover:text-red-300"
-              title="Delete Widget"
-            >
-              <Trash2 size={14} />
-            </button>
+            />
           </div>
         )}
-
-        {/* Component Renderer */}
-        <WidgetComponent
-          node={node}
-          isSelected={isSelected}
-          isPreview={isPreview}
-          onSelect={(e) => {
-            e.stopPropagation();
-            const isMulti = e.ctrlKey || e.metaKey;
-            selectWidget(node.id, isMulti);
-          }}
-        />
-      </div>
+      </SortableBlockItem>
     );
   };
 
@@ -247,24 +283,33 @@ export const CanvasArea: React.FC = () => {
       >
         <CollaboratorCursors />
 
-        <div
-          style={{
-            backgroundColor: experience.canvas.backgroundColor || '#ffffff',
-          }}
-          className={`relative min-h-[720px] transition-all duration-300 ease-out rounded-2xl border border-slate-200 shadow-lg p-6 ${getViewportWidthClass()}`}
-        >
-          {experience.widgets && experience.widgets.length > 0 ? (
-            experience.widgets.map((node) => renderWidgetNode(node))
-          ) : (
-            <div className="flex h-96 w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 text-center">
-              <Layers size={40} className="mb-3 text-slate-300" />
-              <h3 className="text-sm font-bold text-slate-700">Canvas Empty</h3>
-              <p className="mt-1 text-xs text-slate-400">
-                Click or drag any widget from the left library onto the canvas.
-              </p>
+        <LayoutDndProvider onDragEnd={handleDragEnd}>
+          <DroppableCanvas id="studio-canvas-root" className="w-full flex justify-center">
+            <div
+              style={{
+                backgroundColor: experience.canvas.backgroundColor || '#ffffff',
+              }}
+              className={`relative min-h-[720px] transition-all duration-300 ease-out rounded-2xl border border-slate-200 shadow-lg p-6 ${getViewportWidthClass()}`}
+            >
+              <SortableContext
+                items={experience.widgets?.map((w) => w.id) || []}
+                strategy={verticalListSortingStrategy}
+              >
+                {experience.widgets && experience.widgets.length > 0 ? (
+                  experience.widgets.map((node) => renderWidgetNode(node))
+                ) : (
+                  <div className="flex h-96 w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 text-center">
+                    <Layers size={40} className="mb-3 text-slate-300" />
+                    <h3 className="text-sm font-bold text-slate-700">Canvas Empty</h3>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Click or drag any widget from the left library onto the canvas.
+                    </p>
+                  </div>
+                )}
+              </SortableContext>
             </div>
-          )}
-        </div>
+          </DroppableCanvas>
+        </LayoutDndProvider>
       </div>
     </main>
   );

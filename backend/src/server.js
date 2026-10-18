@@ -34,6 +34,7 @@ import { engineRouter } from './routes/engine.js';
 import { lensRouter } from './routes/lens.js';
 import { coreRouter } from './routes/core.js';
 import onboardingRouter from './routes/onboarding.js';
+import { flowRouter } from './routes/flow.js';
 import { errorHandler, notFound } from './utils/errors.js';
 
 export const app = express();
@@ -139,6 +140,7 @@ apiRouter.use('/vault', vaultRouter);
 apiRouter.use('/core', coreRouter);
 apiRouter.use('/notifications', notificationsRouter);
 apiRouter.use('/onboarding', onboardingRouter);
+apiRouter.use('/flows', flowRouter);
 apiRouter.use('/', resourcesRouter);
 
 app.use('/api', apiRouter);

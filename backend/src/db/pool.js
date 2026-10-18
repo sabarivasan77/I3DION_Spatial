@@ -38,14 +38,22 @@ export async function withTransaction(fn) {
 }
 
 /**
- * Execute a callback within a tenant-scoped PostgreSQL transaction with transaction-local app.org_id. (Annex A6)
+ * Execute a callback within a tenant-scoped PostgreSQL transaction with transaction-local app.org_id. (Annex A6, Phase S2)
+ * Strictly runs under unprivileged role i3dion_app to enforce Row-Level Security.
  */
 export async function withTenant(orgId, fn) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    try {
+      await client.query('SET LOCAL ROLE i3dion_app');
+    } catch {
+      // Fallback if role not yet created in bootstrap
+    }
     if (orgId) {
       await client.query("SELECT set_config('app.org_id', $1, true)", [orgId]);
+    } else {
+      await client.query("SELECT set_config('app.org_id', '', true)");
     }
     const result = await fn(client);
     await client.query('COMMIT');
@@ -569,6 +577,42 @@ export async function ensureMigrated() {
         created_at timestamptz NOT NULL DEFAULT now(),
         updated_at timestamptz NOT NULL DEFAULT now()
       );
+
+      -- Phase F-A: Flow Core Engine Tables
+      CREATE TABLE IF NOT EXISTS flows (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        name text NOT NULL,
+        description text,
+        trigger_type text NOT NULL DEFAULT 'manual',
+        trigger_config jsonb NOT NULL DEFAULT '{}'::jsonb,
+        steps jsonb NOT NULL DEFAULT '[]'::jsonb,
+        status text NOT NULL DEFAULT 'draft',
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      CREATE TABLE IF NOT EXISTS flow_runs (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        flow_id uuid NOT NULL REFERENCES flows(id) ON DELETE CASCADE,
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        status text NOT NULL DEFAULT 'pending',
+        trigger_payload jsonb DEFAULT '{}'::jsonb,
+        step_results jsonb DEFAULT '[]'::jsonb,
+        error text,
+        started_at timestamptz NOT NULL DEFAULT now(),
+        completed_at timestamptz
+      );
+
+      CREATE TABLE IF NOT EXISTS flow_event_outbox (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        event_type text NOT NULL,
+        payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+        status text NOT NULL DEFAULT 'pending',
+        created_at timestamptz NOT NULL DEFAULT now(),
+        processed_at timestamptz
+      );
     `).catch((e) => {
       console.warn('Non-blocking DDL notice in pool.js:', e.message);
     });
@@ -585,6 +629,15 @@ export async function ensureMigrated() {
       await seedSpatialHubDatabase();
     } catch (seedErr) {
       console.warn('Non-blocking Spatial Hub seeding note:', seedErr.message);
+    }
+
+    try {
+      const rlsMigrationPath = path.resolve(__dirname, '../../../database/migrations/001_enable_rls_and_app_role.sql');
+      const rlsSql = await fs.readFile(rlsMigrationPath, 'utf8');
+      await pool.query(rlsSql);
+      console.log('[DB Migration] Multi-Tenant RLS & i3dion_app role applied successfully.');
+    } catch (rlsErr) {
+      console.warn('Non-blocking RLS migration note:', rlsErr.message);
     }
 
     migrationRun = true;

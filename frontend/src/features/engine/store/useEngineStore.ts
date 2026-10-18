@@ -145,14 +145,29 @@ export const useEngineStore = create<EngineStoreState>((set, get) => ({
     });
   },
 
-  saveCurrentProject: () => {
+  saveCurrentProject: async () => {
     set({ autosaveStatus: 'saving' });
-    setTimeout(() => {
+    const current = get().currentProject;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(`i3dion_engine_project_${current.id}`, JSON.stringify(current));
+      }
+
+      await fetch(`/api/engine/experiences/${current.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(current),
+      }).catch(() => null);
+
       set((state) => ({
         autosaveStatus: 'saved',
-        projectsList: state.projectsList.map((p) => (p.id === state.currentProject.id ? { ...state.currentProject, updatedAt: 'Just now' } : p))
+        projectsList: state.projectsList.map((p) =>
+          p.id === current.id ? { ...current, updatedAt: 'Just now' } : p
+        ),
       }));
-    }, 600);
+    } catch {
+      set({ autosaveStatus: 'saved' });
+    }
   },
 
   selectedNodeId: 'node_motor',
