@@ -54,8 +54,12 @@ if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
 if (config.appUrl && !allowedOrigins.includes(config.appUrl)) {
   allowedOrigins.push(config.appUrl);
 }
-if (process.env.NODE_ENV !== 'production' && allowedOrigins.length === 0) {
-  allowedOrigins.push('http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:4173');
+// Always ensure common localhost ports are included in allowedOrigins for seamless development
+const devOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:4173', 'http://127.0.0.1:5173', 'http://127.0.0.1:4173'];
+for (const devOrigin of devOrigins) {
+  if (!allowedOrigins.includes(devOrigin)) {
+    allowedOrigins.push(devOrigin);
+  }
 }
 
 app.use(cors({
@@ -154,7 +158,8 @@ app.get('/q/:shortCode', (req, res) => {
   res.redirect(`/player/${req.params.shortCode}`);
 });
 
-app.use('/api', apiRouter);
+app.use('/auth', authRouter);
+app.use(['/api', '/api/v1'], apiRouter);
 app.use(notFound);
 app.use(errorHandler);
 

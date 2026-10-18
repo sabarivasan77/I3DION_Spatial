@@ -1378,12 +1378,16 @@ export async function apiRequest<T>(
 
   try {
     response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers, body, signal: controller.signal });
-  } catch (error) {
+  } catch (error: any) {
     if (isExplicitDemoMode(options.token)) {
       console.warn(`[API Network Guard] Demo mode active. Serving mock fallback for ${path}.`);
       return offlineFallback<T>(path, options);
     }
-    throw error;
+    const isConnError = error?.name === 'TypeError' || error?.message?.includes('fetch') || error?.message?.includes('NetworkError');
+    const msg = isConnError
+      ? 'Unable to connect to the backend server. Please verify the backend is running on port 4000.'
+      : (error?.message || 'Network request failed');
+    throw new ApiClientError(0, msg, error);
   } finally {
     window.clearTimeout(timeout);
   }
@@ -1391,7 +1395,12 @@ export async function apiRequest<T>(
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new ApiClientError(response.status, data.message ?? 'API request failed', data.details);
+    const errorMsg = data.message || data.error || (response.status === 504 || response.status === 502
+      ? 'Backend proxy timeout. Please ensure the backend is running on port 4000.'
+      : response.status === 401
+        ? 'Invalid email or password'
+        : `Request failed with status ${response.status}`);
+    throw new ApiClientError(response.status, errorMsg, data.details || data);
   }
 
   return data as T;

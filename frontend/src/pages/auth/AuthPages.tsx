@@ -67,8 +67,13 @@ function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
     if (isSignup && !companyName.trim()) errs.companyName = 'Company name is required';
     if (!email.trim()) errs.email = 'Email is required';
     else if (!validateEmail(email)) errs.email = 'Please enter a valid email address';
-    if (!password) errs.password = 'Password is required';
-    else if (password.length < 8) errs.password = 'Password must be at least 8 characters';
+    if (!password) {
+      errs.password = 'Password is required';
+    } else if (isSignup && password.length < 12) {
+      errs.password = 'Password must be at least 12 characters long';
+    } else if (!isSignup && password.length < 6) {
+      errs.password = 'Password must be at least 6 characters';
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -80,15 +85,13 @@ function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
       if (isSignup) {
         await signup({ name, companyName, email, password });
         Tracker.trackEvent('user_register', { email, name, companyName });
-        // After signup with Supabase, if email confirmation is enabled, they need to verify
-        // For simplicity, we just navigate.
       } else {
         await login(email, password);
         Tracker.trackEvent('user_login', { email });
       }
       navigate('/hub');
     } catch (err: any) {
-      showError('Authentication failed', authError ?? err.message ?? 'Please check your credentials');
+      showError('Authentication failed', err.message || authError || 'Please check your credentials');
     }
   }
 
@@ -140,7 +143,20 @@ function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
             )}
             
             <InputField label="Email" type="email" value={email} onChange={setEmail} placeholder="alex@i3dion.com" error={errors.email} required />
-            <InputField label="Password" type="password" value={password} onChange={setPassword} placeholder="Minimum 8 characters" error={errors.password} required />
+            <InputField 
+              label="Password" 
+              type="password" 
+              value={password} 
+              onChange={(v) => { setPassword(v); if (authError) clearError(); }} 
+              placeholder={isSignup ? "Minimum 12 characters (e.g. OrgSecure#2027)" : "Enter your password"} 
+              error={errors.password} 
+              required 
+            />
+            {isSignup && (
+              <p className="-mt-3 text-xs text-slate-400">
+                Must be at least 12 characters. Avoid common passwords, your name, or email username.
+              </p>
+            )}
 
             {authError && <p className="rounded-xl bg-red-50 p-3 text-sm font-medium text-red-700">{authError}</p>}
             

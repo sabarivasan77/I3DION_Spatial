@@ -718,8 +718,8 @@ export async function seedSpatialHubDatabase() {
     let userRes = await client.query(`SELECT id FROM users WHERE email = $1`, [adminEmail]);
     let userId;
     if (userRes.rows.length === 0) {
-      // Hashed password for 'Password123!'
-      const passwordHash = '$2a$10$3euP5d/D74P.S.59K1Zg3.7N2.WwR0YxQ.E1k6sVv.7a3M1mQ9m5u'; 
+      // Hashed password for 'Admin@123456' using Argon2id (Annex A1)
+      const passwordHash = '$argon2id$v=19$m=65536,p=1,t=3$eHBwgOu/0852ugPjAZPhDQ$Chdl75wqTKSvYucq6FFL+paLhqpYQ0ucPIOFjj90eGc'; 
       const newUser = await client.query(`
         INSERT INTO users (organization_id, name, email, password_hash, role)
         VALUES ($1, 'I3DION Admin', $2, $3, 'Admin')
