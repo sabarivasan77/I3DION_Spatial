@@ -3,7 +3,7 @@ import { useEngineStore } from '../store/useEngineStore';
 import { MousePointer, Move, RotateCw, Maximize2 } from 'lucide-react';
 
 export const EngineViewportCanvas: React.FC = () => {
-  const { currentProject, selectedNodeId, setSelectedNodeId, gizmoMode, setGizmoMode, renderMode, setRenderMode } = useEngineStore();
+  const { selectedNodeId, setSelectedNodeId, gizmoMode, setGizmoMode, renderMode, setRenderMode } = useEngineStore();
   const [cameraPreset, setCameraPreset] = useState<'Perspective' | 'Top' | 'Front' | 'Right'>('Perspective');
 
   return (

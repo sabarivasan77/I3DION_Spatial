@@ -116,7 +116,7 @@ export const EcosystemHeader: React.FC<EcosystemHeaderProps> = ({
               className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
             >
               <Building2 className="h-3.5 w-3.5 text-slate-400" />
-              <span className="max-w-[130px] truncate">{user?.organizationName || 'Default Workspace'}</span>
+              <span className="max-w-[130px] truncate">{user?.organizationName || user?.companyName || 'Default Workspace'}</span>
               <ChevronDown className="h-3 w-3 text-slate-400" />
             </button>
 
@@ -126,7 +126,7 @@ export const EcosystemHeader: React.FC<EcosystemHeaderProps> = ({
                   Active Organization
                 </div>
                 <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-blue-50 text-blue-900 text-xs font-medium">
-                  <span className="truncate">{user?.organizationName || 'Default Workspace'}</span>
+                  <span className="truncate">{user?.organizationName || user?.companyName || 'Default Workspace'}</span>
                   <Check className="h-3.5 w-3.5 text-blue-600 shrink-0" />
                 </div>
                 <div className="my-1 border-t border-slate-100" />

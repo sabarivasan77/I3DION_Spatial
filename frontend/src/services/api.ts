@@ -22,6 +22,8 @@ export interface SessionUser {
   name: string;
   email: string;
   role: 'Super Admin' | 'Admin' | 'Manager' | 'Sales User' | 'Viewer' | 'Company Admin' | string;
+  organizationName?: string;
+  companyName?: string;
 }
 
 export interface AuthResponse {
