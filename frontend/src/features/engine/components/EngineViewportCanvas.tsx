@@ -3,7 +3,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, TransformControls, Grid, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useEngineStore } from '../store/useEngineStore';
-import { MousePointer, Move, RotateCw, Maximize2, Box, Layers, Play } from 'lucide-react';
+import { Move, RotateCw, Maximize2 } from 'lucide-react';
 import { featureFlags } from '../../../packages/editor-kernel/featureFlags';
 
 // -------------------------------------------------------------
@@ -22,6 +22,7 @@ function IndustrialAssemblyScene({
   gizmoMode: 'translate' | 'rotate' | 'scale';
   onTransformChange: (nodeId: string, position: [number, number, number]) => void;
 }) {
+  const allowGizmos = featureFlags.isEnabled('ff.engine.transform');
   const motorRef = useRef<THREE.Mesh>(null);
   const pipeRef = useRef<THREE.Mesh>(null);
   const baseRef = useRef<THREE.Mesh>(null);
@@ -110,7 +111,7 @@ function IndustrialAssemblyScene({
       </mesh>
 
       {/* Real TransformControls attached to selected mesh */}
-      {selectedNodeId === 'node_motor' && motorRef.current && (
+      {allowGizmos && selectedNodeId === 'node_motor' && motorRef.current && (
         <TransformControls
           object={motorRef.current}
           mode={gizmoMode}
@@ -122,7 +123,7 @@ function IndustrialAssemblyScene({
           }}
         />
       )}
-      {selectedNodeId === 'node_inlet_pipe' && pipeRef.current && (
+      {allowGizmos && selectedNodeId === 'node_inlet_pipe' && pipeRef.current && (
         <TransformControls
           object={pipeRef.current}
           mode={gizmoMode}
@@ -206,7 +207,7 @@ export const EngineViewportCanvas: React.FC = () => {
       <div className="absolute top-3 left-4 z-20 flex items-center gap-2">
         <select
           value={cameraPreset}
-          onChange={(e) => setCameraPreset(e.target.value as any)}
+          onChange={(e) => setCameraPreset(e.target.value as 'Perspective' | 'Top' | 'Front' | 'Right')}
           className="bg-slate-900/90 text-white font-bold text-xs px-3 py-1.5 rounded-lg border border-slate-700/80 shadow-lg backdrop-blur-md focus:outline-none cursor-pointer"
         >
           <option value="Perspective">Perspective ▾</option>
