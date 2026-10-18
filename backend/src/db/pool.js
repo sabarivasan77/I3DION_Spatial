@@ -569,6 +569,75 @@ export async function ensureMigrated() {
         created_at timestamptz NOT NULL DEFAULT now(),
         updated_at timestamptz NOT NULL DEFAULT now()
       );
+
+      -- Phase 2: Flow Engine & Automation Persistence Model
+      CREATE TABLE IF NOT EXISTS flows (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        owner_id uuid REFERENCES users(id) ON DELETE SET NULL,
+        name text NOT NULL,
+        description text DEFAULT '',
+        status text NOT NULL DEFAULT 'draft',
+        version integer NOT NULL DEFAULT 1,
+        last_published_version integer,
+        trigger_type text NOT NULL DEFAULT 'manual',
+        trigger_config jsonb NOT NULL DEFAULT '{}'::jsonb,
+        flow_definition jsonb NOT NULL DEFAULT '{"trigger": {"id": "trig_1", "type": "manual", "label": "Manual Trigger", "config": {}}, "nodes": [], "edges": [], "variables": [], "settings": {"concurrency": 5, "timeoutSeconds": 120, "retentionDays": 30}}'::jsonb,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now(),
+        published_at timestamptz
+      );
+
+      CREATE TABLE IF NOT EXISTS flow_versions (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        flow_id uuid NOT NULL REFERENCES flows(id) ON DELETE CASCADE,
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        version_number integer NOT NULL,
+        author_id uuid REFERENCES users(id) ON DELETE SET NULL,
+        change_summary text,
+        flow_definition jsonb NOT NULL,
+        published_at timestamptz NOT NULL DEFAULT now(),
+        UNIQUE (flow_id, version_number)
+      );
+
+      CREATE TABLE IF NOT EXISTS flow_runs (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        flow_id uuid NOT NULL REFERENCES flows(id) ON DELETE CASCADE,
+        flow_version integer NOT NULL DEFAULT 1,
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        triggered_by uuid REFERENCES users(id) ON DELETE SET NULL,
+        status text NOT NULL DEFAULT 'pending',
+        trigger_payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+        step_results jsonb NOT NULL DEFAULT '[]'::jsonb,
+        error text,
+        started_at timestamptz NOT NULL DEFAULT now(),
+        completed_at timestamptz
+      );
+
+      -- Ensure columns exist if table was created in an earlier migration
+      ALTER TABLE flows ADD COLUMN IF NOT EXISTS owner_id uuid REFERENCES users(id) ON DELETE SET NULL;
+      ALTER TABLE flows ADD COLUMN IF NOT EXISTS version integer NOT NULL DEFAULT 1;
+      ALTER TABLE flows ADD COLUMN IF NOT EXISTS last_published_version integer;
+      ALTER TABLE flows ADD COLUMN IF NOT EXISTS flow_definition jsonb NOT NULL DEFAULT '{"trigger": {"id": "trig_1", "type": "manual", "label": "Manual Trigger", "config": {}}, "nodes": [], "edges": [], "variables": [], "settings": {"concurrency": 5, "timeoutSeconds": 120, "retentionDays": 30}}'::jsonb;
+      ALTER TABLE flows ADD COLUMN IF NOT EXISTS published_at timestamptz;
+
+      ALTER TABLE flow_runs ADD COLUMN IF NOT EXISTS flow_version integer NOT NULL DEFAULT 1;
+      ALTER TABLE flow_runs ADD COLUMN IF NOT EXISTS triggered_by uuid REFERENCES users(id) ON DELETE SET NULL;
+
+      CREATE TABLE IF NOT EXISTS flow_event_outbox (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        event_type text NOT NULL,
+        payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+        status text NOT NULL DEFAULT 'pending',
+        created_at timestamptz NOT NULL DEFAULT now(),
+        processed_at timestamptz
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_flows_org_id ON flows(organization_id);
+      CREATE INDEX IF NOT EXISTS idx_flow_runs_flow_id ON flow_runs(flow_id);
+      CREATE INDEX IF NOT EXISTS idx_flow_runs_org_id ON flow_runs(organization_id);
+      CREATE INDEX IF NOT EXISTS idx_flow_outbox_status ON flow_event_outbox(status);
     `).catch((e) => {
       console.warn('Non-blocking DDL notice in pool.js:', e.message);
     });
