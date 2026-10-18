@@ -39,6 +39,9 @@ const HubLikedPage = lazyWithRetry(() => import('./pages/hub/HubLikedPage').then
 const HubSubscriptionsPage = lazyWithRetry(() => import('./pages/hub/HubSubscriptionsPage').then((m) => ({ default: m.HubSubscriptionsPage })));
 const HubNotificationsPage = lazyWithRetry(() => import('./pages/hub/HubNotificationsPage').then((m) => ({ default: m.HubNotificationsPage })));
 const HubOrganizationPage = lazyWithRetry(() => import('./pages/hub/HubOrganizationPage').then((m) => ({ default: m.HubOrganizationPage })));
+const HubScanPage = lazyWithRetry(() => import('./pages/hub/HubScanPage').then((m) => ({ default: m.HubScanPage })));
+const HubQrStudioPage = lazyWithRetry(() => import('./pages/hub/HubQrStudio').then((m) => ({ default: m.HubQrStudio })));
+const QrLandingHandoffPage = lazyWithRetry(() => import('./pages/hub/QrLandingHandoff').then((m) => ({ default: m.QrLandingHandoff })));
 
 const ProfilePage = lazyWithRetry(() => import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
 const SecurityDashboard = lazyWithRetry(() => import('./pages/SecurityDashboard').then((m) => ({ default: m.SecurityDashboard })));
@@ -136,11 +139,16 @@ export default function App() {
           <Route path="hub/organization" element={<HubOrganizationPage />} />
           <Route path="hub/organization/:tab" element={<HubOrganizationPage />} />
           <Route path="hub/company/:id" element={<HubOrganizationPage />} />
+          <Route path="hub/scan" element={<HubScanPage />} />
+          <Route path="hub/qr-studio" element={<HubQrStudioPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<ProfilePage />} />
           <Route path="support" element={<SupportDashboardPage />} />
           <Route path="support/kb" element={<HelpCenterPage />} />
         </Route>
+
+        {/* QR Short Link Landing & Desktop-to-Phone Handoff */}
+        <Route path="q/:id" element={<QrLandingHandoffPage />} />
 
         {/* 2. I3DION SPATIAL VAULT — DEDICATED NEW APPLICATION SHELL */}
         <Route

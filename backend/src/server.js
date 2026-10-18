@@ -37,6 +37,7 @@ import onboardingRouter from './routes/onboarding.js';
 import flowRouter from './routes/flow.js';
 import { playerRouter } from './routes/player.js';
 import { printRouter } from './routes/print.js';
+import { qrRouter, rootQrResolver } from './routes/qr.js';
 import { secureFileHandler, createStorageRouter } from './services/storageService.js';
 import { errorHandler, notFound } from './utils/errors.js';
 
@@ -150,13 +151,12 @@ apiRouter.use('/vault', vaultRouter);
 apiRouter.use('/core', coreRouter);
 apiRouter.use('/notifications', notificationsRouter);
 apiRouter.use('/onboarding', onboardingRouter);
+apiRouter.use('/qr', qrRouter);
 apiRouter.use('/storage', createStorageRouter());
 apiRouter.use('/', resourcesRouter);
 
-// Short-link player vanity route
-app.get('/q/:shortCode', (req, res) => {
-  res.redirect(`/player/${req.params.shortCode}`);
-});
+// Short-link resolver route with campaign attribution and pause/expiry checks
+app.get('/q/:shortCode', rootQrResolver);
 
 app.use('/auth', authRouter);
 app.use(['/api', '/api/v1'], apiRouter);
