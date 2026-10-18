@@ -19,6 +19,7 @@ const ProductManagementPage = lazyWithRetry(() => import('./pages/ProductFlow').
 const ProductUploadWizardPage = lazyWithRetry(() => import('./pages/ProductFlow').then((m) => ({ default: m.ProductUploadWizardPage })));
 const ProductExperiencePage = lazyWithRetry(() => import('./pages/ProductFlow').then((m) => ({ default: m.ProductExperiencePage })));
 const PublicProductPage = lazyWithRetry(() => import('./pages/PublicProductPage').then((m) => ({ default: m.PublicProductPage })));
+const CatalogPlayerPage = lazyWithRetry(() => import('./pages/player/CatalogPlayerPage').then((m) => ({ default: m.CatalogPlayerPage })));
 const AnalyticsDashboardPage = lazyWithRetry(() => import('./pages/SalesIntelligence').then((m) => ({ default: m.SalesIntelligencePage })));
 const AiIntelligencePage = lazyWithRetry(() => import('./pages/AiIntelligence').then((m) => ({ default: m.AiIntelligencePage })));
 const LeadsDashboardPage = lazyWithRetry(() => import('./pages/LeadManagement').then((m) => ({ default: m.LeadManagementPage })));
@@ -111,6 +112,8 @@ export default function App() {
         {/* Public Product & Experience Direct URLs */}
         <Route path="product/:slug" element={<PublicProductPage />} />
         <Route path="experience/:publicId" element={<PublicProductPage />} />
+        <Route path="player/:shortCode" element={<CatalogPlayerPage />} />
+        <Route path="q/:shortCode" element={<CatalogPlayerPage />} />
 
         {/* 1. I3DION SPATIAL HUB — Public Consumer Front Door Boundary */}
         <Route

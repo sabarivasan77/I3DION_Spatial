@@ -35,6 +35,7 @@ import { lensRouter } from './routes/lens.js';
 import { coreRouter } from './routes/core.js';
 import onboardingRouter from './routes/onboarding.js';
 import flowRouter from './routes/flow.js';
+import { playerRouter } from './routes/player.js';
 import { secureFileHandler, createStorageRouter } from './services/storageService.js';
 import { errorHandler, notFound } from './utils/errors.js';
 
@@ -138,12 +139,18 @@ apiRouter.use('/omni-studio', studioRouter);
 apiRouter.use('/engine', engineRouter);
 apiRouter.use('/lens', lensRouter);
 apiRouter.use('/flows', flowRouter);
+apiRouter.use('/player', playerRouter);
 apiRouter.use('/vault', vaultRouter);
 apiRouter.use('/core', coreRouter);
 apiRouter.use('/notifications', notificationsRouter);
 apiRouter.use('/onboarding', onboardingRouter);
 apiRouter.use('/storage', createStorageRouter());
 apiRouter.use('/', resourcesRouter);
+
+// Short-link player vanity route
+app.get('/q/:shortCode', (req, res) => {
+  res.redirect(`/player/${req.params.shortCode}`);
+});
 
 app.use('/api', apiRouter);
 app.use(notFound);
