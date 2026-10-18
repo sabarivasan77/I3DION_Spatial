@@ -31,6 +31,8 @@ database/backups/*
 *.meta.json
 !backend/src/db/schema.sql
 !database/schema.sql
+!backend/src/db/migrations/*.sql
+!db/migrations/*.sql
 
 # Test Artifacts & Reports
 frontend/playwright-report/

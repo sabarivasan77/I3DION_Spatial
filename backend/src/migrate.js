@@ -1,9 +1,9 @@
-import { migrate } from './db/pool.js';
+import { runMigrations } from './db/migrator.js';
 
 async function runMigration() {
   console.log('Starting database migration...');
   try {
-    await migrate();
+    await runMigrations();
     console.log('Database migration completed successfully.');
     process.exit(0);
   } catch (error) {

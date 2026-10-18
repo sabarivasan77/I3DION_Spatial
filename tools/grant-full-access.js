@@ -1,4 +1,4 @@
-import { query } from './pool.js';
+import { query } from '../backend/src/db/pool.js';
 
 async function grantFullAccess() {
   const targetEmail = 'sabarivasan963sv@gmail.com';

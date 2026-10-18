@@ -25,7 +25,7 @@ const trackedFiles = execSync('git ls-files', { encoding: 'utf8' })
 // 2. Disallowed patterns in tracked files
 for (const file of trackedFiles) {
   // Check backups
-  if (file.includes('database/backups/') || (file.endsWith('.sql') && !file.includes('schema.sql'))) {
+  if (file.includes('database/backups/') || (file.endsWith('.sql') && !file.includes('schema.sql') && !file.includes('migrations/'))) {
     errors.push(`[SEC-01 Violation] Database backup/dump tracked in git: ${file}`);
   }
   // Check .env files
