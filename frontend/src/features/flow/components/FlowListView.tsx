@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { flowApi, FlowListItem } from '../services/flowApi';
 import { useFlowDesignerStore } from '../store/useFlowDesignerStore';
+import { FlowRunsView } from './FlowRunsView';
+import { FlowAnalyticsView } from './FlowAnalyticsView';
 
 export const FlowListView: React.FC = () => {
   const navigate = useNavigate();
@@ -30,6 +32,7 @@ export const FlowListView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [activeNavTab, setActiveNavTab] = useState<'workflows' | 'runs' | 'analytics'>('workflows');
 
   const { createBlankFlow, createFromTemplate } = useFlowDesignerStore();
 
@@ -155,8 +158,56 @@ export const FlowListView: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-6 mt-8">
-        {/* Search & Filter Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-2 border-b border-slate-200 mb-8">
+          <button
+            onClick={() => setActiveNavTab('workflows')}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition ${
+              activeNavTab === 'workflows'
+                ? 'border-cyan-600 text-cyan-700 bg-cyan-50/50'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Workflow size={16} />
+            <span>Workflows</span>
+            <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono">
+              {flows.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveNavTab('runs')}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition ${
+              activeNavTab === 'runs'
+                ? 'border-cyan-600 text-cyan-700 bg-cyan-50/50'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Clock size={16} />
+            <span>Execution Runs</span>
+          </button>
+
+          <button
+            onClick={() => setActiveNavTab('analytics')}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition ${
+              activeNavTab === 'analytics'
+                ? 'border-cyan-600 text-cyan-700 bg-cyan-50/50'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Activity size={16} />
+            <span>Analytics & Metrics</span>
+          </button>
+        </div>
+
+        {activeNavTab === 'runs' ? (
+          <FlowRunsView onSelectFlow={(fid) => navigate(`/flow/${fid}`)} />
+        ) : activeNavTab === 'analytics' ? (
+          <FlowAnalyticsView />
+        ) : (
+          <>
+            {/* Search & Filter Bar */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
           <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-96">
             <Search size={16} className="absolute left-3.5 top-3 text-slate-400" />
             <input
@@ -282,6 +333,8 @@ export const FlowListView: React.FC = () => {
               </div>
             ))}
           </div>
+        )}
+          </>
         )}
       </div>
 

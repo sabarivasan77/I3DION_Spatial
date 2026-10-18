@@ -7,18 +7,21 @@ import { FlowPalette } from './components/FlowPalette';
 import { FlowDesignerCanvas } from './components/FlowDesignerCanvas';
 import { FlowNodeInspector } from './components/FlowNodeInspector';
 import { FlowTestConsole } from './components/FlowTestConsole';
+import { FlowRunsView } from './components/FlowRunsView';
 import { useFlowDesignerStore } from './store/useFlowDesignerStore';
 import { Loader2 } from 'lucide-react';
 
 export const FlowPage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
   const {
+    currentFlow,
     nodes,
     edges,
     selectedNodeId,
     isLoading,
     isPaletteOpen,
     isInspectorOpen,
+    activeTab,
     loadFlow,
     setNodes,
     setEdges,
@@ -55,36 +58,54 @@ export const FlowPage: React.FC = () => {
         {/* Top Command Bar */}
         <FlowCommandBar />
 
-        {/* Designer Main Workspace */}
-        <div className="flex-1 flex overflow-hidden relative">
-          {/* Left: Collapsible Component Palette */}
-          {isPaletteOpen && <FlowPalette />}
+        {activeTab === 'runs' ? (
+          <div className="flex-1 p-8 overflow-y-auto bg-slate-50">
+            <div className="max-w-6xl mx-auto">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">
+                    {currentFlow?.name || 'Workflow'} — Execution Logs
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Historical run status, trigger payloads, step outputs, and diagnostics.
+                  </p>
+                </div>
+              </div>
+              <FlowRunsView flowId={currentFlow?.id} />
+            </div>
+          </div>
+        ) : (
+          /* Designer Main Workspace */
+          <div className="flex-1 flex overflow-hidden relative">
+            {/* Left: Collapsible Component Palette */}
+            {isPaletteOpen && <FlowPalette />}
 
-          {/* Center: React Flow Canvas */}
-          <main className="flex-1 h-full relative overflow-hidden">
-            <FlowDesignerCanvas
-              nodes={nodes}
-              edges={edges}
-              selectedNodeId={selectedNodeId}
-              onNodesChange={setNodes}
-              onEdgesChange={setEdges}
-              onSelectNode={selectNode}
-            />
-          </main>
+            {/* Center: React Flow Canvas */}
+            <main className="flex-1 h-full relative overflow-hidden">
+              <FlowDesignerCanvas
+                nodes={nodes}
+                edges={edges}
+                selectedNodeId={selectedNodeId}
+                onNodesChange={setNodes}
+                onEdgesChange={setEdges}
+                onSelectNode={selectNode}
+              />
+            </main>
 
-          {/* Right: Step Inspector */}
-          {isInspectorOpen && selectedNode && (
-            <FlowNodeInspector
-              selectedNode={selectedNode}
-              onUpdateNode={updateNodeData}
-              onDeleteNode={deleteNode}
-              onClose={() => selectNode(null)}
-            />
-          )}
+            {/* Right: Step Inspector */}
+            {isInspectorOpen && selectedNode && (
+              <FlowNodeInspector
+                selectedNode={selectedNode}
+                onUpdateNode={updateNodeData}
+                onDeleteNode={deleteNode}
+                onClose={() => selectNode(null)}
+              />
+            )}
 
-          {/* Bottom: Diagnostics & Test Execution Console */}
-          <FlowTestConsole />
-        </div>
+            {/* Bottom: Diagnostics & Test Execution Console */}
+            <FlowTestConsole />
+          </div>
+        )}
       </ReactFlowProvider>
     </div>
   );

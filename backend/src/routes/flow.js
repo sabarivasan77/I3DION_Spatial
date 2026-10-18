@@ -11,6 +11,12 @@ import {
   listFlowVersions,
 } from '../services/flow/flowPersistenceService.js';
 import { executeFlowRun, enqueueOutboxEvent } from '../services/flow/flowExecutor.js';
+import {
+  listOrganizationRuns,
+  getRunDetails,
+  retryRun,
+  getFlowAnalytics,
+} from '../services/flow/flowMonitoringService.js';
 import { withTenant } from '../db/pool.js';
 
 const flowRouter = express.Router();
@@ -77,6 +83,77 @@ flowRouter.post('/', async (req, res) => {
     res.status(201).json({ flow });
   } catch (err) {
     res.status(err.status || 400).json({ error: err.message });
+  }
+});
+
+// -----------------------------------------------------------------------------
+// ANALYTICS OVERVIEW
+// -----------------------------------------------------------------------------
+// GET /api/flows/analytics/overview
+flowRouter.get('/analytics/overview', async (req, res) => {
+  try {
+    const orgId = getOrgId(req);
+    const analytics = await getFlowAnalytics(orgId, null);
+    res.json(analytics);
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+// -----------------------------------------------------------------------------
+// LIST ALL ORGANIZATION RUNS
+// -----------------------------------------------------------------------------
+// GET /api/flows/runs/all
+flowRouter.get('/runs/all', async (req, res) => {
+  try {
+    const orgId = getOrgId(req);
+    const { status, search, limit, offset, flowId } = req.query;
+    const result = await listOrganizationRuns(orgId, {
+      flowId: flowId || null,
+      status: status || null,
+      search: search || null,
+      limit: parseInt(limit, 10) || 50,
+      offset: parseInt(offset, 10) || 0,
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+// -----------------------------------------------------------------------------
+// GET SINGLE RUN DETAILS WITH STEP RESULTS
+// -----------------------------------------------------------------------------
+// GET /api/flows/runs/:runId
+flowRouter.get('/runs/:runId', async (req, res) => {
+  try {
+    const orgId = getOrgId(req);
+    const run = await getRunDetails(orgId, req.params.runId);
+    if (!run) {
+      return res.status(404).json({ error: 'Run not found or access denied' });
+    }
+    res.json({ run });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+// -----------------------------------------------------------------------------
+// RETRY RUN
+// -----------------------------------------------------------------------------
+// POST /api/flows/runs/:runId/retry
+flowRouter.post('/runs/:runId/retry', async (req, res) => {
+  try {
+    const orgId = getOrgId(req);
+    const newRun = await retryRun(
+      orgId,
+      req.params.runId,
+      req.user.id,
+      req.body?.triggerPayload || null
+    );
+    res.json({ run: newRun });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
   }
 });
 
@@ -197,25 +274,33 @@ flowRouter.post('/:id/trigger', async (req, res) => {
 });
 
 // -----------------------------------------------------------------------------
-// 10. LIST EXECUTION RUNS
+// 10. LIST EXECUTION RUNS FOR FLOW
 // -----------------------------------------------------------------------------
 // GET /api/flows/:id/runs
 flowRouter.get('/:id/runs', async (req, res) => {
   try {
     const orgId = getOrgId(req);
-    const runs = await withTenant(orgId, async (client) => {
-      const result = await client.query(
-        `SELECT r.*, u.name as triggered_by_name
-         FROM flow_runs r
-         LEFT JOIN users u ON r.triggered_by = u.id
-         WHERE r.flow_id = $1 AND r.organization_id = $2
-         ORDER BY r.started_at DESC
-         LIMIT 50`,
-        [req.params.id, orgId]
-      );
-      return result.rows;
+    const result = await listOrganizationRuns(orgId, {
+      flowId: req.params.id,
+      limit: parseInt(req.query.limit, 10) || 50,
+      offset: parseInt(req.query.offset, 10) || 0,
+      status: req.query.status || null,
     });
-    res.json({ runs });
+    res.json({ runs: result.runs, total: result.total });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+// -----------------------------------------------------------------------------
+// GET PER-FLOW ANALYTICS
+// -----------------------------------------------------------------------------
+// GET /api/flows/:id/analytics
+flowRouter.get('/:id/analytics', async (req, res) => {
+  try {
+    const orgId = getOrgId(req);
+    const analytics = await getFlowAnalytics(orgId, req.params.id);
+    res.json(analytics);
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
   }

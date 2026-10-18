@@ -14,6 +14,8 @@ import {
   UploadCloud,
   Loader2,
   FileCode2,
+  Workflow,
+  Clock,
 } from 'lucide-react';
 import { useFlowDesignerStore } from '../store/useFlowDesignerStore';
 
@@ -29,6 +31,7 @@ export const FlowCommandBar: React.FC = () => {
     isSaving,
     isTesting,
     history,
+    activeTab,
     isPaletteOpen,
     isInspectorOpen,
     isTestConsoleOpen,
@@ -39,6 +42,7 @@ export const FlowCommandBar: React.FC = () => {
     validateDAG,
     undo,
     redo,
+    setActiveTab,
     setPaletteOpen,
     setInspectorOpen,
     setTestConsoleOpen,
@@ -129,6 +133,32 @@ export const FlowCommandBar: React.FC = () => {
                 {currentFlow?.description || 'No description set'}
               </span>
             </div>
+          </div>
+
+          {/* View Tab Switcher: Canvas vs Runs */}
+          <div className="hidden sm:flex items-center bg-slate-100 p-0.5 rounded-lg ml-3">
+            <button
+              onClick={() => setActiveTab('designer')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition ${
+                activeTab === 'designer'
+                  ? 'bg-white text-slate-900 shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Workflow size={13} />
+              <span>Canvas</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('runs')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition ${
+                activeTab === 'runs'
+                  ? 'bg-white text-slate-900 shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Clock size={13} />
+              <span>Runs</span>
+            </button>
           </div>
         </div>
 

@@ -194,4 +194,79 @@ export const flowApi = {
     });
     return res.outbox || [];
   },
+
+  // 14. List all organization runs
+  listAllRuns: async (params?: { flowId?: string; status?: string; search?: string; limit?: number; offset?: number }) => {
+    const query = new URLSearchParams();
+    if (params?.flowId) query.set('flowId', params.flowId);
+    if (params?.status) query.set('status', params.status);
+    if (params?.search) query.set('search', params.search);
+    if (params?.limit) query.set('limit', String(params.limit));
+    if (params?.offset) query.set('offset', String(params.offset));
+
+    const qs = query.toString() ? `?${query.toString()}` : '';
+    return apiRequest<{ runs: any[]; total: number }>(`/flows/runs/all${qs}`, {
+      token: localStorage.getItem('i3dion_token') || '',
+    });
+  },
+
+  // 15. Get single run details with full step outputs
+  getRun: async (runId: string) => {
+    const res = await apiRequest<{ run: any }>(`/flows/runs/${runId}`, {
+      token: localStorage.getItem('i3dion_token') || '',
+    });
+    return res.run;
+  },
+
+  // 16. Retry run with original or overridden payload
+  retryRun: async (runId: string, triggerPayload?: Record<string, any>) => {
+    const res = await apiRequest<{ run: any }>(`/flows/runs/${runId}/retry`, {
+      method: 'POST',
+      token: localStorage.getItem('i3dion_token') || '',
+      body: JSON.stringify({ triggerPayload }),
+    });
+    return res.run;
+  },
+
+  // 17. Get per-flow analytics
+  getFlowAnalytics: async (flowId: string) => {
+    return apiRequest<{
+      overview: {
+        totalRuns: number;
+        completedRuns: number;
+        failedRuns: number;
+        runningRuns: number;
+        successRate: number;
+        avgDurationMs: number;
+        p50DurationMs: number;
+        p90DurationMs: number;
+        p95DurationMs: number;
+      };
+      dailyHistory: any[];
+      topErrors: any[];
+    }>(`/flows/${flowId}/analytics`, {
+      token: localStorage.getItem('i3dion_token') || '',
+    });
+  },
+
+  // 18. Get organization-wide analytics overview
+  getOverviewAnalytics: async () => {
+    return apiRequest<{
+      overview: {
+        totalRuns: number;
+        completedRuns: number;
+        failedRuns: number;
+        runningRuns: number;
+        successRate: number;
+        avgDurationMs: number;
+        p50DurationMs: number;
+        p90DurationMs: number;
+        p95DurationMs: number;
+      };
+      dailyHistory: any[];
+      topErrors: any[];
+    }>('/flows/analytics/overview', {
+      token: localStorage.getItem('i3dion_token') || '',
+    });
+  },
 };
