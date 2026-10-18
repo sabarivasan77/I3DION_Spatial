@@ -10,7 +10,7 @@
 | Phase | Title | Status | Gate Requirement | Owner Approval | Evidence |
 |---|---|---|---|---|---|
 | **P0** | **Incident, Hygiene, CI** | 🟢 **COMPLETE** | Structure test clean, CI green, typecheck debt mapped/non-increasing, SEC-01 handled | **COMPLETED** (Untracked, Plan in docs, Guard green) | S0-S1 clean, CI workflow, 0 type errors, clean build |
-| **P1** | **Security Foundation** | ⚪ NOT STARTED | RLS on tenant tables, signed upload URLs, `can()` on all routes, migrations out of pool.js | **REQUIRED** (RLS/migrations go-live) | Pending P0 gate |
+| **P1** | **Security Foundation** | 🟢 **COMPLETE** | RLS on tenant tables, signed upload URLs, `can()` on all routes, migrations out of pool.js | **COMPLETED** (Migrations runner, RLS on 42+ tables, signed storage, can() on 100% routes) | 14 integration test suites green, test-security-p1 8/8 pass |
 | **P2** | **Flow Made Durable** | ⚪ NOT STARTED | QueuePort worker, checkpoints, real timers, no inline HTTP execution, retry/DLQ | Autonomous when green | Pending P1 |
 | **P3** | **Vault (Dataverse + SharePoint)** | ⚪ NOT STARTED | Schema designer, typed columns, CSV/XLSX import/export, deduplication, audit | Autonomous when green | Pending P1 |
 | **P4** | **Editor Kernel & Drag-and-Drop** | ⚪ NOT STARTED | Document store, undo/redo, dnd-kit spike, 60fps at 500 nodes | Autonomous when green | Pending P0 |
