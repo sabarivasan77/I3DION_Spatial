@@ -81,6 +81,7 @@ const StudioSettings = lazyWithRetry(() => import('./pages/studio/StudioSecondar
 const StudioSupport = lazyWithRetry(() => import('./pages/studio/StudioSecondaryViews').then((m) => ({ default: m.StudioSupport })));
 const StudioShared = lazyWithRetry(() => import('./pages/studio/StudioSecondaryViews').then((m) => ({ default: m.StudioShared })));
 const StudioTrash = lazyWithRetry(() => import('./pages/studio/StudioSecondaryViews').then((m) => ({ default: m.StudioTrash })));
+const FlowPage = lazyWithRetry(() => import('./pages/flow/FlowPage'));
 
 export default function App() {
   const initialize = useAuthStore((state) => state.initialize);
@@ -213,6 +214,20 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        {/* I3DION FLOW — ENTERPRISE AUTOMATION & EVENT PIPELINES */}
+        <Route
+          path="flows"
+          element={
+            <ProtectedRoute>
+              <ApplicationErrorBoundary appName="I3DION Flow">
+                <EntitlementGuard appKey="flow">
+                  <FlowPage />
+                </EntitlementGuard>
+              </ApplicationErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="flow" element={<Navigate to="/flows" replace />} />
         <Route path="workspace" element={<Navigate to="/home" replace />} />
         <Route path="dashboard" element={<Navigate to="/home" replace />} />
         <Route
