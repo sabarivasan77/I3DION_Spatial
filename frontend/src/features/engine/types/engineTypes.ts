@@ -2,6 +2,10 @@ export type EngineMode = 'workspace' | 'ui' | 'logic' | 'preview';
 export type ViewportDevice = 'desktop' | 'tablet' | 'mobile';
 export type TransformGizmoMode = 'translate' | 'rotate' | 'scale';
 
+export type BlenderObjectMode = 'object' | 'edit' | 'sculpt';
+export type BlenderTool = 'select' | 'cursor' | 'move' | 'rotate' | 'scale' | 'transform' | 'measure' | 'add';
+export type BlenderShadingMode = 'wireframe' | 'solid' | 'material' | 'rendered';
+
 export interface Vector3D {
   x: number;
   y: number;
@@ -12,6 +16,8 @@ export interface SceneNode {
   id: string;
   name: string;
   type: 'mesh' | 'group' | 'camera' | 'light' | 'model';
+  geometryType?: 'cube' | 'sphere' | 'cylinder' | 'torus' | 'cone' | 'monkey' | 'custom';
+  dimensions?: Vector3D;
   parent?: string | null;
   visible: boolean;
   locked?: boolean;

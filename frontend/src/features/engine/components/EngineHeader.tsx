@@ -15,10 +15,15 @@ import {
   Edit2,
   Check,
   Zap,
-  ArrowLeft
+  ArrowLeft,
+  Grid
 } from 'lucide-react';
+import { AppLauncherModal } from '../../../design-system/navigation/AppLauncherModal';
+import { useAuthStore } from '../../../store/authStore';
 
 export const EngineHeader: React.FC = () => {
+  const { user } = useAuthStore();
+  const [isLauncherOpen, setIsLauncherOpen] = useState(false);
   const {
     currentProject,
     activeMode,
@@ -50,6 +55,15 @@ export const EngineHeader: React.FC = () => {
     <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 select-none shrink-0 shadow-sm z-30">
       {/* 1. Left Branding & Navigation Context */}
       <div className="flex items-center gap-4">
+        {/* 9-Dots Ecosystem App Launcher Button */}
+        <button
+          onClick={() => setIsLauncherOpen(true)}
+          className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition"
+          title="I3DION Ecosystem Launcher"
+        >
+          <Grid size={18} />
+        </button>
+
         {/* Brand Icon & Name */}
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-[#E94B4B] flex items-center justify-center text-white shadow-sm font-black text-sm tracking-wide">
@@ -251,15 +265,31 @@ export const EngineHeader: React.FC = () => {
 
         {/* User Avatar */}
         <div className="flex items-center gap-2 ml-2 pl-2 border-l border-slate-200">
-          <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shadow-sm">
-            JD
+          <div className="w-8 h-8 rounded-full bg-[#E94B4B] text-white flex items-center justify-center font-bold text-xs shadow-sm">
+            {user?.name
+              ? user.name
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')
+                  .toUpperCase()
+                  .slice(0, 2)
+              : 'SE'}
           </div>
           <div className="hidden xl:block text-left text-xs leading-tight">
-            <div className="font-bold text-slate-900">John Doe</div>
-            <div className="text-[10px] text-slate-400">Acme Industries</div>
+            <div className="font-bold text-slate-900">{user?.name || 'Spatial Engineer'}</div>
+            <div className="text-[10px] text-slate-400">
+              {user?.organizationName || user?.companyName || 'I3DION Spatial Workstation'}
+            </div>
           </div>
         </div>
       </div>
+
+      {/* App Launcher Modal */}
+      <AppLauncherModal
+        isOpen={isLauncherOpen}
+        onClose={() => setIsLauncherOpen(false)}
+        activeAppId="engine"
+      />
     </header>
   );
 };

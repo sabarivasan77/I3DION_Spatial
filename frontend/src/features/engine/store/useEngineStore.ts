@@ -1,5 +1,19 @@
 import { create } from 'zustand';
-import { EngineProject, EngineMode, ViewportDevice, TransformGizmoMode, SceneNode, UIElement, LogicNode, LogicConnection, EngineVariable } from '../types/engineTypes';
+import {
+  EngineProject,
+  EngineMode,
+  ViewportDevice,
+  TransformGizmoMode,
+  SceneNode,
+  UIElement,
+  LogicNode,
+  LogicConnection,
+  EngineVariable,
+  BlenderObjectMode,
+  BlenderTool,
+  BlenderShadingMode,
+  Vector3D
+} from '../types/engineTypes';
 import { DEFAULT_INDUSTRIAL_COMPRESSOR_PROJECT, INITIAL_PROJECT_TEMPLATES } from '../data/defaultEngineProjects';
 
 interface EngineStoreState {
@@ -28,8 +42,26 @@ interface EngineStoreState {
   setSelectedUIElementId: (id: string | null) => void;
   gizmoMode: TransformGizmoMode;
   setGizmoMode: (mode: TransformGizmoMode) => void;
-  renderMode: 'solid' | 'wireframe' | 'xray';
-  setRenderMode: (mode: 'solid' | 'wireframe' | 'xray') => void;
+  renderMode: 'solid' | 'wireframe' | 'xray' | 'material' | 'rendered';
+  setRenderMode: (mode: 'solid' | 'wireframe' | 'xray' | 'material' | 'rendered') => void;
+
+  // Blender-Style Workstation Controls
+  activeObjectMode: BlenderObjectMode;
+  setActiveObjectMode: (mode: BlenderObjectMode) => void;
+  activeBlenderTool: BlenderTool;
+  setActiveBlenderTool: (tool: BlenderTool) => void;
+  showFloorGrid: boolean;
+  setShowFloorGrid: (show: boolean) => void;
+  showOverlays: boolean;
+  setShowOverlays: (show: boolean) => void;
+  isNPanelOpen: boolean;
+  setIsNPanelOpen: (open: boolean) => void;
+  toggleNPanel: () => void;
+  isTShelfOpen: boolean;
+  setIsTShelfOpen: (open: boolean) => void;
+  toggleTShelf: () => void;
+  cursor3D: Vector3D;
+  setCursor3D: (pos: Vector3D) => void;
 
   // Layout Docks
   isTimelineOpen: boolean;
@@ -164,6 +196,28 @@ export const useEngineStore = create<EngineStoreState>((set, get) => ({
   setGizmoMode: (mode) => set({ gizmoMode: mode }),
   renderMode: 'solid',
   setRenderMode: (mode) => set({ renderMode: mode }),
+
+  activeObjectMode: 'object',
+  setActiveObjectMode: (mode) => set({ activeObjectMode: mode }),
+  activeBlenderTool: 'select',
+  setActiveBlenderTool: (tool) => {
+    set({ activeBlenderTool: tool });
+    if (tool === 'move') set({ gizmoMode: 'translate' });
+    else if (tool === 'rotate') set({ gizmoMode: 'rotate' });
+    else if (tool === 'scale') set({ gizmoMode: 'scale' });
+  },
+  showFloorGrid: true,
+  setShowFloorGrid: (show) => set({ showFloorGrid: show }),
+  showOverlays: true,
+  setShowOverlays: (show) => set({ showOverlays: show }),
+  isNPanelOpen: true,
+  setIsNPanelOpen: (open) => set({ isNPanelOpen: open }),
+  toggleNPanel: () => set((state) => ({ isNPanelOpen: !state.isNPanelOpen })),
+  isTShelfOpen: true,
+  setIsTShelfOpen: (open) => set({ isTShelfOpen: open }),
+  toggleTShelf: () => set((state) => ({ isTShelfOpen: !state.isTShelfOpen })),
+  cursor3D: { x: 0, y: 0, z: 0 },
+  setCursor3D: (pos) => set({ cursor3D: pos }),
 
   isTimelineOpen: true,
   toggleTimeline: () => set((state) => ({ isTimelineOpen: !state.isTimelineOpen })),
