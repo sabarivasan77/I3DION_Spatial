@@ -376,43 +376,6 @@ export async function capturePublicLead(data, clientIp = '127.0.0.1') {
   };
 }
 
-export async function generateSocialMeta(type, slug) {
-  let title = 'I3DION Spatial Hub';
-  let description = 'Interactive 3D & Augmented Reality Industrial Showcase';
-  let image = '/assets/i3dion_og.png';
-  let url = `https://i3dion.com/hub/${type}/${slug}`;
-
-  if (type === 'catalog') {
-    const { rows } = await query('SELECT name, description, branding FROM catalogs WHERE slug = $1', [slug]);
-    if (rows.length > 0) {
-      title = `${rows[0].name} — Interactive Spatial Catalog`;
-      description = rows[0].description || description;
-      image = rows[0].branding?.coverImage || image;
-    }
-  } else if (type === 'experience') {
-    const { rows } = await query('SELECT name, description, scene_config FROM spatial_experiences WHERE slug = $1', [slug]);
-    if (rows.length > 0) {
-      title = `${rows[0].name} — 3D & AR Interactive Digital Twin`;
-      description = rows[0].description || description;
-    }
-  } else if (type === 'org') {
-    const { rows } = await query('SELECT name, profile, logo_url FROM organizations WHERE slug = $1', [slug]);
-    if (rows.length > 0) {
-      title = `${rows[0].name} — Spatial Hub Showcase`;
-      description = rows[0].profile || description;
-      image = rows[0].logo_url || image;
-    }
-  }
-
-  return {
-    title,
-    description,
-    image,
-    url,
-    siteName: 'I3DION Spatial Ecosystem',
-    card: 'summary_large_image'
-  };
-}
 
 /**
  * Submits an RFQ quote basket with idempotency, anti-bot check, and Flow lead outbox trigger
@@ -636,4 +599,230 @@ export async function submitHubRfq(data, clientIp = '127.0.0.1') {
     message: 'Your Request for Quotation has been received. Our sales engineering team will follow up within 24 hours.'
   };
 }
+
+/**
+ * Submit Moderation Report (HUB-15)
+ * Allows users and public visitors to report broken models, abusive content, copyright issues, or offensive material.
+ */
+export async function submitModerationReport(reportData, clientIp = '127.0.0.1', userId = null) {
+  const { 
+    entityType, 
+    entityId, 
+    reason, 
+    details = '', 
+    reporterEmail = null, 
+    hp_token, 
+    website_trap 
+  } = reportData;
+
+  // Anti-spam honeypot
+  if (hp_token || website_trap) {
+    console.warn(`[Anti-Spam] Bot trapped in moderation report from IP: ${clientIp}`);
+    return {
+      success: true,
+      reportId: 'spam-filtered',
+      status: 'filtered',
+      message: 'Thank you for your report. Our trust & safety team will review it.'
+    };
+  }
+
+  const { rows } = await query(
+    `INSERT INTO moderation_reports (
+      reporter_id, reporter_email, entity_type, entity_id, reason, details, ip_address, status
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')
+    RETURNING id, entity_type, entity_id, reason, status, created_at`,
+    [userId || null, reporterEmail || null, entityType, entityId, reason, details, clientIp]
+  );
+
+  return {
+    success: true,
+    report: rows[0],
+    message: 'Thank you for your report. Our trust & safety team has received your submission.'
+  };
+}
+
+/**
+ * Generate Dynamic Social Meta / OpenGraph Data (HUB-13)
+ */
+export async function generateSocialMeta(type, identifier) {
+  const baseUrl = process.env.PUBLIC_HUB_URL || 'https://spatial.i3dion.com';
+  const defaultImage = `${baseUrl}/og-spatial-hub.png`;
+
+  if (type === 'product') {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+    let sql = `
+      SELECT p.*, o.name as org_name, o.logo_url as org_logo, o.slug as org_slug
+      FROM products p
+      LEFT JOIN organizations o ON p.organization_id = o.id
+      WHERE (p.id::text = $1 OR p.slug = $1) AND p.is_public = true AND p.status = 'Published'
+    `;
+    const { rows } = await query(sql, [identifier]);
+    if (rows.length === 0) {
+      throw new ApiError(404, `Product not found: ${identifier}`);
+    }
+    const product = rows[0];
+    const title = `${product.name} | ${product.org_name || 'I3DION Spatial Hub'}`;
+    const cleanDesc = (product.description || `Interactive 3D CAD visualization & industrial AR for ${product.name}`)
+      .replace(/<[^>]*>?/gm, '')
+      .slice(0, 180);
+    const image = product.poster_url || product.image_url || defaultImage;
+    const url = `${baseUrl}/hub/product/${product.id}`;
+
+    return {
+      type: 'product',
+      title,
+      description: cleanDesc,
+      image,
+      url,
+      twitterCard: 'summary_large_image',
+      canonicalUrl: url,
+      schemaOrg: {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: product.name,
+        description: cleanDesc,
+        image: [image],
+        category: product.category,
+        brand: {
+          '@type': 'Brand',
+          name: product.org_name || 'I3DION'
+        },
+        offers: {
+          '@type': 'Offer',
+          availability: 'https://schema.org/InStock',
+          price: '0',
+          priceCurrency: 'USD',
+          description: 'Request for Quotation available'
+        }
+      }
+    };
+  }
+
+  if (type === 'organization' || type === 'org') {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+    let sql = isUuid 
+      ? `SELECT id, name, slug, profile, logo_url, website FROM organizations WHERE id = $1`
+      : `SELECT id, name, slug, profile, logo_url, website FROM organizations WHERE slug = $1 OR LOWER(name) = LOWER($1)`;
+    const { rows } = await query(sql, [identifier]);
+    if (rows.length === 0) {
+      throw new ApiError(404, `Organization not found: ${identifier}`);
+    }
+    const org = rows[0];
+    const title = `${org.name} - 3D Showroom & AR Catalog | I3DION Spatial Hub`;
+    const cleanDesc = (org.profile || `Explore the interactive 3D digital showroom and spatial catalog of ${org.name} on I3DION Spatial Hub.`)
+      .replace(/<[^>]*>?/gm, '')
+      .slice(0, 180);
+    const image = org.logo_url || defaultImage;
+    const url = `${baseUrl}/hub/org/${org.slug || org.id}`;
+
+    return {
+      type: 'profile',
+      title,
+      description: cleanDesc,
+      image,
+      url,
+      twitterCard: 'summary',
+      canonicalUrl: url,
+      schemaOrg: {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: org.name,
+        url: org.website || url,
+        logo: image
+      }
+    };
+  }
+
+  if (type === 'catalog') {
+    const { rows } = await query(
+      `SELECT c.*, o.name as org_name, o.logo_url as org_logo 
+       FROM catalogs c
+       JOIN organizations o ON c.organization_id = o.id
+       WHERE (c.id::text = $1 OR c.slug = $1) AND c.status = 'Published'`,
+      [identifier]
+    );
+    if (rows.length === 0) {
+      throw new ApiError(404, `Catalog not found: ${identifier}`);
+    }
+    const catalog = rows[0];
+    const title = `${catalog.name} | ${catalog.org_name} Catalog`;
+    const cleanDesc = (catalog.description || `Browse interactive 3D products in the ${catalog.name} catalog.`)
+      .replace(/<[^>]*>?/gm, '')
+      .slice(0, 180);
+    const image = (catalog.branding && catalog.branding.cover_image) || catalog.org_logo || defaultImage;
+    const url = `${baseUrl}/catalog/${catalog.slug}`;
+
+    return {
+      type: 'article',
+      title,
+      description: cleanDesc,
+      image,
+      url,
+      twitterCard: 'summary_large_image',
+      canonicalUrl: url,
+      schemaOrg: {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: catalog.name,
+        description: cleanDesc,
+        image: [image]
+      }
+    };
+  }
+
+  // Generic fallback
+  return {
+    type: 'website',
+    title: 'I3DION Spatial Hub | Industrial 3D & AR Showroom',
+    description: 'Explore industrial-grade 3D equipment models, CAD specifications, interactive WebXR, and verified commercial quotes.',
+    image: defaultImage,
+    url: baseUrl,
+    twitterCard: 'summary_large_image',
+    canonicalUrl: baseUrl,
+    schemaOrg: {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'I3DION Spatial Hub',
+      url: baseUrl
+    }
+  };
+}
+
+/**
+ * Generate Raw HTML Meta Tags & Crawler Template
+ */
+export function generateHtmlMetaTags(meta) {
+  return `
+    <title>${escapeHtml(meta.title)}</title>
+    <meta name="description" content="${escapeHtml(meta.description)}" />
+    <link rel="canonical" href="${escapeHtml(meta.canonicalUrl || meta.url)}" />
+    <!-- OpenGraph -->
+    <meta property="og:title" content="${escapeHtml(meta.title)}" />
+    <meta property="og:description" content="${escapeHtml(meta.description)}" />
+    <meta property="og:image" content="${escapeHtml(meta.image)}" />
+    <meta property="og:url" content="${escapeHtml(meta.url)}" />
+    <meta property="og:type" content="${escapeHtml(meta.type || 'website')}" />
+    <meta property="og:site_name" content="I3DION Spatial Hub" />
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="${escapeHtml(meta.twitterCard || 'summary_large_image')}" />
+    <meta name="twitter:title" content="${escapeHtml(meta.title)}" />
+    <meta name="twitter:description" content="${escapeHtml(meta.description)}" />
+    <meta name="twitter:image" content="${escapeHtml(meta.image)}" />
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+      ${JSON.stringify(meta.schemaOrg, null, 2)}
+    </script>
+  `.trim();
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 

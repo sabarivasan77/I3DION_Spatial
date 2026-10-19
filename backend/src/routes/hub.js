@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import jwt from 'jsonwebtoken';
 import { query } from '../db/pool.js';
+import { config } from '../config.js';
 import { ApiError, asyncHandler } from '../utils/errors.js';
 import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
@@ -10,8 +12,18 @@ import {
   getPublishedExperience, 
   capturePublicLead, 
   submitHubRfq,
-  generateSocialMeta 
+  submitModerationReport,
+  generateSocialMeta,
+  generateHtmlMetaTags
 } from '../services/hub/hubService.js';
+import { trackEvent } from '../services/trackingEngine.js';
+import { 
+  hubRfqLimiter, 
+  hubReportLimiter, 
+  hubTelemetryLimiter, 
+  hubSearchLimiter, 
+  enforcePayloadCap 
+} from '../middleware/rateLimiters.js';
 
 export const hubRouter = Router();
 
@@ -42,8 +54,17 @@ hubRouter.get(
     }
 
     if (cursor) {
-      params.push(cursor);
-      whereClause += ` AND p.created_at < $${params.length}`;
+      if (cursor.includes('_')) {
+        const [cursorScore, cursorCreatedAt] = cursor.split('_');
+        params.push(Number(cursorScore) || 0);
+        const scoreIdx = params.length;
+        params.push(cursorCreatedAt);
+        const timeIdx = params.length;
+        whereClause += ` AND ((p.likes_count * 5 + p.views_count * 1) < $${scoreIdx} OR ((p.likes_count * 5 + p.views_count * 1) = $${scoreIdx} AND p.created_at < $${timeIdx}))`;
+      } else {
+        params.push(cursor);
+        whereClause += ` AND p.created_at < $${params.length}`;
+      }
     }
 
     let orderClause = `ORDER BY trending_score DESC, p.created_at DESC`;
@@ -71,7 +92,12 @@ hubRouter.get(
     const { rows } = await query(sql, params);
     const hasMore = rows.length > limit;
     const items = hasMore ? rows.slice(0, limit) : rows;
-    const nextCursor = items.length > 0 && hasMore ? items[items.length - 1].created_at : null;
+    let nextCursor = null;
+    if (items.length > 0 && hasMore) {
+      const last = items[items.length - 1];
+      const isoCreated = new Date(last.created_at).toISOString();
+      nextCursor = sort === 'popular' ? `${last.trending_score}_${isoCreated}` : isoCreated;
+    }
 
     if (isPaginated) {
       res.json({
@@ -104,6 +130,7 @@ const searchSchema = z.object({
 
 hubRouter.get(
   '/search',
+  hubSearchLimiter,
   validate(searchSchema),
   asyncHandler(async (req, res) => {
     const { 
@@ -343,14 +370,6 @@ hubRouter.get(
   })
 );
 
-// Social Meta Previews (OpenGraph)
-hubRouter.get(
-  '/meta/:type/:slug',
-  asyncHandler(async (req, res) => {
-    const meta = await generateSocialMeta(req.params.type, req.params.slug);
-    res.json(meta);
-  })
-);
 
 // Public Lead Capture Form (with Consent & Honeypot Anti-Spam)
 const publicHubLeadSchema = z.object({
@@ -425,6 +444,7 @@ const publicHubRfqSchema = z.object({
 
 hubRouter.post(
   '/rfq',
+  hubRfqLimiter,
   validate(publicHubRfqSchema),
   asyncHandler(async (req, res) => {
     const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
@@ -434,7 +454,157 @@ hubRouter.post(
 );
 
 // ==========================================
-// 4. SOCIAL INTERACTIONS (Requires Auth)
+// 4. PUBLIC MODERATION & ABUSE REPORTING (HUB-15)
+// ==========================================
+const publicReportSchema = z.object({
+  body: z.object({
+    entityType: z.enum(['product', 'catalog', 'comment', 'organization', 'shortlink']),
+    entityId: z.string().min(1, 'Entity ID or code required'),
+    reason: z.string().min(3, 'Reason must be at least 3 characters').max(500),
+    details: z.string().max(2000).optional(),
+    reporterEmail: z.string().email().optional(),
+    hp_token: z.string().optional(),
+    website_trap: z.string().optional()
+  })
+});
+
+hubRouter.post(
+  '/report',
+  hubReportLimiter,
+  validate(publicReportSchema),
+  asyncHandler(async (req, res) => {
+    let userId = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.slice(7);
+        const decoded = jwt.verify(token, config.jwtSecret);
+        userId = decoded.sub || decoded.userId || null;
+      } catch {
+        // Optional auth: ignore token errors for public reporting
+      }
+    }
+    const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    const result = await submitModerationReport(req.validated.body, clientIp, userId);
+    res.status(201).json(result);
+  })
+);
+
+// ==========================================
+// 5. HUB TELEMETRY INGESTION (HUB-15 / Lens)
+// ==========================================
+const hubTelemetrySchema = z.object({
+  body: z.object({
+    eventType: z.enum([
+      'product_view',
+      '3d_interaction',
+      'viewer.3d_interacted',
+      'ar_launch',
+      'ar.launch_attempted',
+      'ar.launch_succeeded',
+      'basket.item_added',
+      'rfq.submitted',
+      'search',
+      'share.clicked',
+      'model_download'
+    ]),
+    productId: z.string().uuid().optional(),
+    catalogId: z.string().uuid().optional(),
+    organizationId: z.string().uuid().optional(),
+    visitorId: z.string().optional(),
+    metadata: z.record(z.unknown()).optional().default({})
+  })
+});
+
+hubRouter.post(
+  '/telemetry',
+  hubTelemetryLimiter,
+  enforcePayloadCap(8192),
+  validate(hubTelemetrySchema),
+  asyncHandler(async (req, res) => {
+    const { eventType, productId, catalogId, visitorId, metadata } = req.validated.body;
+    let organizationId = req.validated.body.organizationId;
+
+    if (!organizationId && productId) {
+      const prodRes = await query(`SELECT organization_id FROM products WHERE id = $1`, [productId]);
+      if (prodRes.rows.length > 0) {
+        organizationId = prodRes.rows[0].organization_id;
+      }
+    }
+
+    if (!organizationId) {
+      const orgRes = await query(`SELECT id FROM organizations LIMIT 1`);
+      if (orgRes.rows.length > 0) {
+        organizationId = orgRes.rows[0].id;
+      }
+    }
+
+    if (productId && eventType === 'product_view') {
+      try {
+        await query(`UPDATE products SET views_count = views_count + 1 WHERE id = $1`, [productId]);
+      } catch (err) {
+        console.warn('Could not update views_count:', err);
+      }
+    }
+
+    const event = await trackEvent({
+      organizationId,
+      productId: productId || null,
+      catalogId: catalogId || null,
+      visitorId: visitorId || 'anonymous_hub_user',
+      eventType,
+      metadata
+    });
+
+    res.status(201).json({ success: true, event });
+  })
+);
+
+// ==========================================
+// 6. DYNAMIC SOCIAL METADATA & SSR SHARING (HUB-13)
+// ==========================================
+hubRouter.get(
+  '/meta/:type/:identifier',
+  asyncHandler(async (req, res) => {
+    const { type, identifier } = req.params;
+    const meta = await generateSocialMeta(type, identifier);
+    const htmlTags = generateHtmlMetaTags(meta);
+    res.json({ ...meta, meta, htmlTags });
+  })
+);
+
+hubRouter.get(
+  '/share/:type/:identifier',
+  asyncHandler(async (req, res) => {
+    const { type, identifier } = req.params;
+    const meta = await generateSocialMeta(type, identifier);
+    const tags = generateHtmlMetaTags(meta);
+    const redirectUrl = meta.url;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  ${tags}
+  <meta http-equiv="refresh" content="0; url=${redirectUrl}" />
+  <script>window.location.href = ${JSON.stringify(redirectUrl)};</script>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; padding: 2rem; text-align: center; margin: 0;">
+  <div style="max-width: 600px; margin: 40px auto; background: #1e293b; padding: 2rem; border-radius: 12px; border: 1px solid #334155;">
+    <h1 style="font-size: 1.5rem; margin-bottom: 0.5rem;">${meta.title}</h1>
+    <p style="color: #94a3b8; line-height: 1.5;">${meta.description}</p>
+    ${meta.image ? `<img src="${meta.image}" alt="${meta.title}" style="max-width: 100%; height: auto; border-radius: 8px; margin: 1rem 0;" />` : ''}
+    <p><a href="${redirectUrl}" style="display: inline-block; padding: 10px 20px; background: #06b6d4; color: #000; font-weight: bold; border-radius: 6px; text-decoration: none;">View 3D Model in Spatial Hub</a></p>
+  </div>
+</body>
+</html>`);
+  })
+);
+
+// ==========================================
+// 7. SOCIAL INTERACTIONS (Requires Auth)
 // ==========================================
 hubRouter.use(requireAuth); // All routes below require login
 
@@ -513,21 +683,28 @@ hubRouter.post(
   })
 );
 
-// Report Content
-const reportSchema = z.object({ reason: z.string().min(1) });
+// Report Content (Authenticated)
+const reportSchema = z.object({ 
+  reason: z.string().min(1),
+  details: z.string().max(2000).optional()
+});
+
 hubRouter.post(
   '/:entityType/:entityId/report',
   validate(interactionSchema, 'params'),
   validate(reportSchema),
   asyncHandler(async (req, res) => {
     const { entityType, entityId } = req.validated.params;
-    const { reason } = req.validated.body;
+    const { reason, details = '' } = req.validated.body;
+    const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
     
-    const { rows } = await query(`
-      INSERT INTO moderation_reports (reporter_id, entity_type, entity_id, reason) 
-      VALUES ($1, $2, $3, $4) RETURNING *
-    `, [req.user.id, entityType, entityId, reason]);
+    const result = await submitModerationReport({
+      entityType,
+      entityId,
+      reason,
+      details
+    }, clientIp, req.user.id);
     
-    res.status(201).json(rows[0]);
+    res.status(201).json(result.report || result);
   })
 );

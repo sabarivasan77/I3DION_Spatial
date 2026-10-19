@@ -65,7 +65,11 @@ export function ModelCardPreview({ id, slug, name, modelUrl, previewUrl, thumbna
         setHovered(id, false);
       }}
     >
-      <Link to={`/hub/product/${slug}`} className="absolute inset-0 flex items-center justify-center" aria-label={`Open ${name}`}>
+      <Link 
+        to={`/hub/product/${slug}`} 
+        className="absolute inset-0 flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 rounded-2xl" 
+        aria-label={`Open 3D product view for ${name}`}
+      >
         <img
           src={thumbnail}
           alt={name}

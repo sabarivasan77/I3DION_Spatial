@@ -121,8 +121,44 @@ export const hubApi = {
       method: 'POST',
       body: JSON.stringify(payload)
     });
+  },
+
+  submitReport: async (payload: HubReportPayload, token?: string): Promise<{ success: boolean; message: string }> => {
+    return apiRequest('/hub/report', {
+      method: 'POST',
+      token,
+      body: JSON.stringify(payload)
+    });
+  },
+
+  trackTelemetry: async (payload: {
+    eventType: string;
+    productId?: string;
+    catalogId?: string;
+    organizationId?: string;
+    visitorId?: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<{ success: boolean }> => {
+    return apiRequest('/hub/telemetry', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  },
+
+  getSocialMeta: async (type: string, identifier: string): Promise<{ meta: Record<string, unknown>; htmlTags: string }> => {
+    return apiRequest(`/hub/meta/${type}/${identifier}`);
   }
 };
+
+export interface HubReportPayload {
+  entityType: 'product' | 'catalog' | 'comment' | 'organization' | 'shortlink';
+  entityId: string;
+  reason: string;
+  details?: string;
+  reporterEmail?: string;
+  hp_token?: string;
+  website_trap?: string;
+}
 
 export interface HubRfqPayload {
   name: string;

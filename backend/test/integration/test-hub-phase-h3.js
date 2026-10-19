@@ -37,6 +37,8 @@ async function run() {
   const afterRes = await pool.query(`SELECT views_count FROM products WHERE id = $1`, [targetProduct.id]);
   const newViews = Number(afterRes.rows[0].views_count);
   assert.equal(newViews, initialViews + 1, `views_count must increment by exactly 1 (was ${initialViews}, now ${newViews})`);
+  // Restore zero-baseline integrity
+  await pool.query(`UPDATE products SET views_count = $1 WHERE id = $2`, [initialViews, targetProduct.id]);
   pass('PDP-VIEWS-01', 'Real views_count incremented truthfully in database on inspection');
 
   // 4. Test 3D Model Tier URLs
@@ -51,11 +53,9 @@ async function run() {
   pass('PDP-ERROR-01', 'Fail-closed behavior confirmed: invalid product IDs return honest 404');
 
   console.log('\n✅ All Phase H3 integration tests passed successfully!\n');
-  await pool.end();
 }
 
 run()
-  .then(() => process.exit(0))
   .catch((err) => {
     console.error('\n❌ Phase H3 test failed:', err);
     process.exit(1);

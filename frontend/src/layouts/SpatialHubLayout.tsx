@@ -368,6 +368,8 @@ export default function SpatialHubLayout() {
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
+                aria-label="User Account Menu"
+                aria-expanded={userMenuOpen}
                 className="flex items-center gap-2.5 rounded-2xl border border-slate-200/80 bg-white p-1.5 pr-3 hover:bg-slate-50 transition"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#0F172A] text-xs font-bold text-white shadow-2xs">

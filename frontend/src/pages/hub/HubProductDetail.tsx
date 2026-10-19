@@ -2,13 +2,15 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   Heart, Bookmark, Share2, MessageSquare, ChevronRight, ShieldCheck, 
-  Download, Box, Sparkles, Scale, ExternalLink, Info, Check, Eye, ShoppingBag, Send 
+  Download, Box, Sparkles, Scale, ExternalLink, Info, Check, Eye, ShoppingBag, Send, Flag 
 } from 'lucide-react';
 import ThreeProduct, { RenderMode } from '../../components/ThreeProduct';
 import { SPATIAL_HUB_MODELS, SpatialHubModel } from '../../data/spatialHubModels';
 import { ViewInARButton } from '../../components/ViewInARButton';
 import { HubCommentsSection } from '../../components/hub/HubCommentsSection';
 import { HubContextMenu } from '../../components/hub/HubContextMenu';
+import { ReportContentModal } from '../../components/hub/ReportContentModal';
+import { updateSeoMeta } from '../../utils/seoMeta';
 import { hubIntelligenceApi } from '../../services/hubIntelligenceApi';
 import { useAuthStore } from '../../store/authStore';
 import { hubApi, HubProduct } from '../../services/hubApi';
@@ -26,6 +28,7 @@ export function HubProductDetail() {
   const [viewsCount, setViewsCount] = useState(0);
   const [dbProduct, setDbProduct] = useState<HubProduct | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   const { isSaved, isLiked, toggleSaved, toggleLiked } = useHubPersonalStore();
   const { addItem, isInBasket, removeItem } = useHubQuoteStore();
@@ -118,7 +121,36 @@ export function HubProductDetail() {
   const isProductSaved = product.id ? isSaved(product.id) : false;
   const isProductLiked = product.id ? isLiked(product.id) : false;
 
-  // Track activity event for Lens Analytics & Recommendations
+  // Dynamic SEO & OpenGraph Metadata (HUB-13)
+  useEffect(() => {
+    if (!product) return;
+    updateSeoMeta({
+      title: product.name,
+      description: product.shortDescription,
+      image: product.posterUrl || product.thumbnail,
+      type: 'product',
+      schemaOrg: {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: product.name,
+        description: product.shortDescription,
+        image: [product.posterUrl || product.thumbnail],
+        category: product.category,
+        brand: {
+          '@type': 'Brand',
+          name: product.companyName
+        },
+        offers: {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'USD',
+          availability: 'https://schema.org/InStock'
+        }
+      }
+    });
+  }, [product]);
+
+  // Track activity event for Lens Analytics & Recommendations (HUB-15)
   useEffect(() => {
     if (product.id) {
       hubIntelligenceApi.trackEvent({
@@ -128,6 +160,11 @@ export function HubProductDetail() {
         productId: product.id,
         metadata: { name: product.name, category: product.category, license: product.licenseSpdx.join(',') }
       });
+      hubApi.trackTelemetry({
+        eventType: 'product_view',
+        productId: product.id,
+        metadata: { name: product.name, category: product.category }
+      }).catch(() => {});
     }
   }, [product.id, product.name, product.category, product.licenseSpdx]);
 
@@ -336,10 +373,11 @@ export function HubProductDetail() {
             </div>
 
             {/* Social & Primary Action Buttons */}
-            <div className="grid grid-cols-4 gap-2 pt-2 border-t border-slate-100">
+            <div className="grid grid-cols-5 gap-2 pt-2 border-t border-slate-100">
               <button
                 onClick={handleLikeToggle}
-                className={`flex flex-col items-center justify-center rounded-2xl p-2.5 transition border ${
+                aria-label={`Like product, currently ${likesCount} likes`}
+                className={`flex flex-col items-center justify-center rounded-2xl p-2.5 transition border focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 min-h-[44px] ${
                   isProductLiked ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                 }`}
               >
@@ -349,7 +387,8 @@ export function HubProductDetail() {
 
               <button
                 onClick={handleSaveToggle}
-                className={`flex flex-col items-center justify-center rounded-2xl p-2.5 transition border ${
+                aria-label={isProductSaved ? "Remove from saved models" : "Save model to favorites"}
+                className={`flex flex-col items-center justify-center rounded-2xl p-2.5 transition border focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 min-h-[44px] ${
                   isProductSaved ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                 }`}
               >
@@ -359,7 +398,8 @@ export function HubProductDetail() {
 
               <button
                 onClick={handleShare}
-                className="flex flex-col items-center justify-center rounded-2xl bg-slate-50 border border-slate-200 p-2.5 text-slate-700 hover:bg-slate-100 transition"
+                aria-label="Share 3D model link"
+                className="flex flex-col items-center justify-center rounded-2xl bg-slate-50 border border-slate-200 p-2.5 text-slate-700 hover:bg-slate-100 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 min-h-[44px]"
               >
                 <Share2 size={18} />
                 <span className="text-[10px] font-bold mt-1">Share</span>
@@ -367,11 +407,22 @@ export function HubProductDetail() {
 
               <button
                 onClick={handleDownload}
-                className="flex flex-col items-center justify-center rounded-2xl bg-slate-50 border border-slate-200 p-2.5 text-slate-700 hover:bg-slate-100 transition"
+                aria-label="Download verified GLB 3D model"
+                className="flex flex-col items-center justify-center rounded-2xl bg-slate-50 border border-slate-200 p-2.5 text-slate-700 hover:bg-slate-100 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 min-h-[44px]"
                 title="Download verified GLB file"
               >
                 <Download size={18} />
                 <span className="text-[10px] font-bold mt-1">GLB</span>
+              </button>
+
+              <button
+                onClick={() => setIsReportModalOpen(true)}
+                aria-label="Report content or broken 3D model"
+                className="flex flex-col items-center justify-center rounded-2xl bg-slate-50 border border-slate-200 p-2.5 text-slate-700 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 min-h-[44px]"
+                title="Report issue or broken model"
+              >
+                <Flag size={18} />
+                <span className="text-[10px] font-bold mt-1">Report</span>
               </button>
             </div>
 
@@ -617,6 +668,14 @@ export function HubProductDetail() {
           )}
         </div>
       </div>
+
+      <ReportContentModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        entityType="product"
+        entityId={product.id}
+        entityName={product.name}
+      />
     </div>
   );
 }

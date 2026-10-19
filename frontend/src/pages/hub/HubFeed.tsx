@@ -13,6 +13,7 @@ import { QRCodeGenerator } from '../../components/QRCodeGenerator';
 import { HubContextMenu } from '../../components/hub/HubContextMenu';
 import { useHubPersonalStore } from '../../store/hubPersonalStore';
 import { useHubQuoteStore } from '../../store/hubQuoteStore';
+import { updateSeoMeta } from '../../utils/seoMeta';
 
 // Adapter to ensure uniform model representation between API and fallback
 interface HubDisplayModel {
@@ -73,6 +74,15 @@ export function HubFeed() {
     const handler = setTimeout(() => setDebouncedQuery(searchQuery.trim()), 300);
     return () => clearTimeout(handler);
   }, [searchQuery]);
+
+  // Synchronize dynamic feed SEO metadata (HUB-13)
+  useEffect(() => {
+    updateSeoMeta({
+      title: 'Industrial 3D & Augmented Reality Equipment Catalog',
+      description: 'Explore live 3D industrial machinery, Khronos-verified CAD models, solid/wireframe/x-ray views, QR code handoffs, and instant RFQ baskets.',
+      type: 'website'
+    });
+  }, []);
 
   // Convert raw API product to HubDisplayModel
   const mapApiToDisplay = useCallback((p: HubProduct): HubDisplayModel => {

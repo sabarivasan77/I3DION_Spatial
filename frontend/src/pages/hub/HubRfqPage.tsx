@@ -1,4 +1,4 @@
-import { useState, useId } from 'react';
+import { useState, useId, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { 
   ShoppingBag, 
@@ -17,9 +17,19 @@ import {
 } from 'lucide-react';
 import { useHubQuoteStore, QuoteItem } from '../../store/hubQuoteStore';
 import { hubApi, HubRfqPayload } from '../../services/hubApi';
+import { updateSeoMeta } from '../../utils/seoMeta';
 
 export default function HubRfqPage() {
   const [searchParams] = useSearchParams();
+
+  // Synchronize dynamic RFQ SEO metadata (HUB-13)
+  useEffect(() => {
+    updateSeoMeta({
+      title: 'Commercial RFQ Basket & Quotation Portal',
+      description: 'Submit verified commercial Requests for Quotation (RFQ) directly to equipment manufacturers with multi-item baskets and instant WhatsApp dispatch.',
+      type: 'website'
+    });
+  }, []);
   const campaign = searchParams.get('campaign') || 'Direct Hub';
   const shortCode = searchParams.get('ref') || null;
   const qrAttributed = searchParams.get('qr') === 'true' || Boolean(shortCode);

@@ -7,6 +7,7 @@ import {
 import { useAuthStore } from '../../store/authStore';
 import { ModelCardPreview } from '../../components/hub/ModelCardPreview';
 import { useToast } from '../../components/Toast';
+import { updateSeoMeta } from '../../utils/seoMeta';
 
 interface ShowcaseData {
   organization: {
@@ -110,6 +111,17 @@ export function HubOrganizationPage() {
         setLoading(false);
       });
   }, [orgSlug]);
+
+  // Synchronize dynamic SEO metadata
+  useEffect(() => {
+    if (!data?.organization) return;
+    updateSeoMeta({
+      title: `${data.organization.name} — Spatial Showroom`,
+      description: data.organization.profile || `Explore interactive 3D equipment models and spatial catalogs by ${data.organization.name}.`,
+      image: data.organization.logo_url,
+      type: 'profile'
+    });
+  }, [data?.organization]);
 
   const org = data?.organization;
 

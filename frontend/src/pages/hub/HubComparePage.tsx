@@ -21,6 +21,7 @@ import { hubApi } from '../../services/hubApi';
 import { useToast } from '../../components/Toast';
 import { ModelCardPreview } from '../../components/hub/ModelCardPreview';
 import { SPATIAL_HUB_MODELS } from '../../data/spatialHubModels';
+import { updateSeoMeta } from '../../utils/seoMeta';
 
 export default function HubComparePage() {
   const [searchParams] = useSearchParams();
@@ -89,6 +90,18 @@ export default function HubComparePage() {
         .finally(() => setLoadingInitial(false));
     }
   }, [searchParams]);
+
+  // Synchronize dynamic comparison SEO metadata (HUB-13)
+  useEffect(() => {
+    const names = models.map((m) => m.name).join(' vs ');
+    updateSeoMeta({
+      title: models.length > 0 ? `Compare: ${names}` : 'Technical 3D Specification Matrix',
+      description: models.length > 0 
+        ? `Side-by-side technical CAD and geometry comparison of ${names} on I3DION Spatial Hub.`
+        : 'Compare industrial 3D equipment models side by side with CAD metrics, polygon counts, license verification, and RFQ basket actions.',
+      type: 'website'
+    });
+  }, [models]);
 
   const handleShareComparison = () => {
     if (models.length === 0) return;

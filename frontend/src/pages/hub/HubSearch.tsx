@@ -21,6 +21,7 @@ import { useHubPersonalStore } from '../../store/hubPersonalStore';
 import { useHubCompareStore } from '../../store/hubCompareStore';
 import { useHubQuoteStore } from '../../store/hubQuoteStore';
 import { useToast } from '../../components/Toast';
+import { updateSeoMeta } from '../../utils/seoMeta';
 
 interface SearchDisplayModel {
   id: string;
@@ -71,6 +72,17 @@ export function HubSearch() {
     }, 300);
     return () => clearTimeout(handler);
   }, [rawQuery, setSearchParams]);
+
+  // Synchronize dynamic search SEO metadata (HUB-13)
+  useEffect(() => {
+    updateSeoMeta({
+      title: query ? `Search: "${query}"` : 'Discovery & Catalog Search',
+      description: query
+        ? `Search results for "${query}" across verified industrial 3D equipment models and CAD specifications.`
+        : 'Search and filter industrial 3D equipment models, CAD assets, and verified demonstration showcases on I3DION Spatial Hub.',
+      type: 'website'
+    });
+  }, [query]);
 
   // Map API product to display model
   const mapProductToDisplay = useCallback((p: HubProduct): SearchDisplayModel => {

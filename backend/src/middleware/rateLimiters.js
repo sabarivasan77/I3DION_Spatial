@@ -102,6 +102,66 @@ export const publicEventsLimiter = rateLimit({
 });
 
 /**
+ * Spatial Hub RFQ Limiter: 15 quote requests per 15 minutes per IP
+ */
+export const hubRfqLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: () => getLimit(15),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: {
+    status: 'error',
+    code: 'TOO_MANY_REQUESTS',
+    message: 'Too many RFQ submissions from this IP. Please wait before submitting another quote request.'
+  }
+});
+
+/**
+ * Spatial Hub Report Content Limiter: 10 reports per hour per IP
+ */
+export const hubReportLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: () => getLimit(10),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: {
+    status: 'error',
+    code: 'TOO_MANY_REQUESTS',
+    message: 'Too many moderation reports submitted from this IP. Please try again later.'
+  }
+});
+
+/**
+ * Spatial Hub Telemetry Limiter: 120 events per minute per IP
+ */
+export const hubTelemetryLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: () => getLimit(120),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: {
+    status: 'error',
+    code: 'TOO_MANY_REQUESTS',
+    message: 'Hub telemetry rate limit exceeded. Please throttle event dispatch.'
+  }
+});
+
+/**
+ * Spatial Hub Search Limiter: 60 queries per minute per IP
+ */
+export const hubSearchLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: () => getLimit(60),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: {
+    status: 'error',
+    code: 'TOO_MANY_REQUESTS',
+    message: 'Too many search requests. Please throttle your queries.'
+  }
+});
+
+/**
  * Hard Payload Cap Middleware (e.g. 4 KB cap on public event ingestion)
  */
 export function enforcePayloadCap(maxBytes = 4096) {
