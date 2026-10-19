@@ -49,9 +49,18 @@ const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
   ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(s => s.trim()) 
   : [];
 
-if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
-  console.warn("WARNING: CORS_ALLOWED_ORIGINS environment variable should be set in production.");
+// Standard production domains
+const defaultAllowedOrigins = [
+  'https://i3-dion-spatial.vercel.app',
+  'https://i3dion.com',
+  'https://www.i3dion.com'
+];
+for (const domain of defaultAllowedOrigins) {
+  if (!allowedOrigins.includes(domain)) {
+    allowedOrigins.push(domain);
+  }
 }
+
 if (config.appUrl && !allowedOrigins.includes(config.appUrl)) {
   allowedOrigins.push(config.appUrl);
 }
@@ -63,10 +72,21 @@ for (const devOrigin of devOrigins) {
   }
 }
 
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin)) return true;
+  if (origin === config.appUrl) return true;
+  // Allow all Vercel preview and production deployments (*.vercel.app)
+  if (/^https:\/\/[a-z0-9_-]+\.vercel\.app$/i.test(origin)) return true;
+  // Allow localhost / 127.0.0.1 on any port
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) return true;
+  return false;
+};
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow same-origin requests or explicitly configured CORS allowed origins
-    if (!origin || allowedOrigins.includes(origin) || origin === config.appUrl) {
+    if (isAllowedOrigin(origin)) {
       callback(null, true);
     } else {
       callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
