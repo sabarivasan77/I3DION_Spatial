@@ -241,12 +241,12 @@ async function runApiTests() {
   console.log('----------------------------------------------------------------\n');
 
   if (failed > 0) {
-    setImmediate(() => process.exit(1));
+    setTimeout(() => process.exit(1), 150);
   }
-  setImmediate(() => process.exit(0));
+  setTimeout(() => process.exit(0), 150);
 }
 
 runApiTests().catch((err) => {
   console.error('Fatal API test error:', err);
-  setImmediate(() => process.exit(1));
+  setTimeout(() => process.exit(1), 150);
 });

@@ -367,7 +367,7 @@ async function runSuite() {
     console.log('----------------------------------------------------------------\n');
 
     server.close();
-    setImmediate(() => process.exit(failedCount > 0 ? 1 : 0));
+    setTimeout(() => process.exit(failedCount > 0 ? 1 : 0), 150);
   }
 }
 

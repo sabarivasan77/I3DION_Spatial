@@ -448,13 +448,13 @@ async function runStudioSuite() {
   console.log('================================================================');
 
   if (failedCount > 0) {
-    setImmediate(() => process.exit(1));
+    setTimeout(() => process.exit(1), 150);
   }
 }
 
 runStudioSuite().then(() => {
-  setImmediate(() => process.exit(0));
+  setTimeout(() => process.exit(0), 150);
 }).catch((err) => {
   console.error('Fatal test error in test-studio-hardening:', err);
-  setImmediate(() => process.exit(1));
+  setTimeout(() => process.exit(1), 150);
 });

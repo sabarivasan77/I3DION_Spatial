@@ -293,11 +293,11 @@ async function runFlowPersistenceTests() {
   console.log('----------------------------------------------------------------\n');
 
   if (failed > 0) {
-    setImmediate(() => process.exit(1));
+    setTimeout(() => process.exit(1), 150);
   }
 }
 
 runFlowPersistenceTests().catch((err) => {
   console.error('Fatal test error:', err);
-  setImmediate(() => process.exit(1));
+  setTimeout(() => process.exit(1), 150);
 });

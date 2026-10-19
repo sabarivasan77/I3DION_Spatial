@@ -129,12 +129,12 @@ async function runAll() {
   // Summary
   console.log(`\n📊 Platform Core RBAC Test Results: ${passed} Passed, ${failed} Failed.`);
   if (failed > 0) {
-    setImmediate(() => process.exit(1));
+    setTimeout(() => process.exit(1), 150);
   }
-  setImmediate(() => process.exit(0));
+  setTimeout(() => process.exit(0), 150);
 }
 
 runAll().catch((err) => {
   console.error('Fatal test error:', err);
-  setImmediate(() => process.exit(1));
+  setTimeout(() => process.exit(1), 150);
 });

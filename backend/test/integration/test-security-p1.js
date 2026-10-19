@@ -425,7 +425,7 @@ async function runP1Tests() {
   console.log('----------------------------------------------------------------\n');
 
   if (failed > 0) {
-    setImmediate(() => process.exit(1));
+    setTimeout(() => process.exit(1), 150);
   }
 }
 
@@ -435,10 +435,10 @@ async function main() {
     await runP1Tests();
   } catch (err) {
     console.error('Fatal test error:', err);
-    setImmediate(() => process.exit(1));
+    setTimeout(() => process.exit(1), 150);
   } finally {
     await teardown();
-    setImmediate(() => process.exit(0));
+    setTimeout(() => process.exit(0), 150);
   }
 }
 

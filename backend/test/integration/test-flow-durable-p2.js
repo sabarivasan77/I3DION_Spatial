@@ -739,7 +739,7 @@ async function runDurableFlowSuite() {
   console.log('================================================================\n');
 
   if (failedCount > 0) {
-    setImmediate(() => process.exit(1));
+    setTimeout(() => process.exit(1), 150);
   }
 }
 
@@ -749,10 +749,10 @@ async function main() {
     await runDurableFlowSuite();
   } catch (err) {
     console.error('Fatal test error:', err);
-    setImmediate(() => process.exit(1));
+    setTimeout(() => process.exit(1), 150);
   } finally {
     await teardown();
-    setImmediate(() => process.exit(failedCount > 0 ? 1 : 0));
+    setTimeout(() => process.exit(failedCount > 0 ? 1 : 0), 150);
   }
 }
 

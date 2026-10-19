@@ -543,15 +543,15 @@ async function runWalkingSkeleton() {
 
   if (failedCount > 0) {
     console.error('❌ Walking Skeleton Verification FAILED.');
-    setImmediate(() => process.exit(1));
+    setTimeout(() => process.exit(1), 150);
   } else {
     console.log('🎉 Full End-to-End Walking Skeleton Verified Successfully!');
     console.log('Zero mock fallbacks. Real GLB storage. Real PostgreSQL DB. Real canonical contracts.');
-    setImmediate(() => process.exit(0));
+    setTimeout(() => process.exit(0), 150);
   }
 }
 
 runWalkingSkeleton().catch((err) => {
   console.error('Fatal Walking Skeleton Error:', err);
-  setImmediate(() => process.exit(1));
+  setTimeout(() => process.exit(1), 150);
 });

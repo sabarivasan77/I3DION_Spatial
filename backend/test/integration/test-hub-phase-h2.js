@@ -74,8 +74,8 @@ async function run() {
 }
 
 run()
-  .then(() => setImmediate(() => process.exit(0)))
+  .then(() => setTimeout(() => process.exit(0), 150))
   .catch((err) => {
     console.error('\n❌ Phase H2 test failed:', err);
-    setImmediate(() => process.exit(1));
+    setTimeout(() => process.exit(1), 150);
   });

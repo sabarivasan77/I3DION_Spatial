@@ -513,13 +513,13 @@ async function runEngineSuite() {
   console.log('================================================================');
 
   if (failedCount > 0) {
-    setImmediate(() => process.exit(1));
+    setTimeout(() => process.exit(1), 150);
   }
 }
 
 runEngineSuite().then(() => {
-  setImmediate(() => process.exit(0));
+  setTimeout(() => process.exit(0), 150);
 }).catch((err) => {
   console.error('Fatal test error in test-engine-hardening:', err);
-  setImmediate(() => process.exit(1));
+  setTimeout(() => process.exit(1), 150);
 });

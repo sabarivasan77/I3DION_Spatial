@@ -482,8 +482,8 @@ async function runS0Tests() {
     console.log(`Phase S0 Verification Summary: ${passed} Passed | ${failed} Failed`);
     console.log('----------------------------------------------------------------\n');
     await teardown();
-    if (failed > 0) setImmediate(() => process.exit(1));
-    setImmediate(() => process.exit(0));
+    if (failed > 0) setTimeout(() => process.exit(1), 150);
+    setTimeout(() => process.exit(0), 150);
   }
 }
 

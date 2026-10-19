@@ -440,7 +440,7 @@ pages:
   console.log('================================================================\n');
 
   if (failedCount > 0) {
-    setImmediate(() => process.exit(1));
+    setTimeout(() => process.exit(1), 150);
   }
 }
 
