@@ -8,7 +8,10 @@ const { Pool } = pg;
 
 export const pool = new Pool({
   connectionString: config.databaseUrl,
-  ...( (config.nodeEnv === 'production' || config.databaseUrl?.includes('sslmode=') || config.databaseUrl?.includes('supabase') || config.databaseUrl?.includes('neon') || config.databaseUrl?.includes('render')) && {
+  max: process.env.VERCEL ? 3 : 10,
+  idleTimeoutMillis: process.env.VERCEL ? 1000 : 30000,
+  connectionTimeoutMillis: 5000,
+  ...( (config.nodeEnv === 'production' || config.databaseUrl?.includes('sslmode=') || config.databaseUrl?.includes('supabase') || config.databaseUrl?.includes('neon') || config.databaseUrl?.includes('render') || process.env.VERCEL) && {
     ssl: { rejectUnauthorized: false }
   })
 });

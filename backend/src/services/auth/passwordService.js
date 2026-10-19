@@ -4,36 +4,53 @@
  * length policy (12-128 chars), and k-anonymity breached-password checks.
  */
 
-import argon2 from 'argon2';
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 
+let argon2 = null;
+try {
+  const mod = await import('argon2');
+  argon2 = mod.default || mod;
+} catch (err) {
+  console.warn('[passwordService] Native argon2 addon not available in runtime environment. Using pure-JS bcryptjs.');
+}
+
 // Annex A1 parameters: memory=64MiB (65536 KiB), iterations=3, parallelism=1
-export const ARGON2_OPTIONS = {
+export const ARGON2_OPTIONS = argon2 ? {
   type: argon2.argon2id,
   memoryCost: 65536,
   timeCost: 3,
   parallelism: 1,
-};
+} : null;
 
-// Pre-computed dummy Argon2id hash for constant-time timing equalization
+// Pre-computed dummy hashes for constant-time timing equalization
 let DUMMY_HASH = '$argon2id$v=19$m=65536,t=3,p=1$c29tZXJhbmRvbXNhbHQxNg$5vYVlW7ZlP7Yl9K8J6H5G4F3E2D1C0B9A8Z7Y6X5W4V';
+const DUMMY_BCRYPT_HASH = '$2b$12$e8xL4BqP9K3A1Z7Y6X5W4Ve8xL4BqP9K3A1Z7Y6X5W4Ve8xL4BqP9';
 
 // Initialize dummy hash asynchronously to ensure real matching parameters
 (async () => {
-  try {
-    DUMMY_HASH = await argon2.hash('dummy_timing_equalization_string', ARGON2_OPTIONS);
-  } catch (err) {
-    // Keep fallback dummy hash
+  if (argon2 && ARGON2_OPTIONS) {
+    try {
+      DUMMY_HASH = await argon2.hash('dummy_timing_equalization_string', ARGON2_OPTIONS);
+    } catch (err) {
+      // Keep fallback dummy hash
+    }
   }
 })();
 
 export const passwordService = {
   /**
-   * Hashes a password using Argon2id with 64 MiB memory, 3 iterations.
+   * Hashes a password using Argon2id when available, falling back to pure-JS bcryptjs.
    */
   async hash(password) {
-    return argon2.hash(password, ARGON2_OPTIONS);
+    if (argon2 && ARGON2_OPTIONS) {
+      try {
+        return await argon2.hash(password, ARGON2_OPTIONS);
+      } catch (err) {
+        console.warn('Argon2 hashing failed, falling back to bcryptjs:', err.message);
+      }
+    }
+    return bcrypt.hash(password, 12);
   },
 
   /**
@@ -46,26 +63,36 @@ export const passwordService = {
    */
   async verify(storedHash, password) {
     if (!storedHash) {
-      // Always run hash verification even if user does not exist to equalize timing
-      await argon2.verify(DUMMY_HASH, password).catch(() => false);
+      if (argon2) {
+        await argon2.verify(DUMMY_HASH, password).catch(() => false);
+      } else {
+        await bcrypt.compare(password, DUMMY_BCRYPT_HASH).catch(() => false);
+      }
       return { isValid: false, needsUpgrade: false };
     }
 
     try {
       if (storedHash.startsWith('$argon2')) {
-        const isValid = await argon2.verify(storedHash, password);
-        const needsUpgrade = isValid && argon2.needsRehash(storedHash, ARGON2_OPTIONS);
-        return { isValid, needsUpgrade };
+        if (argon2) {
+          const isValid = await argon2.verify(storedHash, password);
+          const needsUpgrade = isValid && argon2.needsRehash ? argon2.needsRehash(storedHash, ARGON2_OPTIONS) : false;
+          return { isValid, needsUpgrade };
+        }
+        return { isValid: false, needsUpgrade: false };
       }
 
       if (storedHash.startsWith('$2a$') || storedHash.startsWith('$2b$')) {
         const isValid = await bcrypt.compare(password, storedHash);
-        // Valid bcrypt password MUST be upgraded to Argon2id on login
-        return { isValid, needsUpgrade: isValid };
+        // Valid bcrypt password can be upgraded to Argon2id on login if argon2 available
+        return { isValid, needsUpgrade: Boolean(isValid && argon2) };
       }
 
       // Unknown or malformed hash
-      await argon2.verify(DUMMY_HASH, password).catch(() => false);
+      if (argon2) {
+        await argon2.verify(DUMMY_HASH, password).catch(() => false);
+      } else {
+        await bcrypt.compare(password, DUMMY_BCRYPT_HASH).catch(() => false);
+      }
       return { isValid: false, needsUpgrade: false };
     } catch (err) {
       return { isValid: false, needsUpgrade: false };

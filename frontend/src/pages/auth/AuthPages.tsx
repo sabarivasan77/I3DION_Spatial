@@ -158,7 +158,16 @@ function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
               </p>
             )}
 
-            {authError && <p className="rounded-xl bg-red-50 p-3 text-sm font-medium text-red-700">{authError}</p>}
+            {authError && (
+              <div className="rounded-xl bg-red-50 p-3 text-sm font-medium text-red-700 space-y-1">
+                <p>{authError}</p>
+                {authError.includes('FUNCTION_INVOCATION_FAILED') && (
+                  <p className="text-xs text-red-600 font-normal">
+                    The serverless backend failed to invoke. Please check that <code>DATABASE_URL</code> and <code>JWT_SECRET</code> are configured in your Vercel Project Environment Variables.
+                  </p>
+                )}
+              </div>
+            )}
             
             <Button className="w-full" type="submit" disabled={loading}>
               {loading ? 'Working...' : isSignup ? 'Create Account' : 'Sign In'}

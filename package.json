@@ -12,5 +12,27 @@
     "check:structure": "node tools/check-structure.cjs",
     "preview": "npm --prefix frontend run preview -- --host 127.0.0.1",
     "postinstall": "node -e \"const fs=require('fs'),cp=require('child_process'); cp.execSync('npm --prefix frontend install', {stdio:'inherit'}); if(fs.existsSync('backend/package.json')) cp.execSync('npm --prefix backend install', {stdio:'inherit'});\""
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.115.0",
+    "argon2": "^0.45.1",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "google-auth-library": "^10.9.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^10.0.9",
+    "otplib": "^13.4.1",
+    "pg": "^8.13.1",
+    "qrcode": "^1.5.4",
+    "razorpay": "^2.9.8",
+    "yaml": "^2.9.1",
+    "zod": "^3.24.2"
   }
 }
