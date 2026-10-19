@@ -63,24 +63,32 @@ export async function withTenant(orgId, fn) {
 }
 
 let migrationRun = false;
+let migrationPromise = null;
 
 export async function ensureMigrated() {
   if (migrationRun) return;
-  try {
-    const { runMigrations } = await import('./migrator.js');
-    await runMigrations();
+  if (!migrationPromise) {
+    migrationPromise = (async () => {
+      try {
+        const { runMigrations } = await import('./migrator.js');
+        await runMigrations();
 
-    try {
-      const { seedSpatialHubDatabase } = await import('./seed-spatial-hub.js');
-      await seedSpatialHubDatabase();
-    } catch (seedErr) {
-      console.warn('Non-blocking Spatial Hub seeding note:', seedErr.message);
-    }
+        try {
+          const { seedSpatialHubDatabase } = await import('./seed-spatial-hub.js');
+          await seedSpatialHubDatabase();
+        } catch (seedErr) {
+          console.warn('Non-blocking Spatial Hub seeding note:', seedErr.message);
+        }
 
-    migrationRun = true;
-  } catch (err) {
-    console.error('Database migration check failed:', err.message);
+        migrationRun = true;
+      } catch (err) {
+        console.error('Database migration check failed:', err.message);
+        migrationPromise = null;
+        throw err;
+      }
+    })();
   }
+  return migrationPromise;
 }
 
 export async function migrate() {

@@ -7,16 +7,25 @@
 -- 1. Create Application Role (Non-Superuser) to ensure RLS policies are strictly enforced
 DO $$ 
 BEGIN 
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'i3dion_app') THEN 
-    CREATE ROLE i3dion_app NOINHERIT; 
-  END IF; 
-END $$;
+  BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'i3dion_app') THEN 
+      CREATE ROLE i3dion_app NOINHERIT; 
+    END IF; 
+  EXCEPTION WHEN OTHERS THEN
+    -- Hosted Postgres (Neon, Supabase pooler) may disallow role creation; continue gracefully
+    RAISE NOTICE 'Skipping CREATE ROLE i3dion_app: %', SQLERRM;
+  END;
 
-GRANT USAGE ON SCHEMA public TO i3dion_app;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO i3dion_app;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO i3dion_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO i3dion_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO i3dion_app;
+  BEGIN
+    GRANT USAGE ON SCHEMA public TO i3dion_app;
+    GRANT ALL ON ALL TABLES IN SCHEMA public TO i3dion_app;
+    GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO i3dion_app;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO i3dion_app;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO i3dion_app;
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'Skipping GRANT TO i3dion_app: %', SQLERRM;
+  END;
+END $$;
 
 -- 2. Enable RLS and Tenant Isolation Policy across all Organization-scoped tables
 DO $$

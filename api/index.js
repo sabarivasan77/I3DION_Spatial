@@ -1,4 +1,5 @@
 let appInstance = null;
+let migrationInitialized = false;
 
 export default async function handler(req, res) {
   try {
@@ -6,6 +7,17 @@ export default async function handler(req, res) {
       const serverModule = await import('../backend/src/server.js');
       appInstance = serverModule.app;
     }
+
+    if (!migrationInitialized) {
+      try {
+        const { ensureMigrated } = await import('../backend/src/db/pool.js');
+        await ensureMigrated();
+        migrationInitialized = true;
+      } catch (migErr) {
+        console.error('[Vercel Database Migration Warning]', migErr.message || migErr);
+      }
+    }
+
     return appInstance(req, res);
   } catch (err) {
     console.error('[Vercel Serverless Invocation Failure]', err);

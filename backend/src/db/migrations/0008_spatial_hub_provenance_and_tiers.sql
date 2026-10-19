@@ -2,8 +2,6 @@
 -- Description: Adds model provenance, license metadata, tiered asset URLs, and indexes for Spatial Hub.
 -- Demotes legacy fake/unlicensed models from public feed.
 
-BEGIN;
-
 -- 1. Add provenance, license, and asset tiers to products
 ALTER TABLE products 
   ADD COLUMN IF NOT EXISTS license_spdx TEXT[] DEFAULT ARRAY['CC0-1.0']::TEXT[],
@@ -47,6 +45,7 @@ WHERE model_url LIKE '/models/model_%.gltf';
 
 -- 5. Ensure Showcase Organization exists for demonstration models
 ALTER TABLE organizations
+  ADD COLUMN IF NOT EXISTS slug TEXT,
   ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;
 
 INSERT INTO organizations (id, name, slug, profile, website, is_verified, created_at, updated_at)
@@ -66,4 +65,3 @@ ON CONFLICT (id) DO UPDATE SET
   is_verified = true,
   updated_at = now();
 
-COMMIT;

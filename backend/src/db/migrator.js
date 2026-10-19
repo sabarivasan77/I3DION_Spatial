@@ -3,6 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { pool } from './pool.js';
+import { BUNDLED_MIGRATIONS } from './migrationsBundle.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
@@ -37,9 +38,26 @@ export async function runMigrations() {
   try {
     await ensureMigrationsTable(client);
 
-    // Read all .sql files in migrations directory sorted alphanumerically
-    const entries = await fs.readdir(MIGRATIONS_DIR);
-    const sqlFiles = entries.filter((f) => f.endsWith('.sql')).sort();
+    let migrationItems = [];
+
+    // 1. Attempt reading from filesystem (local dev / container)
+    try {
+      const entries = await fs.readdir(MIGRATIONS_DIR);
+      const sqlFiles = entries.filter((f) => f.endsWith('.sql')).sort();
+      for (const file of sqlFiles) {
+        const version = file.split('_')[0];
+        const filePath = path.join(MIGRATIONS_DIR, file);
+        const sqlContent = await fs.readFile(filePath, 'utf8');
+        migrationItems.push({ version, name: file, sql: sqlContent });
+      }
+    } catch {
+      // In serverless environments, migrations directory might not be copied
+    }
+
+    // 2. Fall back to bundled migrations if filesystem directory was missing or empty
+    if (migrationItems.length === 0 && Array.isArray(BUNDLED_MIGRATIONS)) {
+      migrationItems = BUNDLED_MIGRATIONS;
+    }
 
     // Query applied migrations
     const appliedRes = await client.query('SELECT version, checksum FROM schema_migrations');
@@ -47,10 +65,8 @@ export async function runMigrations() {
 
     let appliedCount = 0;
 
-    for (const file of sqlFiles) {
-      const version = file.split('_')[0];
-      const filePath = path.join(MIGRATIONS_DIR, file);
-      const sqlContent = await fs.readFile(filePath, 'utf8');
+    for (const item of migrationItems) {
+      const { version, name: file, sql: sqlContent } = item;
       const checksum = computeChecksum(sqlContent);
 
       if (appliedMap.has(version)) {

@@ -27,13 +27,24 @@ EXCEPTION WHEN duplicate_object THEN null; END $$;
 CREATE TABLE IF NOT EXISTS organizations (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
   name text NOT NULL,
+  slug text,
   website text,
   logo_url text,
   primary_color text DEFAULT '#2563EB',
   profile text,
+  is_verified boolean DEFAULT false,
+  ai_assist_enabled boolean DEFAULT false,
+  storage_quota_bytes bigint DEFAULT 5368709120,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE organizations ADD COLUMN IF NOT EXISTS slug text;
+ALTER TABLE organizations ADD COLUMN IF NOT EXISTS is_verified boolean DEFAULT false;
+ALTER TABLE organizations ADD COLUMN IF NOT EXISTS ai_assist_enabled boolean DEFAULT false;
+ALTER TABLE organizations ADD COLUMN IF NOT EXISTS storage_quota_bytes bigint DEFAULT 5368709120;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_organizations_slug ON organizations(slug) WHERE slug IS NOT NULL;
+
 
 CREATE TABLE IF NOT EXISTS users (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),

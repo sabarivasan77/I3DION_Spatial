@@ -5,6 +5,7 @@
   "functions": {
     "api/**/*.js": {
       "maxDuration": 30,
+      "includeFiles": "backend/src/db/migrations/**",
       "excludeFiles": "{frontend/public/**,frontend/dist/**,public/models/**,backend/uploads/**}"
     }
   },

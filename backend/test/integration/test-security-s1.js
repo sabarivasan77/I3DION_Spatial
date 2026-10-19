@@ -70,7 +70,7 @@ async function runS1Tests() {
         body: JSON.stringify({
           name: 'Short Pw',
           email: shortPwEmail,
-          password: 'Password123!', // 11 chars
+          password: 'Short123!', // 9 chars
           organizationName: 'Policy Test Org'
         })
       });

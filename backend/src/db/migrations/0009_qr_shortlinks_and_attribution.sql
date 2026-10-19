@@ -1,8 +1,6 @@
 -- Migration: 0009_qr_shortlinks_and_attribution.sql
 -- Description: Enhances qr_codes table with >= 96-bit short links, pause/expiry/password controls, campaign attribution, and visit counters.
 
-BEGIN;
-
 -- 1. Add short link and attribution columns to qr_codes
 ALTER TABLE qr_codes
   ALTER COLUMN product_id DROP NOT NULL,
@@ -29,4 +27,3 @@ CREATE INDEX IF NOT EXISTS idx_qr_codes_short_code
 CREATE INDEX IF NOT EXISTS idx_qr_codes_org_campaign 
   ON qr_codes (organization_id, campaign);
 
-COMMIT;

@@ -1,8 +1,6 @@
 -- Migration: 0010_spatial_hub_moderation_and_reports.sql
 -- Description: Creates moderation_reports table for community content reporting and abuse prevention (HUB-15).
 
-BEGIN;
-
 CREATE TABLE IF NOT EXISTS moderation_reports (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   reporter_id UUID REFERENCES users(id) ON DELETE SET NULL,
@@ -29,4 +27,3 @@ CREATE INDEX IF NOT EXISTS idx_moderation_reports_status
 CREATE INDEX IF NOT EXISTS idx_moderation_reports_reporter 
   ON moderation_reports (reporter_id);
 
-COMMIT;
