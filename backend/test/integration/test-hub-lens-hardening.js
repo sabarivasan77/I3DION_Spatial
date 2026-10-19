@@ -572,12 +572,12 @@ async function runHubLensSuite() {
   console.log('----------------------------------------------------------------\n');
 
   if (failedCount > 0) {
-    process.exit(1);
+    setImmediate(() => process.exit(1));
   }
-  process.exit(0);
+  setImmediate(() => process.exit(0));
 }
 
 runHubLensSuite().catch(err => {
   console.error('Fatal error running Spatial Hub & Lens verification suite:', err);
-  process.exit(1);
+  setImmediate(() => process.exit(1));
 });

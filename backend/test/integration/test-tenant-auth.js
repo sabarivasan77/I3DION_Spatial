@@ -55,9 +55,9 @@ async function runTests() {
   // Summary
   console.log(`\n📊 Integration Test Results: ${passed} Passed, ${failed} Failed.`);
   if (failed > 0) {
-    process.exit(1);
+    setImmediate(() => process.exit(1));
   }
-  process.exit(0);
+  setImmediate(() => process.exit(0));
 }
 
 runTests();

@@ -686,25 +686,29 @@ export async function seedSpatialHubDatabase() {
 
     // 2. Insert/Update 30 Spatial Hub Models into database `products` table
     for (const item of SEED_MODELS) {
+      // Legacy seed models are demoted: not public, not Published.
+      // Real showcase models are seeded separately by seed-hub-starter-models.js.
       await client.query(`
         INSERT INTO products (
           organization_id, name, slug, category, description, status, is_public,
           model_url, image_url, specs, tags, public_url, views_count, likes_count
         ) VALUES (
-          $1, $2, $3, $4, $5, 'Published', true,
-          $6, $7, $8, $9, $10, 150, 45
+          $1, $2, $3, $4, $5, 'Draft', false,
+          $6, $7, $8, $9, $10, 0, 0
         )
         ON CONFLICT (organization_id, slug) WHERE slug IS NOT NULL
         DO UPDATE SET
           name = EXCLUDED.name,
           category = EXCLUDED.category,
           description = EXCLUDED.description,
-          status = 'Published',
-          is_public = true,
+          status = 'Draft',
+          is_public = false,
           model_url = EXCLUDED.model_url,
           image_url = EXCLUDED.image_url,
           specs = EXCLUDED.specs,
           tags = EXCLUDED.tags,
+          views_count = 0,
+          likes_count = 0,
           updated_at = now()
       `, [
         orgId, item.name, item.slug, item.category, item.description,
@@ -782,4 +786,10 @@ export async function seedSpatialHubDatabase() {
   } finally {
     client.release();
   }
+}
+
+// Run as main script
+import { fileURLToPath } from 'url';
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  seedSpatialHubDatabase().then(() => process.exit(0)).catch((e) => { console.error(e); process.exit(1); });
 }

@@ -463,7 +463,7 @@ async function runPrintTestSuite() {
   console.log('================================================================\n');
 
   if (failedCount > 0) {
-    process.exit(1);
+    setImmediate(() => process.exit(1));
   }
 }
 
@@ -473,10 +473,10 @@ async function main() {
     await runPrintTestSuite();
   } catch (err) {
     console.error('Fatal test error:', err);
-    process.exit(1);
+    setImmediate(() => process.exit(1));
   } finally {
     await teardown();
-    process.exit(failedCount > 0 ? 1 : 0);
+    setImmediate(() => process.exit(failedCount > 0 ? 1 : 0));
   }
 }
 

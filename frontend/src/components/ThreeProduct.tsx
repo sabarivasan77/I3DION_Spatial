@@ -394,6 +394,7 @@ export function LoadingOverlay({ productName }: { productName?: string }) {
 
 export default function ThreeProduct({ 
   modelUrl, 
+  posterUrl,
   autoRotate = false,
   productName,
   renderMode = 'solid',
@@ -401,7 +402,9 @@ export default function ThreeProduct({
   className = '',
   animationSpeed = 0,
   onHasAnimations,
-  interactive: _interactive
+  onError,
+  interactive: _interactive,
+  allowProceduralFallback = false
 }: { 
   modelUrl?: string;
   posterUrl?: string;

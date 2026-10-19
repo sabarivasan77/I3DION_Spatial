@@ -56,7 +56,8 @@ async function run() {
 }
 
 run()
+  .then(() => setImmediate(() => process.exit(0)))
   .catch((err) => {
     console.error('\n❌ Phase H3 test failed:', err);
-    process.exit(1);
+    setImmediate(() => process.exit(1));
   });

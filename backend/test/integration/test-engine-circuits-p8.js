@@ -597,13 +597,13 @@ async function runSuite() {
   console.log('----------------------------------------------------------------');
 
   if (failedCount > 0) {
-    process.exit(1);
+    setImmediate(() => process.exit(1));
   } else {
-    process.exit(0);
+    setImmediate(() => process.exit(0));
   }
 }
 
 runSuite().catch(err => {
   console.error('Unhandled suite error:', err);
-  process.exit(1);
+  setImmediate(() => process.exit(1));
 });

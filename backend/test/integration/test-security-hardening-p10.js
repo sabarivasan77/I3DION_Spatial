@@ -426,14 +426,14 @@ async function runPenetrationSuite() {
     console.log('----------------------------------------------------------------\n');
 
     if (failed > 0) {
-      process.exit(1);
+      setImmediate(() => process.exit(1));
     }
   } catch (globalErr) {
     console.error('Fatal penetration suite error:', globalErr);
-    process.exit(1);
+    setImmediate(() => process.exit(1));
   } finally {
     await teardown();
-    process.exit(failed > 0 ? 1 : 0);
+    setImmediate(() => process.exit(failed > 0 ? 1 : 0));
   }
 }
 

@@ -1,5 +1,5 @@
 import { withTenant, query } from '../../db/pool.js';
-import { validateFlowDAG } from '../../../../packages/contracts/src/flow.ts';
+import { validateFlowDAG } from './flowValidator.js';
 import { assertFlowCreationQuota } from '../billing/quotaService.js';
 
 /**

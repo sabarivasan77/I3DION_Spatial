@@ -456,7 +456,7 @@ async function runPlayerTestSuite() {
   console.log('================================================================\n');
 
   if (failedCount > 0) {
-    process.exit(1);
+    setImmediate(() => process.exit(1));
   }
 }
 
@@ -466,10 +466,10 @@ async function main() {
     await runPlayerTestSuite();
   } catch (err) {
     console.error('Fatal test error:', err);
-    process.exit(1);
+    setImmediate(() => process.exit(1));
   } finally {
     await teardown();
-    process.exit(0);
+    setImmediate(() => process.exit(0));
   }
 }
 

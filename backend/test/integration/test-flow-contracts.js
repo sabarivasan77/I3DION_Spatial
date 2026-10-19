@@ -245,11 +245,11 @@ async function runFlowContractTests() {
   console.log('----------------------------------------------------------------\n');
 
   if (failed > 0) {
-    process.exit(1);
+    setImmediate(() => process.exit(1));
   }
 }
 
 runFlowContractTests().catch((err) => {
   console.error('Test runner fatal error:', err);
-  process.exit(1);
+  setImmediate(() => process.exit(1));
 });

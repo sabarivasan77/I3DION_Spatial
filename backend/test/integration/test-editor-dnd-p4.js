@@ -509,7 +509,7 @@ async function runDndTestSuite() {
   console.log('================================================================\n');
 
   if (failedCount > 0) {
-    process.exit(1);
+    setImmediate(() => process.exit(1));
   }
 }
 
