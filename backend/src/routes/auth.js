@@ -115,7 +115,7 @@ authRouter.post('/signup', signupLimiter, async (req, res, next) => {
       return next(error);
     }
     console.error('Registration failure:', error.message);
-    next(new ApiError(500, `Registration failed: ${error.message}`));
+    next(new ApiError(503, 'Registration is temporarily unavailable because the database cannot be reached. Please try again shortly.'));
   }
 });
 

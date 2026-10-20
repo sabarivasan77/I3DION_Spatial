@@ -17,12 +17,13 @@ export function notFound(req, _res, next) {
 export function errorHandler(error, _req, res, _next) {
   const status = error.status ?? 500;
   const isDev = process.env.NODE_ENV !== 'production';
+  const safeMessage = status >= 500
+    ? (status === 503 ? error.message : 'Internal server error')
+    : error.message;
   const payload = {
-    message: status === 500
-      ? (isDev && error.message ? error.message : 'Internal server error')
-      : error.message,
-    error: error.message,
-    details: error.details ?? { originalError: error.message, stack: isDev ? error.stack : undefined },
+    message: safeMessage,
+    error: safeMessage,
+    details: error.details ?? (isDev ? { originalError: error.message, stack: error.stack } : undefined),
   };
 
   if (status === 500) {
