@@ -122,8 +122,9 @@ export function requireRole(...roles) {
     }
 
     const userRole = req.user.role;
-    // Explicit role match or Owner/Admin authorization
-    if (roles.includes(userRole) || userRole === 'Owner' || userRole === 'Admin') {
+    // Super Admin has every organization-level permission. Platform-staff
+    // routes use their own explicit allowlist and are never authorized here.
+    if (roles.includes(userRole) || userRole === 'Super Admin' || userRole === 'Owner' || userRole === 'Admin') {
       return next();
     }
 

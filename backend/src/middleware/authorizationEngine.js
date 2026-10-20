@@ -9,10 +9,13 @@ import { query } from '../db/pool.js';
 
 /**
  * Explicit Tenant Role Permissions Matrix
- * Roles: Owner, Admin, Manager, Sales, Marketing, Analyst, Viewer
- * NO wildcard bypass roles, NO rank math.
+ * Roles: Super Admin, Owner, Admin, Manager, Sales, Marketing, Analyst, Viewer
+ * `Super Admin` is the organization-scoped break-glass role. It has every
+ * tenant permission, while tenant isolation and resource safety invariants
+ * below continue to apply. It does not grant access to platform-staff routes.
  */
 export const PERMISSIONS = {
+  'Super Admin': ['*'],
   Owner: [
     'org:read', 'org:update', 'org:delete', 'org:invite', 'org:manage_members',
     'billing:read', 'billing:checkout', 'billing:cancel',
@@ -135,7 +138,6 @@ export async function can(actor, action, resource = null) {
 
   // Normalize role aliases
   if (membershipRole === 'Sales User') membershipRole = 'Sales';
-  if (membershipRole === 'Super Admin') membershipRole = 'Owner';
 
   // 3. Tenant Isolation Check: resource organization must match actor organization
   if (resource) {
@@ -152,7 +154,7 @@ export async function can(actor, action, resource = null) {
 
   // 4. Matrix Permission Check
   const allowedActions = PERMISSIONS[membershipRole] || [];
-  if (!allowedActions.includes(action)) {
+  if (!allowedActions.includes('*') && !allowedActions.includes(action)) {
     return {
       allow: false,
       reason: `Role '${membershipRole}' does not have permission to perform '${action}'`,

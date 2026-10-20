@@ -31,10 +31,17 @@ export function canAccessApp(user: SessionUser | null, appKey: AppKey): boolean 
   // Hub is accessible to everyone
   if (appKey === 'hub') return true;
 
+  if (!user) return false;
+
+  const { role } = getUserContext(user);
+
+  // Super Admin and Admin always have unrestricted access to all apps
+  if (['Super Admin', 'Admin', 'Company Admin'].includes(role)) return true;
+
   const { isOrgUser } = getUserContext(user);
   if (!isOrgUser) return false;
 
-  // Check license tier access
+  // Check license tier access for regular org users
   return useLicenseStore.getState().hasAppAccess(appKey);
 }
 

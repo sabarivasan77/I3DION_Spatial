@@ -31,10 +31,10 @@ export function requireRole(roles) {
           details: { path: req.originalUrl, method: req.method }
         });
 
-        next(new ApiError(403, 'You do not have permission to perform this action.'));
+        return next(new ApiError(403, 'You do not have permission to perform this action.'));
       }
 
-      next();
+      return next();
     } catch (err) {
       next(err);
     }
