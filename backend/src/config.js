@@ -25,13 +25,13 @@ if (initialTestMode) {
 const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
 const isProd = process.env.NODE_ENV === 'production';
 
-// Safe runtime JWT secret resolution that prevents unhandled boot crashes on Vercel
+// JWT secrets must be explicitly configured in deployed environments. A
+// deterministic fallback would let a third party mint production sessions.
 const resolveJwtSecret = () => {
   if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
   if (process.env.NODE_ENV === 'test') return 'test_jwt_secret_only';
   if (process.env.VERCEL || isProd) {
-    console.warn('[Security Warning] JWT_SECRET is not set in environment variables. Using runtime instance secret.');
-    return process.env.VERCEL_GIT_COMMIT_SHA || 'i3dion_spatial_vercel_runtime_jwt_secret_849204';
+    throw new Error('JWT_SECRET must be configured in the production environment.');
   }
   return 'i3dion_spatial_local_dev_jwt_secret_12345';
 };

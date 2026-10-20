@@ -3,7 +3,7 @@
  * Handles completions, coding agent prompts, and intelligence routing via Vercel AI Gateway
  */
 
-const VERCEL_TOKEN = process.env.VERCEL_AI_GATEWAY_TOKEN || process.env.VERCEL_TOKEN || 'vck_6CPJ1EQSbFRS6v0amgqwxXLbY6BagMYBVX4ef4jZkgqv5iyaGH1YKbUO';
+const VERCEL_TOKEN = process.env.VERCEL_AI_GATEWAY_TOKEN || process.env.VERCEL_TOKEN;
 const VERCEL_AI_GATEWAY_URL = process.env.VERCEL_AI_GATEWAY_URL || 'https://ai-gateway.vercel.app/v1';
 
 export const aiGatewayService = {
@@ -21,6 +21,9 @@ export const aiGatewayService = {
     }
 
     try {
+      if (!VERCEL_TOKEN) {
+        throw new Error('Vercel AI Gateway is not configured');
+      }
       const response = await fetch(`${VERCEL_AI_GATEWAY_URL}/chat/completions`, {
         method: 'POST',
         headers: {
