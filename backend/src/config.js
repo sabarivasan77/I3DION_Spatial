@@ -42,7 +42,7 @@ export const config = {
   // Trust VERCEL_URL, otherwise fallback to local APP_URL
   appUrl: vercelUrl ?? process.env.APP_URL ?? 'http://localhost:5173',
   apiUrl: process.env.API_URL ?? (isProd ? vercelUrl : 'http://localhost:4000'),
-  databaseUrl: process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_PRISMA_URL || process.env.SUPABASE_DB_URL || 'postgres://postgres:postgres@localhost:5432/i3dion_spatial',
+  databaseUrl: (process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_PRISMA_URL || process.env.SUPABASE_DB_URL || 'postgres://postgres:postgres@localhost:5432/i3dion_spatial').trim().replace(/^["']|["']$/g, ''),
   jwtSecret: resolveJwtSecret(),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '10m',
   uploadDir: process.env.UPLOAD_DIR ?? 'uploads',

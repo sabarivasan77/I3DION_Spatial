@@ -19,12 +19,15 @@ export default async function handler(req, res) {
         // login and registration failures.
         console.error('[Vercel Database Initialization Failure]', migErr.message || migErr);
         const errMsg = migErr?.message || String(migErr);
+        const rawUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || 'NOT_SET';
+        const masked = rawUrl.replace(/:([^:@]+)@/, (m, p) => `:***(len=${p.length})@`);
         res.setHeader('Content-Type', 'application/json');
         res.statusCode = 503;
         res.end(JSON.stringify({
           error: 'Service temporarily unavailable',
-          message: `The database is not ready: ${errMsg}. Please ensure DATABASE_URL is properly configured in Vercel.`,
-          detail: errMsg
+          message: `The database is not ready: ${errMsg}. Target: ${masked}`,
+          detail: errMsg,
+          target: masked
         }));
         return;
       }
