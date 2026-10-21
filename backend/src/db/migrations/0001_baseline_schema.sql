@@ -1111,6 +1111,9 @@ CREATE TABLE IF NOT EXISTS intelligence_audit_logs (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS session_id text;
+
 CREATE INDEX IF NOT EXISTS idx_intel_events_org ON analytics_events(organization_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_intel_events_user ON analytics_events(user_id) WHERE user_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_intel_events_session ON analytics_events(session_id) WHERE session_id IS NOT NULL;
