@@ -666,6 +666,13 @@ export const SEED_MODELS = [
 ];
 
 export async function seedSpatialHubDatabase() {
+  // Demo fixtures must never create a predictable administrator in production.
+  // Production administrators are provisioned explicitly by the deployment owner.
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PRODUCTION_DEMO_SEED !== 'true') {
+    console.log('Skipping demo Spatial Hub seed in production.');
+    return;
+  }
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -717,24 +724,8 @@ export async function seedSpatialHubDatabase() {
       ]);
     }
 
-    // 3. Ensure Admin User exists
-    const adminEmail = 'admin@i3dion.com';
-    let userRes = await client.query(`SELECT id FROM users WHERE email = $1`, [adminEmail]);
-    let userId;
-    if (userRes.rows.length === 0) {
-      // Hashed password for 'Admin@123456' using Argon2id (Annex A1)
-      const passwordHash = '$argon2id$v=19$m=65536,p=1,t=3$eHBwgOu/0852ugPjAZPhDQ$Chdl75wqTKSvYucq6FFL+paLhqpYQ0ucPIOFjj90eGc'; 
-      const newUser = await client.query(`
-        INSERT INTO users (organization_id, name, email, password_hash, role)
-        VALUES ($1, 'I3DION Admin', $2, $3, 'Admin')
-        RETURNING id
-      `, [orgId, adminEmail, passwordHash]);
-      userId = newUser.rows[0].id;
-    } else {
-      userId = userRes.rows[0].id;
-    }
-
-    // 4. Seed initial Vault Collections
+    // 3. Seed initial Vault Collections. Accounts are provisioned explicitly
+    // through signup or an administrator workflow; never with seeded passwords.
     const defaultColls = [
       { id: 'c0000000-0000-0000-0000-000000000001', name: 'Industrial Machinery & Compressors', description: 'Enterprise dataset repository for rotary screw compressors, turbines, and planetary speed reducers.' },
       { id: 'c0000000-0000-0000-0000-000000000002', name: 'Pneumatic Control Valves & Actuators', description: 'High-pressure solenoid valves, butterfly valves, and electrical linear actuators.' },
@@ -751,7 +742,7 @@ export async function seedSpatialHubDatabase() {
       ])]);
     }
 
-    // 5. Seed initial Vault Assets
+    // 4. Seed initial Vault Assets
     const defaultAssets = [
       { id: 'a0000000-0000-0000-0000-000000000001', name: 'Heavy Duty Planetary Speed Reducer', category: 'Industrial Machinery', type: '3D Model', url: '/models/model_1.gltf', size: 44564480 },
       { id: 'a0000000-0000-0000-0000-000000000002', name: 'Reciprocating Saw Power Actuator', category: 'Power Tools & Actuators', type: '3D Model', url: '/models/model_2.gltf', size: 19084000 },
@@ -764,10 +755,10 @@ export async function seedSpatialHubDatabase() {
         INSERT INTO vault_assets (id, organization_id, created_by, name, original_name, storage_key, mime_type, category, type, public_url, size_bytes, status, visibility)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'Ready', 'Organization')
         ON CONFLICT (id) DO NOTHING
-      `, [a.id, orgId, userId, a.name, a.name, `seed/${a.id}`, mime, a.category, a.type, a.url, a.size]);
+      `, [a.id, orgId, null, a.name, a.name, `seed/${a.id}`, mime, a.category, a.type, a.url, a.size]);
     }
 
-    // 6. Seed initial Vault Templates
+    // 5. Seed initial Vault Templates
     await client.query(`
       INSERT INTO vault_templates (id, organization_id, name, description, schema)
       VALUES (
@@ -779,7 +770,7 @@ export async function seedSpatialHubDatabase() {
     `, [orgId, JSON.stringify({ fields: [{ key: 'serial_number', name: 'Serial Number', type: 'Text', required: true }] })]);
 
     await client.query('COMMIT');
-    console.log('Successfully seeded 30 Spatial Hub models, Admin user, and Vault datasets into PostgreSQL database!');
+    console.log('Successfully seeded 30 Spatial Hub models and Vault datasets into PostgreSQL database!');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Failed to seed Spatial Hub database:', err.message);

@@ -143,14 +143,6 @@ authRouter.post('/login', loginLimiter, async (req, res, next) => {
     // Constant-time timing equalization & password verification (Annex A1)
     let { isValid, needsUpgrade } = await passwordService.verify(user?.password_hash, password);
     
-    // Fallback support for standard demo admin credentials
-    if (!isValid && user && user.email === 'admin@i3dion.com') {
-      if (password === 'Admin@123456' || password === 'Password123!' || password === 'Spatial@2027!Omni' || password === 'admin') {
-        isValid = true;
-        needsUpgrade = true;
-      }
-    }
-
     if (!user || !isValid) {
       throw new ApiError(401, 'Invalid credentials');
     }

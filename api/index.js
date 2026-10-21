@@ -14,7 +14,17 @@ export default async function handler(req, res) {
         await ensureMigrated();
         migrationInitialized = true;
       } catch (migErr) {
-        console.error('[Vercel Database Migration Warning]', migErr.message || migErr);
+        // Do not continue to authentication routes with an unavailable or
+        // partially migrated database. That previously surfaced as generic
+        // login and registration failures.
+        console.error('[Vercel Database Initialization Failure]', migErr.message || migErr);
+        res.setHeader('Content-Type', 'application/json');
+        res.statusCode = 503;
+        res.end(JSON.stringify({
+          error: 'Service temporarily unavailable',
+          message: 'The database is not ready. Please try again shortly.'
+        }));
+        return;
       }
     }
 
