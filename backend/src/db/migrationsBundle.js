@@ -48,5 +48,10 @@ export const BUNDLED_MIGRATIONS = [
     "version": "0010",
     "name": "0010_spatial_hub_moderation_and_reports.sql",
     "sql": "-- Migration: 0010_spatial_hub_moderation_and_reports.sql\r\n-- Description: Creates moderation_reports table for community content reporting and abuse prevention (HUB-15).\r\n\r\nCREATE TABLE IF NOT EXISTS moderation_reports (\r\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n  reporter_id UUID REFERENCES users(id) ON DELETE SET NULL,\r\n  reporter_email TEXT,\r\n  entity_type VARCHAR(32) NOT NULL,\r\n  entity_id VARCHAR(64) NOT NULL,\r\n  reason TEXT NOT NULL,\r\n  details TEXT,\r\n  status VARCHAR(32) NOT NULL DEFAULT 'pending',\r\n  resolution_notes TEXT,\r\n  resolved_by UUID REFERENCES users(id) ON DELETE SET NULL,\r\n  resolved_at TIMESTAMPTZ,\r\n  ip_address TEXT,\r\n  created_at TIMESTAMPTZ NOT NULL DEFAULT now()\r\n);\r\n\r\n-- Indexes for efficient moderation review and querying\r\nCREATE INDEX IF NOT EXISTS idx_moderation_reports_entity \r\n  ON moderation_reports (entity_type, entity_id);\r\n\r\nCREATE INDEX IF NOT EXISTS idx_moderation_reports_status \r\n  ON moderation_reports (status, created_at DESC);\r\n\r\nCREATE INDEX IF NOT EXISTS idx_moderation_reports_reporter \r\n  ON moderation_reports (reporter_id);\r\n\r\n"
+  },
+  {
+    "version": "0011",
+    "name": "0011_repair_analytics_event_identity_columns.sql",
+    "sql": "-- Repair older deployments that recorded the baseline schema before\r\n-- analytics_events gained the identity/session columns used by Lens indexes.\r\n-- This is additive and safe to run against both new and existing databases.\r\n\r\nALTER TABLE analytics_events\r\n  ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES users(id) ON DELETE SET NULL,\r\n  ADD COLUMN IF NOT EXISTS session_id text;\r\n\r\nCREATE INDEX IF NOT EXISTS idx_intel_events_user\r\n  ON analytics_events(user_id) WHERE user_id IS NOT NULL;\r\n\r\nCREATE INDEX IF NOT EXISTS idx_intel_events_session\r\n  ON analytics_events(session_id) WHERE session_id IS NOT NULL;\r\n"
   }
 ];

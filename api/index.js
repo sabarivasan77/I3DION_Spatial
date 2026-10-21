@@ -18,11 +18,13 @@ export default async function handler(req, res) {
         // partially migrated database. That previously surfaced as generic
         // login and registration failures.
         console.error('[Vercel Database Initialization Failure]', migErr.message || migErr);
+        const errMsg = migErr?.message || String(migErr);
         res.setHeader('Content-Type', 'application/json');
         res.statusCode = 503;
         res.end(JSON.stringify({
           error: 'Service temporarily unavailable',
-          message: 'The database is not ready. Please try again shortly.'
+          message: `The database is not ready: ${errMsg}. Please ensure DATABASE_URL is properly configured in Vercel.`,
+          detail: errMsg
         }));
         return;
       }

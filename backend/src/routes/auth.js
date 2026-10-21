@@ -21,7 +21,8 @@ const getJwtSecret = () => config.jwtSecret;
 // ============================================================================
 authRouter.post('/signup', signupLimiter, async (req, res, next) => {
   try {
-    const { name, email, password, organizationName } = req.body;
+    const { name, email, password } = req.body;
+    const organizationName = (req.body.organizationName || req.body.companyName || '').trim();
 
     if (!name || !email || !password || !organizationName) {
       throw new ApiError(400, 'Name, email, password, and organization name are required');
