@@ -25,13 +25,26 @@ this app.
 - The live 3D viewer enables Android Scene Viewer and iOS Quick Look AR where
   the platform supports them. Models can be placed at floor scale; unsupported
   devices keep the interactive 3D viewer.
+- Explore supports live search, category filters, saved-product bookmarks,
+  and product-detail information. The Library stores bookmarks and recent
+  views, and can download a published single-file GLB for offline viewing when
+  the backend supplies verifiable size/checksum metadata. Downloads have
+  foreground progress, cancellation, retry by starting again, and SHA-256
+  verification. Profile reports public API connectivity and the configured QR
+  host allowlist.
 - A Dio client with HTTPS-only requests, timeouts, and bounded retry for
   transient GET failures. The API origin must be explicitly configured.
 - No credentials, tokens, or backend secrets are checked in.
 
-Library and Profile remain scaffolding. Private catalogs are not shown; the
-feed endpoint is public-only. QR model links load details through the existing
-public product routes. Catalog and collection detail screens remain pending.
+Library bookmarks and recently viewed items are stored locally as product
+metadata. Downloaded public GLB files are stored separately in app-private
+support storage and verified against the backend's byte size and SHA-256 before
+the viewer opens them. Single-file GLB downloads are limited to 50 MB and
+models above 15 MB show a warning. This is not yet a background, queued, or
+resumable download manager; interrupted transfers must restart. Private
+catalogs are not shown; the feed endpoint is public-only. Profile currently
+reports public API and QR configuration but does not authenticate users.
+Catalog and collection detail screens remain pending.
 
 ## Prerequisites and local setup
 
@@ -124,6 +137,6 @@ deliberately deferred to Phase 8.
 - The initial threat model and remaining controls are documented in
   [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md).
 - Token storage, certificate pinning, private offline encryption,
-  checksum-verified downloads, and release obfuscation remain for later
+  background/resumable downloads, and release obfuscation remain for later
   phases. Public viewer URLs are signed by the backend and expire after one
-  hour.
+  hour. Downloaded public GLB files are integrity-checked but are not encrypted.

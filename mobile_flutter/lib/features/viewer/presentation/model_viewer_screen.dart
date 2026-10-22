@@ -1,12 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:i3dion_spatial_hub_mobile/app/theme.dart';
+import 'package:i3dion_spatial_hub_mobile/data/offline_model_download_service.dart';
+import 'package:i3dion_spatial_hub_mobile/data/offline_model_http_server.dart';
+import 'package:i3dion_spatial_hub_mobile/domain/models/local_library_item.dart';
 import 'package:i3dion_spatial_hub_mobile/domain/models/public_product.dart';
+import 'package:i3dion_spatial_hub_mobile/domain/models/spatial_item.dart';
 import 'package:i3dion_spatial_hub_mobile/features/explore/providers.dart';
+import 'package:i3dion_spatial_hub_mobile/features/library/providers.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -22,6 +28,7 @@ class ModelViewerScreen extends ConsumerStatefulWidget {
 class _ModelViewerScreenState extends ConsumerState<ModelViewerScreen> {
   late Future<PublicProduct> _productFuture;
   WebViewController? _controller;
+  final _offlineModelServer = OfflineModelHttpServer();
   bool _autoRotate = true;
   bool _fullscreen = false;
   bool _modelLoaded = false;
@@ -56,11 +63,75 @@ customElements.whenDefined('model-viewer').then(() => {
     _productFuture = _loadProduct();
   }
 
-  Future<PublicProduct> _loadProduct() =>
-      ref.read(spatialRepositoryProvider).fetchProduct(widget.productId);
+  Future<PublicProduct> _loadProduct() async {
+    final offlineItems = await ref
+        .read(localLibraryRepositoryProvider)
+        .loadOfflineModels();
+    PublicProduct product;
+    LocalLibraryItem? offlineItem;
+    for (final item in offlineItems) {
+      if (item.id == widget.productId) {
+        offlineItem = item;
+        break;
+      }
+    }
+    if (offlineItem != null) {
+      final path = offlineItem.modelPath;
+      final size = offlineItem.modelSizeBytes;
+      final checksum = offlineItem.modelChecksumSha256;
+      if (path == null || size == null || checksum == null) {
+        throw const OfflineDownloadException(
+          'Offline model metadata is incomplete. Remove it and download again.',
+        );
+      }
+      final file = File(path);
+      await verifyOfflineModelFile(
+        file,
+        expectedSize: size,
+        expectedChecksum: checksum,
+      );
+      product = PublicProduct(
+        id: offlineItem.id,
+        name: offlineItem.name,
+        category: offlineItem.category,
+        description: offlineItem.description,
+        modelUrl: await _offlineModelServer.serve(file),
+        modelSizeBytes: size,
+        modelChecksumSha256: checksum,
+        isOffline: true,
+      );
+    } else {
+      product = await ref
+          .read(spatialRepositoryProvider)
+          .fetchProduct(widget.productId);
+    }
+    try {
+      await ref
+          .read(localLibraryRepositoryProvider)
+          .recordViewed(
+            LocalLibraryItem.fromSpatialItem(
+              SpatialItem(
+                id: product.id,
+                name: product.name,
+                category: product.category,
+                description: product.description,
+                modelUrl: product.modelUrl.toString(),
+                imageUrl: product.imageUrl?.toString(),
+              ),
+            ),
+          );
+      refreshLocalLibrary(ref);
+    } on Exception {
+      if (mounted) {
+        setState(() => _controlError = 'Viewing history could not be updated.');
+      }
+    }
+    return product;
+  }
 
   @override
   void dispose() {
+    unawaited(_offlineModelServer.close());
     if (_fullscreen) {
       unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
     }
@@ -131,6 +202,83 @@ customElements.whenDefined('model-viewer').then(() => {
     if (mounted) setState(() => _fullscreen = fullscreen);
   }
 
+  Future<void> _toggleSaved(PublicProduct product, bool isSaved) async {
+    try {
+      await ref
+          .read(localLibraryRepositoryProvider)
+          .setSaved(
+            LocalLibraryItem(
+              id: product.id,
+              name: product.name,
+              category: product.category,
+              description: product.description,
+            ),
+            saved: !isSaved,
+          );
+      refreshLocalLibrary(ref);
+    } on Exception {
+      if (mounted) {
+        setState(() => _controlError = 'Your library could not be updated.');
+      }
+    }
+  }
+
+  Future<void> _showProductDetails(PublicProduct product) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) {
+        final theme = Theme.of(context);
+        return SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 4, 24, 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  product.name,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  product.category,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                if (product.description.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  Text(product.description, style: theme.textTheme.bodyLarge),
+                ],
+                if (product.specs.isNotEmpty) ...[
+                  const SizedBox(height: 22),
+                  Text(
+                    'Product details',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  for (final entry in product.specs.entries)
+                    ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(entry.key),
+                      trailing: Text(entry.value.toString()),
+                    ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _retry() {
     setState(() {
       _modelLoaded = false;
@@ -144,6 +292,7 @@ customElements.whenDefined('model-viewer').then(() => {
 
   @override
   Widget build(BuildContext context) {
+    final savedProducts = ref.watch(savedProductsProvider).asData?.value;
     return FutureBuilder<PublicProduct>(
       future: _productFuture,
       builder: (context, snapshot) {
@@ -154,6 +303,36 @@ customElements.whenDefined('model-viewer').then(() => {
               : AppBar(
                   title: Text(product?.name ?? 'Product'),
                   actions: [
+                    IconButton(
+                      tooltip:
+                          savedProducts?.any(
+                                (item) => item.id == product?.id,
+                              ) ==
+                              true
+                          ? 'Remove saved product'
+                          : 'Save product',
+                      onPressed: product == null || savedProducts == null
+                          ? null
+                          : () => _toggleSaved(
+                              product,
+                              savedProducts.any(
+                                (item) => item.id == product.id,
+                              ),
+                            ),
+                      icon: Icon(
+                        savedProducts?.any((item) => item.id == product?.id) ==
+                                true
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_add_outlined,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Product details',
+                      onPressed: product == null
+                          ? null
+                          : () => _showProductDetails(product),
+                      icon: const Icon(Icons.info_outline_rounded),
+                    ),
                     IconButton(
                       tooltip: 'Toggle fullscreen',
                       onPressed: product == null ? null : _toggleFullscreen,
@@ -197,15 +376,19 @@ customElements.whenDefined('model-viewer').then(() => {
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
             child: Row(
               children: [
-                const Icon(
-                  Icons.cloud_done_rounded,
+                Icon(
+                  product.isOffline
+                      ? Icons.download_done_rounded
+                      : Icons.cloud_done_rounded,
                   size: 18,
                   color: AppColors.success,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    product.category,
+                    product.isOffline
+                        ? 'Available offline · ${product.category}'
+                        : product.category,
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                 ),

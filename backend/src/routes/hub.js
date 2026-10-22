@@ -17,7 +17,10 @@ import {
   generateHtmlMetaTags
 } from '../services/hub/hubService.js';
 import { trackEvent } from '../services/trackingEngine.js';
-import { addPublicAssetAccessUrls } from '../services/hub/publicAssetUrls.js';
+import {
+  addPublicAssetAccessUrls,
+  addPublicModelDownloadMetadata,
+} from '../services/hub/publicAssetUrls.js';
 import { 
   hubRfqLimiter, 
   hubReportLimiter, 
@@ -265,16 +268,19 @@ hubRouter.get(
     await query(`UPDATE products SET views_count = views_count + 1 WHERE id = $1`, [id]);
     
     const { rows } = await query(`
-      SELECT p.*, c.name as company_name, c.logo_url as company_logo, 
-             u.name as creator_name, u.avatar_url as creator_avatar
+      SELECT p.*, c.name as company_name, c.logo_url as company_logo,
+             u.name as creator_name, u.avatar_url as creator_avatar,
+             pa.size_bytes as model_size_bytes,
+             pa.checksum_sha256 as model_checksum_sha256
       FROM products p
       JOIN organizations c ON p.organization_id = c.id
       LEFT JOIN users u ON p.created_by = u.id
+      LEFT JOIN product_assets pa ON pa.id = p.model_asset_id AND pa.product_id = p.id
       WHERE p.id = $1 AND p.is_public = true AND p.status = 'Published'
     `, [id]);
     
     if (!rows[0]) throw new ApiError(404, 'Public product not found');
-    res.json(addPublicAssetAccessUrls(rows[0]));
+    res.json(await addPublicModelDownloadMetadata(rows[0]));
   })
 );
 

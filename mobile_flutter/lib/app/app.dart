@@ -7,11 +7,12 @@ import 'package:go_router/go_router.dart';
 import 'package:i3dion_spatial_hub_mobile/app/theme.dart';
 import 'package:i3dion_spatial_hub_mobile/config/app_config.dart';
 import 'package:i3dion_spatial_hub_mobile/features/explore/presentation/explore_screen.dart';
+import 'package:i3dion_spatial_hub_mobile/features/library/presentation/library_screen.dart';
+import 'package:i3dion_spatial_hub_mobile/features/profile/presentation/profile_screen.dart';
 import 'package:i3dion_spatial_hub_mobile/features/scan/domain/content_link.dart';
 import 'package:i3dion_spatial_hub_mobile/features/scan/presentation/scan_screen.dart';
 import 'package:i3dion_spatial_hub_mobile/features/scan/presentation/scan_status_screen.dart';
 import 'package:i3dion_spatial_hub_mobile/features/scan/scanner_session.dart';
-import 'package:i3dion_spatial_hub_mobile/features/shell/presentation/placeholder_screen.dart';
 import 'package:i3dion_spatial_hub_mobile/features/viewer/presentation/model_viewer_screen.dart';
 
 class I3DIONSpatialHubApp extends StatefulWidget {
@@ -104,11 +105,7 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/library',
-              builder: (context, state) => const PlaceholderScreen(
-                title: 'Your library',
-                description: 'Models saved for offline viewing will live here.',
-                icon: Icons.inventory_2_outlined,
-              ),
+              builder: (context, state) => const LibraryScreen(),
             ),
           ],
         ),
@@ -116,12 +113,7 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/profile',
-              builder: (context, state) => const PlaceholderScreen(
-                title: 'Profile',
-                description:
-                    'Sign in and organization settings are coming next.',
-                icon: Icons.account_circle_outlined,
-              ),
+              builder: (context, state) => const ProfileScreen(),
             ),
           ],
         ),

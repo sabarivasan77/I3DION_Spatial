@@ -1,8 +1,8 @@
 # Mobile API contract proposal
 
-**Status: public read path uses existing backend routes. Local API/database
-connectivity is verified; the public feed currently returns published products.
-Private/offline routes remain proposed.**
+**Status: public read and single-file public GLB offline download use existing
+backend routes. Private catalog downloads, background/resumable transfers, and
+sync remain proposed.**
 
 The mobile public Explore feed uses the existing `GET /api/hub/feed` route,
 filtered by the backend to published public products. Search uses that route's
@@ -13,10 +13,16 @@ filtered by the backend to published public products. Search uses that route's
 for one hour for public published products; external HTTPS asset URLs remain
 unchanged. The original `model_url`, `image_url`, and `poster_url` fields are
 preserved for compatibility. No mobile request connects directly to PostgreSQL.
+UUID product details also return `model_size_bytes` and
+`model_checksum_sha256` when the linked product asset has valid metadata. For
+legacy local GLB files without stored metadata, the backend calculates the
+size and SHA-256 for that detail request. The client only offers offline save
+when both values are present and the model is a single-file GLB.
 
-Private catalog access, private asset authorization, offline downloads, sync,
-and account token lifecycle are not implemented and remain proposed contract
-work; the mobile app currently does not display private products.
+Private catalog access, private asset authorization, background/resumable
+downloads, sync, and account token lifecycle are not implemented and remain
+proposed contract work; the mobile app currently does not display private
+products.
 
 ## Implemented public read operations
 
@@ -26,6 +32,8 @@ work; the mobile app currently does not display private products.
 | Public feed search | `GET /api/hub/feed?search={query}` | Implemented; server performs filtering. |
 | Public product details | `GET /api/hub/products/{uuid}` | Implemented for UUID identifiers. |
 | Public product details by slug | `GET /api/public/products/{slug}` | Implemented for slug identifiers. |
+| Public model download metadata | `GET /api/hub/products/{uuid}` | Returns size and SHA-256 when available; legacy local GLB metadata is calculated on demand. |
+| Public GLB offline download | Signed `model_access_url` from product details | Implemented in Flutter with a 50 MB limit, progress, cancellation, and size/SHA-256 verification. |
 
 Feed items without a published `model_url` are excluded from the 3D Explore
 screen. Model and image asset URLs must be HTTPS; relative URLs are resolved
@@ -35,6 +43,10 @@ locally bundled demo products.
 Public routes add `model_access_url` and `image_access_url` for local assets.
 These are expiring signed routes under `/api/storage/files/`; they do not
 expose a storage signing secret or permit arbitrary file access.
+Downloads are currently foreground-only and restart from zero after
+cancellation or interruption. They are not queued, resumable, or background
+transfers. The mobile client does not yet have authoritative free-space
+reporting; operating-system write failures are shown as download errors.
 
 ## Contract-wide requirements
 

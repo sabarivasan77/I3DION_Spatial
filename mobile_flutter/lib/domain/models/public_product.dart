@@ -7,6 +7,9 @@ class PublicProduct {
     required this.modelUrl,
     this.imageUrl,
     this.specs = const {},
+    this.modelSizeBytes,
+    this.modelChecksumSha256,
+    this.isOffline = false,
   });
 
   final String id;
@@ -16,6 +19,9 @@ class PublicProduct {
   final Uri modelUrl;
   final Uri? imageUrl;
   final Map<String, dynamic> specs;
+  final int? modelSizeBytes;
+  final String? modelChecksumSha256;
+  final bool isOffline;
 
   factory PublicProduct.fromJson(
     Map<String, dynamic> json, {
@@ -61,8 +67,23 @@ class PublicProduct {
       modelUrl: resolvedModelUrl,
       imageUrl: imageUrl,
       specs: specsValue is Map<String, dynamic> ? specsValue : const {},
+      modelSizeBytes: _positiveInteger(json['model_size_bytes']),
+      modelChecksumSha256: _sha256(json['model_checksum_sha256']),
     );
   }
+}
+
+int? _positiveInteger(dynamic value) {
+  final number = value is num ? value.toInt() : int.tryParse('$value');
+  return number != null && number > 0 ? number : null;
+}
+
+String? _sha256(dynamic value) {
+  if (value is String &&
+      RegExp(r'^[a-f\d]{64}$', caseSensitive: false).hasMatch(value)) {
+    return value.toLowerCase();
+  }
+  return null;
 }
 
 Uri _resolveAssetUrl(

@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:i3dion_spatial_hub_mobile/app/theme.dart';
+import 'package:i3dion_spatial_hub_mobile/domain/models/local_library_item.dart';
 import 'package:i3dion_spatial_hub_mobile/domain/models/spatial_item.dart';
 import 'package:i3dion_spatial_hub_mobile/features/explore/providers.dart';
+import 'package:i3dion_spatial_hub_mobile/features/library/providers.dart';
 
 class ExploreScreen extends ConsumerStatefulWidget {
   const ExploreScreen({super.key});
@@ -18,6 +20,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   final _searchController = TextEditingController();
   Timer? _searchDebounce;
   String? _query;
+  String? _selectedCategory;
 
   @override
   void dispose() {
@@ -40,6 +43,10 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
     final feed = ref.watch(exploreFeedProvider(_query));
+    final savedProducts = ref.watch(savedProductsProvider);
+    final savedIds = savedProducts.asData?.value
+        .map((product) => product.id)
+        .toSet();
     final theme = Theme.of(context);
 
     return SafeArea(
@@ -91,11 +98,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                       ],
                     ),
                     const Spacer(),
-                    IconButton(
-                      tooltip: 'Notifications',
-                      onPressed: () {},
-                      icon: const Icon(Icons.notifications_none_rounded),
-                    ),
                   ],
                 ),
               ),
@@ -130,15 +132,25 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                     Row(
                       children: [
                         Text(
-                          'Featured in 3D',
+                          _query == null && _selectedCategory == null
+                              ? 'Featured in 3D'
+                              : 'Explore products',
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),
                         ),
                         const Spacer(),
                         TextButton(
-                          onPressed: () {},
-                          child: const Text('See all'),
+                          onPressed: _query == null && _selectedCategory == null
+                              ? null
+                              : () {
+                                  _searchController.clear();
+                                  setState(() {
+                                    _query = null;
+                                    _selectedCategory = null;
+                                  });
+                                },
+                          child: const Text('Clear'),
                         ),
                       ],
                     ),
@@ -150,18 +162,71 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                         onRetry: () =>
                             ref.invalidate(exploreFeedProvider(_query)),
                       ),
-                      data: (items) => items.isEmpty
-                          ? const _EmptyFeedState()
-                          : Column(
-                              children: [
-                                _FeaturedCard(item: items.first),
-                                const SizedBox(height: 14),
-                                for (final item in items.skip(1)) ...[
-                                  _CompactItemCard(item: item),
-                                  const SizedBox(height: 10),
-                                ],
+                      data: (items) {
+                        final categories =
+                            items
+                                .map((item) => item.category)
+                                .where((category) => category.isNotEmpty)
+                                .toSet()
+                                .toList()
+                              ..sort();
+                        final visibleItems = _selectedCategory == null
+                            ? items
+                            : items
+                                  .where(
+                                    (item) =>
+                                        item.category == _selectedCategory,
+                                  )
+                                  .toList(growable: false);
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (categories.length > 1) ...[
+                              _CategoryFilters(
+                                categories: categories,
+                                selected: _selectedCategory,
+                                onSelected: (category) => setState(
+                                  () => _selectedCategory = category,
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                            ],
+                            if (visibleItems.isEmpty)
+                              _EmptyFeedState(
+                                message: _selectedCategory == null
+                                    ? 'No published 3D products match this search.'
+                                    : 'No published 3D products in this category.',
+                              )
+                            else ...[
+                              _FeaturedCard(
+                                item: visibleItems.first,
+                                isSaved:
+                                    savedIds?.contains(visibleItems.first.id) ??
+                                    false,
+                                saveEnabled: savedIds != null,
+                                onSave: () => _toggleSaved(
+                                  visibleItems.first,
+                                  savedIds?.contains(visibleItems.first.id) ??
+                                      false,
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              for (final item in visibleItems.skip(1)) ...[
+                                _CompactItemCard(
+                                  item: item,
+                                  isSaved: savedIds?.contains(item.id) ?? false,
+                                  saveEnabled: savedIds != null,
+                                  onSave: () => _toggleSaved(
+                                    item,
+                                    savedIds?.contains(item.id) ?? false,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
                               ],
-                            ),
+                            ],
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -171,6 +236,32 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _toggleSaved(SpatialItem item, bool isSaved) async {
+    try {
+      await ref
+          .read(localLibraryRepositoryProvider)
+          .setSaved(LocalLibraryItem.fromSpatialItem(item), saved: !isSaved);
+      ref.invalidate(savedProductsProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isSaved
+                  ? 'Removed from saved products.'
+                  : 'Saved to your library.',
+            ),
+          ),
+        );
+      }
+    } on Exception {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not update your library.')),
+        );
+      }
+    }
   }
 }
 
@@ -209,6 +300,16 @@ class _SearchPrompt extends StatelessWidget {
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   hintText: 'Search live published 3D products',
+                  suffixIcon: controller.text.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: 'Clear search',
+                          onPressed: () {
+                            controller.clear();
+                            onChanged('');
+                          },
+                          icon: const Icon(Icons.close_rounded),
+                        ),
                   hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -222,10 +323,57 @@ class _SearchPrompt extends StatelessWidget {
   }
 }
 
+class _CategoryFilters extends StatelessWidget {
+  const _CategoryFilters({
+    required this.categories,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final List<String> categories;
+  final String? selected;
+  final ValueChanged<String?> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 42,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          ChoiceChip(
+            label: const Text('All'),
+            selected: selected == null,
+            onSelected: (_) => onSelected(null),
+          ),
+          const SizedBox(width: 8),
+          for (final category in categories) ...[
+            ChoiceChip(
+              label: Text(category),
+              selected: selected == category,
+              onSelected: (_) =>
+                  onSelected(selected == category ? null : category),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _FeaturedCard extends StatelessWidget {
-  const _FeaturedCard({required this.item});
+  const _FeaturedCard({
+    required this.item,
+    required this.isSaved,
+    required this.saveEnabled,
+    required this.onSave,
+  });
 
   final SpatialItem item;
+  final bool isSaved;
+  final bool saveEnabled;
+  final VoidCallback onSave;
 
   @override
   Widget build(BuildContext context) {
@@ -237,39 +385,57 @@ class _FeaturedCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              height: 190,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFF153A85),
-                    AppColors.spatialBlue,
-                    const Color(0xFF73A4FF),
-                  ],
-                  begin: Alignment.bottomLeft,
-                  end: Alignment.topRight,
-                ),
-              ),
-              child: item.imageUrl == null
-                  ? const Center(
-                      child: Icon(
-                        Icons.view_in_ar_rounded,
-                        size: 64,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Image.network(
-                      item.imageUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Center(
-                            child: Icon(
-                              Icons.broken_image_outlined,
-                              size: 48,
-                              color: Colors.white,
-                            ),
-                          ),
+            Stack(
+              children: [
+                Container(
+                  height: 190,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(0xFF153A85),
+                        AppColors.spatialBlue,
+                        Color(0xFF73A4FF),
+                      ],
+                      begin: Alignment.bottomLeft,
+                      end: Alignment.topRight,
                     ),
+                  ),
+                  child: item.imageUrl == null
+                      ? const Center(
+                          child: Icon(
+                            Icons.view_in_ar_rounded,
+                            size: 64,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Image.network(
+                          item.imageUrl!,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Center(
+                                child: Icon(
+                                  Icons.broken_image_outlined,
+                                  size: 48,
+                                  color: Colors.white,
+                                ),
+                              ),
+                        ),
+                ),
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: IconButton.filledTonal(
+                    tooltip: isSaved ? 'Remove saved product' : 'Save product',
+                    onPressed: saveEnabled ? onSave : null,
+                    icon: Icon(
+                      isSaved
+                          ? Icons.bookmark_rounded
+                          : Icons.bookmark_add_outlined,
+                    ),
+                  ),
+                ),
+              ],
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
@@ -321,9 +487,17 @@ class _FeaturedCard extends StatelessWidget {
 }
 
 class _CompactItemCard extends StatelessWidget {
-  const _CompactItemCard({required this.item});
+  const _CompactItemCard({
+    required this.item,
+    required this.isSaved,
+    required this.saveEnabled,
+    required this.onSave,
+  });
 
   final SpatialItem item;
+  final bool isSaved;
+  final bool saveEnabled;
+  final VoidCallback onSave;
 
   @override
   Widget build(BuildContext context) {
@@ -359,7 +533,19 @@ class _CompactItemCard extends StatelessWidget {
           ),
         ),
         subtitle: Text(item.category),
-        trailing: const Icon(Icons.chevron_right_rounded),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: isSaved ? 'Remove saved product' : 'Save product',
+              onPressed: saveEnabled ? onSave : null,
+              icon: Icon(
+                isSaved ? Icons.bookmark_rounded : Icons.bookmark_add_outlined,
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded),
+          ],
+        ),
       ),
     );
   }
@@ -405,14 +591,13 @@ class _FeedErrorState extends StatelessWidget {
 }
 
 class _EmptyFeedState extends StatelessWidget {
-  const _EmptyFeedState();
+  const _EmptyFeedState({this.message = 'No models are featured right now.'});
+
+  final String message;
 
   @override
   Widget build(BuildContext context) {
-    return const _FeedMessage(
-      icon: Icons.search_off_rounded,
-      message: 'No models are featured right now.',
-    );
+    return _FeedMessage(icon: Icons.search_off_rounded, message: message);
   }
 }
 

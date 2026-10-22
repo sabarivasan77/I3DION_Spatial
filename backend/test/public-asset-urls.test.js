@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { addPublicAssetAccessUrls } from '../src/services/hub/publicAssetUrls.js';
+import {
+  addPublicAssetAccessUrls,
+  addPublicModelDownloadMetadata,
+} from '../src/services/hub/publicAssetUrls.js';
 import { verifySignature } from '../src/services/storageService.js';
 
 test('adds expiring signatures for local public model and image files', () => {
@@ -32,4 +35,27 @@ test('does not sign external or unsafe asset paths', () => {
 
   assert.equal(product.model_access_url, externalUrl);
   assert.equal(product.image_access_url, unsafePath);
+});
+
+test('returns stored model size and checksum for offline verification', async () => {
+  const checksum = 'A'.repeat(64);
+  const product = await addPublicModelDownloadMetadata({
+    model_url: 'https://cdn.example.com/pump.glb',
+    model_size_bytes: '2048',
+    model_checksum_sha256: checksum,
+  });
+
+  assert.equal(product.model_size_bytes, 2048);
+  assert.equal(product.model_checksum_sha256, checksum.toLowerCase());
+});
+
+test('does not expose invalid download metadata as verifiable', async () => {
+  const product = await addPublicModelDownloadMetadata({
+    model_url: 'https://cdn.example.com/pump.glb',
+    model_size_bytes: 0,
+    model_checksum_sha256: 'not-a-checksum',
+  });
+
+  assert.equal('model_size_bytes' in product, false);
+  assert.equal('model_checksum_sha256' in product, false);
 });
