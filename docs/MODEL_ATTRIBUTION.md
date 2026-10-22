@@ -38,7 +38,7 @@ All 3D assets in the I3DION Spatial Hub are curated from open CAD repositories a
 | 19 | Vertical Multistage Submersible Water Booster Pump | Water Pump | Open Industrial CAD Vault | CC-BY 4.0 | `/models/model_19.gltf` | `/models/thumbnails/thumb_19.svg` | YES | YES | YES |
 | 20 | Inverter Multi-Process Robotic Welding Power Unit | Welding Machine | Manufacturing Tooling Models Vault | CC-BY 4.0 | `/models/model_20.gltf` | `/models/thumbnails/thumb_20.svg` | YES | YES | YES |
 | 21 | 5-Axis Vertical CNC Machining Center | CNC Machine | Manufacturing Tooling Models Vault | CC-BY 4.0 | `/models/model_21.gltf` | `/models/thumbnails/thumb_21.svg` | YES | YES | YES |
-| 22 | Heavy-Duty Column Industrial Drill Press Assembly | Industrial Drill | Manufacturing Tooling Models Vault | CC-BY 4.0 | `/models/model_22.gltf` | `/models/thumbnails/thumb_22.svg` | YES | YES | YES |
+| 22 | Wayfair upholstered furniture sample | Furniture sample | Embedded asset metadata (Wayfair) | CC-BY 4.0 | `/models/model_22.glb` | — | UNVERIFIED | UNVERIFIED | UNVERIFIED |
 | 23 | High-Precision CNC Turning Lathe Machine | Lathe Machine | Manufacturing Tooling Models Vault | CC-BY 4.0 | `/models/model_23.gltf` | `/models/thumbnails/thumb_23.svg` | YES | YES | YES |
 | 24 | Universal Horizontal/Vertical Milling Machine | Milling Machine | Manufacturing Tooling Models Vault | CC-BY 4.0 | `/models/model_24.gltf` | `/models/thumbnails/thumb_24.svg` | YES | YES | YES |
 | 25 | Hydraulic Plastic Injection Molding System | Injection Molding Machine | Manufacturing Tooling Models Vault | CC-BY 4.0 | `/models/model_25.gltf` | `/models/thumbnails/thumb_25.svg` | YES | YES | YES |

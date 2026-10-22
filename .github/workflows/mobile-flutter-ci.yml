@@ -1,0 +1,60 @@
+name: Mobile Flutter CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['mobile-v*']
+    paths:
+      - 'mobile_flutter/**'
+      - '.github/workflows/mobile-flutter-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'mobile_flutter/**'
+      - '.github/workflows/mobile-flutter-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Format, analyze, and test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.4.0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@fd55f4c5af5b953cc57a2be44cb082c8f6635e8e # v2.21.0
+        with:
+          channel: stable
+          flutter-version: '3.44.7'
+          cache: true
+          cache-dependency-path: mobile_flutter/pubspec.lock
+
+      - name: Install dependencies
+        working-directory: mobile_flutter
+        run: flutter pub get
+
+      - name: Check formatting
+        working-directory: mobile_flutter
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Analyze
+        working-directory: mobile_flutter
+        run: flutter analyze
+
+      - name: Run tests
+        working-directory: mobile_flutter
+        run: flutter test
+
+  dependency-audit:
+    name: Audit Flutter dependencies
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@b1d267aea5211fa648d9d442fa64b90dbdcbdd36 # v2.7.0
+    with:
+      scan-args: |-
+        --lockfile=mobile_flutter/pubspec.lock
+      upload-sarif: false
+    permissions:
+      contents: read

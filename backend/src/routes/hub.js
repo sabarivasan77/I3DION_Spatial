@@ -17,6 +17,7 @@ import {
   generateHtmlMetaTags
 } from '../services/hub/hubService.js';
 import { trackEvent } from '../services/trackingEngine.js';
+import { addPublicAssetAccessUrls } from '../services/hub/publicAssetUrls.js';
 import { 
   hubRfqLimiter, 
   hubReportLimiter, 
@@ -101,13 +102,13 @@ hubRouter.get(
 
     if (isPaginated) {
       res.json({
-        items,
+        items: items.map(addPublicAssetAccessUrls),
         nextCursor,
         hasMore,
         count: items.length
       });
     } else {
-      res.json(items);
+      res.json(items.map(addPublicAssetAccessUrls));
     }
   })
 );
@@ -273,7 +274,7 @@ hubRouter.get(
     `, [id]);
     
     if (!rows[0]) throw new ApiError(404, 'Public product not found');
-    res.json(rows[0]);
+    res.json(addPublicAssetAccessUrls(rows[0]));
   })
 );
 

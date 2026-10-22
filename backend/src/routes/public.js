@@ -8,6 +8,7 @@ import { getPublicProductDetailsBySlug, getProductBySlug } from '../services/pro
 import { trackEvent } from '../services/trackingEngine.js';
 import { ApiError, asyncHandler } from '../utils/errors.js';
 import { publicLeadsLimiter, publicEventsLimiter, enforcePayloadCap } from '../middleware/rateLimiters.js';
+import { addPublicAssetAccessUrls } from '../services/hub/publicAssetUrls.js';
 
 export const publicRouter = Router();
 
@@ -77,7 +78,7 @@ publicRouter.get(
 
     const product = await getPublicProductDetailsBySlug(req.params.slug, authenticatedUser);
     if (!product) throw new ApiError(404, 'Product not found or unavailable');
-    res.json(product);
+    res.json(addPublicAssetAccessUrls(product));
   }),
 );
 
@@ -189,4 +190,3 @@ publicRouter.post(
     res.status(201).json(event);
   }),
 );
-
