@@ -13,6 +13,7 @@ import {
 import { createXRStore, XR } from '@react-three/xr';
 import type { Group } from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getHubModelSourceUrl } from '../data/hubModelSourceUrls';
 
 export type RenderMode = 'solid' | 'wireframe' | 'xray';
 export type ThemeMode = 'light' | 'dark';
@@ -426,6 +427,8 @@ export default function ThreeProduct({
   const bgColor = isDark ? '#0F172A' : '#F8FAFC';
   const gridCellColor = isDark ? '#1E293B' : '#E2E8F0';
   const gridSectionColor = isDark ? '#334155' : '#CBD5E1';
+  const sourceFallbackUrl = modelUrl ? getHubModelSourceUrl(modelUrl) : undefined;
+  const distinctSourceFallbackUrl = sourceFallbackUrl === modelUrl ? undefined : sourceFallbackUrl;
 
   const handleModelError = (err: any) => {
     setLoadFailed(true);
@@ -501,13 +504,20 @@ export default function ThreeProduct({
           <Bounds fit clip observe margin={1.2}>
             <Suspense fallback={null}>
               {modelUrl ? (
-                <GLTFErrorBoundary 
-                  onError={handleModelError}
-                  fallback={
-                    allowProceduralFallback ? (
-                      <DetailedProceduralModel productName={productName} renderMode={renderMode} themeMode={themeMode} animationSpeed={animationSpeed} onHasAnimations={onHasAnimations} />
-                    ) : null
-                  }
+                <GLTFErrorBoundary
+                  onError={distinctSourceFallbackUrl ? undefined : handleModelError}
+                  fallback={distinctSourceFallbackUrl ? (
+                    <GLTFErrorBoundary
+                      onError={handleModelError}
+                      fallback={allowProceduralFallback ? (
+                        <DetailedProceduralModel productName={productName} renderMode={renderMode} themeMode={themeMode} animationSpeed={animationSpeed} onHasAnimations={onHasAnimations} />
+                      ) : null}
+                    >
+                      <RealModel url={distinctSourceFallbackUrl} renderMode={renderMode} themeMode={themeMode} animationSpeed={animationSpeed} onHasAnimations={onHasAnimations} />
+                    </GLTFErrorBoundary>
+                  ) : allowProceduralFallback ? (
+                    <DetailedProceduralModel productName={productName} renderMode={renderMode} themeMode={themeMode} animationSpeed={animationSpeed} onHasAnimations={onHasAnimations} />
+                  ) : null}
                 >
                   <RealModel url={modelUrl} renderMode={renderMode} themeMode={themeMode} animationSpeed={animationSpeed} onHasAnimations={onHasAnimations} />
                 </GLTFErrorBoundary>
