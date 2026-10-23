@@ -7,6 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:i3dion_spatial_hub_mobile/app/theme.dart';
 import 'package:i3dion_spatial_hub_mobile/config/app_config.dart';
 import 'package:i3dion_spatial_hub_mobile/features/explore/presentation/explore_screen.dart';
+import 'package:i3dion_spatial_hub_mobile/features/catalogs/presentation/catalog_detail_screen.dart';
+import 'package:i3dion_spatial_hub_mobile/features/catalogs/presentation/catalogs_screen.dart';
+import 'package:i3dion_spatial_hub_mobile/features/auth/presentation/login_screen.dart';
 import 'package:i3dion_spatial_hub_mobile/features/library/presentation/library_screen.dart';
 import 'package:i3dion_spatial_hub_mobile/features/profile/presentation/profile_screen.dart';
 import 'package:i3dion_spatial_hub_mobile/features/scan/domain/content_link.dart';
@@ -70,9 +73,23 @@ class _I3DIONSpatialHubAppState extends State<I3DIONSpatialHubApp> {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
+      scrollBehavior: I3DIONScrollBehavior(),
       routerConfig: appRouter,
     );
   }
+}
+
+class I3DIONScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) => child;
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) =>
+      const ClampingScrollPhysics();
 }
 
 final appRouter = GoRouter(
@@ -90,6 +107,14 @@ final appRouter = GoRouter(
             GoRoute(
               path: '/explore',
               builder: (context, state) => const ExploreScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/catalogs',
+              builder: (context, state) => const CatalogsScreen(),
             ),
           ],
         ),
@@ -120,6 +145,12 @@ final appRouter = GoRouter(
       ],
     ),
     GoRoute(
+      path: '/catalog/:slug',
+      builder: (context, state) =>
+          CatalogDetailScreen(slug: state.pathParameters['slug'] ?? ''),
+    ),
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+    GoRoute(
       path: '/content/:kind/:id',
       builder: (context, state) {
         final kind = ContentKind.fromPathSegment(
@@ -131,6 +162,9 @@ final appRouter = GoRouter(
         }
         if (kind == ContentKind.model) {
           return ModelViewerScreen(productId: id);
+        }
+        if (kind == ContentKind.catalog) {
+          return CatalogDetailScreen(slug: id);
         }
         return LinkStatusScreen(kind: kind, contentId: id);
       },
@@ -174,14 +208,19 @@ class AppNavigationShell extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: (index) {
-          ScannerSession.isActive.value = index == 1;
+          ScannerSession.isActive.value = index == 2;
           navigationShell.goBranch(index);
         },
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.explore_outlined),
             selectedIcon: Icon(Icons.explore_rounded),
-            label: 'Explore',
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.menu_book_outlined),
+            selectedIcon: Icon(Icons.menu_book_rounded),
+            label: 'Catalogs',
           ),
           NavigationDestination(
             icon: Icon(Icons.qr_code_scanner_rounded),
@@ -190,7 +229,7 @@ class AppNavigationShell extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.inventory_2_outlined),
             selectedIcon: Icon(Icons.inventory_2_rounded),
-            label: 'Library',
+            label: 'Downloads',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline_rounded),

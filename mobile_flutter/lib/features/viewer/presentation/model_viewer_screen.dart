@@ -11,8 +11,10 @@ import 'package:i3dion_spatial_hub_mobile/data/offline_model_http_server.dart';
 import 'package:i3dion_spatial_hub_mobile/domain/models/local_library_item.dart';
 import 'package:i3dion_spatial_hub_mobile/domain/models/public_product.dart';
 import 'package:i3dion_spatial_hub_mobile/domain/models/spatial_item.dart';
+import 'package:i3dion_spatial_hub_mobile/features/auth/providers.dart';
 import 'package:i3dion_spatial_hub_mobile/features/explore/providers.dart';
 import 'package:i3dion_spatial_hub_mobile/features/library/providers.dart';
+import 'package:i3dion_spatial_hub_mobile/features/viewer/presentation/product_like_button.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -293,6 +295,7 @@ customElements.whenDefined('model-viewer').then(() => {
   @override
   Widget build(BuildContext context) {
     final savedProducts = ref.watch(savedProductsProvider).asData?.value;
+    final account = ref.watch(authSessionProvider).asData?.value;
     return FutureBuilder<PublicProduct>(
       future: _productFuture,
       builder: (context, snapshot) {
@@ -303,6 +306,8 @@ customElements.whenDefined('model-viewer').then(() => {
               : AppBar(
                   title: Text(product?.name ?? 'Product'),
                   actions: [
+                    if (account != null && product != null)
+                      ProductLikeButton(productId: product.id),
                     IconButton(
                       tooltip:
                           savedProducts?.any(

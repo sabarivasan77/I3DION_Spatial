@@ -44,6 +44,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   Widget build(BuildContext context) {
     final feed = ref.watch(exploreFeedProvider(_query));
     final savedProducts = ref.watch(savedProductsProvider);
+    final recentProducts = ref.watch(recentlyViewedProvider);
+    final offlineModels = ref.watch(offlineModelsProvider);
     final savedIds = savedProducts.asData?.value
         .map((product) => product.id)
         .toSet();
@@ -98,45 +100,96 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                       ],
                     ),
                     const Spacer(),
+                    IconButton(
+                      tooltip: 'Profile',
+                      onPressed: () => context.go('/profile'),
+                      icon: const Icon(Icons.person_outline_rounded),
+                    ),
                   ],
                 ),
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
               sliver: SliverToBoxAdapter(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'A new perspective\non every product.',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        height: 1.12,
-                        letterSpacing: -0.8,
+                      'Welcome to Spatial Hub',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 10),
                     Text(
-                      'Discover the details that move your world.',
+                      'Published industrial products, ready to explore.',
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _DashboardAction(
+                            label: 'Scan QR',
+                            icon: Icons.qr_code_scanner_rounded,
+                            primary: true,
+                            onPressed: () => context.go('/scan'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _DashboardAction(
+                            label: 'Catalogs',
+                            icon: Icons.menu_book_outlined,
+                            onPressed: () => context.go('/catalogs'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    _OfflineSummary(
+                      models: offlineModels,
+                      onPressed: () => context.go('/library'),
+                    ),
+                    const SizedBox(height: 24),
+                    _LocalProductsSection(
+                      title: 'Continue exploring',
+                      icon: Icons.history_rounded,
+                      products: recentProducts,
+                      emptyMessage: 'Products you view will appear here.',
+                      onRetry: () => ref.invalidate(recentlyViewedProvider),
+                    ),
+                    const SizedBox(height: 16),
+                    _LocalProductsSection(
+                      title: 'Offline library',
+                      icon: Icons.offline_pin_outlined,
+                      products: offlineModels,
+                      emptyMessage: 'Download a model to view it offline.',
+                      onRetry: () => ref.invalidate(offlineModelsProvider),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Explore products',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     _SearchPrompt(
                       controller: _searchController,
                       onChanged: _search,
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 24),
                     Row(
                       children: [
                         Text(
                           _query == null && _selectedCategory == null
-                              ? 'Featured in 3D'
-                              : 'Explore products',
+                              ? 'Published 3D products'
+                              : 'Search results',
                           style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const Spacer(),
@@ -262,6 +315,185 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         );
       }
     }
+  }
+}
+
+class _DashboardAction extends StatelessWidget {
+  const _DashboardAction({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+    this.primary = false,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+  final bool primary;
+
+  @override
+  Widget build(BuildContext context) {
+    final child = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, size: 19),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+      ],
+    );
+    return SizedBox(
+      height: 50,
+      child: primary
+          ? FilledButton(onPressed: onPressed, child: child)
+          : OutlinedButton(onPressed: onPressed, child: child),
+    );
+  }
+}
+
+class _OfflineSummary extends StatelessWidget {
+  const _OfflineSummary({required this.models, required this.onPressed});
+
+  final AsyncValue<List<LocalLibraryItem>> models;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              const Icon(Icons.offline_pin_outlined, color: AppColors.success),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Offline-ready models',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    models.when(
+                      data: (items) => Text(
+                        '${items.length} verified '
+                        '${items.length == 1 ? 'model' : 'models'} stored',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      loading: () => const Text('Checking saved models…'),
+                      error: (error, stackTrace) => Text(
+                        'Could not read offline model storage.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LocalProductsSection extends StatelessWidget {
+  const _LocalProductsSection({
+    required this.title,
+    required this.icon,
+    required this.products,
+    required this.emptyMessage,
+    required this.onRetry,
+  });
+
+  final String title;
+  final IconData icon;
+  final AsyncValue<List<LocalLibraryItem>> products;
+  final String emptyMessage;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 19, color: AppColors.spatialBlue),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        products.when(
+          data: (items) => items.isEmpty
+              ? Text(
+                  emptyMessage,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                )
+              : Column(
+                  children: [
+                    for (final item in items.take(2))
+                      Card(
+                        child: ListTile(
+                          onTap: () => context.push('/viewer/${item.id}'),
+                          leading: const Icon(
+                            Icons.view_in_ar_outlined,
+                            color: AppColors.spatialBlue,
+                          ),
+                          title: Text(
+                            item.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            item.category,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                        ),
+                      ),
+                  ],
+                ),
+          loading: () => const LinearProgressIndicator(),
+          error: (error, stackTrace) => Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Could not load this section.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+              ),
+              TextButton(onPressed: onRetry, child: const Text('Retry')),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 

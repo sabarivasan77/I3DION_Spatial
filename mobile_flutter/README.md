@@ -12,8 +12,8 @@ this app.
   `assets/fonts/OFL.txt`) so typography does not depend on network access.
 - Presentation, domain, and data boundaries; Explore reads the published
   public 3D product feed from the existing I3DION Node API.
-- Light/dark Material 3 theme tokens for the I3DION palette and an Explore /
-  Scan / Library / Profile navigation shell.
+- Light/dark Material 3 theme tokens for the I3DION palette and a Home /
+  Catalogs / Scan / Downloads / Profile navigation shell.
 - Phase 1 QR flow: camera scanner with torch, gallery image scan, verified-link
   history, custom-scheme handling, and exact HTTPS host/path validation.
 - Public product feed and detail requests use the existing
@@ -25,9 +25,9 @@ this app.
 - The live 3D viewer enables Android Scene Viewer and iOS Quick Look AR where
   the platform supports them. Models can be placed at floor scale; unsupported
   devices keep the interactive 3D viewer.
-- Explore supports live search, category filters, saved-product bookmarks,
-  and product-detail information. The Library stores bookmarks and recent
-  views, and can download a published single-file GLB for offline viewing when
+- Home supports live search, category filters, saved-product bookmarks,
+  recently viewed items, and a verified offline-model summary. Downloads stores
+  bookmarks and recent views, and can download a published single-file GLB for offline viewing when
   the backend supplies verifiable size/checksum metadata. Downloads have
   foreground progress, cancellation, retry by starting again, and SHA-256
   verification. Profile reports public API connectivity and the configured QR
@@ -35,6 +35,13 @@ this app.
 - A Dio client with HTTPS-only requests, timeouts, and bounded retry for
   transient GET failures. The API origin must be explicitly configured.
 - No credentials, tokens, or backend secrets are checked in.
+- Sign-in uses the existing `POST /api/auth/login`, `/api/auth/refresh`, and
+  `/api/auth/logout` routes, including the backend's MFA challenge. Access and
+  refresh tokens are stored in one OS-backed `flutter_secure_storage` record;
+  passwords are never persisted.
+- Signed-in users can read and toggle product likes using the existing
+  authenticated Hub routes. The bearer token is attached only to same-origin
+  API requests; online likes are not yet queued for offline synchronization.
 
 Library bookmarks and recently viewed items are stored locally as product
 metadata. Downloaded public GLB files are stored separately in app-private
@@ -42,9 +49,15 @@ support storage and verified against the backend's byte size and SHA-256 before
 the viewer opens them. Single-file GLB downloads are limited to 50 MB and
 models above 15 MB show a warning. This is not yet a background, queued, or
 resumable download manager; interrupted transfers must restart. Private
-catalogs are not shown; the feed endpoint is public-only. Profile currently
-reports public API and QR configuration but does not authenticate users.
-Catalog and collection detail screens remain pending.
+catalogs are not shown; the feed endpoint is public-only. Sign-in authenticates
+the account but private-catalog authorization and authenticated catalog/model
+requests are not connected yet.
+Catalogs lists published catalogs from the existing backend with search and
+offset pagination. Catalog details use the published catalog snapshot and
+identify products without a 3D model instead of treating every catalog product
+as viewable in 3D. Catalog downloads and offline catalog metadata are not yet
+implemented. The new public list route returns only published catalogs and
+counts only products that are themselves public and published.
 
 ## Prerequisites and local setup
 

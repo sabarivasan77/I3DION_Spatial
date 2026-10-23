@@ -4,19 +4,24 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:i3dion_spatial_hub_mobile/config/app_config.dart';
 
+typedef AccessTokenProvider = Future<String?> Function();
+
 class ApiClient {
-  ApiClient({required this.baseUrl, this.allowLocalHttpForDevelopment = false})
-    : dio = Dio(
-        BaseOptions(
-          baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 20),
-          sendTimeout: const Duration(seconds: 20),
-        ),
-      ) {
+  ApiClient({
+    required this.baseUrl,
+    this.allowLocalHttpForDevelopment = false,
+    this.accessTokenProvider,
+  }) : dio = Dio(
+         BaseOptions(
+           baseUrl: baseUrl,
+           connectTimeout: const Duration(seconds: 10),
+           receiveTimeout: const Duration(seconds: 20),
+           sendTimeout: const Duration(seconds: 20),
+         ),
+       ) {
     dio.interceptors.add(
       InterceptorsWrapper(
-        onRequest: (options, handler) {
+        onRequest: (options, handler) async {
           if (!permitsUri(options.uri)) {
             handler.reject(
               DioException(
@@ -27,6 +32,14 @@ class ApiClient {
             );
             return;
           }
+          if (accessTokenProvider != null &&
+              _isApiRequest(options.uri) &&
+              !_isAuthenticationRequest(options.uri)) {
+            final token = await accessTokenProvider!();
+            if (token != null && token.isNotEmpty) {
+              options.headers['Authorization'] = 'Bearer $token';
+            }
+          }
           handler.next(options);
         },
         onError: _retryTransientGet,
@@ -34,10 +47,11 @@ class ApiClient {
     );
   }
 
-  factory ApiClient.fromConfig() {
+  factory ApiClient.fromConfig({AccessTokenProvider? accessTokenProvider}) {
     final config = AppConfig.current;
     return ApiClient(
       baseUrl: config.apiBaseUrl,
+      accessTokenProvider: accessTokenProvider,
       allowLocalHttpForDevelopment:
           kDebugMode && config.environment == AppEnvironment.development,
     );
@@ -45,7 +59,18 @@ class ApiClient {
 
   final String baseUrl;
   final bool allowLocalHttpForDevelopment;
+  final AccessTokenProvider? accessTokenProvider;
   final Dio dio;
+
+  bool _isApiRequest(Uri uri) {
+    final base = Uri.tryParse(baseUrl);
+    return base != null &&
+        uri.scheme == base.scheme &&
+        uri.host.toLowerCase() == base.host.toLowerCase() &&
+        uri.port == base.port;
+  }
+
+  bool _isAuthenticationRequest(Uri uri) => uri.path.startsWith('/api/auth/');
 
   bool permitsUri(Uri uri) {
     if (uri.userInfo.isNotEmpty || uri.host.isEmpty) return false;

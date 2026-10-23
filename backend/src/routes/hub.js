@@ -9,6 +9,7 @@ import { validate } from '../middleware/validate.js';
 import { 
   getOrganizationShowcase, 
   getPublishedCatalog, 
+  listPublishedCatalogs,
   getPublishedExperience, 
   capturePublicLead, 
   submitHubRfq,
@@ -360,6 +361,26 @@ hubRouter.get(
 );
 
 // Public Published Catalog
+const publishedCatalogListSchema = z.object({
+  query: z.object({
+    search: z.string().trim().max(100).optional().default(''),
+    limit: z.coerce.number().int().min(1).max(50).optional().default(30),
+    offset: z.coerce.number().int().min(0).max(5000).optional().default(0),
+  }),
+});
+
+hubRouter.get(
+  '/catalogs',
+  validate(publishedCatalogListSchema),
+  asyncHandler(async (req, res) => {
+    const result = await listPublishedCatalogs(req.validated.query);
+    res.json({
+      ...result,
+      hasMore: result.offset + result.items.length < result.total,
+    });
+  })
+);
+
 hubRouter.get(
   '/catalogs/:slug',
   asyncHandler(async (req, res) => {

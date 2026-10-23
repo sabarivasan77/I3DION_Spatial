@@ -19,10 +19,10 @@ legacy local GLB files without stored metadata, the backend calculates the
 size and SHA-256 for that detail request. The client only offers offline save
 when both values are present and the model is a single-file GLB.
 
-Private catalog access, private asset authorization, background/resumable
-downloads, sync, and account token lifecycle are not implemented and remain
-proposed contract work; the mobile app currently does not display private
-products.
+Private catalog access and private asset authorization, background/resumable
+downloads, and sync are not implemented and remain proposed contract work.
+The mobile app currently authenticates the user but does not use the session
+to fetch private products or catalogs.
 
 ## Implemented public read operations
 
@@ -34,6 +34,13 @@ products.
 | Public product details by slug | `GET /api/public/products/{slug}` | Implemented for slug identifiers. |
 | Public model download metadata | `GET /api/hub/products/{uuid}` | Returns size and SHA-256 when available; legacy local GLB metadata is calculated on demand. |
 | Public GLB offline download | Signed `model_access_url` from product details | Implemented in Flutter with a 50 MB limit, progress, cancellation, and size/SHA-256 verification. |
+| Published catalog list | `GET /api/hub/catalogs?search={query}&limit={limit}&offset={offset}` | Implemented; returns published catalog metadata, the count of public published products, and pagination state. |
+| Published catalog details | `GET /api/hub/catalogs/{slug-or-uuid}` | Implemented for a published catalog; product data comes from its published snapshot. Fallback product lookup includes only public published products. |
+| Account sign-in | `POST /api/auth/login` | Implemented; existing email/password verification and optional MFA challenge. Access token is in JSON; rotating refresh token is returned as an HttpOnly cookie and stored by the native app in secure storage. |
+| Session renewal | `POST /api/auth/refresh` | Implemented; mobile submits the stored refresh token in the JSON body and persists the rotated refresh token from `Set-Cookie`. |
+| Account sign-out | `POST /api/auth/logout` | Implemented; mobile submits the refresh token to revoke the server session, then deletes the local secure session. |
+| Read product likes | `GET /api/hub/personal/liked` | Implemented against the existing authenticated personal Hub route; the mobile client filters the current account's liked products. |
+| Set product like | `POST /api/hub/personal/liked`, `DELETE /api/hub/personal/liked/{uuid}` | Implemented against the existing authenticated personal Hub routes, matching the liked-items list. Requires a published product UUID and an active session; reactions are currently online-only. |
 
 Feed items without a published `model_url` are excluded from the 3D Explore
 screen. Model and image asset URLs must be HTTPS; relative URLs are resolved
@@ -51,6 +58,10 @@ reporting; operating-system write failures are shown as download errors.
 ## Contract-wide requirements
 
 - HTTPS only. Authenticated routes use a short-lived bearer access token.
+- The mobile client reads the access token from secure storage for same-origin
+  API requests only; auth endpoints and cross-origin asset URLs do not receive
+  the bearer token. Expired-token retry/rotation during an API request is not
+  implemented yet; users must restore or sign in again after expiration.
 - JSON errors use a stable shape, for example
   `{ "code": "TOKEN_EXPIRED", "message": "..." }`; never include secrets.
 - List endpoints are cursor-paginated and return `items`, `nextCursor`, and
@@ -64,20 +75,17 @@ reporting; operating-system write failures are shown as download errors.
 - A catalog's `downloadPolicy` is explicit (`allowed` or `view_only`). Signed
   URLs are issued only after checking that policy and the caller's access.
 
-## Required operations
+## Proposed mobile-specific operations
 
 | Operation | Proposed route | Purpose |
 | --- | --- | --- |
 | Explore feed | `GET /api/mobile/v1/explore` | Public and authorized organization content; accepts `query`, `categoryId`, `organizationId`, and `cursor`. |
 | Categories | `GET /api/mobile/v1/categories` | Search/filter category metadata, optionally scoped to an organization. |
-| Catalog details | `GET /api/mobile/v1/catalogs/{catalogId}` | Catalog metadata, access policy, and paginated model references. |
+| Catalog download policy | `GET /api/mobile/v1/catalogs/{catalogId}` | Return catalog access policy and complete offline asset references when organization-scoped catalogs are supported. |
 | Collection details | `GET /api/mobile/v1/collections/{collectionId}` | Collection metadata and ordered model references. |
 | Model/product details | `GET /api/mobile/v1/models/{modelId}` | Product information, model version, thumbnail, variants, and asset descriptors. |
 | Asset authorization | `POST /api/mobile/v1/models/{modelId}/assets/{format}/download` | Return a short-lived signed URL only after access/download-policy checks. `format` includes `glb` or `usdz`. |
 | QR resolution | `GET /api/mobile/v1/resolve?url={canonicalUrl}` | Resolve an allowlisted I3DION content URL to a public model/catalog/collection ID. |
-| Login | `POST /api/mobile/v1/auth/session` | Exchange credentials or an approved OAuth assertion for short-lived access and refresh tokens. |
-| Refresh | `POST /api/mobile/v1/auth/refresh` | Rotate refresh token and issue a new short-lived access token. |
-| Logout | `POST /api/mobile/v1/auth/logout` | Revoke the refresh-token session. |
 | Organizations | `GET /api/mobile/v1/organizations` | Return the caller's memberships and roles. |
 | Reactions | `PUT /api/mobile/v1/models/{modelId}/reactions/{reaction}` | Idempotently set a reaction; accept an `Idempotency-Key`. |
 | Sync queue | `POST /api/mobile/v1/sync/events` | Idempotently submit queued favorites, reactions, and recent-view events; return per-event accepted/conflict/rejected results. |

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:i3dion_spatial_hub_mobile/data/api_client.dart';
+import 'package:i3dion_spatial_hub_mobile/domain/models/published_catalog.dart';
 import 'package:i3dion_spatial_hub_mobile/domain/models/public_product.dart';
 import 'package:i3dion_spatial_hub_mobile/domain/models/spatial_item.dart';
 import 'package:i3dion_spatial_hub_mobile/domain/repositories/spatial_repository.dart';
@@ -103,6 +104,55 @@ class PublicSpatialRepository implements SpatialRepository {
     }
   }
 
+  Future<PublishedCatalogPage> fetchPublishedCatalogs({
+    String? query,
+    int limit = 30,
+    int offset = 0,
+  }) async {
+    final endpoint = _apiOrigin.resolve('/api/hub/catalogs');
+    try {
+      final response = await client.dio.get<dynamic>(
+        endpoint.toString(),
+        queryParameters: {
+          if (query != null && query.trim().isNotEmpty) 'search': query.trim(),
+          'limit': limit,
+          'offset': offset,
+        },
+      );
+      if (response.data is! Map<String, dynamic>) {
+        throw const FormatException(
+          'The I3DION API returned an invalid catalog list.',
+        );
+      }
+      return PublishedCatalogPage.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+    } on DioException catch (error) {
+      throw PublicApiException(_messageFor(error, resource: 'catalog'));
+    } on FormatException catch (error) {
+      throw PublicApiException(error.message);
+    }
+  }
+
+  Future<PublishedCatalog> fetchPublishedCatalog(String slug) async {
+    final endpoint = _apiOrigin.resolve(
+      '/api/hub/catalogs/${Uri.encodeComponent(slug)}',
+    );
+    try {
+      final response = await client.dio.get<dynamic>(endpoint.toString());
+      if (response.data is! Map<String, dynamic>) {
+        throw const PublicApiException(
+          'The I3DION API returned an invalid catalog response.',
+        );
+      }
+      return PublishedCatalog.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (error) {
+      throw PublicApiException(_messageFor(error, resource: 'catalog'));
+    } on FormatException catch (error) {
+      throw PublicApiException(error.message);
+    }
+  }
+
   List<Map<String, dynamic>> _extractItems(dynamic data) {
     final dynamic rawItems;
     if (data is List) {
@@ -123,13 +173,13 @@ class PublicSpatialRepository implements SpatialRepository {
         .toList(growable: false);
   }
 
-  String _messageFor(DioException error) {
+  String _messageFor(DioException error, {String resource = 'product'}) {
     final status = error.response?.statusCode;
     if (status == 404) {
-      return 'This published product is no longer available.';
+      return 'This published $resource is no longer available.';
     }
     if (status == 401 || status == 403) {
-      return 'This product is not available to this account.';
+      return 'This $resource is not available to this account.';
     }
     if (status != null && status >= 500) {
       return 'The I3DION catalog service is temporarily unavailable.';

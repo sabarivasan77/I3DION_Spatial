@@ -38,6 +38,7 @@ async function runHubLensSuite() {
   let org1Id = null;
   let org2Id = null;
   let adminUserId = null;
+  let catalogId = null;
   let adminToken = null;
   let org2AdminToken = null;
   let catalogSlug = `cat-hub-${testRunId}`;
@@ -105,10 +106,11 @@ async function runHubLensSuite() {
     );
 
     // Create Published Catalog
-    await query(
+    const catalogRes = await query(
       `INSERT INTO catalogs (
          organization_id, name, slug, description, status, published_snapshot, published_at
-       ) VALUES ($1, $2, $3, $4, 'Published', $5, now())`,
+       )        VALUES ($1, $2, $3, $4, 'Published', $5, now())
+       RETURNING id`,
       [
         org1Id,
         'Heavy Power Gas Turbines 2026',
@@ -120,8 +122,9 @@ async function runHubLensSuite() {
             { id: 'sec-1', title: 'High-Pressure Turbines', products: [{ name: 'Apex Titan 9000', power: '95 MW' }] }
           ]
         })
-      ]
+      ],
     );
+    catalogId = catalogRes.rows[0]?.id;
 
     // Create Published Spatial Experience
     await query(
@@ -188,6 +191,22 @@ async function runHubLensSuite() {
       assert.strictEqual(catalog.organization.primaryColor, '#F4B400');
 
       pass('2. Public Catalog Snapshot Delivery', `Delivered immutable snapshot for catalog: ${catalog.name}`);
+
+      const listRes = await fetch(
+        `${baseUrl}/api/hub/catalogs?search=${encodeURIComponent(`Apex Turbines Industrial ${testRunId}`)}`
+      );
+      assert.strictEqual(listRes.status, 200, `Expected 200, got ${listRes.status}`);
+      const catalogPage = await listRes.json();
+      assert.strictEqual(catalogPage.total, 1);
+      assert.strictEqual(catalogPage.items[0].slug, catalogSlug);
+      assert.strictEqual(catalogPage.items[0].product_count, 0);
+      assert.strictEqual(catalogPage.hasMore, false);
+
+      const uuidRes = await fetch(`${baseUrl}/api/hub/catalogs/${catalogId}`);
+      assert.strictEqual(uuidRes.status, 200, `Expected 200, got ${uuidRes.status}`);
+      assert.strictEqual((await uuidRes.json()).slug, catalogSlug);
+
+      pass('2a. Public Catalog List and Identifier Lookup', 'Search returned only the published catalog with the public product count and pagination metadata.');
     } catch (err) {
       fail('2. Public Catalog Snapshot Delivery', err);
     }

@@ -90,6 +90,85 @@ void main() {
     );
   });
 
+  test(
+    'loads only published catalog summaries from the Hub catalog route',
+    () async {
+      final adapter = _JsonAdapter({
+        'items': [
+          {
+            'id': 'catalog-id',
+            'name': 'Pumps and Motors',
+            'slug': 'pumps-motors',
+            'description': 'Published pump products',
+            'organization_name': 'I3DION Industrial',
+            'published_at': '2026-10-01T00:00:00.000Z',
+            'product_count': 8,
+          },
+        ],
+        'total': 1,
+        'limit': 30,
+        'offset': 0,
+        'hasMore': false,
+      });
+      final repository = _repository(apiOrigin, adapter);
+
+      final page = await repository.fetchPublishedCatalogs(query: 'pumps');
+
+      expect(adapter.lastRequest?.uri.path, '/api/hub/catalogs');
+      expect(adapter.lastRequest?.uri.queryParameters['search'], 'pumps');
+      expect(adapter.lastRequest?.uri.queryParameters['limit'], '30');
+      expect(page.total, 1);
+      expect(page.hasMore, isFalse);
+      expect(page.items.single.name, 'Pumps and Motors');
+      expect(page.items.single.productCount, 8);
+    },
+  );
+
+  test('loads a published catalog snapshot and model availability', () async {
+    final adapter = _JsonAdapter({
+      'id': 'catalog-id',
+      'name': 'Pumps and Motors',
+      'slug': 'pumps-motors',
+      'description': 'Published catalog',
+      'publishedAt': '2026-10-01T00:00:00.000Z',
+      'organization': {'name': 'I3DION Industrial'},
+      'publishedSnapshot': {
+        'products': [
+          {
+            'productId': 'model-id',
+            'productName': 'Live pump model',
+            'category': 'Pumps',
+            'vaultPublicUrl': 'https://cdn.i3dion.example/pump.glb',
+          },
+          {
+            'productId': 'product-id',
+            'productName': 'Pump accessory',
+            'category': 'Accessories',
+          },
+        ],
+      },
+    });
+    final repository = _repository(apiOrigin, adapter);
+
+    final catalog = await repository.fetchPublishedCatalog('pumps-motors');
+
+    expect(adapter.lastRequest?.uri.path, '/api/hub/catalogs/pumps-motors');
+    expect(catalog.summary.organizationName, 'I3DION Industrial');
+    expect(catalog.products, hasLength(2));
+    expect(catalog.products.first.hasModel, isTrue);
+    expect(catalog.products.last.hasModel, isFalse);
+  });
+
+  test('rejects an invalid published catalog list response', () async {
+    final adapter = _JsonAdapter({'items': 'not a list'});
+    final repository = _repository(apiOrigin, adapter);
+
+    await expectLater(
+      repository.fetchPublishedCatalogs(),
+      throwsA(isA<PublicApiException>()),
+    );
+  });
+
   test('uses a signed access URL returned with product details', () async {
     final adapter = _JsonAdapter({
       'id': '143b37ac-62fd-46f4-99bb-f06f995c7dc0',

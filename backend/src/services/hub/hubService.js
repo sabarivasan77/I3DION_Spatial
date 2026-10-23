@@ -84,13 +84,14 @@ export async function getOrganizationShowcase(identifier) {
   };
 }
 
-export async function getPublishedCatalog(slug) {
+export async function getPublishedCatalog(identifier) {
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
   const { rows } = await query(
     `SELECT c.*, o.name as org_name, o.logo_url as org_logo, o.primary_color as org_color
      FROM catalogs c
      JOIN organizations o ON c.organization_id = o.id
-     WHERE c.slug = $1 AND c.status = 'Published'`,
-    [slug]
+     WHERE ${isUuid ? 'c.id::text' : 'c.slug'} = $1 AND c.status = 'Published'`,
+    [identifier]
   );
 
   if (rows.length === 0) {
@@ -108,6 +109,7 @@ export async function getPublishedCatalog(slug) {
        FROM catalog_products cp
        JOIN products p ON cp.product_id = p.id
        WHERE cp.catalog_id = $1
+         AND p.is_public = true AND p.status = 'Published'
        ORDER BY cp.sort_order ASC`,
       [catalog.id]
     );
@@ -137,6 +139,46 @@ export async function getPublishedCatalog(slug) {
       logoUrl: catalog.org_logo,
       primaryColor: catalog.org_color,
     }
+  };
+}
+
+export async function listPublishedCatalogs({ search = '', limit = 30, offset = 0 } = {}) {
+  const params = [];
+  let whereClause = `WHERE c.status = 'Published'`;
+
+  if (search.trim()) {
+    params.push(`%${search.trim()}%`);
+    whereClause += ` AND (c.name ILIKE $1 OR COALESCE(c.description, '') ILIKE $1 OR o.name ILIKE $1)`;
+  }
+
+  params.push(limit);
+  const limitParameter = `$${params.length}`;
+  params.push(offset);
+  const offsetParameter = `$${params.length}`;
+
+  const { rows } = await query(
+    `SELECT c.id, c.name, c.slug, c.description, c.published_at,
+            o.name as organization_name,
+            COUNT(DISTINCT p.id) FILTER (
+              WHERE p.is_public = true AND p.status = 'Published'
+            )::int as product_count,
+            COUNT(*) OVER()::int as total_count
+     FROM catalogs c
+     JOIN organizations o ON o.id = c.organization_id
+     LEFT JOIN catalog_products cp ON cp.catalog_id = c.id
+     LEFT JOIN products p ON p.id = cp.product_id
+     ${whereClause}
+     GROUP BY c.id, o.name
+     ORDER BY COALESCE(c.published_at, c.updated_at) DESC, c.name ASC
+     LIMIT ${limitParameter} OFFSET ${offsetParameter}`,
+    params
+  );
+
+  return {
+    items: rows.map(({ total_count, ...catalog }) => catalog),
+    total: rows[0]?.total_count ?? 0,
+    limit,
+    offset,
   };
 }
 
@@ -824,5 +866,3 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
-
-

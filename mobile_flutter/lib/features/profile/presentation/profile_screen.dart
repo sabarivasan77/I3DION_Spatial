@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:i3dion_spatial_hub_mobile/config/app_config.dart';
+import 'package:i3dion_spatial_hub_mobile/features/auth/providers.dart';
 import 'package:i3dion_spatial_hub_mobile/features/explore/providers.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -9,6 +11,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final feed = ref.watch(exploreFeedProvider(null));
+    final authSession = ref.watch(authSessionProvider);
     final config = AppConfig.current;
     final apiHost = Uri.tryParse(config.apiBaseUrl)?.host;
     final allowedHosts = config.qrAllowedHosts.toList()..sort();
@@ -98,25 +101,139 @@ class ProfileScreen extends ConsumerWidget {
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Account access',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                child: authSession.when(
+                  loading: () => const Row(
+                    children: [
+                      SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'You are browsing public products. Sign-in, '
-                      'organization membership, and private catalogs are '
-                      'not connected in this app version.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                      SizedBox(width: 12),
+                      Text('Checking account session…'),
+                    ],
+                  ),
+                  error: (error, stackTrace) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Account access',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(
+                        'Could not restore the saved session. $error',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => ref.invalidate(authSessionProvider),
+                        child: const Text('Retry'),
+                      ),
+                      OutlinedButton(
+                        onPressed: () => context.push('/login'),
+                        child: const Text('Sign in'),
+                      ),
+                    ],
+                  ),
+                  data: (session) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Account access',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (session == null) ...[
+                        Text(
+                          'Browsing public products. Sign in with your I3DION '
+                          'account to access account features as they become '
+                          'available in the mobile app.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () => context.push('/login'),
+                            icon: const Icon(Icons.login_rounded),
+                            label: const Text('Sign in to I3DION'),
+                          ),
+                        ),
+                      ] else ...[
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              child: Text(
+                                session.name.isEmpty
+                                    ? '?'
+                                    : session.name[0].toUpperCase(),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    session.name,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  Text(
+                                    session.email,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  Text(
+                                    session.role,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Private catalog access is not yet integrated.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () async {
+                              try {
+                                await ref
+                                    .read(authSessionProvider.notifier)
+                                    .signOut();
+                              } on Exception catch (error) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(error.toString())),
+                                  );
+                                }
+                              }
+                            },
+                            child: const Text('Sign out'),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
             ),

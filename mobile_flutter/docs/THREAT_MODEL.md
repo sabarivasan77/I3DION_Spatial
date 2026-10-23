@@ -22,17 +22,27 @@ implemented.
 | A crafted QR code or deep link directs the app to an attacker-controlled URL. | Phishing, unintended navigation, or unsafe content access. | Implemented in Phase 1: exact HTTPS host allowlist (empty by default), supported content paths and ID validation, restricted custom-scheme paths, and no arbitrary browser/WebView launch. Domain association remains unconfigured until the canonical host is supplied. |
 | A private catalog or model is fetched without entitlement, or a signed URL is reused after expiry. | Confidential industrial data disclosure. | Enforce tenant and role access on every request; issue short-lived signed URLs after authorization; enforce catalog download policy. Backend contract required. |
 | A model file is oversized, corrupted, substituted, or crafted to stress a low-memory device/viewer. | Excessive resource use, failed viewing, or parser vulnerability exposure. | Check declared and actual size, verify SHA-256 and version before use, enforce device-aware limits, and test model format handling. Download/viewer phases. |
-| Tokens or private offline content are exposed from app storage, logs, or backups. | Account takeover or data disclosure. | Store tokens in OS secure storage; avoid PII/token logs; encrypt private offline files where feasible; clear private files on logout. Later phases. |
+| Tokens or private offline content are exposed from app storage, logs, or backups. | Account takeover or data disclosure. | Access and rotating refresh tokens are stored as one record in OS-backed `flutter_secure_storage`; Android app backup is disabled; passwords are never persisted; auth request/response bodies are not logged. Private offline encryption and clearing future private files on logout remain unimplemented. |
 | Offline user actions are replayed or applied twice after reconnection. | Incorrect user state or cross-account activity. | Queue explicit event IDs; use server-side idempotency and per-event conflict results; bind queued events to the account and clear them on logout. Sync phase. |
 | CI output or release configuration exposes signing material. | Unauthorized app distribution or signing identity compromise. | Keep signing credentials in GitHub Secrets, restrict workflow permissions, avoid echoing secret values, and separate unsigned builds from signed release jobs. Phase 8. |
 
-## Current controls in Phases 0-1
+## Current controls
 
-- The starter app contains no credentials and uses a mock repository; it makes
-  no requests to the backend.
+- The app contains no embedded credentials. Public catalog/model requests use
+  the existing backend; sign-in, refresh, and logout use the existing `/api/auth`
+  routes. The app does not connect directly to PostgreSQL.
 - The Dio foundation has explicit timeouts, bounded retries for transient GET
-  failures, and an interceptor that rejects non-HTTPS requests.
+  failures, and an interceptor that rejects non-HTTPS requests. The access
+  token is attached only to same-origin API requests and never to auth
+  endpoints or cross-origin asset URLs.
 - The client does not log request or response bodies.
+- Login validates email/password input, supports the backend MFA challenge,
+  stores only the access/refresh token session and account fields in secure
+  storage, rotates tokens on session restoration, and clears local state on
+  logout. Passwords remain in memory only while the login screen is open.
+- Product likes use the existing authenticated Hub routes and are currently
+  online-only. Automatic refresh/retry after an access token expires and
+  offline reaction synchronization remain unimplemented.
 - QR values are validated before in-app navigation. Only validated content
   identifiers are stored in scan history; original values, query strings, and
   fragments are never persisted. Camera and gallery errors have user-facing
@@ -50,7 +60,8 @@ implemented.
   `assetlinks.json`, iOS `apple-app-site-association`, the iOS Associated
   Domains entitlement, and production signing identifiers require the real
   domain and release credentials.
-- Private offline encryption/key lifecycle, certificate pinning policy,
+- Private catalog authorization, private offline encryption/key lifecycle,
+  authenticated API request attachment, certificate pinning policy,
   viewer/AR native attack surface, and store signing/release protections remain
   to be designed and verified in their later phases.
 - Phase 1 QR/deep-link and gallery flows were exercised in an Android emulator.
