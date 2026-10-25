@@ -648,7 +648,7 @@ export const useLensStore = create<LensStoreState>((set, get) => ({
     try {
       const token = localStorage.getItem('i3dion_token') || localStorage.getItem('i3dion.token') || '';
       const { api } = await import('../../../services/api');
-      const res = await api.crmAssistantChat(prompt, token);
+      const res = await api.askCrmSalesAssistant(token, prompt);
       const aiReply = res?.reply || "I've reviewed your active pipeline and accounts. All records are currently up to date.";
       set((state) => ({
         aiMessages: [

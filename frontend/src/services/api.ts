@@ -1631,6 +1631,8 @@ export const api = {
     apiRequest<any>('/crm/dashboard-config', { token, method: 'PUT', body: JSON.stringify(payload) }),
   askCrmSalesAssistant: (token: string, prompt: string) =>
     apiRequest<{ reply: string; records: any[] }>('/crm/assistant/chat', { token, method: 'POST', body: JSON.stringify({ prompt }) }),
+  crmAssistantChat: (prompt: string, token: string) =>
+    apiRequest<{ reply: string; records: any[] }>('/crm/assistant/chat', { token, method: 'POST', body: JSON.stringify({ prompt }) }),
 
   // Spatial Hub Public Layer
   getHubShowcase: (identifier: string) => apiRequest<any>(`/hub/showcase/${identifier}`, { method: 'GET' }),
