@@ -91,9 +91,17 @@ interface EngineStoreState {
   addPrimitive: (primitiveType: 'cube' | 'sphere' | 'cylinder' | 'torus' | 'cone' | 'monkey') => void;
   updateNodeMaterial: (nodeId: string, material: Partial<NonNullable<SceneNode['material']>>) => void;
 
+  // Blender Workspaces & Timeline Animation
+  blenderWorkspace: 'layout' | 'modeling' | 'sculpting' | 'shading' | 'animation' | 'geometry' | 'scripting';
+  setBlenderWorkspace: (ws: 'layout' | 'modeling' | 'sculpting' | 'shading' | 'animation' | 'geometry' | 'scripting') => void;
+  currentFrame: number;
+  setCurrentFrame: (frame: number) => void;
+  isPlayingAnimation: boolean;
+  setIsPlayingAnimation: (playing: boolean) => void;
+
   // Interactive Experience & Verge3D Authoring
-  interactiveTab: 'widgets' | 'code' | 'xr' | 'export';
-  setInteractiveTab: (tab: 'widgets' | 'code' | 'xr' | 'export') => void;
+  interactiveTab: 'widgets' | 'puzzles' | 'code' | 'xr' | 'export';
+  setInteractiveTab: (tab: 'widgets' | 'puzzles' | 'code' | 'xr' | 'export') => void;
   selectedWidgetId: string | null;
   setSelectedWidgetId: (id: string | null) => void;
   addWidget: (widget: InteractiveWidget) => void;
@@ -396,6 +404,28 @@ export const useEngineStore = create<EngineStoreState>((set, get) => ({
       }
     }));
   },
+
+  // Blender Workspaces & Timeline Animation
+  blenderWorkspace: 'modeling',
+  setBlenderWorkspace: (ws) => {
+    set({ blenderWorkspace: ws });
+    if (ws === 'shading') {
+      set({ renderMode: 'material' });
+    } else if (ws === 'sculpting') {
+      set({ activeObjectMode: 'sculpt' });
+    } else if (ws === 'modeling') {
+      set({ activeObjectMode: 'edit' });
+    } else if (ws === 'layout') {
+      set({ activeObjectMode: 'object', renderMode: 'solid' });
+    } else if (ws === 'animation') {
+      set({ isTimelineOpen: true });
+    }
+    get().addConsoleLog('info', `Switched Blender workspace to: ${ws.toUpperCase()}`);
+  },
+  currentFrame: 1,
+  setCurrentFrame: (frame) => set({ currentFrame: frame }),
+  isPlayingAnimation: false,
+  setIsPlayingAnimation: (playing) => set({ isPlayingAnimation: playing }),
 
   // Interactive Experience & Verge3D Authoring
   interactiveTab: 'widgets',

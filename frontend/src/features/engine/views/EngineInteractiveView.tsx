@@ -27,10 +27,13 @@ import {
   Zap,
   Sliders,
   Check,
-  Copy
+  Copy,
+  Cpu
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { InteractiveWidget, SceneInteraction } from '../types/engineTypes';
+import { LogicPuzzlesCanvas } from '../components/LogicPuzzlesCanvas';
+import { MiniLivePreview } from '../components/MiniLivePreview';
 
 export const EngineInteractiveView: React.FC = () => {
   const {
@@ -317,29 +320,40 @@ export const EngineInteractiveView: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex h-full overflow-hidden select-none relative bg-slate-100">
-      {/* 1. LEFT / SPLIT AUTHORING WORKSPACE */}
-      <div className="w-[480px] bg-white border-r border-slate-200 flex flex-col shrink-0 z-10 shadow-sm">
-        {/* Verge3D Tab Navigation Header */}
-        <div className="flex items-center border-b border-slate-200 bg-slate-50 px-2 text-xs font-bold text-slate-600">
+    <div className="flex-1 flex flex-col h-full overflow-hidden select-none relative bg-slate-100">
+      {/* 1. VERGE3D TAB NAVIGATION HEADER BAR */}
+      <div className="h-10 bg-slate-50 border-b border-slate-200 flex items-center justify-between px-3 text-xs font-bold text-slate-600 shrink-0 z-20">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => setInteractiveTab('widgets')}
-            className={`flex-1 py-2.5 flex items-center justify-center gap-1.5 transition ${
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
               interactiveTab === 'widgets'
-                ? 'bg-white text-[#E94B4B] border-b-2 border-[#E94B4B]'
-                : 'hover:bg-slate-100 text-slate-600'
+                ? 'bg-white text-[#E94B4B] shadow-xs font-bold border border-slate-200'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
             <Sparkles size={14} />
-            <span>Widgets & Rules</span>
+            <span>Widgets & Hotspots</span>
+          </button>
+
+          <button
+            onClick={() => setInteractiveTab('puzzles')}
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
+              interactiveTab === 'puzzles'
+                ? 'bg-white text-[#E94B4B] shadow-xs font-bold border border-slate-200'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+            }`}
+          >
+            <Cpu size={14} />
+            <span>Visual Puzzles (Verge3D)</span>
           </button>
 
           <button
             onClick={() => setInteractiveTab('code')}
-            className={`flex-1 py-2.5 flex items-center justify-center gap-1.5 transition ${
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
               interactiveTab === 'code'
-                ? 'bg-white text-[#E94B4B] border-b-2 border-[#E94B4B]'
-                : 'hover:bg-slate-100 text-slate-600'
+                ? 'bg-white text-[#E94B4B] shadow-xs font-bold border border-slate-200'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
             <Code2 size={14} />
@@ -348,28 +362,44 @@ export const EngineInteractiveView: React.FC = () => {
 
           <button
             onClick={() => setInteractiveTab('xr')}
-            className={`flex-1 py-2.5 flex items-center justify-center gap-1.5 transition ${
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
               interactiveTab === 'xr'
-                ? 'bg-white text-[#E94B4B] border-b-2 border-[#E94B4B]'
-                : 'hover:bg-slate-100 text-slate-600'
+                ? 'bg-white text-[#E94B4B] shadow-xs font-bold border border-slate-200'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
             <Glasses size={14} />
-            <span>WebXR & View</span>
+            <span>WebXR & Devices</span>
           </button>
 
           <button
             onClick={() => setInteractiveTab('export')}
-            className={`flex-1 py-2.5 flex items-center justify-center gap-1.5 transition ${
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
               interactiveTab === 'export'
-                ? 'bg-white text-[#E94B4B] border-b-2 border-[#E94B4B]'
-                : 'hover:bg-slate-100 text-slate-600'
+                ? 'bg-white text-[#E94B4B] shadow-xs font-bold border border-slate-200'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
             <Share2 size={14} />
             <span>Export & Publish</span>
           </button>
         </div>
+
+        <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono">
+          <span>Verge3D Interactive Engine</span>
+        </div>
+      </div>
+
+      {/* 2. BODY: PUZZLES MODE OR 2-PANE AUTHORING MODE */}
+      {interactiveTab === 'puzzles' ? (
+        <div className="flex-1 flex h-full overflow-hidden select-none relative bg-slate-100">
+          <LogicPuzzlesCanvas />
+          <MiniLivePreview />
+        </div>
+      ) : (
+        <div className="flex-1 flex h-full overflow-hidden select-none relative bg-slate-100">
+          {/* LEFT / SPLIT AUTHORING WORKSPACE */}
+          <div className="w-[480px] bg-white border-r border-slate-200 flex flex-col shrink-0 z-10 shadow-sm">
 
         {/* Tab 1: WIDGETS & BEHAVIORS */}
         {interactiveTab === 'widgets' && (
@@ -905,8 +935,10 @@ export const EngineInteractiveView: React.FC = () => {
           </div>
         )}
       </div>
+    </div>
+  )}
 
-      {/* QR Code Handoff Modal */}
+  {/* QR Code Handoff Modal */}
       {qrModalUrl && qrDataUrl && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 text-center">
