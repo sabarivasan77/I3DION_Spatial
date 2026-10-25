@@ -77,149 +77,98 @@ export const LensHomeView: React.FC = () => {
         </div>
       )}
 
-      {/* 1. Hero Banner Inspired by Reference Image 1 */}
-      <div className="relative overflow-hidden rounded-3xl bg-amber-500/10 border border-amber-200/80 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-2xs">
-        <div className="space-y-3 z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/90 border border-amber-200 px-3 py-1 text-xs font-bold text-[#D97706] shadow-2xs">
-            <Sparkles size={13} className="text-[#F4B400]" />
-            <span>I3DION Spatial Lens Intelligence</span>
-            {isLoadingLive && <span className="text-[10px] text-amber-600 animate-pulse ml-1">(Live Updating...)</span>}
+      {/* 1. Unified Executive Command Ribbon */}
+      <div className="bg-white border border-slate-200/90 rounded-3xl p-5 md:p-6 shadow-2xs space-y-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#F4B400] animate-pulse" />
+              <span className="text-[11px] font-black uppercase tracking-wider text-[#D97706]">
+                I3DION Spatial Lens Intelligence
+              </span>
+              {isLoadingLive && <span className="text-[10px] text-amber-600 font-bold animate-pulse ml-1">(Live Updating...)</span>}
+            </div>
+            <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight mt-0.5">
+              Turn 3D Experiences into Closed Deals
+            </h1>
+            <p className="text-xs text-slate-500 font-medium">
+              Real-time pipeline visibility, customer intent telemetry, and conversion velocity across spatial catalogs.
+            </p>
           </div>
 
-          <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight">
-            Turn Your Data into Meaningful Insights
-          </h1>
-          <p className="text-xs md:text-sm font-medium text-slate-600 leading-relaxed">
-            Track leads, analyze performance and unlock opportunities across all your 3D experiences.
-          </p>
+          {/* View Switcher & Action Shortcuts */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">
+              <button
+                onClick={() => setHomeViewMode('overall')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
+                  homeViewMode === 'overall' ? 'bg-white text-slate-950 shadow-xs' : 'hover:text-slate-900'
+                }`}
+              >
+                <Layers size={13} />
+                <span>Overall View</span>
+              </button>
+              <button
+                onClick={() => {
+                  setHomeViewMode('project');
+                  setActiveView('projects');
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
+                  homeViewMode === 'project' ? 'bg-white text-slate-950 shadow-xs' : 'hover:text-slate-900'
+                }`}
+              >
+                <Box size={13} />
+                <span>Project View</span>
+              </button>
+            </div>
 
-          {/* View Switcher Pills */}
-          <div className="pt-2 flex items-center gap-2">
             <button
-              onClick={() => setHomeViewMode('overall')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition shadow-2xs ${
-                homeViewMode === 'overall'
-                  ? 'bg-[#F4B400] text-slate-950 shadow-sm'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
+              onClick={() => setActiveView('deals')}
+              className="flex items-center gap-1.5 bg-[#F4B400] hover:bg-[#D97706] text-slate-950 font-bold text-xs px-3.5 py-2 rounded-xl transition shadow-2xs active:scale-95"
             >
-              <Layers size={14} />
-              <span>Overall View</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setHomeViewMode('project');
-                setActiveView('projects');
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition ${
-                homeViewMode === 'project'
-                  ? 'bg-[#F4B400] text-slate-950 shadow-sm'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
-            >
-              <Box size={14} />
-              <span>Project View</span>
+              <Briefcase size={14} />
+              <span>Pipeline Kanban</span>
             </button>
           </div>
         </div>
 
-        {/* Banner Right Badge (Data powered by I3DION Vault) */}
-        <div className="bg-white/90 border border-slate-200/90 rounded-2xl p-4 shadow-sm space-y-2 shrink-0 z-10">
-          <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block">
-            Data powered by
-          </span>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#F4B400] text-slate-950 font-black text-xs flex items-center justify-center">
-              3D
+        {/* Commercial Metrics Strip */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-100">
+          <div className="bg-slate-50/70 rounded-2xl p-3.5 border border-slate-100">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Active Pipeline</span>
+            <span className="text-xl font-black text-slate-900 tracking-tight mt-0.5 block">${openPipelineValue.toLocaleString()}</span>
+            <span className="text-[10px] text-amber-600 font-semibold">{openDeals.length} active opportunities</span>
+          </div>
+
+          <div className="bg-slate-50/70 rounded-2xl p-3.5 border border-slate-100">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Won Revenue</span>
+            <span className="text-xl font-black text-emerald-600 tracking-tight mt-0.5 block">${wonRevenue.toLocaleString()}</span>
+            <span className="text-[10px] text-emerald-700 font-semibold">{wonDeals.length} closed won deals</span>
+          </div>
+
+          <div className="bg-slate-50/70 rounded-2xl p-3.5 border border-slate-100">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Client Accounts</span>
+            <span className="text-xl font-black text-slate-900 tracking-tight mt-0.5 block">{accounts.length}</span>
+            <span className="text-[10px] text-slate-500 font-semibold">{accounts.filter(a => a.tier === 'Enterprise').length} Enterprise tier</span>
+          </div>
+
+          <div className="bg-slate-50/70 rounded-2xl p-3.5 border border-slate-100 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Action Items</span>
+              <span className={`text-xl font-black tracking-tight mt-0.5 block ${overdueTasks.length > 0 ? 'text-rose-600' : 'text-slate-900'}`}>
+                {overdueTasks.length > 0 ? `${overdueTasks.length} Overdue` : 'All Caught Up'}
+              </span>
+              <span className="text-[10px] text-slate-500 font-semibold">{tasks.length} total tasks</span>
             </div>
-            <div className="leading-none">
-              <span className="font-extrabold text-slate-900 text-xs block">I3DION Vault</span>
-              <span className="text-[10px] text-slate-400 font-medium">Secure • Centralized • Reliable</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Subtle Background Pattern graphic */}
-        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-amber-100/50 to-transparent pointer-events-none" />
-      </div>
-
-      {/* CRM & Sales Operations Command Strip */}
-      <div className="bg-slate-900 rounded-3xl p-5 text-white shadow-md border border-slate-800 flex flex-wrap items-center justify-between gap-6">
-        <div className="flex flex-wrap items-center gap-6 sm:gap-8">
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
-              Active Pipeline
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-amber-400 tracking-tight mt-0.5 block">
-              ${openPipelineValue.toLocaleString()}
-            </span>
-            <span className="text-[11px] text-slate-300 font-medium">
-              {openDeals.length} active opportunities
-            </span>
-          </div>
-
-          <div className="h-10 w-px bg-slate-800 hidden sm:block" />
-
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
-              Won Revenue
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-emerald-400 tracking-tight mt-0.5 block">
-              ${wonRevenue.toLocaleString()}
-            </span>
-            <span className="text-[11px] text-slate-300 font-medium">
-              {wonDeals.length} deals closed won
-            </span>
-          </div>
-
-          <div className="h-10 w-px bg-slate-800 hidden sm:block" />
-
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
-              Accounts &amp; Contacts
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-white tracking-tight mt-0.5 block">
-              {accounts.length} <span className="text-sm font-medium text-slate-400">clients</span>
-            </span>
-            <span className="text-[11px] text-slate-300 font-medium">
-              {accounts.filter((a) => a.tier === 'Enterprise').length} Enterprise tier
-            </span>
-          </div>
-
-          {overdueTasks.length > 0 && (
-            <>
-              <div className="h-10 w-px bg-slate-800 hidden sm:block" />
+            {overdueTasks.length > 0 && (
               <button
                 onClick={() => setActiveView('tasks')}
-                className="bg-rose-500/20 border border-rose-500/40 text-rose-300 hover:bg-rose-500/30 px-3.5 py-2 rounded-2xl flex items-center gap-2 text-xs font-bold transition text-left"
+                className="bg-rose-50 text-rose-700 hover:bg-rose-100 text-[11px] font-bold px-2 py-1 rounded-lg border border-rose-200 transition"
               >
-                <AlertCircle size={16} className="text-rose-400 shrink-0" />
-                <div>
-                  <span className="block font-black">{overdueTasks.length} Overdue Tasks</span>
-                  <span className="text-[10px] text-rose-200/80">Requires immediate attention</span>
-                </div>
+                Review
               </button>
-            </>
-          )}
-        </div>
-
-        {/* Quick Launch Buttons */}
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => setActiveView('deals')}
-            className="flex items-center gap-1.5 bg-[#F4B400] hover:bg-[#D97706] text-slate-950 font-bold text-xs px-4 py-2 rounded-xl transition shadow-2xs"
-          >
-            <Briefcase size={14} />
-            <span>Pipeline Kanban</span>
-          </button>
-          <button
-            onClick={() => setActiveView('crm')}
-            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition border border-slate-700"
-          >
-            <Building2 size={14} />
-            <span>Accounts</span>
-          </button>
+            )}
+          </div>
         </div>
       </div>
 
