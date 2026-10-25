@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pool } from '../../src/db/pool.js';
+import { seedHubStarterModels } from '../../src/db/seed-hub-starter-models.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '../../..');
@@ -16,6 +17,8 @@ function pass(testId, msg) {
 
 async function run() {
   console.log('\n--- Running Spatial Hub Phase H1 Test Suite (Model Pipeline, Tiers, Provenance) ---');
+
+  await seedHubStarterModels();
 
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 

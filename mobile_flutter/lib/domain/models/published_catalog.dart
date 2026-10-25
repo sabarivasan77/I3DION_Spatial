@@ -49,6 +49,16 @@ class PublishedCatalogSummary {
       productCount: productCount.toInt(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'slug': slug,
+    'description': description,
+    if (organizationName != null) 'organization_name': organizationName,
+    if (publishedAt != null) 'published_at': publishedAt!.toIso8601String(),
+    'product_count': productCount,
+  };
 }
 
 class PublishedCatalogPage {
@@ -98,6 +108,14 @@ class PublishedCatalogPage {
       hasMore: hasMore,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'items': items.map((item) => item.toJson()).toList(),
+    'total': total,
+    'limit': limit,
+    'offset': offset,
+    'hasMore': hasMore,
+  };
 }
 
 class PublishedCatalogProduct {

@@ -29,7 +29,9 @@ export const LeadDetailDrawer: React.FC = () => {
     assignLead,
     addLeadNote,
     addLeadTag,
-    deleteLead
+    deleteLead,
+    convertLead,
+    setActiveView
   } = useLensStore();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'activity' | 'notes' | 'related'>('overview');
@@ -38,6 +40,9 @@ export const LeadDetailDrawer: React.FC = () => {
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [isEditingStatus, setIsEditingStatus] = useState(false);
   const [isEditingAssign, setIsEditingAssign] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
+  const [dealValueInput, setDealValueInput] = useState('50000');
+  const [dealNameInput, setDealNameInput] = useState('');
 
   const lead = leads.find((l) => l.id === selectedLeadId);
 
@@ -138,6 +143,72 @@ export const LeadDetailDrawer: React.FC = () => {
             <Trash2 size={14} />
           </button>
         </div>
+
+        {/* One-Click Convert to Customer & Deal */}
+        {lead.status !== 'Converted' ? (
+          <div>
+            {!isConverting ? (
+              <button
+                onClick={() => {
+                  setDealNameInput(`${lead.company} - Spatial Solution`);
+                  setIsConverting(true);
+                }}
+                className="w-full flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 rounded-xl transition shadow-2xs"
+              >
+                <Activity size={14} />
+                <span>Convert to Account &amp; Deal</span>
+              </button>
+            ) : (
+              <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl space-y-2.5 animate-in fade-in text-xs">
+                <span className="font-bold text-emerald-900 block text-[11px] uppercase tracking-wide">
+                  Convert Lead into CRM Account, Contact &amp; Deal
+                </span>
+                <div>
+                  <label className="text-[10px] font-bold text-emerald-800 block mb-0.5">Opportunity / Deal Name</label>
+                  <input
+                    type="text"
+                    value={dealNameInput}
+                    onChange={(e) => setDealNameInput(e.target.value)}
+                    className="w-full bg-white border border-emerald-300 rounded-lg p-1.5 text-xs font-semibold text-slate-900 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-emerald-800 block mb-0.5">Deal Pipeline Value ($)</label>
+                  <input
+                    type="number"
+                    value={dealValueInput}
+                    onChange={(e) => setDealValueInput(e.target.value)}
+                    className="w-full bg-white border border-emerald-300 rounded-lg p-1.5 text-xs font-semibold text-slate-900 focus:outline-none"
+                  />
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={() => setIsConverting(false)}
+                    className="flex-1 bg-white border border-slate-200 text-slate-600 font-bold py-1.5 rounded-lg text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await convertLead(lead.id, Number(dealValueInput) || 50000, dealNameInput);
+                      setIsConverting(false);
+                      closeLeadDrawer();
+                      setActiveView('deals');
+                    }}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 rounded-lg text-xs transition"
+                  >
+                    Confirm &amp; Open Pipeline
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-center text-xs font-bold text-emerald-800 flex items-center justify-center gap-1.5">
+            <CheckCircle2 size={15} className="text-emerald-600" />
+            <span>Converted to CRM Customer</span>
+          </div>
+        )}
 
         {/* Status Edit Dropdown */}
         {isEditingStatus && (

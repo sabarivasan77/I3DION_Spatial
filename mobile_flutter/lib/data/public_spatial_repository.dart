@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:i3dion_spatial_hub_mobile/data/api_client.dart';
+import 'package:i3dion_spatial_hub_mobile/data/offline_cache_repository.dart';
 import 'package:i3dion_spatial_hub_mobile/domain/models/published_catalog.dart';
 import 'package:i3dion_spatial_hub_mobile/domain/models/public_product.dart';
 import 'package:i3dion_spatial_hub_mobile/domain/models/spatial_item.dart';
@@ -15,9 +16,10 @@ class PublicApiException implements Exception {
 }
 
 class PublicSpatialRepository implements SpatialRepository {
-  PublicSpatialRepository({required this.client});
+  PublicSpatialRepository({required this.client, this.cacheRepository});
 
   final ApiClient client;
+  final OfflineCacheRepository? cacheRepository;
 
   Uri get _apiOrigin {
     final value = client.baseUrl.trim();
@@ -51,7 +53,7 @@ class PublicSpatialRepository implements SpatialRepository {
         },
       );
       final items = _extractItems(response.data);
-      return items
+      final spatialItems = items
           .map(
             (product) => PublicProduct.fromJson(
               product,
@@ -70,7 +72,29 @@ class PublicSpatialRepository implements SpatialRepository {
             ),
           )
           .toList(growable: false);
+
+      if (query == null || query.trim().isEmpty) {
+        await cacheRepository?.cacheExploreFeed(spatialItems);
+      }
+      return spatialItems;
     } on DioException catch (error) {
+      if (cacheRepository != null) {
+        final cached = await cacheRepository!.loadCachedExploreFeed();
+        if (cached != null && cached.isNotEmpty) {
+          if (query != null && query.trim().isNotEmpty) {
+            final q = query.trim().toLowerCase();
+            return cached
+                .where(
+                  (item) =>
+                      item.name.toLowerCase().contains(q) ||
+                      item.description.toLowerCase().contains(q) ||
+                      item.category.toLowerCase().contains(q),
+                )
+                .toList(growable: false);
+          }
+          return cached;
+        }
+      }
       throw PublicApiException(_messageFor(error));
     } on FormatException catch (error) {
       throw PublicApiException(error.message);
@@ -92,12 +116,18 @@ class PublicSpatialRepository implements SpatialRepository {
           'The I3DION API returned an invalid product response.',
         );
       }
-      return PublicProduct.fromJson(
+      final product = PublicProduct.fromJson(
         response.data as Map<String, dynamic>,
         apiOrigin: origin,
         allowLocalHttpForDevelopment: client.allowLocalHttpForDevelopment,
       );
+      await cacheRepository?.cacheProduct(product);
+      return product;
     } on DioException catch (error) {
+      if (cacheRepository != null) {
+        final cached = await cacheRepository!.loadCachedProduct(identifier);
+        if (cached != null) return cached;
+      }
       throw PublicApiException(_messageFor(error));
     } on FormatException catch (error) {
       throw PublicApiException(error.message);
@@ -124,10 +154,18 @@ class PublicSpatialRepository implements SpatialRepository {
           'The I3DION API returned an invalid catalog list.',
         );
       }
-      return PublishedCatalogPage.fromJson(
+      final page = PublishedCatalogPage.fromJson(
         response.data as Map<String, dynamic>,
       );
+      if (offset == 0 && (query == null || query.trim().isEmpty)) {
+        await cacheRepository?.cacheCatalogs(page);
+      }
+      return page;
     } on DioException catch (error) {
+      if (cacheRepository != null && offset == 0) {
+        final cached = await cacheRepository!.loadCachedCatalogs();
+        if (cached != null) return cached;
+      }
       throw PublicApiException(_messageFor(error, resource: 'catalog'));
     } on FormatException catch (error) {
       throw PublicApiException(error.message);

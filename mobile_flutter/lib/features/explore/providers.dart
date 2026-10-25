@@ -1,12 +1,25 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:i3dion_spatial_hub_mobile/data/hub_reaction_repository.dart';
 import 'package:i3dion_spatial_hub_mobile/data/public_spatial_repository.dart';
+import 'package:i3dion_spatial_hub_mobile/data/offline_cache_repository.dart';
+import 'package:i3dion_spatial_hub_mobile/data/offline_sync_repository.dart';
 import 'package:i3dion_spatial_hub_mobile/domain/models/published_catalog.dart';
 import 'package:i3dion_spatial_hub_mobile/domain/models/spatial_item.dart';
 import 'package:i3dion_spatial_hub_mobile/features/auth/providers.dart';
 
+final offlineCacheRepositoryProvider = Provider<OfflineCacheRepository>(
+  (ref) => OfflineCacheRepository(),
+);
+
+final offlineSyncRepositoryProvider = Provider<OfflineSyncRepository>(
+  (ref) => OfflineSyncRepository(),
+);
+
 final spatialRepositoryProvider = Provider<PublicSpatialRepository>(
-  (ref) => PublicSpatialRepository(client: ref.watch(apiClientProvider)),
+  (ref) => PublicSpatialRepository(
+    client: ref.watch(apiClientProvider),
+    cacheRepository: ref.watch(offlineCacheRepositoryProvider),
+  ),
 );
 
 final exploreFeedProvider = FutureProvider.family<List<SpatialItem>, String?>(

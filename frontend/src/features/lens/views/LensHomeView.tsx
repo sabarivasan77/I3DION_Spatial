@@ -13,7 +13,12 @@ import {
   Layers,
   Sparkles,
   QrCode,
-  RefreshCw
+  RefreshCw,
+  Briefcase,
+  Building2,
+  CheckSquare,
+  AlertCircle,
+  ArrowRight
 } from 'lucide-react';
 
 export const LensHomeView: React.FC = () => {
@@ -27,12 +32,24 @@ export const LensHomeView: React.FC = () => {
     overview,
     isLoadingLive,
     liveError,
-    fetchLiveData
+    fetchLiveData,
+    deals,
+    accounts,
+    tasks,
+    overviewStats,
+    fetchCrmOverview
   } = useLensStore();
 
   useEffect(() => {
     fetchLiveData();
-  }, [fetchLiveData]);
+    fetchCrmOverview();
+  }, [fetchLiveData, fetchCrmOverview]);
+
+  const openDeals = deals.filter((d) => d.stage !== 'lost' && d.stage !== 'won');
+  const openPipelineValue = openDeals.reduce((sum, d) => sum + Number(d.value || 0), 0);
+  const wonDeals = deals.filter((d) => d.stage === 'won');
+  const wonRevenue = wonDeals.reduce((sum, d) => sum + Number(d.value || 0), 0);
+  const overdueTasks = tasks.filter((t) => t.status !== 'completed' && new Date(t.dueDate) < new Date());
 
   const recentLeads = leads.slice(0, 5);
 
@@ -125,6 +142,85 @@ export const LensHomeView: React.FC = () => {
 
         {/* Subtle Background Pattern graphic */}
         <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-amber-100/50 to-transparent pointer-events-none" />
+      </div>
+
+      {/* CRM & Sales Operations Command Strip */}
+      <div className="bg-slate-900 rounded-3xl p-5 text-white shadow-md border border-slate-800 flex flex-wrap items-center justify-between gap-6">
+        <div className="flex flex-wrap items-center gap-6 sm:gap-8">
+          <div>
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+              Active Pipeline
+            </span>
+            <span className="text-xl sm:text-2xl font-black text-amber-400 tracking-tight mt-0.5 block">
+              ${openPipelineValue.toLocaleString()}
+            </span>
+            <span className="text-[11px] text-slate-300 font-medium">
+              {openDeals.length} active opportunities
+            </span>
+          </div>
+
+          <div className="h-10 w-px bg-slate-800 hidden sm:block" />
+
+          <div>
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+              Won Revenue
+            </span>
+            <span className="text-xl sm:text-2xl font-black text-emerald-400 tracking-tight mt-0.5 block">
+              ${wonRevenue.toLocaleString()}
+            </span>
+            <span className="text-[11px] text-slate-300 font-medium">
+              {wonDeals.length} deals closed won
+            </span>
+          </div>
+
+          <div className="h-10 w-px bg-slate-800 hidden sm:block" />
+
+          <div>
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+              Accounts &amp; Contacts
+            </span>
+            <span className="text-xl sm:text-2xl font-black text-white tracking-tight mt-0.5 block">
+              {accounts.length} <span className="text-sm font-medium text-slate-400">clients</span>
+            </span>
+            <span className="text-[11px] text-slate-300 font-medium">
+              {accounts.filter((a) => a.tier === 'Enterprise').length} Enterprise tier
+            </span>
+          </div>
+
+          {overdueTasks.length > 0 && (
+            <>
+              <div className="h-10 w-px bg-slate-800 hidden sm:block" />
+              <button
+                onClick={() => setActiveView('tasks')}
+                className="bg-rose-500/20 border border-rose-500/40 text-rose-300 hover:bg-rose-500/30 px-3.5 py-2 rounded-2xl flex items-center gap-2 text-xs font-bold transition text-left"
+              >
+                <AlertCircle size={16} className="text-rose-400 shrink-0" />
+                <div>
+                  <span className="block font-black">{overdueTasks.length} Overdue Tasks</span>
+                  <span className="text-[10px] text-rose-200/80">Requires immediate attention</span>
+                </div>
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Quick Launch Buttons */}
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setActiveView('deals')}
+            className="flex items-center gap-1.5 bg-[#F4B400] hover:bg-[#D97706] text-slate-950 font-bold text-xs px-4 py-2 rounded-xl transition shadow-2xs"
+          >
+            <Briefcase size={14} />
+            <span>Pipeline Kanban</span>
+          </button>
+          <button
+            onClick={() => setActiveView('crm')}
+            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition border border-slate-700"
+          >
+            <Building2 size={14} />
+            <span>Accounts</span>
+          </button>
+        </div>
       </div>
 
       {/* 2. Small Set of 6 KPI Cards Matching Reference Image 1 */}

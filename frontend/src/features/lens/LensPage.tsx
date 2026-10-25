@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLensStore } from './store/useLensStore';
 import { LensHeader } from './components/LensHeader';
 import { LensSidebar } from './components/LensSidebar';
 import { LensHomeView } from './views/LensHomeView';
 import { LensLeadsView } from './views/LensLeadsView';
+import { LensDealsView } from './views/LensDealsView';
+import { LensCrmView } from './views/LensCrmView';
+import { LensTasksView } from './views/LensTasksView';
+import { LensEnquiriesView } from './views/LensEnquiriesView';
+import { LensDocumentsView } from './views/LensDocumentsView';
+import { LensAutomationsView } from './views/LensAutomationsView';
 import { LensAnalyticsView } from './views/LensAnalyticsView';
 import { LensProjectsView } from './views/LensProjectsView';
 import { LensVisualizationsView } from './views/LensVisualizationsView';
@@ -11,16 +17,36 @@ import { LensReportsView } from './views/LensReportsView';
 import { LensSavedViewsView } from './views/LensSavedViewsView';
 import { LensDataExplorerView } from './views/LensDataExplorerView';
 import { LensSettingsView, LensHelpView } from './views/LensSettingsView';
+import { LensAiAssistantModal } from './components/LensAiAssistantModal';
 
 export const LensPage: React.FC = () => {
-  const { activeView } = useLensStore();
+  const { activeView, fetchCrmOverview, fetchAccounts, fetchDeals, fetchTasks } = useLensStore();
+
+  useEffect(() => {
+    fetchCrmOverview();
+    fetchAccounts();
+    fetchDeals();
+    fetchTasks();
+  }, [fetchCrmOverview, fetchAccounts, fetchDeals, fetchTasks]);
 
   const renderActiveView = () => {
     switch (activeView) {
       case 'home':
         return <LensHomeView />;
+      case 'deals':
+        return <LensDealsView />;
       case 'leads':
         return <LensLeadsView />;
+      case 'crm':
+        return <LensCrmView />;
+      case 'tasks':
+        return <LensTasksView />;
+      case 'enquiries':
+        return <LensEnquiriesView />;
+      case 'documents':
+        return <LensDocumentsView />;
+      case 'automations':
+        return <LensAutomationsView />;
       case 'analytics':
         return <LensAnalyticsView />;
       case 'projects':
@@ -57,6 +83,9 @@ export const LensPage: React.FC = () => {
           {renderActiveView()}
         </main>
       </div>
+
+      {/* Global Lens AI Copilot Modal */}
+      <LensAiAssistantModal />
     </div>
   );
 };

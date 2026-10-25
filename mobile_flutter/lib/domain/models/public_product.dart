@@ -71,6 +71,44 @@ class PublicProduct {
       modelChecksumSha256: _sha256(json['model_checksum_sha256']),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'category': category,
+    'description': description,
+    'model_url': modelUrl.toString(),
+    if (imageUrl != null) 'image_url': imageUrl.toString(),
+    'specs': specs,
+    if (modelSizeBytes != null) 'model_size_bytes': modelSizeBytes,
+    if (modelChecksumSha256 != null)
+      'model_checksum_sha256': modelChecksumSha256,
+    'isOffline': isOffline,
+  };
+
+  PublicProduct copyWith({
+    String? id,
+    String? name,
+    String? category,
+    String? description,
+    Uri? modelUrl,
+    Uri? imageUrl,
+    Map<String, dynamic>? specs,
+    int? modelSizeBytes,
+    String? modelChecksumSha256,
+    bool? isOffline,
+  }) => PublicProduct(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    category: category ?? this.category,
+    description: description ?? this.description,
+    modelUrl: modelUrl ?? this.modelUrl,
+    imageUrl: imageUrl ?? this.imageUrl,
+    specs: specs ?? this.specs,
+    modelSizeBytes: modelSizeBytes ?? this.modelSizeBytes,
+    modelChecksumSha256: modelChecksumSha256 ?? this.modelChecksumSha256,
+    isOffline: isOffline ?? this.isOffline,
+  );
 }
 
 int? _positiveInteger(dynamic value) {

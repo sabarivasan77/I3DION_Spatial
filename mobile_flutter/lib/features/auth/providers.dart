@@ -1,6 +1,9 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:i3dion_spatial_hub_mobile/config/app_config.dart';
+import 'package:i3dion_spatial_hub_mobile/config/connection_settings.dart';
 import 'package:i3dion_spatial_hub_mobile/data/api_client.dart';
 import 'package:i3dion_spatial_hub_mobile/data/auth_repository.dart';
 import 'package:i3dion_spatial_hub_mobile/domain/models/auth_session.dart';
@@ -11,7 +14,11 @@ final secureSessionStoreProvider = Provider<SecureSessionStore>(
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   final store = ref.watch(secureSessionStoreProvider);
-  return ApiClient.fromConfig(
+  final connection = ref.watch(connectionSettingsProvider);
+  return ApiClient(
+    baseUrl: connection.apiBaseUrl,
+    allowLocalHttpForDevelopment:
+        kDebugMode && connection.environment == AppEnvironment.development,
     accessTokenProvider: () async {
       final rawSession = await store.read();
       if (rawSession == null) return null;

@@ -1563,6 +1563,75 @@ export const api = {
   getLensDefinitions: () => apiRequest<any>('/lens/definitions', { method: 'GET' }),
   getLensLeads: (token: string) => apiRequest<any[]>('/lens/leads', { token }),
 
+  // Spatial Lens CRM & Sales Operations
+  getCrmOverview: (token: string) => apiRequest<any>('/crm/overview', { token }),
+  getCrmAccounts: (token: string, params?: { search?: string; tier?: string }) => {
+    const q = new URLSearchParams();
+    if (params?.search) q.set('search', params.search);
+    if (params?.tier) q.set('tier', params.tier);
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return apiRequest<any[]>(`/crm/accounts${qs}`, { token });
+  },
+  createCrmAccount: (token: string, payload: any) =>
+    apiRequest<any>('/crm/accounts', { token, method: 'POST', body: JSON.stringify(payload) }),
+  getCrmContacts: (token: string, params?: { accountId?: string; search?: string }) => {
+    const q = new URLSearchParams();
+    if (params?.accountId) q.set('accountId', params.accountId);
+    if (params?.search) q.set('search', params.search);
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return apiRequest<any[]>(`/crm/contacts${qs}`, { token });
+  },
+  createCrmContact: (token: string, payload: any) =>
+    apiRequest<any>('/crm/contacts', { token, method: 'POST', body: JSON.stringify(payload) }),
+  getCrmDeals: (token: string, params?: { stage?: string; search?: string }) => {
+    const q = new URLSearchParams();
+    if (params?.stage) q.set('stage', params.stage);
+    if (params?.search) q.set('search', params.search);
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return apiRequest<any[]>(`/crm/deals${qs}`, { token });
+  },
+  createCrmDeal: (token: string, payload: any) =>
+    apiRequest<any>('/crm/deals', { token, method: 'POST', body: JSON.stringify(payload) }),
+  updateCrmDealStage: (token: string, dealId: string, payload: { stage: string; lossReason?: string }) =>
+    apiRequest<any>(`/crm/deals/${dealId}/stage`, { token, method: 'PATCH', body: JSON.stringify(payload) }),
+  convertLeadToCustomer: (token: string, leadId: string, payload: any) =>
+    apiRequest<any>(`/crm/leads/${leadId}/convert`, { token, method: 'POST', body: JSON.stringify(payload) }),
+  getCrmTasks: (token: string, params?: { status?: string; filter?: string }) => {
+    const q = new URLSearchParams();
+    if (params?.status) q.set('status', params.status);
+    if (params?.filter) q.set('filter', params.filter);
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return apiRequest<any[]>(`/crm/tasks${qs}`, { token });
+  },
+  createCrmTask: (token: string, payload: any) =>
+    apiRequest<any>('/crm/tasks', { token, method: 'POST', body: JSON.stringify(payload) }),
+  updateCrmTaskStatus: (token: string, taskId: string, status: string) =>
+    apiRequest<any>(`/crm/tasks/${taskId}/status`, { token, method: 'PATCH', body: JSON.stringify({ status }) }),
+  getCrmEnquiries: (token: string, params?: { status?: string }) => {
+    const q = new URLSearchParams();
+    if (params?.status) q.set('status', params.status);
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return apiRequest<any[]>(`/crm/enquiries${qs}`, { token });
+  },
+  createCrmEnquiry: (token: string, payload: any) =>
+    apiRequest<any>('/crm/enquiries', { token, method: 'POST', body: JSON.stringify(payload) }),
+  updateCrmEnquiry: (token: string, enquiryId: string, payload: any) =>
+    apiRequest<any>(`/crm/enquiries/${enquiryId}`, { token, method: 'PATCH', body: JSON.stringify(payload) }),
+  getCrmDocuments: (token: string, params?: { accountId?: string; dealId?: string }) => {
+    const q = new URLSearchParams();
+    if (params?.accountId) q.set('accountId', params.accountId);
+    if (params?.dealId) q.set('dealId', params.dealId);
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return apiRequest<any[]>(`/crm/documents${qs}`, { token });
+  },
+  createCrmDocument: (token: string, payload: any) =>
+    apiRequest<any>('/crm/documents', { token, method: 'POST', body: JSON.stringify(payload) }),
+  getCrmDashboardConfig: (token: string) => apiRequest<any>('/crm/dashboard-config', { token }),
+  saveCrmDashboardConfig: (token: string, payload: any) =>
+    apiRequest<any>('/crm/dashboard-config', { token, method: 'PUT', body: JSON.stringify(payload) }),
+  askCrmSalesAssistant: (token: string, prompt: string) =>
+    apiRequest<{ reply: string; records: any[] }>('/crm/assistant/chat', { token, method: 'POST', body: JSON.stringify({ prompt }) }),
+
   // Spatial Hub Public Layer
   getHubShowcase: (identifier: string) => apiRequest<any>(`/hub/showcase/${identifier}`, { method: 'GET' }),
   getHubCatalog: (slug: string) => apiRequest<any>(`/hub/catalogs/${slug}`, { method: 'GET' }),

@@ -39,14 +39,26 @@ class _ProductLikeButtonState extends ConsumerState<ProductLikeButton> {
   Future<void> _toggleLike() async {
     if (_isBusy) return;
     setState(() => _isBusy = true);
+    final target = !(_liked ?? false);
     try {
-      final liked = _liked ?? false;
       await ref
           .read(hubReactionRepositoryProvider)
-          .setProductLiked(widget.productId, liked: !liked);
-      if (mounted) setState(() => _liked = !liked);
-    } on Exception catch (error) {
-      if (mounted) _showMessage(error.toString());
+          .setProductLiked(widget.productId, liked: target);
+      if (mounted) setState(() => _liked = target);
+    } on Exception {
+      try {
+        await ref
+            .read(offlineSyncRepositoryProvider)
+            .enqueueLike(widget.productId, liked: target);
+        if (mounted) {
+          setState(() => _liked = target);
+          _showMessage(
+            'Saved offline. Will sync with database when reconnected.',
+          );
+        }
+      } catch (fallbackError) {
+        if (mounted) _showMessage(fallbackError.toString());
+      }
     } finally {
       if (mounted) setState(() => _isBusy = false);
     }

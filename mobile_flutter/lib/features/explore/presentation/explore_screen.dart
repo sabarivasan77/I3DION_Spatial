@@ -21,6 +21,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   Timer? _searchDebounce;
   String? _query;
   String? _selectedCategory;
+  bool _offlineOnly = false;
 
   @override
   void dispose() {
@@ -216,6 +217,11 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                             ref.invalidate(exploreFeedProvider(_query)),
                       ),
                       data: (items) {
+                        final offlineIds = offlineModels.asData?.value
+                                .where((m) => m.modelPath != null)
+                                .map((m) => m.id)
+                                .toSet() ??
+                            const <String>{};
                         final categories =
                             items
                                 .map((item) => item.category)
@@ -223,7 +229,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                                 .toSet()
                                 .toList()
                               ..sort();
-                        final visibleItems = _selectedCategory == null
+                        var visibleItems = _selectedCategory == null
                             ? items
                             : items
                                   .where(
@@ -231,24 +237,33 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                                         item.category == _selectedCategory,
                                   )
                                   .toList(growable: false);
+                        if (_offlineOnly) {
+                          visibleItems = visibleItems
+                              .where((item) => offlineIds.contains(item.id))
+                              .toList(growable: false);
+                        }
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (categories.length > 1) ...[
-                              _CategoryFilters(
-                                categories: categories,
-                                selected: _selectedCategory,
-                                onSelected: (category) => setState(
-                                  () => _selectedCategory = category,
-                                ),
+                            _CategoryFilters(
+                              categories: categories,
+                              selected: _selectedCategory,
+                              offlineOnly: _offlineOnly,
+                              offlineCount: offlineIds.length,
+                              onOfflineOnlyChanged: (val) =>
+                                  setState(() => _offlineOnly = val),
+                              onSelected: (category) => setState(
+                                () => _selectedCategory = category,
                               ),
-                              const SizedBox(height: 14),
-                            ],
+                            ),
+                            const SizedBox(height: 14),
                             if (visibleItems.isEmpty)
                               _EmptyFeedState(
-                                message: _selectedCategory == null
-                                    ? 'No published 3D products match this search.'
-                                    : 'No published 3D products in this category.',
+                                message: _offlineOnly
+                                    ? 'No downloaded offline models found. Download 3D models to view without an internet connection.'
+                                    : _selectedCategory == null
+                                        ? 'No published 3D products match this search.'
+                                        : 'No published 3D products in this category.',
                               )
                             else ...[
                               _FeaturedCard(
@@ -256,6 +271,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                                 isSaved:
                                     savedIds?.contains(visibleItems.first.id) ??
                                     false,
+                                isOfflineReady: offlineIds.contains(visibleItems.first.id),
                                 saveEnabled: savedIds != null,
                                 onSave: () => _toggleSaved(
                                   visibleItems.first,
@@ -268,6 +284,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                                 _CompactItemCard(
                                   item: item,
                                   isSaved: savedIds?.contains(item.id) ?? false,
+                                  isOfflineReady: offlineIds.contains(item.id),
                                   saveEnabled: savedIds != null,
                                   onSave: () => _toggleSaved(
                                     item,
@@ -560,11 +577,17 @@ class _CategoryFilters extends StatelessWidget {
     required this.categories,
     required this.selected,
     required this.onSelected,
+    this.offlineOnly = false,
+    this.onOfflineOnlyChanged,
+    this.offlineCount = 0,
   });
 
   final List<String> categories;
   final String? selected;
   final ValueChanged<String?> onSelected;
+  final bool offlineOnly;
+  final ValueChanged<bool>? onOfflineOnlyChanged;
+  final int offlineCount;
 
   @override
   Widget build(BuildContext context) {
@@ -575,16 +598,34 @@ class _CategoryFilters extends StatelessWidget {
         children: [
           ChoiceChip(
             label: const Text('All'),
-            selected: selected == null,
-            onSelected: (_) => onSelected(null),
+            selected: selected == null && !offlineOnly,
+            onSelected: (_) {
+              onOfflineOnlyChanged?.call(false);
+              onSelected(null);
+            },
+          ),
+          const SizedBox(width: 8),
+          FilterChip(
+            avatar: Icon(
+              offlineOnly
+                  ? Icons.offline_pin_rounded
+                  : Icons.offline_pin_outlined,
+              size: 16,
+              color: offlineOnly ? Colors.white : AppColors.success,
+            ),
+            label: Text('Offline Ready ($offlineCount)'),
+            selected: offlineOnly,
+            onSelected: (val) => onOfflineOnlyChanged?.call(val),
           ),
           const SizedBox(width: 8),
           for (final category in categories) ...[
             ChoiceChip(
               label: Text(category),
-              selected: selected == category,
-              onSelected: (_) =>
-                  onSelected(selected == category ? null : category),
+              selected: selected == category && !offlineOnly,
+              onSelected: (_) {
+                onOfflineOnlyChanged?.call(false);
+                onSelected(selected == category ? null : category);
+              },
             ),
             const SizedBox(width: 8),
           ],
@@ -600,12 +641,14 @@ class _FeaturedCard extends StatelessWidget {
     required this.isSaved,
     required this.saveEnabled,
     required this.onSave,
+    this.isOfflineReady = false,
   });
 
   final SpatialItem item;
   final bool isSaved;
   final bool saveEnabled;
   final VoidCallback onSave;
+  final bool isOfflineReady;
 
   @override
   Widget build(BuildContext context) {
@@ -654,6 +697,40 @@ class _FeaturedCard extends StatelessWidget {
                               ),
                         ),
                 ),
+                if (isOfflineReady)
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color.fromRGBO(0, 0, 0, 0.7),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.offline_pin_rounded,
+                            color: AppColors.success,
+                            size: 14,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Offline 3D',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 Positioned(
                   top: 10,
                   right: 10,
@@ -724,12 +801,14 @@ class _CompactItemCard extends StatelessWidget {
     required this.isSaved,
     required this.saveEnabled,
     required this.onSave,
+    this.isOfflineReady = false,
   });
 
   final SpatialItem item;
   final bool isSaved;
   final bool saveEnabled;
   final VoidCallback onSave;
+  final bool isOfflineReady;
 
   @override
   Widget build(BuildContext context) {
@@ -758,11 +837,27 @@ class _CompactItemCard extends StatelessWidget {
                   ),
                 ),
         ),
-        title: Text(
-          item.name,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                item.name,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (isOfflineReady) ...[
+              const SizedBox(width: 6),
+              const Icon(
+                Icons.offline_pin_rounded,
+                size: 16,
+                color: AppColors.success,
+              ),
+            ],
+          ],
         ),
         subtitle: Text(item.category),
         trailing: Row(
