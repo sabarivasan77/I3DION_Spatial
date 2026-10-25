@@ -120,10 +120,20 @@ interface LensStoreState {
   // Project Metrics
   projects: LensProjectMetric[];
 
-  // Visualization Engine
+  // Visualization & Power BI Dashboard Engine
   visualizations: LensVisualization[];
+  isPresentationMode: boolean;
+  togglePresentationMode: () => void;
+  setPresentationMode: (val: boolean) => void;
+  canvasLayoutMode: 'fluid' | 'fit-window' | '16-9';
+  setCanvasLayoutMode: (mode: 'fluid' | 'fit-window' | '16-9') => void;
+  isEditingLayout: boolean;
+  setIsEditingLayout: (isEditing: boolean) => void;
   addVisualization: (vis: Omit<LensVisualization, 'id'>) => void;
   updateVisualizationPosition: (id: string, pos: { x: number; y: number; w: number; h: number }) => void;
+  reorderVisualizations: (fromIndex: number, toIndex: number) => void;
+  updateVisualizationSize: (id: string, cols: 4 | 6 | 8 | 12) => void;
+  resetVisualizationsToDefault: () => void;
   deleteVisualization: (id: string) => void;
 
   // Datasets
@@ -1001,6 +1011,13 @@ export const useLensStore = create<LensStoreState>((set, get) => ({
 
   projects: INITIAL_PROJECT_METRICS,
   visualizations: INITIAL_VISUALIZATIONS,
+  isPresentationMode: false,
+  togglePresentationMode: () => set((state) => ({ isPresentationMode: !state.isPresentationMode })),
+  setPresentationMode: (val) => set({ isPresentationMode: val }),
+  canvasLayoutMode: 'fluid',
+  setCanvasLayoutMode: (mode) => set({ canvasLayoutMode: mode }),
+  isEditingLayout: false,
+  setIsEditingLayout: (isEditing) => set({ isEditingLayout: isEditing }),
 
   addVisualization: (visData) => {
     const newVis: LensVisualization = {
@@ -1016,6 +1033,30 @@ export const useLensStore = create<LensStoreState>((set, get) => ({
     set((state) => ({
       visualizations: state.visualizations.map((v) => (v.id === id ? { ...v, position: pos } : v))
     }));
+  },
+
+  reorderVisualizations: (fromIndex, toIndex) => {
+    set((state) => {
+      const items = [...state.visualizations];
+      if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length) {
+        return state;
+      }
+      const [moved] = items.splice(fromIndex, 1);
+      items.splice(toIndex, 0, moved);
+      return { visualizations: items };
+    });
+  },
+
+  updateVisualizationSize: (id, cols) => {
+    set((state) => ({
+      visualizations: state.visualizations.map((v) =>
+        v.id === id ? { ...v, position: { ...v.position, w: cols } } : v
+      )
+    }));
+  },
+
+  resetVisualizationsToDefault: () => {
+    set({ visualizations: INITIAL_VISUALIZATIONS });
   },
 
   deleteVisualization: (id) => {

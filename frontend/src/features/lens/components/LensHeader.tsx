@@ -7,11 +7,12 @@ import {
   Bell,
   ChevronDown,
   Sparkles,
+  Maximize2,
   X
 } from 'lucide-react';
 
 export const LensHeader: React.FC = () => {
-  const { filters, setFilters, activeView, setActiveView, openAiAssistant } = useLensStore();
+  const { filters, setFilters, activeView, setActiveView, openAiAssistant, togglePresentationMode } = useLensStore();
   const [searchInput, setSearchInput] = useState(filters.searchKeyword);
   const [dateMenuOpen, setDateMenuOpen] = useState(false);
 
@@ -168,6 +169,16 @@ export const LensHeader: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Fullscreen Boardroom Presentation Button */}
+        <button
+          onClick={togglePresentationMode}
+          title="Open Fullscreen Executive Presentation Mode"
+          className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-3 py-1.5 rounded-xl transition shadow-2xs active:scale-95"
+        >
+          <Maximize2 size={13} className="text-[#F4B400]" />
+          <span className="hidden sm:inline">Presentation View</span>
+        </button>
 
         {/* AI Sales Assistant Trigger Button */}
         <button

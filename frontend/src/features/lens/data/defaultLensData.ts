@@ -230,33 +230,62 @@ export const INITIAL_PROJECT_METRICS: LensProjectMetric[] = [
 export const INITIAL_VISUALIZATIONS: LensVisualization[] = [
   {
     id: 'vis_lead_trend',
-    title: 'Lead Trend Over Time',
+    title: 'Lead Ingestion & Qualification Trend',
     datasetId: 'ds_leads_vault',
-    chartType: 'line',
+    chartType: 'area',
     primaryMetric: 'Total Leads',
     secondaryMetric: 'Qualified Leads',
-    description: 'Daily captured leads vs qualified leads timeline',
-    position: { x: 0, y: 0, w: 6, h: 4 }
+    description: '30-day velocity of total vs high-intent qualified leads',
+    position: { x: 0, y: 0, w: 8, h: 4 }
   },
   {
     id: 'vis_lead_source',
-    title: 'Leads by Acquisition Source',
+    title: 'Acquisition Channels & Attribution',
     datasetId: 'ds_leads_vault',
     chartType: 'donut',
     primaryMetric: 'Leads Count',
     groupByField: 'Source',
-    description: 'Percentage distribution of website, QR, AR & direct leads',
-    position: { x: 6, y: 0, w: 6, h: 4 }
+    description: 'Distribution across Web 3D, QR Codes, Mobile AR & Direct',
+    position: { x: 8, y: 0, w: 4, h: 4 }
+  },
+  {
+    id: 'vis_dwell_time',
+    title: '3D Orbit & Session Dwell Time Distribution',
+    datasetId: 'ds_projects_vault',
+    chartType: 'bar',
+    primaryMetric: 'Avg Dwell Seconds',
+    groupByField: 'Model Component',
+    description: 'Inspection time per spatial model component',
+    position: { x: 0, y: 4, w: 6, h: 4 }
+  },
+  {
+    id: 'vis_hotspot_funnel',
+    title: 'Interactive 3D Hotspot Engagement',
+    datasetId: 'ds_projects_vault',
+    chartType: 'funnel',
+    primaryMetric: 'Click Rate',
+    groupByField: 'Interaction Type',
+    description: 'Conversion from Model Load -> Orbit -> Hotspot -> Inquiry',
+    position: { x: 6, y: 4, w: 6, h: 4 }
   },
   {
     id: 'vis_top_projects',
-    title: 'Top Projects by Engagement',
+    title: 'Top 3D Showcase Models by Overall Conversion',
     datasetId: 'ds_projects_vault',
     chartType: 'progress',
     primaryMetric: 'Views Count',
     secondaryMetric: 'Leads Count',
-    description: 'Comparative view counts across active 3D projects',
-    position: { x: 0, y: 4, w: 12, h: 4 }
+    description: 'Comparative conversion and AR sessions across active 3D models',
+    position: { x: 0, y: 8, w: 8, h: 4 }
+  },
+  {
+    id: 'vis_kpi_summary',
+    title: 'Executive Spatial Engagement Score',
+    datasetId: 'ds_projects_vault',
+    chartType: 'kpi',
+    primaryMetric: 'Engagement Index',
+    description: 'Composite health score for 3D and WebXR customer adoption',
+    position: { x: 8, y: 8, w: 4, h: 4 }
   }
 ];
 

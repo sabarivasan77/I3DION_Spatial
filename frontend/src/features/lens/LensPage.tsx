@@ -18,6 +18,7 @@ import { LensSavedViewsView } from './views/LensSavedViewsView';
 import { LensDataExplorerView } from './views/LensDataExplorerView';
 import { LensSettingsView, LensHelpView } from './views/LensSettingsView';
 import { LensAiAssistantModal } from './components/LensAiAssistantModal';
+import { LensPresentationOverlay } from './components/LensPresentationOverlay';
 
 export const LensPage: React.FC = () => {
   const { activeView, fetchCrmOverview, fetchAccounts, fetchDeals, fetchTasks } = useLensStore();
@@ -86,6 +87,9 @@ export const LensPage: React.FC = () => {
 
       {/* Global Lens AI Copilot Modal */}
       <LensAiAssistantModal />
+
+      {/* Fullscreen Boardroom Presentation Overlay */}
+      <LensPresentationOverlay />
     </div>
   );
 };
