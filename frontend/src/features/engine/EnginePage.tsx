@@ -2,8 +2,8 @@ import React from 'react';
 import { useEngineStore } from './store/useEngineStore';
 import { EngineHeader } from './components/EngineHeader';
 import { ProjectWorkspaceView } from './views/ProjectWorkspaceView';
-import { UiEditorView } from './views/UiEditorView';
-import { LogicEditorView } from './views/LogicEditorView';
+import { EngineModelingView } from './views/EngineModelingView';
+import { EngineInteractiveView } from './views/EngineInteractiveView';
 import { FullPreviewView } from './views/FullPreviewView';
 
 export const EnginePage: React.FC = () => {
@@ -20,12 +20,12 @@ export const EnginePage: React.FC = () => {
 
       {/* Main Workspace Modes */}
       <div className="flex-1 flex overflow-hidden relative">
-        {activeMode === 'workspace' ? (
+        {activeMode === 'workspace' || activeMode === 'projects' ? (
           <ProjectWorkspaceView />
-        ) : activeMode === 'logic' ? (
-          <LogicEditorView />
+        ) : activeMode === 'interactive' || activeMode === 'logic' ? (
+          <EngineInteractiveView />
         ) : (
-          <UiEditorView />
+          <EngineModelingView />
         )}
       </div>
     </div>

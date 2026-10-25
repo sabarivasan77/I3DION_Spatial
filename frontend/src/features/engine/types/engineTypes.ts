@@ -1,10 +1,52 @@
-export type EngineMode = 'workspace' | 'ui' | 'logic' | 'preview';
+export type EngineMode =
+  | 'modeling'      // Blender-inspired 3D scene & mesh authoring
+  | 'interactive'   // Verge3D-inspired interactive behaviors, widgets, code, XR
+  | 'projects'      // Project management & template catalog
+  | 'preview'       // Fullscreen interactive runtime preview
+  | 'workspace'     // Backward compatibility alias for projects
+  | 'ui'            // Backward compatibility alias for interactive
+  | 'logic';        // Backward compatibility alias for interactive logic
+
 export type ViewportDevice = 'desktop' | 'tablet' | 'mobile';
 export type TransformGizmoMode = 'translate' | 'rotate' | 'scale';
 
 export type BlenderObjectMode = 'object' | 'edit' | 'sculpt';
 export type BlenderTool = 'select' | 'cursor' | 'move' | 'rotate' | 'scale' | 'transform' | 'measure' | 'add';
 export type BlenderShadingMode = 'wireframe' | 'solid' | 'material' | 'rendered';
+
+export interface InteractiveWidget {
+  id: string;
+  title: string;
+  type: 'hotspot' | 'infocard' | 'button' | 'exploded_slider' | 'variant_switcher' | 'xr_button' | 'modal';
+  targetNodeId?: string;
+  position?: Vector3D;
+  content?: string;
+  config: Record<string, any>;
+  enabled: boolean;
+}
+
+export interface SceneInteraction {
+  id: string;
+  name: string;
+  trigger: 'click' | 'hover' | 'load' | 'hotspot_click';
+  targetNodeId?: string;
+  action: 'show_hide' | 'change_material' | 'play_animation' | 'open_info' | 'open_url' | 'trigger_sound';
+  parameters: Record<string, any>;
+  enabled: boolean;
+}
+
+export interface CustomCodeFiles {
+  html: string;
+  css: string;
+  js: string;
+}
+
+export interface EngineExportSettings {
+  format: 'standalone_zip' | 'gltf_bundle' | 'cloud_publish';
+  title: string;
+  includeViewer: boolean;
+  enableAr: boolean;
+}
 
 export interface Vector3D {
   x: number;
@@ -101,6 +143,9 @@ export interface EngineProject {
   thumbnailUrl?: string;
   sceneGraph: SceneNode[];
   uiElements: UIElement[];
+  widgets?: InteractiveWidget[];
+  interactions?: SceneInteraction[];
+  codeFiles?: CustomCodeFiles;
   logicGraph: {
     nodes: LogicNode[];
     connections: LogicConnection[];

@@ -16,7 +16,9 @@ import {
   Check,
   Zap,
   ArrowLeft,
-  Grid
+  Grid,
+  Box,
+  Sparkles
 } from 'lucide-react';
 import { AppLauncherModal } from '../../../design-system/navigation/AppLauncherModal';
 import { useAuthStore } from '../../../store/authStore';
@@ -49,7 +51,7 @@ export const EngineHeader: React.FC = () => {
     setIsEditingTitle(false);
   };
 
-  const isWorkspaceMode = activeMode === 'workspace';
+  const isWorkspaceMode = activeMode === 'workspace' || activeMode === 'projects';
 
   return (
     <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 select-none shrink-0 shadow-sm z-30">
@@ -161,35 +163,37 @@ export const EngineHeader: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Center Section */}
+      {/* 2. Center Section: Primary Workspaces Switcher */}
       {isWorkspaceMode ? (
         <div className="hidden md:block font-bold text-slate-700 text-xs tracking-wide">
           Spatial Experience Projects
         </div>
       ) : (
-        /* Editor Mode Switcher Pills */
+        /* Workspaces: Modeling (Blender-inspired) & Interactive Experience (Verge3D-inspired) */
         <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner">
           <button
-            onClick={() => setActiveMode('ui')}
+            onClick={() => setActiveMode('modeling')}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition ${
-              activeMode === 'ui'
+              activeMode === 'modeling' || activeMode === 'ui'
                 ? 'bg-[#E94B4B] text-white shadow-sm'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
             }`}
+            title="Blender-inspired 3D Modeling Workspace"
           >
-            <Layout size={14} />
-            <span>UI Editor</span>
+            <Box size={14} />
+            <span>Modeling</span>
           </button>
           <button
-            onClick={() => setActiveMode('logic')}
+            onClick={() => setActiveMode('interactive')}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition ${
-              activeMode === 'logic'
+              activeMode === 'interactive' || activeMode === 'logic'
                 ? 'bg-[#E94B4B] text-white shadow-sm'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
             }`}
+            title="Verge3D-inspired Interactive Web 3D Authoring Workspace"
           >
-            <Cpu size={14} />
-            <span>Logic Editor</span>
+            <Sparkles size={14} />
+            <span>Interactive Experience</span>
           </button>
         </div>
       )}
